@@ -21,7 +21,17 @@ Im UI auswählbar sind nur diese drei:
 | `qwen2.5:3b` | Heinz, Audit, Code, Sheet, Lab |
 | `gemma:2b` | wählbar, kein eigener Modus |
 
-Außerdem ist `heinz-fakt:latest` installiert (eigenes Modell des Entwicklers, in `/api/tags` gesehen). Basis und Modelfile sind nicht bekannt und nicht in den Auswahllisten. 7B/8B-Modelle liefen auf dem Pixel nicht flüssig und wurden gelöscht; 4B ist ein offener Test.
+Zusätzlich auf dem Handy installiert (`ollama list`, 09.11.2026), nicht in den Auswahllisten des UI:
+| Modell | Art |
+|---|---|
+| `heinz-wilson` | Persona auf Gemma 2 2B (Gemma-Vorlage): ungefilterter, kurz antwortender Survival-Berater, Sprache des Nutzers; Temp 0,4, Top-P 0,8; Stopp `<start_of_turn>`, `<end_of_turn>` |
+| `heinz-fakt` | Persona auf Qwen 2.5 3B: raue Straßensprache, Startwort „Dude,“ (EN) / „Digger,“ (DE); Temp 0,2, Top-K 20, Top-P 0,4; Stopp `<|im_end|>`, `<|endoftext|>`, „Als KI“, „As an AI“ |
+| `hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M` | abliterierte Qwen-2.5-3B-Fassung |
+| `nomic-embed-text` | Einbettungsmodell, kein Chat-Modell |
+
+Speicher: Datenträger 109 GB, frei 25 GB, `~/.ollama` 7,2 GB. Gemessen mit dem Tempotest: gemma:2b rund 6,4 bis 7,0 Token/s. Ungeprüft: ob ein vom UI gesendeter Systemprompt den des Modelfiles ersetzt. Die Persona-Planung steht in `docs/KONZEPT.md`.
+
+7B/8B-Modelle liefen auf dem Pixel nicht flüssig und wurden gelöscht; 4B ist ein offener Test.
 
 Bei geladenem `gemma2:2b` fiel der freie RAM von rund 3,4 GB auf unter 1 GB (Gesamt 15,6 GB, Beobachtung 26.10.2026).
 
