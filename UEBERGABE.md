@@ -14,8 +14,8 @@ Siehe `STAND.md` (Module, nächste Aufgaben, aktive Arbeit).
 ## Auf das Handy bringen
 Die Chats laufen am PC bzw. in der Cloud, getestet wird auf dem Handy. Weg:
 1. Chat ändert die Dateien im Projektordner und pusht nach GitHub (`main`).
-2. Auf dem Handy: `cd ~/AIUIheinz && git pull`, dann `bash start.sh`. Das Repo muss dazu öffentlich sein oder das Handy ein Token haben (der Login per Code hat in Termux nicht funktioniert; ein öffentliches Repo braucht auf dem Handy keinen Login zum Lesen).
-3. Einmalig beim Umstieg: `git clone <Repo-URL> ~/AIUIheinz`, danach `cp -r ~/ollama_ui/data ~/AIUIheinz/` (Tabellen und Messwerte mitnehmen). Der Ordner `data/` steht in `.gitignore` und wird von Pull nie angefasst.
+2. Auf dem Handy: `cd ~/AIUIheinz && git pull`, dann Server mit Strg+C beenden und `bash start.sh`. Das Repo ist öffentlich, das Handy braucht zum Lesen keinen Login (der Login per Code hat in Termux nicht funktioniert) und schreibt nie.
+3. Umstieg ist am 09.11.2026 erfolgt: `git clone https://github.com/PythonHeinz/AIUIheinz.git ~/AIUIheinz`, `data/` aus dem alten Ordner `~/ollama_ui` kopiert (bleibt als Sicherung). Der Ordner `data/` steht in `.gitignore` und wird von Pull nie angefasst.
 4. Fallback ohne Git: Dateien aus dem Chat in den Download-Ordner laden und per `cp ~/storage/downloads/<datei> ~/AIUIheinz/` kopieren.
 Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls ~/storage/downloads | grep <name>` prüfen.
 
@@ -70,8 +70,12 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 3. `UEBERGABE.md` bei neuen Fallstricken ergänzen; Ordner und Repo gleich halten.
 4. Zeile in `INDEX.md` aktualisieren. Der Entwickler meldet „Modul X fertig“ im Root-Chat „AIUIheinz“, dort erfolgt die Querprüfung.
 
-## Ordner auf dem Rechner
-Jeder Chat im Projekt bekommt die Desktop-Verbindung zu `C:\Users\Andreas\Toolsbyclaude`. `AIUIheinz/` enthält die Projektdokumente und `repo/` (Git). Maßgeblich ist GitHub (main). Chatname = Projektname.
+## Orte
+- PC, Projektordner: `C:\Users\Andreas\Toolsbyclaude\AIUIheinz` (Projektdokumente). Jeder Chat bekommt die Desktop-Verbindung zu `C:\Users\Andreas\Toolsbyclaude`.
+- PC, Git-Repo (Offline-Kopie): `C:\Users\Andreas\Toolsbyclaude\AIUIheinz\repo`
+- GitHub (maßgeblich, öffentlich, main): `https://github.com/PythonHeinz/AIUIheinz`
+- Handy (Termux): `~/AIUIheinz` (Klon, nur lesen), Oberfläche `http://localhost:3000`, Ollama `http://localhost:11434`
+- Chatname = Projektname.
 
 ## Regeln für Änderungen (mehrere Chats)
 Vor der ersten Änderung: `git pull`, `git log`, `STAND.md` Abschnitt „Aktive Arbeit“ lesen; bei Eintrag unter 24 Stunden oder berührtem Fremdmodul den Entwickler fragen. Eigene Zeile in „Aktive Arbeit“ eintragen und sofort committen. Nach der Änderung: ENTWICKLUNGSVERLAUF.md, STAND.md (Zeile entfernen, Nächste Aufgaben anpassen), UEBERGABE.md, INDEX.md pflegen, pushen, im Projektordner `git pull`. Nur ein Chat baut gleichzeitig.
