@@ -90,3 +90,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
   - Termux sichtbar („front“): 8: 5,72; 4: 10,34; 3: 10,9; 2: 7,12; 1: 8,03.
 - Lesart: Der Standardwert (vermutlich 8 Threads) ist in beiden Fällen der schlechteste oder fast; im Hintergrund bricht er um das Zehnfache ein. 3–4 Threads sind im Vordergrund etwa doppelt so schnell wie 8. Einzelläufe, kleine Stichprobe; 3 Threads im Hintergrund und Wiederholungen fehlen noch.
 - Folge: `num_thread` als einstellbarer Parameter (Startwert 3 oder 4) in der Chat-Seite und je Modell/Engine; Chat-Strang. Ob LiteRT-LM Ähnliches zeigt, ist offen.
+
+## 09.11.2026 – Abschluss des Root-Chats (Grundgerüst und Handytest)
+- Übergabe ergänzt: `docs/KONZEPT.md` Abschnitt 14 (Messungen, Beschlüsse), Kopieren auf zwei Ebenen (Blase und ganzer Chat) in Abschnitt 4, Regeln für neue Seiten in `UEBERGABE.md`.
+- Auf dem Handy bestätigt: Hub, Kopfzeile, EN/DE, Modelle-Liste, Chat-Archiv der alten Seite, Installation vom Hub. Nicht bestätigt: LiteRT-LM aus dem Hub (Server lief nicht), Dauertest gegen Signal 9.

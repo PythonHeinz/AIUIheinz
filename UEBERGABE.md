@@ -39,6 +39,9 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - **Nicht ins Repo:** `data/` (Tabellen, Messwerte), Rohstofflisten, private Daten.
 - **LiteRT-LM in Termux (09.11.2026):** `litert-lm import` bricht nach dem Download mit `module 'os' has no attribute 'link'` ab, weil Termux-Python keine Hardlinks kennt. Umgehung: ein Hilfsskript setzt `os.link` auf eine Funktion, die `OSError` auslöst (die CLI fängt das ab und kopiert), und ruft dann `litert_lm_cli.main.main()` auf. Die geladene Datei liegt unter `~/.litert-lm/cache/huggingface/…`. Der Server (`litert-lm serve`) braucht `--cors-origin http://localhost:3000`, sonst blockiert der Browser die Aufrufe der Seite.
 
+- **Neue Seiten (Regeln aus dem Handytest 09.11.2026):** relative Pfade verwenden und den Server nur über `/api/...` ansprechen (spätere gehostete Fassung); `overscroll-behavior-y: none` setzen (Wischen zum Aktualisieren kann den Chat löschen); Ollama-Anfragen mit `options.num_thread` (Startwert 3–4, einstellbar, siehe `docs/OLLAMA_UND_MODELLE.md`); Modus und Modell sind getrennte Angaben (Modus Heinz soll `heinz-fakt` nutzen können).
+- **Tempo:** Termux im Splitscreen sichtbar halten, solange `num_thread` nicht gesetzt ist; ohne Sicht läuft Ollama in `cpuset:/foreground` und mit 8 Threads bis zu zehnmal langsamer.
+
 ## Wichtige Strukturen
 - **chat.html:** `MODE_PRESETS`, `MODELS`, `I18N`/`t()`/`applyI18n()`, `onSlider`, `onDefaultToggle`, `normalizeMode`; Streaming über `fetch` und `ReadableStream`.
 - **lab.html:** drei Schritte (Daten, Regel, Ausführen), Spaltenwahl als Chips, Kontrollspalte mit Trefferquote (`takeLabels`, `normCat`, `mkResult`), Presets mood/urgency/spam/topic/material/custom, Export CSV und JSON.

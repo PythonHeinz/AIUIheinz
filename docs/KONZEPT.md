@@ -50,7 +50,7 @@ AIUIheinz/
 ## 4 Bedienkonzept Chat
 - **Hauptansicht:** schmale Kopfzeile (⌂, Modusname in Modusfarbe, Statuspunkt, ☰), Chat füllt fast den ganzen Bildschirm, unten eine Eingabezeile mit 🎤 und Senden. Die Zeile wächst beim Tippen; für langen Text öffnet sich ein großes Eingabefenster.
 - **Moduswechsel** über die Leiste oben (wie das Register Lager | Rezeptbuch bei INCIheinz), **kein Wischen** (kollidiert mit Code-Blöcken, Tabellen und der Android-Zurück-Geste). Jeder Modus hat eine eigene Chat-Ansicht mit eigenem Verlauf. Audit bekommt einen Chip „📎 Kontext“ (Pflichtfeld, großes Eingabefenster), Wilson hat keinen.
-- **Kopieren:** jede Eingabe- und Antwortblase bekommt ein eigenes Kopieren-Symbol (einzelne Antwort entnehmen, zum Beispiel für Gemini). „Ganzen Chat kopieren“ bleibt, die festen Beschriftungen „Du:/Heinz:“ folgen künftig der Sprache.
+- **Kopieren:** jede Eingabe- und Antwortblase bekommt ein eigenes Kopieren-Symbol (einzelne Antwort entnehmen, zum Beispiel für Gemini). Kopieren gibt es auf zwei Ebenen: je Blase (einzelne Antwort) und für den ganzen Chat (eine Schaltfläche am Kopf des Chatfensters, die alle Blasen zusammen mit Rollen kopiert). „Ganzen Chat kopieren“ bleibt, die festen Beschriftungen „Du:/Heinz:“ folgen künftig der Sprache.
 - **Token-Anzeige:** keine Zeile unter jeder Antwort (stört den Textverlauf). Die drei farbigen Badges (P-Tok grün, A-Tok blau, Speed violett) bleiben an ihrem Platz, zeigen aber nur die letzte Antwort.
 - **Einstellungen (☰):** Sprache, Modell und Alias, Regler und „Standardwerte“, Chats, später „Online erlauben“. Regler gelten je Modus, Presets bleiben Vorschläge.
 - **Beibehaltene Regeln aus der Praxis** (aus `chat.html`, nicht ändern): Systemnachricht enthält Regel, Antwortsprache und Kontext, nicht der Verlauf; bei leerer Antwort wird die Frage aus dem Verlauf entfernt; NDJSON wird zeilenweise gepuffert; Anzeige alle 60 ms gedrosselt; Moduswechsel speichert den alten Chat und startet einen neuen; Hinweise bei HTTP 404 und CORS; Notbehelf beim Kopieren ohne Zwischenablage; Vorlesen überspringt Code und Markdown und bevorzugt eine lokale Stimme; unten bleibt Platz für das Termux-Splitfenster (`max(90px, 45vh)`).
@@ -168,3 +168,11 @@ Erledigt am 09.11.2026: Modi und Persönlichkeiten (Beschluss 1), gemeinsamer Br
 - WebGPU auf Handys: tinyweights.dev, Ludion-Messbericht (18.06.2026)
 - Claude-Support: Abo und API sind getrennte Produkte, monatliche API-Guthaben für Max und Team
 - OpenRouter: Venice Uncensored (openrouter.ai/venice/uncensored)
+
+## 14 Messungen und Beschlüsse aus dem Handytest (09.11.2026)
+- **Tempo hängt an `num_thread`:** Standard (8) ist am langsamsten, 3–4 Threads etwa doppelt so schnell, im Hintergrund um das Zehnfache. Tabelle in `docs/OLLAMA_UND_MODELLE.md`. Umsetzung: `options.num_thread` als einstellbarer Parameter (Chat-Strang).
+- **Cgroup:** Ollama läuft bei sichtbarem Termux in `top-app`, sonst in `foreground` (nicht `background`).
+- **Modus ↔ Modell:** Die Chat-Seite kennt nur `gemma2:2b`, `qwen2.5:3b`, `gemma:2b`. Modus Heinz nutzt das normale `qwen2.5:3b`, nicht `heinz-fakt` (abliteriertes Qwen mit eigenem Systemprompt).
+- **Abliteriertes Qwen 2.5 3B** lehnte die Testfrage (Salzsäure) fast so fest ab wie das normale. Eine Stichprobe; Vergleichstest mit Zählung offen.
+- **Installierbarkeit:** Vom Hub (`localhost:3000/`) bot Chrome auf dem Pixel „App installieren“ an. Die App läuft weiter aus dem lokalen Server; Updates per `git pull`. Eine gehostete Fassung (GitHub Pages, Update-Hinweis mit Knopf) ist später möglich: relative Pfade, Ersatz für `data/`, CORS für Ollama und LiteRT-LM.
+- **Wischen zum Aktualisieren** abschalten (`overscroll-behavior-y: none`), sonst droht Datenverlust im Chat.
