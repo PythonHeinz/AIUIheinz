@@ -37,6 +37,7 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - **Server:** bindet nur an 127.0.0.1; Schreibzugriffe brauchen `X-Heinz: 1` und passenden Origin; Dateinamen per Regex; `/data`, `/server.py`, `/start.sh` werden nicht ausgeliefert. Neue Endpunkte müssen dieselben Schutzregeln einhalten. Antwortet `/api/vitals` aus dem Cache, damit die Seite nicht auf Termux-Aufrufe wartet.
 - **Download-Namen:** Android hängt `(1)` an doppelte Dateien an.
 - **Nicht ins Repo:** `data/` (Tabellen, Messwerte), Rohstofflisten, private Daten.
+- **LiteRT-LM in Termux (09.11.2026):** `litert-lm import` bricht nach dem Download mit `module 'os' has no attribute 'link'` ab, weil Termux-Python keine Hardlinks kennt. Umgehung: ein Hilfsskript setzt `os.link` auf eine Funktion, die `OSError` auslöst (die CLI fängt das ab und kopiert), und ruft dann `litert_lm_cli.main.main()` auf. Die geladene Datei liegt unter `~/.litert-lm/cache/huggingface/…`. Der Server (`litert-lm serve`) braucht `--cors-origin http://localhost:3000`, sonst blockiert der Browser die Aufrufe der Seite.
 
 ## Wichtige Strukturen
 - **chat.html:** `MODE_PRESETS`, `MODELS`, `I18N`/`t()`/`applyI18n()`, `onSlider`, `onDefaultToggle`, `normalizeMode`; Streaming über `fetch` und `ReadableStream`.
