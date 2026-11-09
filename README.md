@@ -22,7 +22,7 @@ Projektinstruktion für neue Chats: `NAECHSTER_CHAT.md` (im Projektordner, eine 
 Aktualisieren: `cd ~/AIUIheinz && git pull`, Server neu starten. Der Ordner `data/` (Tabellen, Messwerte) ist nicht im Repo und bleibt beim Pull unberührt.
 
 ## Dokumentation
-- `STAND.md` Stand je Modul, aktive Arbeit, nächste Aufgaben
+- `STAND.md` (nur im Projektordner, nicht im Repo) Stand je Modul, aktive Arbeit, nächste Aufgaben
 - `UEBERGABE.md` Start für neue Chats, Fallstricke, Regeln
 - `ENTWICKLUNGSVERLAUF.md` Chronik der Änderungen
 - `docs/OLLAMA_UND_MODELLE.md` Modelle, Pfade, Ollama-Schnittstelle je Seite

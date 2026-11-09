@@ -12,14 +12,20 @@ Siehe `STAND.md` (Module, nächste Aufgaben, aktive Arbeit).
 - Details zu Pfaden, Modellen und Ollama-Aufrufen: `docs/OLLAMA_UND_MODELLE.md`.
 
 ## Auf das Handy bringen
-Die Chats laufen am PC bzw. in der Cloud, getestet wird auf dem Handy. Weg:
-1. Chat ändert die Dateien im Projektordner und pusht nach GitHub (`main`).
+Die Chats arbeiten im angehängten GitHub-Repo, getestet wird auf dem Handy. Weg:
+1. Der Chat ändert die Dateien im **angehängten Repo** (`add_repo` mit Zugriff „push“) und pusht nach `main`. Danach holt er die Änderung am PC im Ordner `AIUIheinz\repo` mit `git pull` in die Offline-Kopie.
 2. Auf dem Handy: `cd ~/AIUIheinz && git pull`, dann Server mit Strg+C beenden und `bash start.sh`. Das Repo ist öffentlich, das Handy braucht zum Lesen keinen Login (der Login per Code hat in Termux nicht funktioniert) und schreibt nie.
 3. Umstieg ist am 09.11.2026 erfolgt: `git clone https://github.com/PythonHeinz/AIUIheinz.git ~/AIUIheinz`, `data/` aus dem alten Ordner `~/ollama_ui` kopiert (bleibt als Sicherung). Der Ordner `data/` steht in `.gitignore` und wird von Pull nie angefasst.
 4. Fallback ohne Git: Dateien aus dem Chat in den Download-Ordner laden und per `cp ~/storage/downloads/<datei> ~/AIUIheinz/` kopieren.
 Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls ~/storage/downloads | grep <name>` prüfen.
 
 ## Fallstricke
+- **Gearbeitet, getestet und gepusht wird im angehängten GitHub-Repo, nicht in der Offline-Kopie am PC.** Die PC-Kopie (`AIUIheinz\repo`) wird nur gelesen und per `git pull` aktualisiert. Sie wird nie von Hand geändert, sonst gibt es beim nächsten `git pull` Konflikte. Am PC ist kein Push-Zugang eingerichtet.
+- **Welche Datei wo liegt:** Dokumente, die nur im Ordner liegen (`STAND.md`, `NAECHSTER_CHAT.md`, Zeile in `INDEX.md`), schreibt der Chat über die Desktop-Verbindung in den Ordner. Dokumente, die in Ordner und Repo liegen (`UEBERGABE.md`, `ENTWICKLUNGSVERLAUF.md`), werden zuerst im Repo geändert und gepusht, dann per `git pull` in die Kopie geholt. Danach mit `cmp` prüfen, dass `AIUIheinz\UEBERGABE.md` und `AIUIheinz\repo\UEBERGABE.md` (ebenso `ENTWICKLUNGSVERLAUF.md`) gleich sind.
+- **Löschfreigabe für Git am PC:** Wer am PC Git benutzt (`git pull`), braucht in der Sitzung einmal die Löschfreigabe für den Ordner (`device_request_delete_permission`). Sonst bleiben Sperrdateien (`.lock`, `tmp_obj_*`) in `.git` liegen und spätere Git-Befehle scheitern mit „File exists“. Nur Sperrdateien löschen, die ein früherer Befehl hinterlassen hat.
+- **Dateien zwischen Cloud und PC:** Vom PC lesen mit `device_bash` oder `device_stage_files`, in den PC-Ordner schreiben mit `device_commit_files` (große Dateien als Zip übertragen und auf dem PC entpacken).
+- **Alles Nötige muss im Repo liegen.** Eine Hilfsdatei, die nur lokal existiert, verhindert, dass ein frischer Chat bauen oder testen kann (bei INCIheinz passiert). `data/` bleibt in `.gitignore`.
+- **`STAND.md` bleibt eine einzige, nach Bereichen geordnete Datei** und enthält keine festen Commit-Nummern (nur „Stand: Datum, Commit siehe `git log -1`“). Wird sie zu lang, die alte Fassung nach `archiv/` verschieben und neu zusammenführen. Doppelte Überschriften vermeiden.
 - **Jede Seite ist eigenständig.** I18N-Wörterbuch, `lsGet/lsSet`, Kopfzeile und Basisstile sind in jeder Datei kopiert. Änderungen an Gemeinsamem (Sprachumschalter, Einstellungen, Kopfzeile) in allen Seiten nachziehen.
 - **localStorage-Schlüssel:** `heinz_settings` (Sprache, Regler und Standardwerte-Haken des Chats), `heinz_current`, `heinz_chats`, `heinz_lab`, `heinz_sheet`, `heinz_sheet_cfg`, `heinz_vitals`, `heinz_bench`. Jede Adresse (Host und Port) hat eigenen Speicher: `localhost:3000`, `127.0.0.1:3000` und `127.0.0.1:8081` sind getrennt.
 - **Modellliste ist fest** in chat, lab, sheet, vitals eingetragen (`gemma2:2b`, `qwen2.5:3b`, `gemma:2b`). Neue Modelle dort ergänzen.
@@ -48,6 +54,7 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - Der Entwickler arbeitet auf Deutsch; Antworten sachlich und knapp, ohne Lob und Begeisterung.
 
 ## Tests
+- **Einmal aus einem frischen Klon starten und die Playwright-Tests laufen lassen**, sobald sie im Repo liegen (`tests/`). Dabei darf nichts fehlen, was nur lokal existiert.
 - Im Chat-Container mit Playwright und der vorinstallierten Chromium-Version; Ollama wird mit `page.route('**/localhost:11434/**', …)` simuliert (Pfade der Installation vor Gebrauch prüfen). `node --check` für die Skriptblöcke.
 - Server mit curl prüfen: fehlender Header, fremder Origin, `../` im Namen, ungültige Endung, Löschen nach `_trash`, `/server.py` und `/data` müssen 404 liefern.
 - Echte Modelle laufen nur auf dem Handy. Nach jeder Änderung sagen, was der Entwickler dort prüfen soll. Nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief.
@@ -55,8 +62,8 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 ## Arbeitsweise für Modul-Chats (verbindlich)
 **Start:**
 1. `INDEX.md` (Wurzelordner Toolsbyclaude) lesen, dann `AIUIheinz/STAND.md`, dann `ENTWICKLUNGSVERLAUF.md`.
-2. In `AIUIheinz/repo/` zuerst `git pull`.
-3. Ändern, testen, am Ende selbst nach `main` pushen (Repo ggf. mit Schreibrecht per `add_repo` anhängen).
+2. Repo `PythonHeinz/AIUIheinz` per `add_repo` mit Zugriff „push“ anhängen, klonen, `git pull` und `git log`. Die PC-Kopie `AIUIheinz\repo` wird nur gelesen (und danach per `git pull` aktualisiert).
+3. Im angehängten Repo ändern und testen, am Ende selbst nach `main` pushen. Danach am PC im Ordner `AIUIheinz\repo` `git pull` (Löschfreigabe beachten, siehe Fallstricke).
 
 **Während der Arbeit:**
 - Genau ein Chat baut zur selben Zeit (Absprache des Entwicklers).
@@ -65,17 +72,17 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - Neue Seiten bekommen eine Kachel im Hub und einen Eintrag in `docs/OLLAMA_UND_MODELLE.md`, wenn sie Ollama oder den Server neu ansprechen.
 
 **Ende:**
-1. `STAND.md`: Modulstatus, letzter Commit, Datum, Abschnitt „Berührt Grundgerüst“.
+1. `STAND.md` (nur im Ordner, per Desktop-Verbindung): Modulstatus, Datum („Commit siehe `git log -1`“, keine festen Nummern), Abschnitt „Berührt Grundgerüst“.
 2. `ENTWICKLUNGSVERLAUF.md`: was geändert wurde, Dateien und Funktionen, welche Tests liefen, was offen ist.
-3. `UEBERGABE.md` bei neuen Fallstricken ergänzen; Ordner und Repo gleich halten.
-4. Zeile in `INDEX.md` aktualisieren. Der Entwickler meldet „Modul X fertig“ im Root-Chat „AIUIheinz“, dort erfolgt die Querprüfung.
+3. `UEBERGABE.md` bei neuen Fallstricken zuerst im Repo ergänzen und pushen, dann per `git pull` in die Kopie holen; mit `cmp` prüfen, dass Ordner und Repo gleich sind.
+4. Zeile in `INDEX.md` aktualisieren (über die Desktop-Verbindung). Der Entwickler meldet „Modul X fertig“ im Root-Chat „AIUIheinz“, dort erfolgt die Querprüfung.
 
 ## Orte
 - PC, Projektordner: `C:\Users\Andreas\Toolsbyclaude\AIUIheinz` (Projektdokumente). Jeder Chat bekommt die Desktop-Verbindung zu `C:\Users\Andreas\Toolsbyclaude`.
-- PC, Git-Repo (Offline-Kopie): `C:\Users\Andreas\Toolsbyclaude\AIUIheinz\repo`
-- GitHub (maßgeblich, öffentlich, main): `https://github.com/PythonHeinz/AIUIheinz`
+- PC, Git-Repo (Offline-Kopie, nur lesen, nie von Hand ändern, wird per `git pull` aktualisiert; kein Push-Zugang): `C:\Users\Andreas\Toolsbyclaude\AIUIheinz\repo`
+- GitHub (maßgeblich, öffentlich, main; hier wird gearbeitet und gepusht): `https://github.com/PythonHeinz/AIUIheinz`, im Chat per `add_repo` (push) angehängt
 - Handy (Termux): `~/AIUIheinz` (Klon, nur lesen), Oberfläche `http://localhost:3000`, Ollama `http://localhost:11434`
 - Chatname = Projektname.
 
 ## Regeln für Änderungen (mehrere Chats)
-Vor der ersten Änderung: `git pull`, `git log`, `STAND.md` Abschnitt „Aktive Arbeit“ lesen; bei Eintrag unter 24 Stunden oder berührtem Fremdmodul den Entwickler fragen. Eigene Zeile in „Aktive Arbeit“ eintragen und sofort committen. Nach der Änderung: ENTWICKLUNGSVERLAUF.md, STAND.md (Zeile entfernen, Nächste Aufgaben anpassen), UEBERGABE.md, INDEX.md pflegen, pushen, im Projektordner `git pull`. Nur ein Chat baut gleichzeitig.
+Vor der ersten Änderung: im angehängten Repo `git pull` und `git log`, `STAND.md` Abschnitt „Aktive Arbeit“ lesen; bei Eintrag unter 24 Stunden oder berührtem Fremdmodul den Entwickler fragen. Eigene Zeile in „Aktive Arbeit“ sofort in `STAND.md` im Ordner eintragen (die Datei liegt nur im Ordner, also kein Commit). Nach der Änderung: im Repo ENTWICKLUNGSVERLAUF.md und bei Bedarf UEBERGABE.md ändern, nach `main` pushen, am PC in `AIUIheinz\repo` `git pull`, mit `cmp` prüfen. Danach im Ordner STAND.md (Zeile entfernen, Nächste Aufgaben anpassen) und die Zeile in INDEX.md aktualisieren. Nur ein Chat baut gleichzeitig.
