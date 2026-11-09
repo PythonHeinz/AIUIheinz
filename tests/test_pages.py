@@ -135,9 +135,9 @@ class PageTest(unittest.TestCase):
         body = self.ollama.requests[0]
         self.assertEqual(body["model"], "qwen2.5:3b")
         self.assertAlmostEqual(body["options"]["temperature"], 0.15)
-        self.assertNotIn("Some context text", body["messages"][0]["content"], "context is not part of the system prompt")
         self.assertEqual(body["messages"][0]["role"], "system")
-        self.assertTrue(body["messages"][-1]["content"].startswith("Context / source text:\nSome context text"))
+        self.assertIn("Some context text", body["messages"][0]["content"], "audit keeps the context in the system message")
+        self.assertEqual(body["messages"][-1]["content"], "Check it", "the user message stays the plain question")
 
     def test_http_error_is_shown_and_question_removed_from_history(self):
         page = self.new_page(status=404)
@@ -327,6 +327,20 @@ class PageTest(unittest.TestCase):
         page.evaluate("generating = false")
         page.click("#mode-bar [data-mode=code]")
         self.assertEqual(page.evaluate("settings.mode"), "code")
+
+    def test_only_the_selected_model_stays_loaded(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.wait_preloads(page, 1)
+        self.assertEqual(self.ollama.unloads, [], "the model in memory is the selected one: nothing to unload")
+        page.click("#mode-bar [data-mode=audit]")   # qwen2.5:3b; the fake /api/ps still reports gemma2:2b
+        self.wait_preloads(page, 2)
+        self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, self.ollama.unloads)
+        self.assertNotIn("qwen2.5:3b", [u["model"] for u in self.ollama.unloads])
+        self.ollama.unloads.clear()
+        page.fill("#context", "text")
+        self.send(page, "Go")
+        self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, self.ollama.unloads, "also before a real request")
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()

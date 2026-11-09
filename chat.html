@@ -488,7 +488,7 @@
         const MODE_PRESETS = {
             wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#2196F3' },
             heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63' },
-            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', color: '#ff9800' },
+            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#ff9800' },
             code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#607d8b' },
             creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#9c27b0' }
         };
@@ -748,6 +748,20 @@
             if (!settings.preload) return;
             preloadTimer = setTimeout(preloadModel, 1200);
         }
+        // Es bleibt nur das gewählte Modell im Arbeitsspeicher: sonst halten mehrere Modelle (mit 30 min keep_alive)
+        // und große Kontexte den Speicher, und Android beendet Termux (Absturz am Handy 10.11.2026).
+        async function unloadOthers(model) {
+            try {
+                const r = await fetch(OLLAMA_URL + '/api/ps');
+                const d = await r.json();
+                const others = (d.models || []).map(function (m) { return m.name; })
+                    .filter(function (n) { return n !== model; });
+                await Promise.all(others.map(function (n) {
+                    return fetch(OLLAMA_URL + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: n, keep_alive: 0 }) });
+                }));
+            } catch (e) { /* ohne Ollama nichts zu tun */ }
+        }
         async function preloadModel() {
             if (!settings.preload || generating || speedTesting) return;
             const model = $('model-select').value;
@@ -758,6 +772,8 @@
             preloadAbort = ac;
             setPreloadStatus('loading');
             try {
+                await unloadOthers(model);
+                if (ac.signal.aborted) return;
                 const opts = buildOptions(MODE_PRESETS[settings.mode]);
                 delete opts.stop; delete opts.num_predict;
                 opts.num_predict = 1;
@@ -1229,7 +1245,14 @@
                 last.content += '\n\n' + P.respond + (settings.fast ? ' ' + P.plain : '');
                 return msgs;
             }
-            return [{ role: 'system', content: buildSystemPrompt(settings.mode) }].concat(msgs);
+            // Modi mit Pflicht-Kontext (Audit): Kontext wie bisher in der Systemnachricht (Handytest 10.11.2026: im Nutzertext
+            // antwortete qwen2.5:3b „Information not in context.“); der feste Anfang bleibt trotzdem im Zwischenspeicher.
+            let sys = buildSystemPrompt(settings.mode);
+            if (useCtx && MODE_PRESETS[settings.mode].ctxInSystem) {
+                sys += '\n\n' + P.ctxLabel + '\n' + contextText;
+                last.content = last.content.slice((P.ctxLabel + '\n' + contextText + '\n\n').length);
+            }
+            return [{ role: 'system', content: sys }].concat(msgs);
         }
         function buildOptions(preset) {
             const o = {};
@@ -1318,6 +1341,7 @@
             if (Object.keys(opts).length) reqBody.options = opts;
 
             try {
+                await unloadOthers(selectedModel);
                 const response = await fetch(OLLAMA_URL + '/api/chat', {
                     method: 'POST',
                     signal: currentAbortController.signal,
