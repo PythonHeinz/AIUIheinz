@@ -2,6 +2,13 @@
 
 Stand 09.11.2026, Chat „AIUIheinz“. **Nichts davon ist gebaut.** Grundlage sind der Code im Repo, die Angaben des Entwicklers und Recherchen vom 09.11.2026 (Quellen am Ende). Was nicht auf dem Pixel geprüft wurde, ist als „ungeprüft“ markiert.
 
+## 0 Beschlüsse des Entwicklers (09.11.2026)
+1. **Modus bringt den Ton mit.** Es gibt keine eigene Persona-Ebene: Ein Modus bündelt Ton, Regler und Regeln. Audit und Code bleiben neutral und streng; ein Wechsel in einen Kreativton soll dort nicht passieren.
+2. **Modi im Starterkit:** Wilson (Arzt und Psychologe mit Wissen über Überleben im Busch), Heinz (Allrounder, „mit dem man über alles reden kann“, kann den Kreativmodus mit übernehmen), Audit und Code (kontextbasiert, streng geregelt). Creative bleibt vorerst, entfällt ggf. später.
+3. **Speicher:** Einstellungen bleiben im Browser (`localStorage`, Präfix je Tool, gemeinsame Herkunft für alle Tools). Chats, Tabellen und sonstige Daten kommen als Dateien in `data/` auf den Server (kein 5-MB-Limit). **Ausnahme: API-Schlüssel bleiben im Browser** und gehen nie in `data/` oder ins Repo.
+4. **Werkzeug-Ideen mit Kamera und Dokumenten** (siehe Abschnitt 10a) sind erwünscht, noch nicht entschieden.
+5. **LiteRT-LM:** Anbindung über die geplante App und Modellwahl sind noch zu prüfen (Abschnitt 10).
+
 ## 1 Ziele und Leitplanken
 - **Zwei Ziele, eine Codebasis:** (a) das persönliche „Heinz-Taschenmesser“ auf dem Pixel 9 Pro, (b) ein veröffentlichbares Starterkit mit Tutorial, das Einsteiger zum Selbstausprobieren motiviert. Das Starterkit ist eine zweite Ansicht (Einrichtungsassistent), kein zweites Projekt.
 - **Offline zuerst.** Der Haken „Online erlauben“ steht standardmäßig aus. Ist er aus, findet kein einziger Netzwerkaufruf nach außen statt (lokale Aufrufe an `localhost` ausgenommen). Auch Markdown, Syntaxfarben und Sprachtexte kommen aus lokalen Dateien.
@@ -46,6 +53,8 @@ AIUIheinz/
 - **Beibehaltene Regeln aus der Praxis** (aus `chat.html`, nicht ändern): Systemnachricht enthält Regel, Antwortsprache und Kontext, nicht der Verlauf; bei leerer Antwort wird die Frage aus dem Verlauf entfernt; NDJSON wird zeilenweise gepuffert; Anzeige alle 60 ms gedrosselt; Moduswechsel speichert den alten Chat und startet einen neuen; Hinweise bei HTTP 404 und CORS; Notbehelf beim Kopieren ohne Zwischenablage; Vorlesen überspringt Code und Markdown und bevorzugt eine lokale Stimme; unten bleibt Platz für das Termux-Splitfenster (`max(90px, 45vh)`).
 
 ## 5 Persönlichkeiten (Personas)
+**Stand nach Beschluss 1 und 2:** Eine Persona ist ein Modus mit Ton, keine zweite Ebene. Die Tabelle unten bleibt als Bestandsaufnahme und Vorlage für die Modus-Definitionen; `heinz-wilson` ist der Wilson-Modus als Ollama-Modell, `heinz-fakt` die raue Heinz-Fassung (optional).
+
 Persönlichkeiten liegen **in der Seite**, nicht als Ollama-Modelle. Das macht sie auf jedem Modell und für Einsteiger ohne `ollama create` nutzbar. Bisher bekannt sind vier Definitionen:
 
 | Name | Ort | Basis | Kern | Temp / Top-P / Top-K |
@@ -97,8 +106,19 @@ Ein Schalter oben steuert Oberfläche, Systemprompt („Antworte auf Deutsch“)
 ## 10 Weitere Engines (Erkundung)
 - **WebGPU im Browser: verworfen.** Auf Handys uneinheitlich, kein klarer Tempogewinn, großer Download, lange Wartezeit bei langem Kontext.
 - **Google LiteRT-LM:** On-Device-Laufzeit von Google AI Edge. Die App „AI Edge Gallery“ führt Modelle offline aus, hat aber keine Schnittstelle für unsere Seiten. Die Kommandozeile `litert-lm` hat einen OpenAI-kompatiblen Server. Ob sie in Termux installierbar ist, ist ungeprüft (Doku nennt Linux, macOS, Windows, Raspberry Pi). Google nennt für ein Samsung S26 Ultra mit Gemma 4 E2B: CPU 557 Token/s Einlesen und 47 Erzeugen, GPU 3808 und 52. Der GPU-Gewinn liegt vor allem beim Einlesen langer Texte. **Auf dem Pixel 9 Pro nicht gemessen**; Modelle haben das Format `.litertlm`, nicht GGUF.
+- **Messung auf dem Pixel 9 Pro (09.11.2026, Gallery 1.0.23, Gemma 4 E2B, 256 Token einlesen und erzeugen, Mittel aus 3 Läufen):** GPU: Einlesen 653 Token/s, Erzeugen 14,6 Token/s, erstes Wort 0,46 s, erste Initialisierung 83,7 s (danach 5,7 s). CPU: Einlesen 191, Erzeugen 11,2, erstes Wort 1,58 s, Initialisierung 13,9 s. Zum Vergleich Ollama im Heinz UI (Badge „Speed“ = Erzeugungsgeschwindigkeit): gemma2:2b 1,3 bis 1,9 Token/s, qwen2.5:3b 0,8 Token/s; Handy dabei nicht am Ladegerät, Termux im Splitscreen. Die Bedingungen sind nicht gleich; eine saubere Gegenmessung mit `ollama run … --verbose` am Ladegerät steht aus.
+- **Stand der Doku (Recherche 09.11.2026):** Laut Google-Doku läuft die `litert-lm`-CLI auf Linux, macOS, Windows, **Android** und Raspberry Pi; die Python-Schnittstelle (`pip install litert-lm-api`) nennt Android (aarch64). `litert-lm serve --port 9379` startet einen OpenAI-kompatiblen Server; `litert-lm run … --attachment bild.jpg` erlaubt Bild- und Audioeingabe bei geeigneten Modellen. **Ungeprüft:** ob die Pakete in Termux (Bionic statt glibc) installierbar sind; die Doku meint vermutlich Android-Apps und Linux-Umgebungen.
+- **Modellwahl (Vorschlag):** Start mit Gemma 4 E2B (`.litertlm`, rund 2,6 GB, in der Gallery bereits getestet, mit Bildeingabe). Die Gallery hat keine Schnittstelle nach außen, ein eigener Download für die CLI wäre nötig (25 GB frei). Weitere Modelle der Gallery-Liste (Qwen, Llama 3.2 u. a. unter `litert-community`) erst nach dem ersten Erfolg.
 - **llama.cpp mit GPU und MNN:** Berichte gemischt, ungeprüft auf dem Pixel (Tensor G4).
 - **Vorgehen:** Erst Gallery messen (Gemma 4 E2B, GPU gegen CPU), dann `litert-lm` in Termux versuchen. Nutzbar wird es über die openai-kompatible Anbieterschicht ohne weiteren Code.
+
+## 10a Ideen: Kamera und Dokumente (offline, noch nicht entschieden)
+Erfahrungen aus INCIheinz (KI-Arbeit von außen mit Schlüssel, Aus-Schalter ohne Netzaufrufe) sollen hier einfließen, aber lokal:
+- **Foto zu Text oder Rezept:** Kamera oder Bilddatei, Modell liest den Text und bringt ihn in eine feste Form (Rezept, Zutatenliste, Tabelle). Der Code prüft und zählt.
+- **Rechnungen und Briefe:** Foto, Felder auslesen (Absender, Datum, Betrag, Fälligkeit) als Tabelle in `data/`, alles offline.
+- **Technik:** Eingabe über `<input type="file" accept="image/*" capture>`; `getUserMedia` wäre auf `localhost` möglich (ungeprüft auf dem Pixel). Auslesen entweder mit einem Bildmodell (z. B. Gemma 4 E2B über LiteRT-LM, Gallery bietet „Ask Image“) oder mit klassischer Texterkennung im Browser (Tesseract.js, müsste lokal in `lib/` liegen, Größe und Qualität ungeprüft). Bildmodelle in Ollama sind für den Pixel ungeprüft.
+- **Regel:** Das Modell liest und ordnet zu, Zahlen und Summen prüft der Code; der Mensch bestätigt vor dem Speichern (wie bei Sheet).
+- Neue Tools passen in die Tool-Struktur (Abschnitt 2): `tools/<name>/` mit `tool.json`.
 
 ## 11 Testprompts (Vergleich der Modelle)
 Gleicher Text für alle, frischer Chat, erster Lauf zählt nicht, jede Messung zweimal.
@@ -122,11 +142,12 @@ Gleicher Text für alle, frischer Chat, erster Lauf zählt nicht, jede Messung z
 Schritte 1 und 2 und die Termux-Stabilität (Abschnitt 9) können parallel zu den Messungen laufen.
 
 ## 13 Offene Entscheidungen
-1. Modi und Persönlichkeiten: Aufgabenprofil gegen Ton trennen (Vorschlag oben) oder verschmelzen?
-2. Gemeinsamer Browser-Speicher für alle Tools (Vorschlag: ja, mit Präfixen) oder getrennte Herkunft je Tool?
-3. Umzug der Dateien in `hub/`, `tools/`: ändert Pfade auf dem Handy (`start.sh` wird angepasst, `git pull` genügt).
-4. Welche Fassung der Persönlichkeiten kommt in ein veröffentlichtes Starterkit?
-5. Ergebnis der Messungen (Gallery, `litert-lm`) und des ADB-Tests entscheidet, ob Abschnitt 10 weiterverfolgt wird.
+Erledigt am 09.11.2026: Modi und Persönlichkeiten (Beschluss 1), gemeinsamer Browser-Speicher (Beschluss 3), Inhalt des Starterkits (Beschluss 2).
+1. Creative: in Heinz aufgehen lassen oder behalten (später).
+2. Umzug der Dateien in `hub/`, `tools/`: ändert Pfade auf dem Handy (`start.sh` wird angepasst, `git pull` genügt).
+3. LiteRT-LM: läuft die CLI oder die Python-Schnittstelle in Termux, und welches Modell? (Abschnitt 10)
+4. Welche Kamera- und Dokument-Werkzeuge zuerst (Abschnitt 10a).
+5. Ergebnis des ADB-Tests (Abschnitt 9).
 
 ## Quellen (Stand 09.11.2026)
 - Google AI Edge, LiteRT-LM Überblick und CLI-Seiten: developers.google.com/edge/litert-lm
