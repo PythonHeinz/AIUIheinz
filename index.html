@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heinz Hub</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #e8eaed; margin: 0; padding: 15px; padding-bottom: max(90px, 45vh); }
+        .wrap { max-width: 600px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+        .header h1 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; background: #ea4335; display: inline-block; transition: background 0.3s; }
+        .dot.on { background: #fbbc05; box-shadow: 0 0 8px #fbbc05; }
+        .dot.run { background: #34a853; box-shadow: 0 0 8px #34a853; }
+        .lang-btn { background: #202124; border: 1px solid #3c4043; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 5px; border-radius: 8px; cursor: pointer; display: flex; gap: 3px; }
+        .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #80868b; }
+        .lang-btn span.active { background: #34a853; color: #fff; }
+        .status { background: #202124; border: 1px solid #3c4043; border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; color: #bdc1c6; line-height: 1.5; }
+        .status b { color: #fff; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        a.card, div.card { display: block; text-decoration: none; color: #fff; border-radius: 16px; padding: 20px 18px; position: relative; }
+        .card h2 { margin: 0 0 6px; font-size: 20px; }
+        .card p { margin: 0; font-size: 14px; opacity: 0.92; line-height: 1.4; }
+        .card .ico { font-size: 30px; display: block; margin-bottom: 8px; }
+        .c-blue { background: #4285f4; }
+        .c-green { background: #34a853; }
+        .c-yellow { background: #fbbc05; color: #202124 !important; }
+        .c-red { background: #ea4335; }
+        .soon { background: #202124; border: 1px dashed #5f6368; color: #9aa0a6 !important; }
+        .soon .tag { position: absolute; top: 14px; right: 14px; font-size: 11px; border: 1px solid #5f6368; border-radius: 10px; padding: 2px 8px; }
+        .foot { margin-top: 22px; font-size: 12px; color: #5f6368; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <h1><span>🤖 Heinz Hub</span><span id="dot" class="dot" data-i18n-title="serverStatus" title="Server status"></span></h1>
+            <button id="lang-btn" class="lang-btn" onclick="toggleLang()" title="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+        </div>
+
+        <div class="status" id="status">…</div>
+
+        <div class="grid">
+            <a class="card c-blue" href="chat.html">
+                <span class="ico">💬</span>
+                <h2 data-i18n="chatTitle">Chat</h2>
+                <p data-i18n="chatDesc">Talk to your local models: Wilson, Heinz, Audit, Code, Creative.</p>
+            </a>
+            <a class="card c-green" href="lab.html">
+                <span class="ico">🧪</span>
+                <h2 data-i18n="labTitle">Data Lab</h2>
+                <p data-i18n="labDesc">Load a table, text lines or a news feed. The model rates every entry by your rule, then you see the evaluation.</p>
+            </a>
+            <a class="card c-yellow" href="sheet.html">
+                <span class="ico">📊</span>
+                <h2 data-i18n="sheetTitle">Sheet</h2>
+                <p data-i18n="sheetDesc">Keep a table and talk to it: “How many blue items?” – “Take 7.” The model only translates, the program counts.</p>
+            </a>
+            <a class="card c-red" href="vitals.html">
+                <span class="ico">📱</span>
+                <h2 data-i18n="vitalsTitle">Phone Vitals</h2>
+                <p data-i18n="vitalsDesc">Battery, temperature, pressure and Ollama speed over time.</p>
+            </a>
+        </div>
+
+        <div class="foot">Heinz UI · 100 % offline<br><span id="vp"></span></div>
+    </div>
+
+    <script>
+        const OLLAMA_URL = 'http://localhost:11434';
+        const I18N = {
+            en: { serverStatus: 'Server status', chatTitle: 'Chat', chatDesc: 'Talk to your local models: Wilson, Heinz, Audit, Code, Creative.',
+                  labTitle: 'Data Lab', labDesc: 'Load a table, text lines or a news feed. The model rates every entry by your rule, then you see the evaluation.',
+                  sheetTitle: 'Sheet', sheetDesc: 'Keep a table and talk to it: “How many blue items?” – “Take 7.” The model only translates, the program counts.',
+                  soon: 'soon', vitalsTitle: 'Phone Vitals', vitalsDesc: 'Battery, temperature, pressure and Ollama speed over time.',
+                  offline: 'Ollama server <b>offline</b>. Start it with: ollama serve', online: 'Ollama server <b>online</b> · installed models: <b>{n}</b>', loaded: ' · in RAM: <b>{m}</b>' },
+            de: { serverStatus: 'Server-Status', chatTitle: 'Chat', chatDesc: 'Sprich mit deinen lokalen Modellen: Wilson, Heinz, Audit, Code, Creative.',
+                  labTitle: 'Data Lab', labDesc: 'Tabelle, Textzeilen oder Newsfeed laden. Das Modell bewertet jeden Eintrag nach deiner Regel, dann siehst du die Auswertung.',
+                  sheetTitle: 'Sheet', sheetDesc: 'Eine Tabelle führen und mit ihr sprechen: „Wie viele blaue Artikel?“ – „Nimm 7 raus.“ Das Modell übersetzt nur, das Programm zählt.',
+                  soon: 'bald', vitalsTitle: 'Phone Vitals', vitalsDesc: 'Akku, Temperatur, Luftdruck und Ollama-Tempo im Verlauf.',
+                  offline: 'Ollama-Server <b>offline</b>. Starten mit: ollama serve', online: 'Ollama-Server <b>online</b> · installierte Modelle: <b>{n}</b>', loaded: ' · im RAM: <b>{m}</b>' }
+        };
+        let lang = 'en';
+        function lsGet(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        function t(k, v) {
+            let s = I18N[lang][k] || I18N.en[k] || k;
+            if (v) Object.keys(v).forEach(x => { s = s.replace('{' + x + '}', v[x]); });
+            return s;
+        }
+        function applyI18n() {
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.getAttribute('data-i18n-title')); });
+            document.querySelectorAll('#lang-btn span').forEach(s => s.classList.toggle('active', s.getAttribute('data-l') === lang));
+            refreshStatus();
+        }
+        function toggleLang() {
+            lang = lang === 'en' ? 'de' : 'en';
+            const s = lsGet('heinz_settings', {}); s.lang = lang; lsSet('heinz_settings', s);
+            applyI18n();
+        }
+        async function refreshStatus() {
+            const box = document.getElementById('status'), dot = document.getElementById('dot');
+            try {
+                const tags = await (await fetch(OLLAMA_URL + '/api/tags')).json();
+                const chat = (tags.models || []).filter(m => !/embed/i.test(m.name));
+                let html = t('online', { n: chat.length });
+                dot.className = 'dot on';
+                try {
+                    const ps = await (await fetch(OLLAMA_URL + '/api/ps')).json();
+                    if (ps.models && ps.models.length) {
+                        html += t('loaded', { m: ps.models.map(m => m.name.replace(/[&<>"]/g, '')).join(', ') });
+                        dot.className = 'dot run';
+                    }
+                } catch (e) {}
+                box.innerHTML = html;
+            } catch (e) {
+                dot.className = 'dot';
+                box.innerHTML = t('offline');
+            }
+        }
+        function showViewport() {
+            const v = window.visualViewport;
+            document.getElementById('vp').textContent = 'Viewport: ' + innerWidth + ' × ' + innerHeight + ' px · ' + (v ? Math.round(v.width) + ' × ' + Math.round(v.height) + ' visual · ' : '') + 'DPR ' + (window.devicePixelRatio || 1).toFixed(2) + ' · screen ' + screen.width + ' × ' + screen.height;
+        }
+        window.addEventListener('resize', showViewport);
+        (function init() {
+            const s = lsGet('heinz_settings', {});
+            if (s.lang === 'de' || s.lang === 'en') lang = s.lang;
+            applyI18n();
+            showViewport();
+            setInterval(refreshStatus, 5000);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Heinz Vitals</title>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; background: #000; color: #e8eaed; margin: 0; padding: 15px; padding-bottom: max(90px, 45vh); }
+    .wrap { max-width: 640px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+    .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
+    .hub-link { background: #202124; border: 1px solid #3c4043; color: #fff; text-decoration: none; border-radius: 8px; padding: 4px 8px; font-size: 17px; line-height: 1.3; flex-shrink: 0; }
+    .dot { height: 12px; width: 12px; border-radius: 50%; background: #ea4335; flex-shrink: 0; transition: background .3s; }
+    .dot.on { background: #fbbc05; box-shadow: 0 0 8px #fbbc05; }
+    .dot.run { background: #34a853; box-shadow: 0 0 8px #34a853; }
+    .lang-btn { background: #202124; border: 1px solid #3c4043; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 5px; border-radius: 8px; cursor: pointer; display: flex; gap: 3px; flex-shrink: 0; }
+    .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #80868b; }
+    .lang-btn span.active { background: #34a853; color: #fff; }
+    select { background: #202124; color: #fff; border: 1px solid #3c4043; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: bold; width: 100%; }
+    .panel { background: #202124; border: 1px solid #3c4043; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .panel h3 { margin: 0 0 4px; font-size: 15px; }
+    .sub { font-size: 12px; color: #9aa0a6; margin-bottom: 8px; line-height: 1.4; }
+    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .tile { background: #202124; border: 1px solid #3c4043; border-radius: 14px; padding: 12px; min-width: 0; }
+    .tile .lbl { font-size: 12px; color: #9aa0a6; }
+    .tile .val { font-size: 26px; font-weight: bold; margin-top: 2px; color: #fff; white-space: nowrap; }
+    .tile .val small { font-size: 13px; color: #9aa0a6; font-weight: normal; }
+    .tile .note { font-size: 11px; color: #9aa0a6; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tile.na .val { color: #5f6368; }
+    .chips { display: flex; gap: 6px; margin-bottom: 12px; }
+    .chip { flex: 1; background: #202124; border: 1px solid #3c4043; color: #bdc1c6; border-radius: 18px; padding: 8px 0; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .chip.active { background: #4285f4; border-color: #4285f4; color: #fff; }
+    .chart { position: relative; touch-action: pan-y; }
+    .chart svg { width: 100%; height: 150px; display: block; }
+    .chart .tip { position: absolute; top: 0; pointer-events: none; background: #000; border: 1px solid #5f6368; border-radius: 8px; padding: 4px 8px; font-size: 12px; white-space: nowrap; display: none; transform: translateX(-50%); z-index: 2; }
+    .empty { font-size: 13px; color: #80868b; padding: 18px 0; text-align: center; }
+    .btn { border: none; border-radius: 10px; padding: 11px 12px; font-size: 14px; font-weight: bold; color: #fff; cursor: pointer; background: #4285f4; }
+    .btn:disabled { opacity: .4; }
+    .row { display: flex; gap: 8px; margin-top: 8px; }
+    .row > select { flex: 1; min-width: 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 10px; }
+    th, td { border-bottom: 1px solid #2d2f31; padding: 5px 6px; text-align: left; white-space: nowrap; }
+    th { color: #9aa0a6; font-weight: normal; }
+    .tw { overflow-x: auto; }
+    .hint { font-size: 12px; color: #9aa0a6; line-height: 1.45; }
+    .warn { border-color: #fbbc05; }
+    code { background: #000; padding: 1px 5px; border-radius: 4px; }
+    details summary { cursor: pointer; font-size: 13px; color: #9aa0a6; margin-top: 8px; }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="header-left"><a class="hub-link" href="index.html" title="Hub">⌂</a><h2>📱 Vitals</h2><span id="dot" class="dot"></span></div>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLang()" title="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+    </div>
+
+    <div id="noserver" class="panel warn hidden">
+        <div class="hint" data-i18n="noServer">History needs <code>server.py</code> (start with <code>bash start.sh</code>). Only the live battery value from the browser is shown.</div>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="chips" id="chips"></div>
+    <div id="charts"></div>
+    <details class="panel" id="tabdet"><summary data-i18n="tableSum" style="margin:0">Data table (latest readings)</summary><div class="tw" id="tabwrap"></div></details>
+
+    <div class="panel">
+        <h3 data-i18n="benchTitle">Ollama speed test</h3>
+        <div class="sub" data-i18n="benchSub">Generates 64 tokens with a fixed prompt, temperature 0. Run it cold and hot to see thermal throttling.</div>
+        <div class="row">
+            <select id="bmodel"><option>qwen2.5:3b</option><option>gemma2:2b</option><option>gemma:2b</option></select>
+            <button class="btn" id="bbtn" onclick="runBench()" data-i18n="benchRun">▶ Run</button>
+        </div>
+        <div id="bstatus" class="hint" style="margin-top:8px;"></div>
+        <div class="chart" id="bchart"></div>
+        <div class="tw" id="btable"></div>
+        <div class="row"><button class="btn" style="background:#3c4043" onclick="clearBench()" data-i18n="benchClear">🗑 Clear results</button></div>
+    </div>
+</div>
+
+<script>
+const OLLAMA_URL = 'http://localhost:11434';
+const $ = id => document.getElementById(id);
+const I18N = {
+  en: { noServer: 'History needs <code>server.py</code> (start with <code>bash start.sh</code>). Only the live battery value from the browser is shown.',
+        tableSum: 'Data table (latest readings)', benchTitle: 'Ollama speed test',
+        benchSub: 'Generates 64 tokens with a fixed prompt, temperature 0. Run it cold and hot to see thermal throttling.',
+        benchRun: '▶ Run', benchClear: '🗑 Clear results', running: 'Running… (the first run loads the model)', failed: 'Failed: {e}',
+        battery: 'Battery', battTemp: 'Battery temperature', cpuTemp: 'Hottest sensor', ram: 'Free RAM', pressure: 'Air pressure', ollama: 'Ollama',
+        charging: 'charging', discharging: 'discharging', full: 'full', idle: 'not loaded', na: 'n/a',
+        h1: '1 h', h6: '6 h', h24: '24 h', h168: '7 d', noData: 'No readings in this range yet. The server logs one per minute.',
+        chBatt: 'Battery (%)', chTemp: 'Battery temperature (°C)', chCpu: 'Hottest sensor (°C)', chRam: 'Free RAM (MB)', chPress: 'Air pressure (hPa)', chBench: 'Tokens per second',
+        tTime: 'Time', tModel: 'Model', tTps: 'tok/s', tPrompt: 'prompt tok/s', tLoad: 'load s', tTemp: '°C', tBatt: '%', noBench: 'No test run yet.',
+        of: 'of', inRam: 'in RAM' },
+  de: { noServer: 'Der Verlauf braucht <code>server.py</code> (Start mit <code>bash start.sh</code>). Gezeigt wird nur der Live-Akkustand aus dem Browser.',
+        tableSum: 'Datentabelle (letzte Messungen)', benchTitle: 'Ollama-Geschwindigkeitstest',
+        benchSub: 'Erzeugt 64 Token mit festem Prompt, Temperatur 0. Kalt und heiß ausführen, um Drosselung durch Hitze zu sehen.',
+        benchRun: '▶ Start', benchClear: '🗑 Ergebnisse löschen', running: 'Läuft… (beim ersten Mal wird das Modell geladen)', failed: 'Fehlgeschlagen: {e}',
+        battery: 'Akku', battTemp: 'Akku-Temperatur', cpuTemp: 'Heißester Sensor', ram: 'Freier RAM', pressure: 'Luftdruck', ollama: 'Ollama',
+        charging: 'lädt', discharging: 'entlädt', full: 'voll', idle: 'nicht geladen', na: 'k. A.',
+        h1: '1 Std', h6: '6 Std', h24: '24 Std', h168: '7 Tage', noData: 'Noch keine Messwerte in diesem Zeitraum. Der Server speichert eine pro Minute.',
+        chBatt: 'Akku (%)', chTemp: 'Akku-Temperatur (°C)', chCpu: 'Heißester Sensor (°C)', chRam: 'Freier RAM (MB)', chPress: 'Luftdruck (hPa)', chBench: 'Token pro Sekunde',
+        tTime: 'Zeit', tModel: 'Modell', tTps: 'Tok/s', tPrompt: 'Prompt Tok/s', tLoad: 'Laden s', tTemp: '°C', tBatt: '%', noBench: 'Noch kein Test gelaufen.',
+        of: 'von', inRam: 'im RAM' }
+};
+let lang = 'en', hours = 6, serverUp = false, latest = null, hist = null, ollamaPs = [];
+function lsGet(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function t(k, v) { let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(v[x]); }); return s; }
+function esc(x) { return String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function applyI18n() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(e => { e.innerHTML = t(e.getAttribute('data-i18n')); });
+    document.querySelectorAll('#lang-btn span').forEach(s => s.classList.toggle('active', s.getAttribute('data-l') === lang));
+    renderChips(); renderTiles(); renderCharts(); renderBench();
+}
+function toggleLang() { lang = lang === 'en' ? 'de' : 'en'; const s = lsGet('heinz_settings', {}); s.lang = lang; lsSet('heinz_settings', s); applyI18n(); }
+
+// ---------- data ----------
+async function getJSON(url) { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function refreshLatest() {
+    try { latest = await getJSON('/api/vitals'); serverUp = true; }
+    catch (e) {
+        serverUp = false; latest = null;
+        try { if (navigator.getBattery) { const b = await navigator.getBattery(); latest = { batt: Math.round(b.level * 100), status: b.charging ? 'CHARGING' : 'DISCHARGING' }; } } catch (e2) {}
+    }
+    $('noserver').classList.toggle('hidden', serverUp);
+    try { ollamaPs = (await getJSON(OLLAMA_URL + '/api/ps')).models || []; $('dot').className = 'dot ' + (ollamaPs.length ? 'run' : 'on'); }
+    catch (e) { ollamaPs = []; $('dot').className = 'dot'; }
+    renderTiles();
+}
+async function refreshHistory() {
+    if (!serverUp) { hist = null; renderCharts(); return; }
+    try {
+        const j = await getJSON('/api/vitals/history?hours=' + hours);
+        hist = j.rows.map(r => { const o = {}; j.cols.forEach((c, i) => { o[c] = r[i]; }); return o; });
+    } catch (e) { hist = null; }
+    renderCharts();
+}
+
+// ---------- tiles ----------
+function tile(label, val, unit, note) {
+    const na = val == null;
+    return '<div class="tile' + (na ? ' na' : '') + '"><div class="lbl">' + esc(label) + '</div><div class="val">' + (na ? '–' : esc(val) + (unit ? ' <small>' + esc(unit) + '</small>' : '')) + '</div><div class="note">' + esc(note || '') + '</div></div>';
+}
+function statusText(s) { s = String(s || '').toUpperCase(); return s === 'CHARGING' ? t('charging') : s === 'DISCHARGING' ? t('discharging') : s === 'FULL' ? t('full') : (s ? s.toLowerCase() : ''); }
+function renderTiles() {
+    const L = latest || {};
+    const mem = L.mem_avail_mb != null ? Math.round(L.mem_avail_mb) : null;
+    const memNote = L.mem_total_mb ? t('of') + ' ' + Math.round(L.mem_total_mb) + ' MB' : '';
+    const m = ollamaPs[0];
+    let html = tile(t('battery'), L.batt, '%', statusText(L.status));
+    html += tile(t('battTemp'), L.batt_temp, '°C', '');
+    html += tile(t('ram'), mem, 'MB', memNote);
+    html += m ? tile(t('ollama'), m.name, '', t('inRam') + (m.size ? ' · ' + (m.size / 1e9).toFixed(1) + ' GB' : '')) : tile(t('ollama'), t('idle'), '', '');
+    if (L.cpu_temp != null) html += tile(t('cpuTemp'), L.cpu_temp, '°C', '');
+    if (L.pressure != null) html += tile(t('pressure'), L.pressure, 'hPa', '');
+    $('tiles').innerHTML = html;
+}
+function renderChips() {
+    const opts = [[1, 'h1'], [6, 'h6'], [24, 'h24'], [168, 'h168']];
+    $('chips').innerHTML = opts.map(o => '<button class="chip' + (o[0] === hours ? ' active' : '') + '" onclick="setHours(' + o[0] + ')">' + esc(t(o[1])) + '</button>').join('');
+}
+function setHours(h) { hours = h; const s = lsGet('heinz_vitals', {}); s.hours = h; lsSet('heinz_vitals', s); renderChips(); refreshHistory(); }
+
+// ---------- line chart (inline SVG, hover crosshair) ----------
+const NS = 'http://www.w3.org/2000/svg';
+function fmtClock(ts, withDay) {
+    const d = new Date(ts * 1000);
+    const hm = d.toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+    return withDay ? d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: '2-digit', month: '2-digit' }) + ' ' + hm : hm;
+}
+// pts: [{x: seconds, y: number}], opts: {color, unit, dec, zero (force y from 0), withDay, xFmt}
+function drawChart(host, pts, o) {
+    host.innerHTML = '';
+    if (pts.length < 2) { host.innerHTML = '<div class="empty">' + esc(t('noData')) + '</div>'; return; }
+    const W = 360, H = 150, pl = 36, pr = 8, pt = 8, pb = 22;
+    let x0 = pts[0].x, x1 = pts[pts.length - 1].x, ymin = Math.min.apply(null, pts.map(p => p.y)), ymax = Math.max.apply(null, pts.map(p => p.y));
+    if (o.zero) ymin = 0;
+    if (ymax - ymin < (o.minSpan || 1)) { const c = (ymax + ymin) / 2; ymin = c - (o.minSpan || 1) / 2; ymax = c + (o.minSpan || 1) / 2; if (o.zero) ymin = Math.min(0, ymin); }
+    else if (!o.zero) { const pad = (ymax - ymin) * 0.1; ymin -= pad; ymax += pad; }
+    if (o.max != null) ymax = Math.max(ymax, o.max);
+    if (x1 === x0) x1 = x0 + 1;
+    const X = x => pl + (x - x0) / (x1 - x0) * (W - pl - pr), Y = y => pt + (1 - (y - ymin) / (ymax - ymin)) * (H - pt - pb);
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('preserveAspectRatio', 'none');
+    const add = (tag, attrs, txt) => { const e = document.createElementNS(NS, tag); Object.keys(attrs).forEach(k => e.setAttribute(k, attrs[k])); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
+    // grid + y labels (3 lines)
+    for (let i = 0; i < 3; i++) {
+        const v = ymin + (ymax - ymin) * i / 2, y = Y(v);
+        add('line', { x1: pl, x2: W - pr, y1: y, y2: y, stroke: '#2d2f31', 'stroke-width': 1 });
+        add('text', { x: pl - 5, y: y + 4, 'text-anchor': 'end', fill: '#9aa0a6', 'font-size': 10 }, v.toFixed(o.dec || 0));
+    }
+    add('text', { x: pl, y: H - 6, 'text-anchor': 'start', fill: '#9aa0a6', 'font-size': 10 }, o.xFmt(x0));
+    add('text', { x: W - pr, y: H - 6, 'text-anchor': 'end', fill: '#9aa0a6', 'font-size': 10 }, o.xFmt(x1));
+    // line, broken at gaps (phone asleep / server off)
+    const gap = Math.max(300, (x1 - x0) / 40);
+    let d = '', prev = null;
+    pts.forEach(p => { d += (prev == null || p.x - prev > gap ? 'M' : 'L') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1) + ' '; prev = p.x; });
+    add('path', { d: d, fill: 'none', stroke: o.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'vector-effect': 'non-scaling-stroke' });
+    const cross = add('line', { y1: pt, y2: H - pb, stroke: '#9aa0a6', 'stroke-width': 1, visibility: 'hidden' });
+    const mark = add('circle', { r: 4, fill: o.color, stroke: '#202124', 'stroke-width': 2, visibility: 'hidden' });
+    host.appendChild(svg);
+    const tip = document.createElement('div'); tip.className = 'tip'; host.appendChild(tip);
+    function move(ev) {
+        const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
+        let best = pts[0], bd = 1e9;
+        pts.forEach(p => { const dd = Math.abs(X(p.x) - px); if (dd < bd) { bd = dd; best = p; } });
+        cross.setAttribute('x1', X(best.x)); cross.setAttribute('x2', X(best.x)); cross.setAttribute('visibility', 'visible');
+        mark.setAttribute('cx', X(best.x)); mark.setAttribute('cy', Y(best.y)); mark.setAttribute('visibility', 'visible');
+        tip.style.display = 'block'; tip.textContent = best.y.toFixed(o.dec || 0) + ' ' + o.unit + ' · ' + o.xFmt(best.x);
+        tip.style.left = Math.max(60, Math.min(r.width - 60, X(best.x) / W * r.width)) + 'px';
+    }
+    function leave() { cross.setAttribute('visibility', 'hidden'); mark.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; }
+    host.onpointermove = move; host.onpointerdown = move; host.onpointerleave = leave;
+}
+function renderCharts() {
+    const box = $('charts');
+    if (!serverUp || !hist) { box.innerHTML = ''; $('tabdet').classList.add('hidden'); return; }
+    const withDay = hours > 24;
+    const xf = x => fmtClock(x, withDay);
+    const defs = [
+        ['batt', 'chBatt', '#34a853', '%', 0, { zero: true, max: 100, minSpan: 10 }],
+        ['batt_temp', 'chTemp', '#ea4335', '°C', 1, { minSpan: 4 }],
+        ['cpu_temp', 'chCpu', '#fbbc05', '°C', 1, { minSpan: 4 }],
+        ['mem_avail_mb', 'chRam', '#4285f4', 'MB', 0, { zero: true, minSpan: 100 }],
+        ['pressure', 'chPress', '#e8eaed', 'hPa', 1, { minSpan: 2 }]
+    ];
+    box.innerHTML = '';
+    defs.forEach(def => {
+        const pts = hist.filter(r => r[def[0]] != null).map(r => ({ x: r.ts, y: r[def[0]] }));
+        if (!pts.length && def[0] !== 'batt') return;           // hide metrics the phone does not expose
+        const p = document.createElement('div'); p.className = 'panel';
+        p.innerHTML = '<h3>' + esc(t(def[1])) + '</h3><div class="chart"></div>';
+        box.appendChild(p);
+        drawChart(p.querySelector('.chart'), pts, Object.assign({ color: def[2], unit: def[3], dec: def[4], xFmt: xf }, def[5]));
+    });
+    // table view
+    const last = hist.slice(-12).reverse();
+    $('tabdet').classList.toggle('hidden', !last.length);
+    let h = '<table><tr><th>' + esc(t('tTime')) + '</th><th>%</th><th>°C</th><th>MB</th></tr>';
+    last.forEach(r => { h += '<tr><td>' + esc(fmtClock(r.ts, true)) + '</td><td>' + esc(r.batt == null ? '–' : r.batt) + '</td><td>' + esc(r.batt_temp == null ? '–' : r.batt_temp) + '</td><td>' + esc(r.mem_avail_mb == null ? '–' : Math.round(r.mem_avail_mb)) + '</td></tr>'; });
+    $('tabwrap').innerHTML = h + '</table>';
+}
+
+// ---------- Ollama speed test ----------
+function getBench() { return lsGet('heinz_bench', []); }
+function clearBench() { lsSet('heinz_bench', []); renderBench(); }
+async function runBench() {
+    const model = $('bmodel').value, btn = $('bbtn'), st = $('bstatus');
+    btn.disabled = true; st.textContent = t('running');
+    try {
+        await refreshLatest();
+        const res = await fetch(OLLAMA_URL + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            model: model, stream: false, options: { temperature: 0, num_predict: 64, num_ctx: 2048 },
+            messages: [{ role: 'user', content: 'Write a short paragraph about the ocean.' }] }) });
+        if (!res.ok) throw new Error('HTTP ' + res.status + (res.status === 404 ? ' (ollama list?)' : ''));
+        const d = await res.json();
+        if (!d.eval_count || !d.eval_duration) throw new Error('no timing data');
+        const L = latest || {};
+        const list = getBench();
+        list.push({ ts: Math.floor(Date.now() / 1000), model: model, tps: d.eval_count / d.eval_duration * 1e9,
+            ptps: d.prompt_eval_count && d.prompt_eval_duration ? d.prompt_eval_count / d.prompt_eval_duration * 1e9 : null,
+            load: (d.load_duration || 0) / 1e9, temp: L.batt_temp == null ? null : L.batt_temp, batt: L.batt == null ? null : L.batt });
+        lsSet('heinz_bench', list.slice(-50));
+        st.textContent = '';
+    } catch (e) { st.textContent = e instanceof TypeError ? t('failed', { e: 'Ollama offline' }) : t('failed', { e: e.message }); }
+    btn.disabled = false; renderBench();
+}
+function renderBench() {
+    const list = getBench();
+    const pts = list.map((r, i) => ({ x: i, y: r.tps }));
+    const host = $('bchart');
+    if (list.length < 2) { host.innerHTML = ''; host.onpointermove = null; }
+    else drawChart(host, pts, { color: '#4285f4', unit: 'tok/s', dec: 1, minSpan: 2, xFmt: x => '#' + (Math.round(x) + 1) });
+    if (!list.length) { $('btable').innerHTML = '<div class="empty">' + esc(t('noBench')) + '</div>'; return; }
+    let h = '<table><tr><th>' + esc(t('tTime')) + '</th><th>' + esc(t('tModel')) + '</th><th>' + esc(t('tTps')) + '</th><th>' + esc(t('tPrompt')) + '</th><th>' + esc(t('tLoad')) + '</th><th>' + esc(t('tTemp')) + '</th><th>' + esc(t('tBatt')) + '</th></tr>';
+    list.slice(-8).reverse().forEach(r => { h += '<tr><td>' + esc(fmtClock(r.ts, true)) + '</td><td>' + esc(r.model) + '</td><td><b>' + r.tps.toFixed(1) + '</b></td><td>' + (r.ptps == null ? '–' : r.ptps.toFixed(0)) + '</td><td>' + r.load.toFixed(1) + '</td><td>' + (r.temp == null ? '–' : r.temp) + '</td><td>' + (r.batt == null ? '–' : r.batt) + '</td></tr>'; });
+    $('btable').innerHTML = h + '</table>';
+}
+
+(function init() {
+    const s = lsGet('heinz_settings', {}); if (s.lang === 'de' || s.lang === 'en') lang = s.lang;
+    const v = lsGet('heinz_vitals', {}); if ([1, 6, 24, 168].indexOf(v.hours) >= 0) hours = v.hours;
+    applyI18n();
+    refreshLatest().then(refreshHistory);
+    setInterval(refreshLatest, 10000);
+    setInterval(refreshHistory, 60000);
+})();
+</script>
+</body>
+</html>

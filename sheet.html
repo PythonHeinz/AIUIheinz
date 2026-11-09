@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heinz Sheet</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #e8eaed; margin: 0; padding: 15px; padding-bottom: max(90px, 45vh); }
+        .wrap { max-width: 640px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+        .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
+        .hub-link { background: #202124; border: 1px solid #3c4043; color: #fff; text-decoration: none; border-radius: 8px; padding: 4px 8px; font-size: 17px; line-height: 1.3; flex-shrink: 0; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; background: #ea4335; flex-shrink: 0; transition: background 0.3s; }
+        .dot.on { background: #fbbc05; box-shadow: 0 0 8px #fbbc05; }
+        .dot.run { background: #34a853; box-shadow: 0 0 8px #34a853; }
+        select, input[type=text], textarea { background: #171717; color: #fff; border: 1px solid #3c4043; border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; width: 100%; outline: none; }
+        select { font-weight: bold; cursor: pointer; }
+        textarea { resize: vertical; font-family: monospace; font-size: 12px; }
+        .header select { width: auto; flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; background: #202124; }
+        .lang-btn { background: #202124; border: 1px solid #3c4043; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 5px; border-radius: 8px; cursor: pointer; display: flex; gap: 3px; flex-shrink: 0; }
+        .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #80868b; }
+        .lang-btn span.active { background: #34a853; color: #fff; }
+
+        .panel { background: #202124; border: 1px solid #3c4043; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+        .panel h3 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .num { background: #4285f4; color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .row > * { flex: 1; min-width: 100px; }
+        label.small { display: block; font-size: 12px; color: #9aa0a6; margin: 10px 0 4px; }
+        .btn { border: none; border-radius: 10px; padding: 11px 12px; font-size: 14px; font-weight: bold; color: #fff; cursor: pointer; }
+        .btn-blue { background: #4285f4; } .btn-green { background: #34a853; } .btn-red { background: #ea4335; } .btn-gray { background: #3c4043; } .btn-yellow { background: #fbbc05; color: #202124; }
+        .btn:disabled { opacity: 0.4; cursor: default; }
+        .filebtn { display: block; text-align: center; }
+        input[type=file] { display: none; }
+        .hint { font-size: 12px; color: #9aa0a6; margin-top: 8px; line-height: 1.4; }
+        .chk { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; cursor: pointer; }
+        .chk input { width: auto; margin: 0; }
+
+        .tablewrap { max-height: 45vh; max-height: 45dvh; overflow: auto; border: 1px solid #3c4043; border-radius: 10px; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+        table { border-collapse: collapse; width: 100%; font-size: 13px; }
+        th, td { border-bottom: 1px solid #2d2f31; padding: 6px 8px; text-align: left; white-space: nowrap; }
+        th { background: #171717; position: sticky; top: 0; }
+        td.rn { color: #80868b; }
+        tr.hl td { background: rgba(66, 133, 244, 0.22); }
+        td.chg { background: rgba(251, 188, 5, 0.35); font-weight: bold; }
+        tr.del td { background: rgba(234, 67, 53, 0.25); text-decoration: line-through; }
+
+        .askrow { display: flex; gap: 8px; }
+        .askrow input { flex: 1; min-width: 0; }
+        .askrow .btn { flex-shrink: 0; }
+
+        .feed { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.45; word-break: break-word; }
+        .msg.user { background: #174ea6; align-self: flex-end; max-width: 90%; }
+        .msg.bot { background: #171717; border: 1px solid #3c4043; }
+        .msg.err { background: #3c1a18; border: 1px solid #ea4335; }
+        .msg.ok { border-color: #34a853; }
+        .msg .cmd { color: #9aa0a6; font-size: 12px; margin-bottom: 6px; }
+        .msg .big { font-size: 20px; font-weight: bold; color: #34a853; }
+        .msg .plan { font-size: 13px; color: #bdc1c6; margin: 6px 0; max-height: 140px; overflow: auto; }
+        .msg .plan div { padding: 1px 0; }
+        .msg table { margin-top: 6px; }
+        .msg details { margin-top: 6px; }
+        .msg summary { cursor: pointer; font-size: 12px; color: #9aa0a6; }
+        .msg .acts { display: flex; gap: 8px; margin-top: 8px; }
+        .msg .acts .btn { flex: 1; }
+        .mini { max-height: 220px; overflow: auto; border: 1px solid #3c4043; border-radius: 8px; }
+        .hidden { display: none; }
+        .spin { display: inline-block; animation: sp 1s linear infinite; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+        .logbox { font-size: 12px; color: #bdc1c6; max-height: 160px; overflow: auto; margin-top: 6px; }
+        .logbox div { padding: 2px 0; border-bottom: 1px solid #2d2f31; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="header-left">
+            <a href="index.html" class="hub-link" title="Hub">⌂</a>
+            <h2>📊 Sheet</h2>
+            <span id="dot" class="dot" data-i18n-title="serverStatus" title="Server status"></span>
+        </div>
+        <select id="model" onchange="saveCfg()">
+            <option value="qwen2.5:3b">🧠 Qwen 2.5 (3B)</option>
+            <option value="gemma2:2b">🧠 Gemma 2 (2B)</option>
+            <option value="gemma:2b">🧠 Gemma 1 (2B)</option>
+        </select>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLang()" title="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+    </div>
+
+    <!-- 1. Tabelle -->
+    <div class="panel">
+        <h3><span class="num">1</span><span data-i18n="s1">Table</span></h3>
+        <div class="row">
+            <label class="btn btn-blue filebtn" for="file" data-i18n="pickFile">📂 Load CSV</label>
+            <input type="file" id="file" accept=".csv,.tsv,.txt,text/*">
+            <button class="btn btn-gray" onclick="loadSample()" data-i18n="sample">🧾 Sample</button>
+        </div>
+        <details style="margin-top:10px;">
+            <summary style="cursor:pointer;font-size:13px;color:#9aa0a6;" data-i18n="pasteSum">…or paste a table (copied from a spreadsheet)</summary>
+            <textarea id="paste" rows="4" style="margin-top:8px;"></textarea>
+            <button class="btn btn-gray" style="margin-top:8px;width:100%;" onclick="usePaste()" data-i18n="usePaste">Use pasted table</button>
+        </details>
+        <div id="srv" class="hidden" style="margin-top:12px;border-top:1px solid #3c4043;padding-top:10px;">
+            <div class="hint" style="margin:0 0 6px;"><b data-i18n="srvTitle">Files on this phone</b> <span id="srvState"></span></div>
+            <div class="row" style="margin-top:0;">
+                <select id="srvList" aria-label="files"></select>
+                <button class="btn btn-gray" onclick="srvOpen()" data-i18n="srvOpen" style="flex:0 0 auto;min-width:0;">Open</button>
+            </div>
+            <div class="row">
+                <input type="text" id="srvName" placeholder="name.csv" autocapitalize="off" autocomplete="off">
+                <button class="btn btn-blue" onclick="srvSave()" data-i18n="srvSave" style="flex:0 0 auto;min-width:0;">Save</button>
+            </div>
+            <label class="chk"><input type="checkbox" id="srvAuto" onchange="saveCfg()"> <span data-i18n="srvAuto">Save to this file after every change</span></label>
+        </div>
+        <div id="qtyrow" class="hidden">
+            <label class="small" for="qty" data-i18n="qtyLabel">Quantity column (stock per row):</label>
+            <select id="qty" onchange="onQty()"></select>
+        </div>
+        <div id="info" class="hint"></div>
+        <div class="tablewrap hidden" id="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+        <div class="row hidden" id="tools">
+            <button class="btn btn-gray" id="undoBtn" onclick="undoLast()" disabled data-i18n="undo">↶ Undo</button>
+            <button class="btn btn-gray" onclick="exportCsv()" data-i18n="export">⬇ CSV</button>
+            <button class="btn btn-gray" onclick="clearTable()" data-i18n="clear">🗑 Remove table</button>
+        </div>
+        <details id="logdet" style="margin-top:10px;" class="hidden">
+            <summary style="cursor:pointer;font-size:13px;color:#9aa0a6;" data-i18n="logSum">Change history</summary>
+            <div class="logbox" id="logbox"></div>
+        </details>
+    </div>
+
+    <!-- 2. Fragen -->
+    <div class="panel">
+        <h3><span class="num">2</span><span data-i18n="s2">Ask</span></h3>
+        <div class="askrow">
+            <input type="text" id="q" data-i18n-ph="qPh" placeholder="e.g. How many blue items are there?" onkeydown="if(event.key==='Enter') ask()">
+            <button class="btn btn-green" id="askBtn" onclick="ask()">▶</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="confirm" checked onchange="saveCfg()"> <span data-i18n="confirm">Ask before changing the table (recommended)</span></label>
+        <div class="hint" data-i18n="how">The model only translates your question into a command. Counting and changing is done by the program, the model never sees your rows.</div>
+        <div class="feed" id="feed"></div>
+    </div>
+</div>
+
+<script>
+    const OLLAMA_URL = 'http://localhost:11434';
+    const $ = id => document.getElementById(id);
+    const MAX_UNDO = 15, MAX_RENDER = 300;
+
+    const I18N = {
+        en: {
+            serverStatus: 'Server status', s1: 'Table', s2: 'Ask', pickFile: '📂 Load CSV', sample: '🧾 Sample',
+            pasteSum: '…or paste a table (copied from a spreadsheet)', usePaste: 'Use pasted table',
+            qtyLabel: 'Quantity column (stock per row):', none: '— each row counts as 1 —',
+            undo: '↶ Undo', export: '⬇ CSV', clear: '🗑 Remove table', logSum: 'Change history',
+            qPh: 'e.g. How many blue items are there?',
+            confirm: 'Ask before changing the table (recommended)',
+            how: 'The model only translates your question into a command. Counting and changing is done by the program, the model never sees your rows.',
+            info: '{r} rows, {c} columns. Saved in this browser.',
+            noTable: 'Load a table first.', thinking: 'translating…',
+            offline: 'Ollama is not reachable. Is the server running?', notInstalled: 'Model not installed? Check with: ollama list',
+            badCmd: 'The model did not return a usable command.', unknownCol: 'Unknown column: {c}',
+            a_count: 'Count', a_list: 'List', a_sum: 'Sum', a_remove: 'Remove', a_add: 'Add', a_set: 'Set',
+            where: 'where', allRows: 'all rows', and: ' AND ', pieces: 'pieces', rowsWord: 'rows',
+            cmdPrefix: 'Understood as:', rawJson: 'Command (JSON, editable)', runEdited: 'Run edited command',
+            rCountQty: '{n} pieces in {rows} rows', rCountRows: '{n} rows', rSum: 'Sum of “{col}”: {sum} ({n} rows)',
+            rList: '{n} rows found (highlighted in the table)', rListMore: ', showing the first {m}',
+            noMatch: 'No rows match this filter.', valuesHint: 'Values in “{col}”: {vals}', relaxed: '(matched by “contains”)',
+            needAmount: 'How many? The command has no amount.', onlyHave: 'Only {have} available, you asked for {want}. Nothing changed.',
+            needOneRow: '{n} rows match, but adding needs exactly one row. Narrow the filter.',
+            needFilter: 'Refusing to change all rows without a filter.', needTarget: 'The command needs a target column and a value.',
+            needQty: 'No numeric quantity column selected.', notNumber: 'The column “{col}” is not numeric.',
+            planRemove: 'Take {a} from {n} rows:', planAdd: 'Add {a} to row {r}:', planDelete: 'Delete {n} rows:', planSet: 'Set “{col}” = “{val}” in {n} rows:',
+            apply: '✔ Apply', cancel: '✖ Cancel', applied: 'Done.', cancelled: 'Cancelled.', nowHave: 'Now: {n} {unit} ({desc})',
+            undone: 'Undone: {l}', nothingUndo: 'Nothing to undo (undo is kept until you reload the page).',
+            logRemove: 'removed {a} ({f})', logAdd: 'added {a} ({f})', logDelete: 'deleted {n} rows ({f})', logSet: 'set {col} = {val} in {n} rows ({f})',
+            srvTitle: 'Files on this phone', srvOpen: 'Open', srvSave: 'Save', srvAuto: 'Save to this file after every change', srvSaved: 'Saved: {n}', srvLoaded: 'Opened: {n}', srvFail: 'File error: {e}', srvBadName: 'Use a name like stock.csv (letters, digits, space, _ - .)', srvNone: '— choose a file —', srvOn: '● server', sampleName: 'sample', exportName: 'heinz-sheet.csv'
+        },
+        de: {
+            serverStatus: 'Server-Status', s1: 'Tabelle', s2: 'Fragen', pickFile: '📂 CSV laden', sample: '🧾 Beispiel',
+            pasteSum: '…oder eine Tabelle einfügen (aus einer Tabellenkalkulation kopiert)', usePaste: 'Eingefügte Tabelle verwenden',
+            qtyLabel: 'Mengenspalte (Bestand pro Zeile):', none: '— jede Zeile zählt als 1 —',
+            undo: '↶ Rückgängig', export: '⬇ CSV', clear: '🗑 Tabelle entfernen', logSum: 'Änderungsverlauf',
+            qPh: 'z. B. Wie viele blaue Artikel gibt es?',
+            confirm: 'Vor Änderungen an der Tabelle nachfragen (empfohlen)',
+            how: 'Das Modell übersetzt deine Frage nur in einen Befehl. Zählen und Ändern erledigt das Programm, das Modell sieht deine Zeilen nie.',
+            info: '{r} Zeilen, {c} Spalten. In diesem Browser gespeichert.',
+            noTable: 'Erst eine Tabelle laden.', thinking: 'übersetze…',
+            offline: 'Ollama nicht erreichbar. Läuft der Server?', notInstalled: 'Modell nicht installiert? Prüfe mit: ollama list',
+            badCmd: 'Das Modell hat keinen brauchbaren Befehl geliefert.', unknownCol: 'Unbekannte Spalte: {c}',
+            a_count: 'Zählen', a_list: 'Auflisten', a_sum: 'Summe', a_remove: 'Entnehmen', a_add: 'Zurücklegen', a_set: 'Setzen',
+            where: 'wo', allRows: 'alle Zeilen', and: ' UND ', pieces: 'Stück', rowsWord: 'Zeilen',
+            cmdPrefix: 'Verstanden als:', rawJson: 'Befehl (JSON, bearbeitbar)', runEdited: 'Bearbeiteten Befehl ausführen',
+            rCountQty: '{n} Stück in {rows} Zeilen', rCountRows: '{n} Zeilen', rSum: 'Summe von „{col}“: {sum} ({n} Zeilen)',
+            rList: '{n} Zeilen gefunden (in der Tabelle markiert)', rListMore: ', die ersten {m} werden gezeigt',
+            noMatch: 'Keine Zeile passt zu diesem Filter.', valuesHint: 'Werte in „{col}“: {vals}', relaxed: '(über „enthält“ gefunden)',
+            needAmount: 'Wie viele? Der Befehl enthält keine Menge.', onlyHave: 'Nur {have} vorhanden, gewünscht {want}. Nichts geändert.',
+            needOneRow: '{n} Zeilen passen, Zurücklegen braucht genau eine Zeile. Filter enger fassen.',
+            needFilter: 'Ich ändere nicht alle Zeilen ohne Filter.', needTarget: 'Der Befehl braucht eine Zielspalte und einen Wert.',
+            needQty: 'Keine numerische Mengenspalte gewählt.', notNumber: 'Die Spalte „{col}“ ist nicht numerisch.',
+            planRemove: '{a} entnehmen aus {n} Zeilen:', planAdd: '{a} zu Zeile {r} addieren:', planDelete: '{n} Zeilen löschen:', planSet: '„{col}“ = „{val}“ setzen in {n} Zeilen:',
+            apply: '✔ Ausführen', cancel: '✖ Abbrechen', applied: 'Erledigt.', cancelled: 'Abgebrochen.', nowHave: 'Jetzt: {n} {unit} ({desc})',
+            undone: 'Rückgängig: {l}', nothingUndo: 'Nichts rückgängig zu machen (Rückgängig gilt nur bis zum Neuladen der Seite).',
+            logRemove: '{a} entnommen ({f})', logAdd: '{a} zurückgelegt ({f})', logDelete: '{n} Zeilen gelöscht ({f})', logSet: '{col} = {val} gesetzt in {n} Zeilen ({f})',
+            srvTitle: 'Dateien auf diesem Handy', srvOpen: 'Öffnen', srvSave: 'Speichern', srvAuto: 'Nach jeder Änderung in diese Datei speichern', srvSaved: 'Gespeichert: {n}', srvLoaded: 'Geöffnet: {n}', srvFail: 'Dateifehler: {e}', srvBadName: 'Name wie lager.csv verwenden (Buchstaben, Ziffern, Leerzeichen, _ - .)', srvNone: '— Datei wählen —', srvOn: '● Server', sampleName: 'Beispiel', exportName: 'heinz-sheet.csv'
+        }
+    };
+    let lang = 'en';
+    function t(k, v) {
+        let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+        if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(v[x]); });
+        return s;
+    }
+    function lsGet(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+
+    // ===== Zustand =====
+    let headers = [], rows = [], qtyCol = -1, log = [];
+    let undoStack = [];
+    let busy = false;
+
+    function applyI18n() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.getAttribute('data-i18n')); });
+        document.querySelectorAll('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.getAttribute('data-i18n-ph')); });
+        document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.getAttribute('data-i18n-title')); });
+        document.querySelectorAll('#lang-btn span').forEach(s => s.classList.toggle('active', s.getAttribute('data-l') === lang));
+        buildQtySelect(); refreshInfo(); renderLog();
+    }
+    function toggleLang() {
+        lang = lang === 'en' ? 'de' : 'en';
+        const s = lsGet('heinz_settings', {}); s.lang = lang; lsSet('heinz_settings', s);
+        applyI18n();
+    }
+    function saveCfg() { lsSet('heinz_sheet_cfg', { model: $('model').value, confirm: $('confirm').checked, auto: $('srvAuto').checked, name: $('srvName').value }); }
+
+    // ===== Hilfsfunktionen =====
+    function norm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+    function toNum(s) {
+        const n = parseFloat(String(s).replace(/\s/g, '').replace(',', '.').replace(/[^0-9.\-]/g, ''));
+        return isFinite(n) ? n : NaN;
+    }
+    function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function fmtNum(n) { return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100); }
+
+    // ===== CSV =====
+    function detectDelim(line) {
+        const c = { ',': 0, ';': 0, '\t': 0 }; let q = false;
+        for (const ch of line) { if (ch === '"') q = !q; else if (!q && c[ch] !== undefined) c[ch]++; }
+        return Object.keys(c).sort((a, b) => c[b] - c[a])[0];
+    }
+    function parseCSV(text) {
+        text = text.replace(/^﻿/, '');
+        const d = detectDelim(text.split(/\r?\n/)[0] || '');
+        const out = []; let row = [], cell = '', q = false;
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+            else if (ch === '"') q = true;
+            else if (ch === d) { row.push(cell); cell = ''; }
+            else if (ch === '\n' || ch === '\r') {
+                if (ch === '\r' && text[i + 1] === '\n') i++;
+                row.push(cell); cell = '';
+                if (row.some(c => c.trim() !== '')) out.push(row);
+                row = [];
+            } else cell += ch;
+        }
+        row.push(cell);
+        if (row.some(c => c.trim() !== '')) out.push(row);
+        return out;
+    }
+    function setTable(text) {
+        const parsed = parseCSV(text);
+        if (parsed.length < 2) return false;
+        headers = parsed[0].map((h, i) => h.trim() || 'col ' + (i + 1));
+        rows = parsed.slice(1).map(r => headers.map((h, i) => (r[i] || '').trim()));
+        const q = headers.findIndex(h => /^(menge|anzahl|bestand|stück|stueck|stk|qty|quantity|stock|count|amount)$/i.test(h.trim()));
+        qtyCol = q;
+        undoStack = []; log = [];
+        persist(); afterTableChange();
+        return true;
+    }
+    function persist() {
+        const ok = lsSet('heinz_sheet', { headers: headers, rows: rows, qty: qtyCol, log: log.slice(-100) });
+        if (!ok) $('info').textContent = '⚠ Browser storage is full or blocked – the table is not saved.';
+    }
+    function afterTableChange() {
+        const has = headers.length > 0;
+        $('qtyrow').classList.toggle('hidden', !has);
+        $('tablewrap').classList.toggle('hidden', !has);
+        $('tools').classList.toggle('hidden', !has);
+        $('logdet').classList.toggle('hidden', !has);
+        buildQtySelect(); refreshInfo(); renderTable(); renderLog(); updateUndoBtn();
+    }
+    function buildQtySelect() {
+        const sel = $('qty'); if (!sel) return;
+        sel.innerHTML = '';
+        const o0 = el('option', null, t('none')); o0.value = -1; sel.appendChild(o0);
+        headers.forEach((h, i) => { const o = el('option', null, h); o.value = i; sel.appendChild(o); });
+        sel.value = qtyCol;
+    }
+    function onQty() { qtyCol = parseInt($('qty').value, 10); persist(); }
+    function refreshInfo() { $('info').textContent = headers.length ? t('info', { r: rows.length, c: headers.length }) : ''; }
+    function clearTable() {
+        headers = []; rows = []; qtyCol = -1; log = []; undoStack = [];
+        try { localStorage.removeItem('heinz_sheet'); } catch (e) {}
+        afterTableChange();
+    }
+
+    // ===== Tabelle zeichnen =====
+    function renderTable(hl, chg, del) {
+        hl = hl || new Set(); chg = chg || new Set(); del = del || new Set();
+        const th = $('thead'), tb = $('tbody'); th.innerHTML = ''; tb.innerHTML = '';
+        if (!headers.length) return;
+        const hr = el('tr'); hr.appendChild(el('th', null, '#'));
+        headers.forEach((h, i) => { const c = el('th', null, h); if (i === qtyCol) c.textContent = h + ' ★'; hr.appendChild(c); });
+        th.appendChild(hr);
+        let shown = 0;
+        // markierte Zeilen zuerst anzeigen, wenn sie sonst abgeschnitten würden
+        const order = rows.map((r, i) => i);
+        if (hl.size && rows.length > MAX_RENDER) order.sort((a, b) => (hl.has(b) ? 1 : 0) - (hl.has(a) ? 1 : 0) || a - b);
+        for (const i of order) {
+            if (shown >= MAX_RENDER) break;
+            const tr = el('tr');
+            if (hl.has(i)) tr.className = 'hl';
+            if (del.has(i)) tr.className = 'del';
+            tr.appendChild(el('td', 'rn', String(i + 1)));
+            rows[i].forEach((v, c) => { const td = el('td', chg.has(i + ':' + c) ? 'chg' : null, v); tr.appendChild(td); });
+            tb.appendChild(tr); shown++;
+        }
+    }
+    function miniTable(idx) {
+        const wrap = el('div', 'mini'); const tbl = el('table');
+        const hr = el('tr'); hr.appendChild(el('th', null, '#'));
+        headers.forEach(h => hr.appendChild(el('th', null, h))); tbl.appendChild(hr);
+        idx.forEach(i => { const tr = el('tr'); tr.appendChild(el('td', 'rn', String(i + 1))); rows[i].forEach(v => tr.appendChild(el('td', null, v))); tbl.appendChild(tr); });
+        wrap.appendChild(tbl); return wrap;
+    }
+
+    // ===== Beispiel =====
+    function loadSample() {
+        const others = ['rot', 'grün', 'schwarz', 'weiß'], types = ['T-Shirt', 'Hose', 'Jacke', 'Mütze', 'Schal', 'Tasche'], sizes = ['S', 'M', 'L'];
+        const blue = [6, 4, 8, 3, 4]; // zusammen 25 blaue Stück
+        const lines = ['Artikel;Farbe;Größe;Menge;Regal'];
+        let bi = 0, seed = 7;
+        const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        for (let i = 0; i < 40; i++) {
+            let color = others[Math.floor(rnd() * others.length)];
+            let qty = 1 + Math.floor(rnd() * 9);
+            if (i % 8 === 0 && bi < blue.length) { color = 'blau'; qty = blue[bi++]; }
+            lines.push([types[i % types.length] + ' ' + (100 + i), color, sizes[i % 3], qty, 'R' + (1 + (i % 4))].join(';'));
+        }
+        setTable(lines.join('\n'));
+    }
+    $('file').addEventListener('change', function () {
+        const f = this.files[0]; if (!f) return;
+        const fr = new FileReader();
+        fr.onload = () => { if (!setTable(String(fr.result))) addMsg('err', t('badCmd')); };
+        fr.readAsText(f); this.value = '';
+    });
+    function usePaste() { setTable($('paste').value); }
+
+    // ===== Befehle: Modell -> JSON =====
+    const OPS = ['eq', 'ne', 'contains', 'gt', 'gte', 'lt', 'lte'];
+    const ACTIONS = ['count', 'list', 'sum', 'remove', 'add', 'set'];
+    function distinct(i) {
+        const set = new Set(rows.map(r => r[i]).filter(Boolean));
+        return set.size > 0 && set.size <= 25 ? Array.from(set).map(v => v.slice(0, 30)) : null;
+    }
+    function systemPrompt() {
+        const cols = headers.map((h, i) => {
+            const d = distinct(i);
+            return '- ' + h + (d ? ' (values: ' + d.join(', ') + ')' : '');
+        }).join('\n');
+        const qty = qtyCol >= 0 ? 'The quantity (stock) column is "' + headers[qtyCol] + '".' : 'Each row counts as one item.';
+        let catI = headers.findIndex((h, i) => i !== qtyCol && distinct(i));
+        let ex = '';
+        if (catI >= 0) {
+            const v = distinct(catI)[0], c = headers[catI];
+            ex = '\nExamples (use the real column names and values):\n' +
+                'User: how many ' + v + ' items are there?\n{"action":"count","filter":[{"column":"' + c + '","op":"eq","value":"' + v + '"}]}\n' +
+                'User: take 7 ' + v + ' items\n{"action":"remove","amount":7,"filter":[{"column":"' + c + '","op":"eq","value":"' + v + '"}]}\n' +
+                'User: show all ' + v + ' items\n{"action":"list","filter":[{"column":"' + c + '","op":"eq","value":"' + v + '"}]}\n';
+        }
+        return 'You translate a request about a table into exactly one JSON command. Never answer the question yourself.\n' +
+            'Columns:\n' + cols + '\n' + qty + '\n' +
+            'Actions: count (how many), list (show rows), sum (add up the numeric column named in "target"), remove (take away "amount"), add (put "amount" back), set (write "value" into the column named in "target").\n' +
+            'filter is a list of conditions {column, op, value}; ops: eq, ne, contains, gt, gte, lt, lte. Use an empty filter for all rows. ' +
+            'Use the exact column names. For text values use the spelling from the values list, translating the user\'s word if needed.' + ex;
+    }
+    function schema() {
+        const cols = headers.slice();
+        return {
+            type: 'object',
+            properties: {
+                action: { type: 'string', enum: ACTIONS },
+                filter: { type: 'array', items: { type: 'object', properties: { column: { type: 'string', enum: cols }, op: { type: 'string', enum: OPS }, value: { type: 'string' } }, required: ['column', 'op', 'value'] } },
+                amount: { type: 'number' },
+                target: { type: 'string', enum: cols.concat(['']) },
+                value: { type: 'string' }
+            },
+            required: ['action', 'filter']
+        };
+    }
+    let useSchema = true, abortCtl = null;
+    async function translate(text) {
+        const mk = sch => ({
+            model: $('model').value, stream: false, format: sch ? schema() : 'json',
+            options: { temperature: 0, num_ctx: 4096 },
+            messages: [{ role: 'system', content: systemPrompt() }, { role: 'user', content: text }]
+        });
+        const call = async sch => {
+            const res = await fetch(OLLAMA_URL + '/api/chat', { method: 'POST', signal: abortCtl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mk(sch)) });
+            if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+            return res.json();
+        };
+        let data;
+        try { data = await call(useSchema); }
+        catch (e) { if (e.status === 400 && useSchema) { useSchema = false; data = await call(false); } else throw e; }
+        return JSON.parse(data.message.content);
+    }
+    function cleanCmd(c) {
+        if (!c || typeof c !== 'object') throw new Error(t('badCmd'));
+        const action = String(c.action || '').toLowerCase();
+        if (ACTIONS.indexOf(action) < 0) throw new Error(t('badCmd'));
+        const findCol = name => headers.findIndex(h => norm(h) === norm(name));
+        const filter = (Array.isArray(c.filter) ? c.filter : []).map(f => {
+            const ci = findCol(f.column);
+            if (ci < 0) throw new Error(t('unknownCol', { c: f.column }));
+            const op = OPS.indexOf(String(f.op).toLowerCase()) >= 0 ? String(f.op).toLowerCase() : 'eq';
+            return { column: headers[ci], op: op, value: String(f.value == null ? '' : f.value) };
+        });
+        const out = { action: action, filter: filter };
+        const amt = parseFloat(c.amount); if (isFinite(amt)) out.amount = amt;
+        if (c.target) { const ti = findCol(c.target); if (ti >= 0) out.target = headers[ti]; }
+        if (c.value != null && c.value !== '') out.value = String(c.value);
+        return out;
+    }
+
+    // ===== Ausführen (reiner Code, kein Modell) =====
+    function matches(filter, relaxed) {
+        const idx = [];
+        rows.forEach((r, i) => {
+            const ok = filter.every(f => {
+                const ci = headers.indexOf(f.column);
+                const cell = r[ci], a = norm(cell), b = norm(f.value);
+                let op = f.op; if (relaxed && op === 'eq') op = 'contains';
+                switch (op) {
+                    case 'eq': return a === b;
+                    case 'ne': return a !== b;
+                    case 'contains': return a.indexOf(b) >= 0;
+                    default: {
+                        const x = toNum(cell), y = toNum(f.value);
+                        if (isNaN(x) || isNaN(y)) return false;
+                        return op === 'gt' ? x > y : op === 'gte' ? x >= y : op === 'lt' ? x < y : x <= y;
+                    }
+                }
+            });
+            if (ok) idx.push(i);
+        });
+        return idx;
+    }
+    function findRows(filter) {
+        let idx = matches(filter, false), relaxed = false;
+        if (!idx.length && filter.some(f => f.op === 'eq')) { const r = matches(filter, true); if (r.length) { idx = r; relaxed = true; } }
+        return { idx: idx, relaxed: relaxed };
+    }
+    function describeFilter(filter) {
+        if (!filter.length) return t('allRows');
+        const sym = { eq: '=', ne: '≠', contains: '∋', gt: '>', gte: '≥', lt: '<', lte: '≤' };
+        return filter.map(f => f.column + ' ' + sym[f.op] + ' ' + f.value).join(t('and'));
+    }
+    function describeCmd(c) {
+        let s = t('a_' + c.action);
+        if (c.amount != null) s += ' ' + fmtNum(c.amount);
+        if (c.target) s += ' [' + c.target + (c.value != null ? ' = ' + c.value : '') + ']';
+        return s + ' ' + t('where') + ' ' + describeFilter(c.filter);
+    }
+    function qtyOf(r) { const n = toNum(r[qtyCol]); return isNaN(n) ? 0 : n; }
+    function countText(idx) {
+        if (qtyCol >= 0) return t('rCountQty', { n: fmtNum(idx.reduce((s, i) => s + qtyOf(rows[i]), 0)), rows: idx.length });
+        return t('rCountRows', { n: idx.length });
+    }
+
+    // Ergebnis: { error } | { text, idx, table } | { plan: {...} }
+    function evaluate(c) {
+        const fr = findRows(c.filter);
+        const idx = fr.idx;
+        const note = fr.relaxed ? ' ' + t('relaxed') : '';
+        const zeroHint = () => {
+            let h = t('noMatch');
+            const fcol = c.filter.find(f => f.op === 'eq' || f.op === 'contains');
+            if (fcol) { const ci = headers.indexOf(fcol.column); const d = distinct(ci); if (d) h += ' ' + t('valuesHint', { col: fcol.column, vals: d.join(', ') }); }
+            return h;
+        };
+        switch (c.action) {
+            case 'count':
+                if (!idx.length) return { error: zeroHint(), idx: idx };
+                return { text: countText(idx) + note, idx: idx, big: true };
+            case 'list': {
+                if (!idx.length) return { error: zeroHint(), idx: idx };
+                const m = 15;
+                return { text: t('rList', { n: idx.length }) + (idx.length > m ? t('rListMore', { m: m }) : '') + note, idx: idx, table: idx.slice(0, m) };
+            }
+            case 'sum': {
+                if (!c.target) return { error: t('needTarget') };
+                const ti = headers.indexOf(c.target);
+                if (!idx.length) return { error: zeroHint() };
+                let sum = 0, bad = 0;
+                idx.forEach(i => { const n = toNum(rows[i][ti]); if (isNaN(n)) bad++; else sum += n; });
+                if (bad === idx.length) return { error: t('notNumber', { col: c.target }) };
+                return { text: t('rSum', { col: c.target, sum: fmtNum(sum), n: idx.length }) + note, idx: idx, big: true };
+            }
+            case 'remove': {
+                if (c.amount == null || c.amount <= 0) return { error: t('needAmount') };
+                if (!idx.length) return { error: zeroHint() };
+                if (qtyCol >= 0) {
+                    const have = idx.reduce((s, i) => s + qtyOf(rows[i]), 0);
+                    if (c.amount > have) return { error: t('onlyHave', { have: fmtNum(have), want: fmtNum(c.amount) }), idx: idx };
+                    let left = c.amount; const changes = [];
+                    for (const i of idx) {
+                        if (left <= 0) break;
+                        const q = qtyOf(rows[i]); if (q <= 0) continue;
+                        const take = Math.min(q, left);
+                        changes.push({ r: i, c: qtyCol, from: rows[i][qtyCol], to: fmtNum(q - take) });
+                        left -= take;
+                    }
+                    return { plan: { kind: 'cells', changes: changes, head: t('planRemove', { a: fmtNum(c.amount), n: changes.length }), log: t('logRemove', { a: fmtNum(c.amount), f: describeFilter(c.filter) }), idx: idx } };
+                }
+                if (c.amount > idx.length) return { error: t('onlyHave', { have: idx.length, want: fmtNum(c.amount) }), idx: idx };
+                const del = idx.slice(0, Math.round(c.amount));
+                return { plan: { kind: 'delete', del: del, head: t('planDelete', { n: del.length }), log: t('logDelete', { n: del.length, f: describeFilter(c.filter) }), idx: idx } };
+            }
+            case 'add': {
+                if (qtyCol < 0) return { error: t('needQty') };
+                if (c.amount == null || c.amount <= 0) return { error: t('needAmount') };
+                if (!idx.length) return { error: zeroHint() };
+                if (idx.length !== 1) return { error: t('needOneRow', { n: idx.length }), idx: idx };
+                const i = idx[0];
+                return { plan: { kind: 'cells', changes: [{ r: i, c: qtyCol, from: rows[i][qtyCol], to: fmtNum(qtyOf(rows[i]) + c.amount) }], head: t('planAdd', { a: fmtNum(c.amount), r: i + 1 }), log: t('logAdd', { a: fmtNum(c.amount), f: describeFilter(c.filter) }), idx: idx } };
+            }
+            case 'set': {
+                if (!c.filter.length) return { error: t('needFilter') };
+                if (!c.target || c.value == null) return { error: t('needTarget') };
+                if (!idx.length) return { error: zeroHint() };
+                const ti = headers.indexOf(c.target);
+                const changes = idx.filter(i => rows[i][ti] !== c.value).map(i => ({ r: i, c: ti, from: rows[i][ti], to: c.value }));
+                return { plan: { kind: 'cells', changes: changes, head: t('planSet', { col: c.target, val: c.value, n: changes.length }), log: t('logSet', { col: c.target, val: c.value, n: changes.length, f: describeFilter(c.filter) }), idx: idx } };
+            }
+        }
+        return { error: t('badCmd') };
+    }
+
+    function applyPlan(p, cmd) {
+        undoStack.push({ label: p.log, rows: JSON.stringify(rows) });
+        if (undoStack.length > MAX_UNDO) undoStack.shift();
+        const chg = new Set(), del = new Set();
+        if (p.kind === 'cells') {
+            p.changes.forEach(ch => { rows[ch.r][ch.c] = ch.to; chg.add(ch.r + ':' + ch.c); });
+            renderTable(new Set(p.idx), chg);
+        } else {
+            const rem = new Set(p.del);
+            rows = rows.filter((r, i) => !rem.has(i));
+            renderTable();
+        }
+        log.push(new Date().toLocaleString(lang === 'de' ? 'de-DE' : 'en-GB') + ' – ' + p.log);
+        persist(); renderLog(); updateUndoBtn(); refreshInfo(); srvAutoSave();
+    }
+    function undoLast() {
+        const u = undoStack.pop();
+        if (!u) { addMsg('err', t('nothingUndo')); return; }
+        rows = JSON.parse(u.rows);
+        log.push(new Date().toLocaleString() + ' – ↶ ' + u.label);
+        persist(); renderTable(); renderLog(); updateUndoBtn(); refreshInfo(); srvAutoSave();
+        addMsg('bot', t('undone', { l: u.label }));
+    }
+    function updateUndoBtn() { $('undoBtn').disabled = !undoStack.length; }
+    function renderLog() {
+        const box = $('logbox'); if (!box) return; box.innerHTML = '';
+        log.slice().reverse().forEach(l => box.appendChild(el('div', null, l)));
+    }
+
+    // ===== Feed =====
+    function addMsg(kind, text) {
+        const m = el('div', 'msg ' + (kind === 'user' ? 'user' : (kind === 'err' ? 'bot err' : 'bot')));
+        if (text != null) m.textContent = text;
+        $('feed').appendChild(m);
+        m.scrollIntoView({ block: 'nearest' });
+        return m;
+    }
+    function showResult(cmd, userText) {
+        const res = evaluate(cmd);
+        const m = el('div', 'msg bot');
+        m.appendChild(el('div', 'cmd', t('cmdPrefix') + ' ' + describeCmd(cmd)));
+        // bearbeitbarer Befehl
+        const det = el('details'); det.appendChild(el('summary', null, t('rawJson')));
+        const ta = el('textarea'); ta.rows = 6; ta.value = JSON.stringify(cmd, null, 1); det.appendChild(ta);
+        const rb = el('button', 'btn btn-gray', t('runEdited')); rb.style.cssText = 'margin-top:6px;width:100%;';
+        rb.onclick = () => { try { showResult(cleanCmd(JSON.parse(ta.value)), userText); } catch (e) { addMsg('err', e.message); } };
+        det.appendChild(rb);
+
+        if (res.error) {
+            m.className = 'msg bot err';
+            m.appendChild(el('div', null, res.error));
+            if (res.idx) renderTable(new Set(res.idx));
+        } else if (res.plan) {
+            const p = res.plan;
+            m.appendChild(el('div', null, p.head));
+            const pl = el('div', 'plan');
+            if (p.kind === 'cells') p.changes.slice(0, 40).forEach(ch => pl.appendChild(el('div', null, '#' + (ch.r + 1) + ' ' + rows[ch.r][0] + ' · ' + headers[ch.c] + ': ' + ch.from + ' → ' + ch.to)));
+            else p.del.slice(0, 40).forEach(i => pl.appendChild(el('div', null, '#' + (i + 1) + ' ' + rows[i].join(' · '))));
+            m.appendChild(pl);
+            renderTable(new Set(p.idx), new Set(), p.kind === 'delete' ? new Set(p.del) : new Set());
+            const acts = el('div', 'acts');
+            const ok = el('button', 'btn btn-green', t('apply')), no = el('button', 'btn btn-gray', t('cancel'));
+            const finish = apply => {
+                acts.remove();
+                if (!apply) { m.appendChild(el('div', 'cmd', t('cancelled'))); renderTable(); return; }
+                applyPlan(p, cmd);
+                m.classList.add('ok');
+                m.appendChild(el('div', null, '✔ ' + t('applied') + ' ' + p.log));
+                const now = findRows(cmd.filter).idx;
+                const unit = qtyCol >= 0 ? t('pieces') : t('rowsWord');
+                const n = qtyCol >= 0 ? fmtNum(now.reduce((s, i) => s + qtyOf(rows[i]), 0)) : now.length;
+                m.appendChild(el('div', 'big', t('nowHave', { n: n, unit: unit, desc: describeFilter(cmd.filter) })));
+            };
+            ok.onclick = () => finish(true); no.onclick = () => finish(false);
+            acts.appendChild(ok); acts.appendChild(no); m.appendChild(acts);
+            if (!$('confirm').checked) { finish(true); }
+        } else {
+            m.classList.add('ok');
+            const b = el('div', res.big ? 'big' : null, res.text); m.appendChild(b);
+            if (res.table) m.appendChild(miniTable(res.table));
+            renderTable(new Set(res.idx || []));
+        }
+        m.appendChild(det);
+        $('feed').appendChild(m);
+        m.scrollIntoView({ block: 'nearest' });
+    }
+
+    async function ask() {
+        if (busy) return;
+        const text = $('q').value.trim();
+        if (!text) return;
+        if (!headers.length) { addMsg('err', t('noTable')); return; }
+        busy = true; $('askBtn').disabled = true;
+        addMsg('user', text); $('q').value = '';
+        const wait = addMsg('bot', '');
+        const sp = el('span', 'spin', '⚙️'); wait.appendChild(sp); wait.appendChild(document.createTextNode(' ' + t('thinking')));
+        abortCtl = new AbortController();
+        try {
+            const raw = await translate(text);
+            wait.remove();
+            showResult(cleanCmd(raw), text);
+        } catch (e) {
+            wait.remove();
+            const msg = e instanceof TypeError ? t('offline') : (e.status === 404 ? t('notInstalled') : (e instanceof SyntaxError ? t('badCmd') : e.message));
+            addMsg('err', msg);
+        } finally { busy = false; $('askBtn').disabled = false; abortCtl = null; }
+    }
+
+    // ===== Export =====
+    function exportCsv() {
+        const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const lines = [headers.map(q).join(',')].concat(rows.map(r => r.map(q).join(',')));
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type: 'text/csv' }));
+        a.download = t('exportName'); document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+
+    // ===== Dateien auf dem Handy (nur mit server.py) =====
+    let srvUp = false, srvTimer = null;
+    const SRV_NAME = /^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,63}\.(csv|json|txt)$/;
+    async function srvApi(method, path, body) {
+        const r = await fetch('/api/' + path, { method: method, headers: method === 'GET' ? {} : { 'X-Heinz': '1', 'Content-Type': 'text/plain; charset=utf-8' }, body: body });
+        if (!r.ok) { let m = 'HTTP ' + r.status; try { m = (await r.json()).error || m; } catch (e) {} throw new Error(m); }
+        return r;
+    }
+    function toCsvText(delim) {
+        const q = v => { v = String(v == null ? '' : v); return (v.indexOf(delim) >= 0 || /["\n\r]/.test(v)) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+        return '\uFEFF' + [headers.map(q).join(delim)].concat(rows.map(r => r.map(q).join(delim))).join('\n') + '\n';
+    }
+    async function srvRefresh(select) {
+        try {
+            const j = await (await srvApi('GET', 'files')).json();
+            srvUp = true;
+            const sel = $('srvList'), cur = select || sel.value;
+            sel.innerHTML = '';
+            const o0 = el('option', null, t('srvNone')); o0.value = ''; sel.appendChild(o0);
+            j.files.forEach(f => { const o = el('option', null, f.name); o.value = f.name; sel.appendChild(o); });
+            sel.value = cur || '';
+        } catch (e) { srvUp = false; }
+        $('srv').classList.toggle('hidden', !srvUp);
+        $('srvState').textContent = srvUp ? t('srvOn') : '';
+    }
+    async function srvOpen() {
+        const n = $('srvList').value; if (!n) return;
+        try {
+            const txt = await (await srvApi('GET', 'files/' + encodeURIComponent(n))).text();
+            if (!setTable(txt)) throw new Error('no table');
+            $('srvName').value = n; saveCfg();
+            addMsg('bot', t('srvLoaded', { n: n }));
+        } catch (e) { addMsg('err', t('srvFail', { e: e.message })); }
+    }
+    async function srvSave(silent) {
+        const n = $('srvName').value.trim() || $('srvList').value;
+        if (!headers.length) { addMsg('err', t('noTable')); return; }
+        if (!SRV_NAME.test(n)) { addMsg('err', t('srvBadName')); return; }
+        try {
+            await srvApi('PUT', 'files/' + encodeURIComponent(n), toCsvText(';'));
+            $('srvName').value = n; saveCfg();
+            if (!silent) addMsg('bot', t('srvSaved', { n: n }));
+            srvRefresh(n);
+        } catch (e) { addMsg('err', t('srvFail', { e: e.message })); }
+    }
+    function srvAutoSave() {
+        if (!srvUp || !$('srvAuto') || !$('srvAuto').checked || !headers.length || !SRV_NAME.test($('srvName').value.trim())) return;
+        clearTimeout(srvTimer);
+        srvTimer = setTimeout(() => srvSave(true), 400);
+    }
+
+    async function checkServer() {
+        try {
+            const ps = await (await fetch(OLLAMA_URL + '/api/ps')).json();
+            const loaded = ps.models && ps.models.some(m => m.name.startsWith($('model').value));
+            $('dot').className = 'dot ' + (loaded ? 'run' : 'on');
+        } catch (e) { $('dot').className = 'dot'; }
+    }
+
+    (function init() {
+        const s = lsGet('heinz_settings', {});
+        if (s.lang === 'de' || s.lang === 'en') lang = s.lang;
+        const c = lsGet('heinz_sheet_cfg', null);
+        if (c) { if (['qwen2.5:3b', 'gemma2:2b', 'gemma:2b'].indexOf(c.model) >= 0) $('model').value = c.model; $('confirm').checked = c.confirm !== false; $('srvAuto').checked = !!c.auto; $('srvName').value = c.name || ''; }
+        const d = lsGet('heinz_sheet', null);
+        if (d && Array.isArray(d.headers) && d.headers.length && Array.isArray(d.rows)) {
+            headers = d.headers; rows = d.rows; qtyCol = typeof d.qty === 'number' ? d.qty : -1; log = Array.isArray(d.log) ? d.log : [];
+        }
+        afterTableChange();
+        applyI18n();
+        srvRefresh(); setInterval(() => { if (!srvUp) srvRefresh(); }, 10000);
+        checkServer(); setInterval(checkServer, 4000);
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heinz Data Lab</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #e8eaed; margin: 0; padding: 15px; padding-bottom: max(90px, 45vh); }
+        .wrap { max-width: 640px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+        .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
+        .hub-link { background: #202124; border: 1px solid #3c4043; color: #fff; text-decoration: none; border-radius: 8px; padding: 4px 8px; font-size: 17px; line-height: 1.3; flex-shrink: 0; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; background: #ea4335; flex-shrink: 0; transition: background 0.3s; }
+        .dot.on { background: #fbbc05; box-shadow: 0 0 8px #fbbc05; }
+        .dot.run { background: #34a853; box-shadow: 0 0 8px #34a853; }
+        select, input[type=text], input[type=number], textarea { background: #202124; color: #fff; border: 1px solid #3c4043; border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; width: 100%; outline: none; }
+        select { font-weight: bold; cursor: pointer; }
+        textarea { resize: vertical; }
+        .header select { width: auto; flex: 1; min-width: 100px; padding: 8px 10px; font-size: 13px; }
+        .lang-btn { background: #202124; border: 1px solid #3c4043; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 5px; border-radius: 8px; cursor: pointer; display: flex; gap: 3px; flex-shrink: 0; }
+        .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #80868b; }
+        .lang-btn span.active { background: #34a853; color: #fff; }
+
+        .panel { background: #202124; border: 1px solid #3c4043; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+        .panel h3 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .num { background: #4285f4; color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .panel .row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .panel .row > * { flex: 1; min-width: 120px; }
+        label.small { display: block; font-size: 12px; color: #9aa0a6; margin: 10px 0 4px; }
+        .panel textarea, .panel input[type=text] { background: #171717; }
+        .panel select, .panel input[type=number] { background: #171717; }
+
+        .btn { border: none; border-radius: 10px; padding: 12px 14px; font-size: 15px; font-weight: bold; color: #fff; cursor: pointer; }
+        .btn-blue { background: #4285f4; } .btn-green { background: #34a853; } .btn-red { background: #ea4335; } .btn-gray { background: #3c4043; }
+        .btn:disabled { opacity: 0.4; cursor: default; }
+        .filebtn { display: block; text-align: center; }
+        input[type=file] { display: none; }
+
+        .hint { font-size: 12px; color: #9aa0a6; margin-top: 8px; line-height: 1.4; }
+        .preview { margin-top: 10px; font-size: 13px; background: #171717; border-radius: 8px; padding: 8px 10px; max-height: 120px; overflow: auto; color: #bdc1c6; }
+        .preview div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 0; }
+        .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .chip { background: #3c4043; border: none; color: #fff; border-radius: 14px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+        .chip.active { background: #4285f4; }
+
+        .progress { height: 10px; background: #171717; border-radius: 6px; overflow: hidden; margin-top: 12px; }
+        .progress > div { height: 100%; width: 0; background: #34a853; transition: width 0.2s; }
+        .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .badge { font-family: monospace; font-size: 13px; padding: 4px 9px; border-radius: 6px; border: 1px solid; }
+        .b1 { color: #34a853; border-color: #34a853; } .b2 { color: #4285f4; border-color: #4285f4; } .b3 { color: #fbbc05; border-color: #fbbc05; } .b4 { color: #ea4335; border-color: #ea4335; }
+
+        .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .tile { border-radius: 12px; padding: 8px 10px; color: #fff; min-width: 0; overflow-wrap: anywhere; }
+        .tile .n { font-size: 22px; font-weight: bold; line-height: 1.1; }
+        .tile .l { font-size: 13px; opacity: 0.95; word-break: break-word; }
+        .tile .p { font-size: 12px; opacity: 0.85; }
+        .acc { background: #171717; border: 1px solid #3c4043; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; font-size: 14px; }
+        .acc b { color: #34a853; font-size: 20px; }
+        td.cmp { white-space: nowrap; font-size: 12px; color: #9aa0a6; }
+        td.cmp.ok { color: #34a853; } td.cmp.bad { color: #ea4335; }
+        .stack { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: #171717; margin-bottom: 14px; }
+        .stack > div { height: 100%; }
+        .tablewrap { max-height: 55vh; max-height: 55dvh; overflow: auto; -webkit-overflow-scrolling: touch; border: 1px solid #3c4043; border-radius: 10px; }
+        table { border-collapse: collapse; width: 100%; font-size: 13px; }
+        th, td { border-bottom: 1px solid #2d2f31; padding: 7px 9px; text-align: left; vertical-align: top; }
+        th { background: #171717; position: sticky; top: 0; }
+        td.lab { white-space: nowrap; font-weight: bold; }
+        td.txt { word-break: break-word; }
+        td.why { color: #9aa0a6; font-size: 12px; }
+        .err { color: #ea4335; font-size: 13px; margin-top: 8px; word-break: break-word; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="header-left">
+            <a href="index.html" class="hub-link" title="Hub">⌂</a>
+            <h2>🧪 Data Lab</h2>
+            <span id="dot" class="dot" data-i18n-title="serverStatus" title="Server status"></span>
+        </div>
+        <select id="model" onchange="saveCfg()">
+            <option value="qwen2.5:3b">🧠 Qwen 2.5 (3B)</option>
+            <option value="gemma2:2b">🧠 Gemma 2 (2B)</option>
+            <option value="gemma:2b">🧠 Gemma 1 (2B)</option>
+        </select>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLang()" title="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+    </div>
+
+    <!-- 1. Daten -->
+    <div class="panel">
+        <h3><span class="num">1</span><span data-i18n="s1">Data</span></h3>
+        <div class="row">
+            <label class="btn btn-blue filebtn" for="file"><span data-i18n="pickFile">📂 Choose file</span></label>
+            <input type="file" id="file" accept=".csv,.tsv,.txt,.json,.xml,.rss,.atom,text/*,application/json,application/xml">
+            <button class="btn btn-gray" onclick="loadSample()" data-i18n="sample">🧾 Load sample</button>
+        </div>
+        <label class="small" for="paste" data-i18n="orPaste">…or paste lines here (one entry per line):</label>
+        <textarea id="paste" rows="4" oninput="onPaste()"></textarea>
+        <div id="colrow" class="hidden">
+            <label class="small" data-i18n="column">Columns to evaluate (tap to select, several are combined):</label>
+            <div class="chips" id="colchips"></div>
+            <label class="small" for="cmp" data-i18n="compare">Control column (optional): compares the model with your own values</label>
+            <select id="cmp" onchange="onCompare()"></select>
+            <button class="btn btn-gray" id="takeLabels" onclick="takeLabels()" style="margin-top:8px;width:100%;font-size:13px;" data-i18n="takeLabels">Use the values of the control column as labels</button>
+        </div>
+        <div class="hint" data-i18n="formats">Formats: CSV/TSV (first row = header), text (one line per entry), JSON list, RSS/Atom feed file (titles). Files are only read in this browser.</div>
+        <div id="info" class="hint"></div>
+        <div id="preview" class="preview hidden"></div>
+    </div>
+
+    <!-- 2. Regel -->
+    <div class="panel">
+        <h3><span class="num">2</span><span data-i18n="s2">Rule</span></h3>
+        <div class="chips" id="presets"></div>
+        <label class="small" for="labels" data-i18n="labels">Allowed labels (comma separated):</label>
+        <input type="text" id="labels" oninput="saveCfg()">
+        <label class="small" for="rule" data-i18n="rule">Rule for the model (English works best):</label>
+        <textarea id="rule" rows="3" oninput="saveCfg()"></textarea>
+        <div class="row">
+            <div>
+                <label class="small" for="limit" data-i18n="limit">Max. entries:</label>
+                <input type="number" id="limit" min="1" max="2000" value="100" oninput="saveCfg()">
+            </div>
+            <div>
+                <label class="small" for="temp" data-i18n="temp">Temperature:</label>
+                <input type="number" id="temp" min="0" max="1" step="0.05" value="0" oninput="saveCfg()">
+            </div>
+            <div>
+                <label class="small" for="ctx" data-i18n="ctx">Context window:</label>
+                <input type="number" id="ctx" min="512" max="16384" step="512" value="2048" oninput="saveCfg()">
+            </div>
+        </div>
+        <label class="small" style="display:flex;align-items:center;gap:8px;margin-top:12px;color:#e8eaed;cursor:pointer;">
+            <input type="checkbox" id="why" onchange="saveCfg()" style="width:auto;margin:0;"> <span data-i18n="why">Add a short reason (slower, but shows how the model thinks)</span>
+        </label>
+        <label class="small" style="display:flex;align-items:center;gap:8px;margin-top:10px;color:#e8eaed;cursor:pointer;">
+            <input type="checkbox" id="shuffle" onchange="saveCfg()" style="width:auto;margin:0;"> <span data-i18n="shuffle">Pick entries at random (fair test for sorted lists)</span>
+        </label>
+    </div>
+
+    <!-- 3. Lauf -->
+    <div class="panel">
+        <h3><span class="num">3</span><span data-i18n="s3">Run</span></h3>
+        <div class="row">
+            <button class="btn btn-green" id="run" onclick="runJob()" data-i18n="run">▶ Evaluate</button>
+            <button class="btn btn-red" id="cancel" onclick="cancelJob()" disabled data-i18n="cancel">Cancel</button>
+        </div>
+        <div class="progress"><div id="bar"></div></div>
+        <div class="stats">
+            <span class="badge b1"><span data-i18n="done">Done</span>: <span id="st-done">0</span>/<span id="st-total">0</span></span>
+            <span class="badge b2"><span id="st-speed">0.0</span> <span data-i18n="perMin">entries/min</span></span>
+            <span class="badge b3">ETA: <span id="st-eta">–</span></span>
+            <span class="badge b4" id="st-errbox"><span data-i18n="errors">Errors</span>: <span id="st-err">0</span></span>
+        </div>
+        <div id="msg" class="err"></div>
+    </div>
+
+    <!-- Ergebnis -->
+    <div class="panel hidden" id="resultPanel">
+        <h3><span class="num">✓</span><span data-i18n="result">Evaluation</span></h3>
+        <div class="acc hidden" id="acc"></div>
+        <div class="tiles" id="tiles"></div>
+        <div class="stack" id="stack"></div>
+        <div class="tablewrap"><table><thead><tr><th>#</th><th data-i18n="thEntry">Entry</th><th data-i18n="thLabel">Label</th><th id="thCmp" class="hidden" data-i18n="thCmp">Control</th><th id="thWhy" class="hidden" data-i18n="thWhy">Reason</th></tr></thead><tbody id="tbody"></tbody></table></div>
+        <div class="row">
+            <button class="btn btn-gray" onclick="exportCsv()" data-i18n="expCsv">⬇ CSV</button>
+            <button class="btn btn-gray" onclick="exportJson()" data-i18n="expJson">⬇ JSON</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const OLLAMA_URL = 'http://localhost:11434';
+    const COLORS = ['#34a853', '#4285f4', '#fbbc05', '#ea4335', '#a142f4', '#24c1e0', '#ff6d01', '#9aa0a6'];
+    const MAX_CHARS = 500;
+
+    const PRESETS = {
+        mood:    { key: 'pMood',    labels: 'positive, neutral, negative', rule: 'Rate the overall mood of the text.' },
+        urgency: { key: 'pUrgency', labels: 'urgent, normal, ignore',      rule: 'Rate how urgent this message is for a busy person. "urgent" = needs action today, "ignore" = advertising, newsletter or irrelevant.' },
+        spam:    { key: 'pSpam',    labels: 'promo, personal, work, other', rule: 'Classify what kind of message this is. "promo" = advertising or newsletter, "personal" = private, "work" = job related.' },
+        material: { key: 'pMaterial', labels: 'ÄÖ, Aroma, Conditioner, DÖ, Emollient, Emulgator, Feuchtigkeitsspender, Füllstoff, Gelbildner, Hydrolat, Konservierungsmittel, Liposomenkonzentrat, Ölverdicker, Pflanze, Pflanzenextrakt, Säure, Tenside, Tonerde, Trägeröl, Wirkstoff, Wirkstofföl, Zusatzstoff',
+                    rule: 'Classify this cosmetic raw material (German or English name, may include a package size like 10ml or 100g) into exactly one category. Hints: ÄÖ = essential oil (ätherisches Öl), DÖ = fragrance oil (Duftöl), Trägeröl = carrier oil, Wirkstofföl = active oil, Tenside = surfactants, Hydrolat = floral water, Emulgator = emulsifier, Konservierungsmittel = preservative.' },
+        topic:   { key: 'pTopic',   labels: 'politics, economy, technology, science, sports, culture, other', rule: 'Assign the headline to exactly one topic.' }
+    };
+
+    const I18N = {
+        en: { serverStatus: 'Server status', s1: 'Data', s2: 'Rule', s3: 'Run', pickFile: '📂 Choose file', sample: '🧾 Load sample',
+              orPaste: '…or paste lines here (one entry per line):', column: 'Columns to evaluate (tap to select, several are combined):',
+              formats: 'Formats: CSV/TSV (first row = header), text (one line per entry), JSON list, RSS/Atom feed file (titles). Files are only read in this browser.',
+              labels: 'Allowed labels (comma separated):', rule: 'Rule for the model (English works best):', limit: 'Max. entries:', temp: 'Temperature:', ctx: 'Context window:',
+              why: 'Add a short reason (slower, but shows how the model thinks)', shuffle: 'Pick entries at random (fair test for sorted lists)', run: '▶ Evaluate', cancel: 'Cancel', done: 'Done', perMin: 'entries/min', errors: 'Errors',
+              result: 'Evaluation', thEntry: 'Entry', thLabel: 'Label', thWhy: 'Reason', expCsv: '⬇ CSV', expJson: '⬇ JSON',
+              pMood: 'Mood', pUrgency: 'Urgency', pSpam: 'Message type', pTopic: 'News topic', pMaterial: 'Raw material', pCustom: 'Custom',
+              compare: 'Control column (optional): compares the model with your own values', takeLabels: 'Use the values of the control column as labels', thCmp: 'Control', accLabel: 'Matches your control column:', none: '— none —',
+              infoLoaded: '{n} entries loaded ({src}).', infoLimit: ' Only the first {l} will be evaluated.', infoNone: 'No entries found.',
+              srcFile: 'file: {f}', srcPaste: 'pasted', srcSample: 'sample',
+              noData: 'Load or paste some data first.', noLabels: 'Enter at least two labels.', offline: 'Ollama is not reachable. Is the server running?',
+              notInstalled: 'Model not installed? Check with: ollama list', aborted: 'Cancelled.', finished: 'Finished.', unknown: '(unclear)',
+              fileErr: 'Could not read the file.' },
+        de: { serverStatus: 'Server-Status', s1: 'Daten', s2: 'Regel', s3: 'Lauf', pickFile: '📂 Datei wählen', sample: '🧾 Beispiel laden',
+              orPaste: '…oder Zeilen hier einfügen (ein Eintrag pro Zeile):', column: 'Spalten, die bewertet werden (antippen, mehrere werden zusammengefasst):',
+              formats: 'Formate: CSV/TSV (erste Zeile = Kopf), Text (eine Zeile pro Eintrag), JSON-Liste, RSS/Atom-Feeddatei (Titel). Dateien werden nur in diesem Browser gelesen.',
+              labels: 'Erlaubte Labels (Komma-getrennt):', rule: 'Regel für das Modell (Englisch funktioniert am besten):', limit: 'Max. Einträge:', temp: 'Temperatur:', ctx: 'Kontextfenster:',
+              why: 'Kurze Begründung ergänzen (langsamer, zeigt aber das Denken des Modells)', shuffle: 'Einträge zufällig auswählen (fairer Test bei sortierten Listen)', run: '▶ Auswerten', cancel: 'Abbrechen', done: 'Fertig', perMin: 'Einträge/Min', errors: 'Fehler',
+              result: 'Auswertung', thEntry: 'Eintrag', thLabel: 'Label', thWhy: 'Begründung', expCsv: '⬇ CSV', expJson: '⬇ JSON',
+              pMood: 'Stimmung', pUrgency: 'Dringlichkeit', pSpam: 'Nachrichtenart', pTopic: 'News-Thema', pMaterial: 'Rohstoff', pCustom: 'Eigene',
+              compare: 'Kontrollspalte (optional): vergleicht das Modell mit deinen eigenen Werten', takeLabels: 'Werte der Kontrollspalte als Labels übernehmen', thCmp: 'Kontrolle', accLabel: 'Übereinstimmung mit deiner Kontrollspalte:', none: '— keine —',
+              infoLoaded: '{n} Einträge geladen ({src}).', infoLimit: ' Nur die ersten {l} werden ausgewertet.', infoNone: 'Keine Einträge gefunden.',
+              srcFile: 'Datei: {f}', srcPaste: 'eingefügt', srcSample: 'Beispiel',
+              noData: 'Erst Daten laden oder einfügen.', noLabels: 'Mindestens zwei Labels eintragen.', offline: 'Ollama nicht erreichbar. Läuft der Server?',
+              notInstalled: 'Modell nicht installiert? Prüfe mit: ollama list', aborted: 'Abgebrochen.', finished: 'Fertig.', unknown: '(unklar)',
+              fileErr: 'Datei konnte nicht gelesen werden.' }
+    };
+    let lang = 'en';
+    function t(k, v) {
+        let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+        if (v) Object.keys(v).forEach(x => { s = s.replace('{' + x + '}', v[x]); });
+        return s;
+    }
+    const $ = id => document.getElementById(id);
+
+    function lsGet(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+    // ===== Zustand =====
+    let rawRows = [];        // Zeilen (Arrays) im Tabellenmodus
+    let plain = [];          // Texte im Textmodus
+    let selCols = new Set(); // gewählte Textspalten
+    let cmpCol = -1;         // Kontrollspalte
+    let headers = null;      // Spaltennamen
+    let items = [];          // zu bewertende Texte
+    let source = '';
+    let results = [];        // {text, label, why}
+    let running = false, abortCtl = null, usedLabels = [];
+
+    // ===== Sprache =====
+    function applyI18n() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.getAttribute('data-i18n')); });
+        document.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.getAttribute('data-i18n-title')); });
+        document.querySelectorAll('#lang-btn span').forEach(s => s.classList.toggle('active', s.getAttribute('data-l') === lang));
+        renderPresets();
+        refreshInfo();
+    }
+    function toggleLang() {
+        lang = lang === 'en' ? 'de' : 'en';
+        const s = lsGet('heinz_settings', {}); s.lang = lang; lsSet('heinz_settings', s);
+        applyI18n();
+    }
+
+    // ===== Presets =====
+    let activePreset = 'mood';
+    function renderPresets() {
+        const box = $('presets'); box.innerHTML = '';
+        Object.keys(PRESETS).concat(['custom']).forEach(k => {
+            const b = document.createElement('button');
+            b.className = 'chip' + (k === activePreset ? ' active' : '');
+            b.textContent = t(k === 'custom' ? 'pCustom' : PRESETS[k].key);
+            b.onclick = () => selectPreset(k);
+            box.appendChild(b);
+        });
+    }
+    function selectPreset(k) {
+        activePreset = k;
+        if (PRESETS[k]) { $('labels').value = PRESETS[k].labels; $('rule').value = PRESETS[k].rule; }
+        renderPresets(); saveCfg();
+    }
+    function saveCfg() {
+        lsSet('heinz_lab', {
+            preset: activePreset, model: $('model').value, labels: $('labels').value, rule: $('rule').value,
+            limit: $('limit').value, temp: $('temp').value, ctx: $('ctx').value, why: $('why').checked, shuffle: $('shuffle').checked
+        });
+    }
+
+    // ===== Parser =====
+    function detectDelim(line) {
+        const c = { ',': 0, ';': 0, '\t': 0 };
+        let q = false;
+        for (const ch of line) { if (ch === '"') q = !q; else if (!q && c[ch] !== undefined) c[ch]++; }
+        return Object.keys(c).sort((a, b) => c[b] - c[a])[0];
+    }
+    function parseCSV(text) {
+        text = text.replace(/^﻿/, '');
+        const first = text.split(/\r?\n/)[0] || '';
+        const d = detectDelim(first);
+        const rows = []; let row = [], cell = '', q = false;
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (q) {
+                if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+                else cell += ch;
+            } else if (ch === '"') q = true;
+            else if (ch === d) { row.push(cell); cell = ''; }
+            else if (ch === '\n' || ch === '\r') {
+                if (ch === '\r' && text[i + 1] === '\n') i++;
+                row.push(cell); cell = '';
+                if (row.some(c => c.trim() !== '')) rows.push(row);
+                row = [];
+            } else cell += ch;
+        }
+        row.push(cell);
+        if (row.some(c => c.trim() !== '')) rows.push(row);
+        return rows;
+    }
+    function looksLikeTable(text) {
+        const lines = text.split(/\r?\n/).filter(l => l.trim()).slice(0, 5);
+        if (lines.length < 2) return false;
+        const d = detectDelim(lines[0]);
+        const n = parseCSV(lines[0])[0].length;
+        return n > 1 && lines.every(l => parseCSV(l)[0].length === n) && (lines[0].split(d).length > 1);
+    }
+    function ingest(text, name) {
+        const lower = (name || '').toLowerCase();
+        rawRows = []; headers = null; plain = []; items = []; cmpCol = -1;
+        const trimmed = text.trim();
+        try {
+            if (/\.(xml|rss|atom)$/.test(lower) || /^<\?xml|^<rss|^<feed/i.test(trimmed)) {
+                const doc = new DOMParser().parseFromString(trimmed, 'text/xml');
+                const nodes = doc.querySelectorAll('item > title, entry > title');
+                plain = Array.from(nodes).map(n => n.textContent.trim()).filter(Boolean);
+            } else if (/\.json$/.test(lower) || /^[\[{]/.test(trimmed)) {
+                const data = JSON.parse(trimmed);
+                const arr = Array.isArray(data) ? data : (data.items || data.entries || []);
+                if (arr.length && typeof arr[0] === 'object') {
+                    headers = Object.keys(arr[0]);
+                    rawRows = arr.map(o => headers.map(h => (o[h] == null ? '' : String(o[h]))));
+                } else plain = arr.map(String);
+            } else if (/\.(csv|tsv)$/.test(lower) || looksLikeTable(trimmed)) {
+                const rows = parseCSV(trimmed);
+                headers = rows[0].map((h, i) => (h.trim() || 'col ' + (i + 1)));
+                rawRows = rows.slice(1);
+            } else {
+                plain = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            }
+        } catch (e) { plain = []; headers = null; rawRows = []; }
+        buildColumnPicker();
+    }
+    function normCat(v) { return String(v || '').split('/')[0].trim(); }
+    function renderChips() {
+        const box = $('colchips'); box.innerHTML = '';
+        headers.forEach((h, i) => {
+            const b = document.createElement('button');
+            b.className = 'chip' + (selCols.has(i) ? ' active' : '');
+            b.textContent = h;
+            b.onclick = () => {
+                if (selCols.has(i)) { if (selCols.size > 1) selCols.delete(i); } else selCols.add(i);
+                renderChips(); rebuildItems();
+            };
+            box.appendChild(b);
+        });
+    }
+    function buildColumnPicker() {
+        if (headers && rawRows.length) {
+            // Heuristik: Spalte mit dem längsten Durchschnittstext vorwählen
+            let best = 0, bestLen = -1;
+            headers.forEach((h, i) => {
+                const avg = rawRows.slice(0, 30).reduce((s, r) => s + ((r[i] || '').length), 0) / Math.min(30, rawRows.length);
+                if (avg > bestLen) { bestLen = avg; best = i; }
+            });
+            selCols = new Set([best]);
+            const sel = $('cmp'); sel.innerHTML = '';
+            const o0 = document.createElement('option'); o0.value = -1; o0.textContent = t('none'); sel.appendChild(o0);
+            headers.forEach((h, i) => { const o = document.createElement('option'); o.value = i; o.textContent = h; sel.appendChild(o); });
+            const guess = headers.findIndex(h => /kategor|categor|typ|type|group|gruppe/i.test(h));
+            if (guess >= 0 && guess !== best) { sel.value = guess; cmpCol = guess; } else { sel.value = -1; }
+            renderChips();
+            $('colrow').classList.remove('hidden');
+        } else {
+            $('colrow').classList.add('hidden');
+        }
+        rebuildItems();
+    }
+    function onCompare() { cmpCol = parseInt($('cmp').value, 10); }
+    function rebuildItems() {
+        if (headers && rawRows.length) {
+            const cols = Array.from(selCols).sort((a, b) => a - b);
+            items = rawRows.map(r => {
+                const parts = cols.map(i => {
+                    const v = (r[i] || '').trim();
+                    return v ? (cols.length > 1 ? headers[i] + ': ' + v : v) : '';
+                }).filter(Boolean);
+                return { text: parts.join(' | '), row: r };
+            }).filter(x => x.text);
+        } else {
+            items = plain.map(x => ({ text: x, row: null }));
+        }
+        refreshInfo();
+    }
+    function takeLabels() {
+        if (cmpCol < 0 || !rawRows.length) return;
+        const cnt = {};
+        rawRows.forEach(r => { const v = normCat(r[cmpCol]); if (v) cnt[v] = (cnt[v] || 0) + 1; });
+        const list = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 40);
+        if (list.length < 2) return;
+        $('labels').value = list.join(', ');
+        activePreset = 'custom'; renderPresets(); saveCfg();
+    }
+    function refreshInfo() {
+        const info = $('info'), pv = $('preview');
+        if (!items.length) { info.textContent = source ? t('infoNone') : ''; pv.classList.add('hidden'); return; }
+        const lim = parseInt($('limit').value, 10) || 100;
+        let txt = t('infoLoaded', { n: items.length, src: source });
+        if (items.length > lim) txt += t('infoLimit', { l: lim });
+        info.textContent = txt;
+        pv.classList.remove('hidden'); pv.innerHTML = '';
+        items.slice(0, 6).forEach(x => { const d = document.createElement('div'); d.textContent = x.text; pv.appendChild(d); });
+    }
+
+    // ===== Datenquellen =====
+    $('file').addEventListener('change', function () {
+        const f = this.files[0]; if (!f) return;
+        const fr = new FileReader();
+        fr.onload = () => { $('paste').value = ''; source = t('srcFile', { f: f.name }); ingest(String(fr.result), f.name); };
+        fr.onerror = () => { $('msg').textContent = t('fileErr'); };
+        fr.readAsText(f);
+        this.value = '';
+    });
+    function onPaste() {
+        source = t('srcPaste');
+        ingest($('paste').value, '');
+    }
+    const SAMPLE = [
+        'Invoice 2024-118 is overdue – please pay by Friday',
+        'Your weekly newsletter: 10 tips for better sleep',
+        'Thanks a lot, the new release works great!',
+        'Re: server outage – customers are complaining',
+        '50% off everything this weekend only!!!',
+        'Meeting moved to 3 pm, hope that works for you',
+        'Leider müssen wir Ihren Auftrag stornieren',
+        'Happy birthday! Let\'s have dinner on Saturday',
+        'Security alert: new login from unknown device',
+        'Quarterly report attached, numbers look disappointing',
+        'Vielen Dank für die schnelle Hilfe, super Service!',
+        'Reminder: dentist appointment tomorrow at 9:00'
+    ].join('\n');
+    function loadSample() {
+        $('paste').value = SAMPLE; source = t('srcSample');
+        ingest(SAMPLE, '');
+    }
+
+    // ===== Auswertung =====
+    function setStatus(done, total, errs, start) {
+        $('st-done').textContent = done; $('st-total').textContent = total; $('st-err').textContent = errs;
+        $('bar').style.width = (total ? (done / total * 100) : 0) + '%';
+        if (start && done > 0) {
+            const el = (Date.now() - start) / 60000;
+            const rate = done / el;
+            $('st-speed').textContent = rate.toFixed(1);
+            const left = (total - done) / rate;
+            $('st-eta').textContent = left < 1 ? '<1 min' : Math.round(left) + ' min';
+        }
+    }
+    function buildBody(model, labels, text, withWhy, useSchema) {
+        const props = { label: { type: 'string', enum: labels } };
+        const req = ['label'];
+        if (withWhy) { props.why = { type: 'string' }; req.push('why'); }
+        const sys = 'You are a strict classifier. ' + $('rule').value.trim() +
+            ' Allowed labels: ' + labels.join(', ') + '. Answer only as JSON: {"label": "<one allowed label>"' +
+            (withWhy ? ', "why": "<max. 10 words>"' : '') + '}.';
+        return {
+            model: model, stream: false,
+            format: useSchema ? { type: 'object', properties: props, required: req } : 'json',
+            options: { temperature: parseFloat($('temp').value) || 0, num_ctx: parseInt($('ctx').value, 10) || 2048 },
+            messages: [{ role: 'system', content: sys }, { role: 'user', content: text.slice(0, MAX_CHARS) }]
+        };
+    }
+    async function classifyOne(text, labels, withWhy, state) {
+        const call = async useSchema => {
+            const res = await fetch(OLLAMA_URL + '/api/chat', {
+                method: 'POST', signal: abortCtl.signal, headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buildBody($('model').value, labels, text, withWhy, useSchema))
+            });
+            if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+            return res.json();
+        };
+        let data;
+        try { data = await call(state.schema); }
+        catch (e) {
+            if (e.status === 400 && state.schema) { state.schema = false; data = await call(false); }
+            else throw e;
+        }
+        let obj = {};
+        try { obj = JSON.parse(data.message.content); } catch (e) { obj = {}; }
+        let label = String(obj.label || '').trim();
+        const hit = labels.find(l => l.toLowerCase() === label.toLowerCase());
+        return { label: hit || t('unknown'), why: obj.why ? String(obj.why).trim() : '' };
+    }
+    function mkResult(item, label, why) {
+        const exp = (cmpCol >= 0 && item.row) ? normCat(item.row[cmpCol]) : '';
+        const match = exp ? (exp.toLowerCase() === String(label).toLowerCase()) : null;
+        return { text: item.text, label: label, why: why, expected: exp, match: match, row: item.row };
+    }
+    async function runJob() {
+        if (running) return;
+        $('msg').textContent = '';
+        const lim = parseInt($('limit').value, 10) || 100;
+        const pool = items.slice();
+        if ($('shuffle').checked) { for (let k = pool.length - 1; k > 0; k--) { const m = Math.floor(Math.random() * (k + 1)); const tmp = pool[k]; pool[k] = pool[m]; pool[m] = tmp; } }
+        const list = pool.slice(0, lim);
+        const labels = $('labels').value.split(',').map(s => s.trim()).filter(Boolean);
+        const withWhy = $('why').checked;
+        if (!list.length) { $('msg').textContent = t('noData'); return; }
+        if (labels.length < 2) { $('msg').textContent = t('noLabels'); return; }
+
+        running = true; abortCtl = new AbortController(); results = []; usedLabels = labels.slice();
+        $('run').disabled = true; $('cancel').disabled = false;
+        $('resultPanel').classList.remove('hidden');
+        $('thWhy').classList.toggle('hidden', !withWhy);
+        $('thCmp').classList.toggle('hidden', cmpCol < 0);
+        $('tbody').innerHTML = '';
+        const start = Date.now(); let errs = 0, errMsg = '';
+        const state = { schema: true };
+        setStatus(0, list.length, 0, 0);
+        renderSummary();
+
+        for (let i = 0; i < list.length; i++) {
+            if (abortCtl.signal.aborted) break;
+            try {
+                const r = await classifyOne(list[i].text, labels, withWhy, state);
+                results.push(mkResult(list[i], r.label, r.why));
+            } catch (e) {
+                if (e.name === 'AbortError') break;
+                errs++;
+                errMsg = e instanceof TypeError ? t('offline') : (e.status === 404 ? t('notInstalled') : e.message);
+                results.push(mkResult(list[i], t('unknown'), ''));
+                if (e instanceof TypeError || e.status === 404) { setStatus(i + 1, list.length, errs, start); addRow(results.length - 1, withWhy); break; }
+            }
+            addRow(results.length - 1, withWhy);
+            setStatus(results.length, list.length, errs, start);
+            if (results.length % 3 === 0 || i === list.length - 1) renderSummary();
+        }
+        renderSummary();
+        const aborted = abortCtl.signal.aborted;
+        $('msg').textContent = errMsg ? errMsg : '';
+        $('msg').style.color = errMsg ? '' : '#9aa0a6';
+        if (!errMsg) $('msg').textContent = aborted ? t('aborted') : t('finished');
+        running = false; abortCtl = null;
+        $('run').disabled = false; $('cancel').disabled = true;
+    }
+    function cancelJob() { if (abortCtl) abortCtl.abort(); }
+
+    function colorFor(label) {
+        const i = usedLabels.indexOf(label);
+        return i >= 0 ? COLORS[i % COLORS.length] : '#5f6368';
+    }
+    function addRow(idx, withWhy) {
+        const r = results[idx];
+        const tr = document.createElement('tr');
+        const a = document.createElement('td'); a.textContent = idx + 1; a.style.color = '#80868b';
+        const b = document.createElement('td'); b.className = 'txt'; b.textContent = r.text;
+        const c = document.createElement('td'); c.className = 'lab'; c.textContent = r.label; c.style.color = colorFor(r.label);
+        tr.appendChild(a); tr.appendChild(b); tr.appendChild(c);
+        if (cmpCol >= 0) {
+            const e = document.createElement('td'); e.className = 'cmp' + (r.match === true ? ' ok' : (r.match === false ? ' bad' : ''));
+            e.textContent = r.expected ? (r.match ? '✓ ' : '✗ ') + r.expected : ''; tr.appendChild(e);
+        }
+        if (withWhy) { const d = document.createElement('td'); d.className = 'why'; d.textContent = r.why; tr.appendChild(d); }
+        $('tbody').appendChild(tr);
+    }
+    function renderSummary() {
+        const counts = {}; usedLabels.concat([t('unknown')]).forEach(l => counts[l] = 0);
+        results.forEach(r => { counts[r.label] = (counts[r.label] || 0) + 1; });
+        const total = results.length || 1;
+        const withExp = results.filter(r => r.match !== null);
+        const accBox = $('acc');
+        if (withExp.length) {
+            const ok = withExp.filter(r => r.match).length;
+            accBox.classList.remove('hidden');
+            accBox.innerHTML = '';
+            accBox.appendChild(document.createTextNode(t('accLabel') + ' '));
+            const bb = document.createElement('b'); bb.textContent = Math.round(ok / withExp.length * 100) + ' %'; accBox.appendChild(bb);
+            accBox.appendChild(document.createTextNode(' (' + ok + '/' + withExp.length + ')'));
+        } else accBox.classList.add('hidden');
+        const tiles = $('tiles'), stack = $('stack'); tiles.innerHTML = ''; stack.innerHTML = '';
+        Object.keys(counts).forEach(l => {
+            if (!counts[l] && (l === t('unknown') || usedLabels.length > 6)) return;
+            const tile = document.createElement('div'); tile.className = 'tile'; tile.style.background = colorFor(l);
+            if (colorFor(l) === '#fbbc05') tile.style.color = '#202124';
+            const n = document.createElement('div'); n.className = 'n'; n.textContent = counts[l];
+            const lb = document.createElement('div'); lb.className = 'l'; lb.textContent = l;
+            const p = document.createElement('div'); p.className = 'p'; p.textContent = Math.round(counts[l] / total * 100) + ' %';
+            tile.appendChild(n); tile.appendChild(lb); tile.appendChild(p); tiles.appendChild(tile);
+            if (counts[l]) { const seg = document.createElement('div'); seg.style.width = (counts[l] / total * 100) + '%'; seg.style.background = colorFor(l); stack.appendChild(seg); }
+        });
+    }
+
+    // ===== Export =====
+    function download(name, mime, text) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+        a.download = name; document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    function exportCsv() {
+        const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const table = headers && results.length && results[0].row;
+        const withWhy = $('why').checked;
+        let head, lines;
+        if (table) {
+            head = headers.concat(['label']).concat(withWhy ? ['reason'] : []).concat(cmpCol >= 0 ? ['control_match'] : []);
+            lines = [head.map(q).join(',')].concat(results.map(r => {
+                const cells = r.row.slice(0, headers.length).concat(Array(Math.max(0, headers.length - r.row.length)).fill(''));
+                cells.push(r.label);
+                if (withWhy) cells.push(r.why);
+                if (cmpCol >= 0) cells.push(r.match === null ? '' : (r.match ? 'yes' : 'no'));
+                return cells.map(q).join(',');
+            }));
+        } else {
+            lines = ['entry,label,reason'].concat(results.map(r => [q(r.text), q(r.label), q(r.why)].join(',')));
+        }
+        download('heinz-lab-result.csv', 'text/csv', '\uFEFF' + lines.join('\n'));
+    }
+    function exportJson() {
+        const out = results.map(r => {
+            const o = { entry: r.text, label: r.label };
+            if (r.why) o.reason = r.why;
+            if (r.expected) { o.control = r.expected; o.match = r.match; }
+            if (headers && r.row) { o.row = {}; headers.forEach((h, i) => { o.row[h] = r.row[i] || ''; }); }
+            return o;
+        });
+        download('heinz-lab-result.json', 'application/json', JSON.stringify(out, null, 2));
+    }
+
+    // ===== Server-Status =====
+    async function checkServer() {
+        try {
+            const ps = await (await fetch(OLLAMA_URL + '/api/ps')).json();
+            const loaded = ps.models && ps.models.some(m => m.name.startsWith($('model').value));
+            $('dot').className = 'dot ' + (loaded ? 'run' : 'on');
+        } catch (e) { $('dot').className = 'dot'; }
+    }
+
+    // ===== Start =====
+    (function init() {
+        const s = lsGet('heinz_settings', {});
+        if (s.lang === 'de' || s.lang === 'en') lang = s.lang;
+        const c = lsGet('heinz_lab', null);
+        if (c) {
+            activePreset = c.preset || 'mood';
+            if (['qwen2.5:3b', 'gemma2:2b', 'gemma:2b'].indexOf(c.model) >= 0) $('model').value = c.model;
+            $('labels').value = c.labels || ''; $('rule').value = c.rule || '';
+            if (c.limit) $('limit').value = c.limit;
+            if (c.temp !== undefined && c.temp !== '') $('temp').value = c.temp;
+            if (c.ctx) $('ctx').value = c.ctx;
+            $('why').checked = !!c.why;
+            $('shuffle').checked = !!c.shuffle;
+        } else {
+            $('labels').value = PRESETS.mood.labels; $('rule').value = PRESETS.mood.rule;
+        }
+        $('limit').addEventListener('input', refreshInfo);
+        applyI18n();
+        checkServer(); setInterval(checkServer, 4000);
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Heinz Ollama UI</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #121212; color: #e0e0e0; padding: 15px; margin: 0; width: 100%; overflow-x: hidden; padding-bottom: max(90px, 45vh); }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; height: 95vh; height: 95dvh; min-height: 600px; }
+
+        /* Header */
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; flex-wrap: nowrap; flex-shrink: 0; }
+        .header-left { display: flex; align-items: center; gap: 8px; }
+        .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
+        .status-dot { height: 12px; width: 12px; border-radius: 50%; background-color: #ff5252; display: inline-block; flex-shrink: 0; transition: background-color 0.3s; }
+        .status-online { background-color: #ff9800; box-shadow: 0 0 8px #ff9800; }
+        .status-active { background-color: #4caf50; box-shadow: 0 0 8px #4caf50; }
+
+        select { background: #1e1e1e; color: #fff; border: 1px solid #333; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; }
+        .hub-link { background: #2a2a2a; border: 1px solid #444; color: #fff; text-decoration: none; border-radius: 8px; padding: 4px 8px; font-size: 17px; line-height: 1.3; flex-shrink: 0; }
+        .model-select { flex: 1; min-width: 0; }
+        .burger-btn, .lang-btn { background: #2a2a2a; border: 1px solid #444; color: #fff; font-size: 18px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+        .lang-btn { font-size: 13px; font-weight: bold; padding: 4px 5px; display: flex; gap: 3px; align-items: center; }
+        .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #777; }
+        .lang-btn span.active { background: #4caf50; color: #fff; }
+
+        /* Modus-Auswahl */
+        .mode-container { background: #1e1e1e; border: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; width: 100%; flex-shrink: 0; }
+        .mode-container select { width: 100%; font-size: 15px; padding: 10px; background: #2a2a2a; border: 1px solid #444; }
+
+        /* Eingabefelder */
+        .controls-wrapper { flex-shrink: 0; }
+        textarea, input[type=text] { width: 100%; background: #1e1e1e; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; font-size: 15px; font-family: inherit; }
+        textarea { height: 80px; resize: none; margin-bottom: 5px; }
+
+        /* Token Dashboard */
+        .token-dashboard { display: flex; gap: 8px; margin-bottom: 15px; font-family: monospace; font-size: 12px; flex-shrink: 0; flex-wrap: wrap; }
+        .badge { padding: 4px 8px; border-radius: 6px; background: #1a1a1a; border: 1px solid #333; font-weight: bold; }
+        .badge-prompt { color: #00e676; border-color: #00e676; }
+        .badge-eval { color: #29b6f6; border-color: #29b6f6; }
+        .badge-speed { color: #ab47bc; border-color: #ab47bc; }
+
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .input-row input { margin-bottom: 0; flex: 1; min-width: 0; }
+        .voice-btn { background: #ff9800; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+        /* Buttons */
+        .action-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        button.action-btn { flex: 1; background: #4caf50; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        button.stop-btn { flex: 1; background: #f44336; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; display: none; }
+        button.new-btn { background: #333; border: 1px solid #444; color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+        .audio-row { display: flex; gap: 10px; margin-bottom: 5px; }
+        .audio-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; }
+
+        /* Chat-Ausgabe */
+        .chat-wrapper { flex: 1; min-height: 220px; position: relative; width: 100%; overflow-y: auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+        .msg { flex-shrink: 0; padding: 10px 15px; border-radius: 8px; max-width: 90%; word-break: break-word; line-height: 1.5; font-size: 15px; }
+        .msg-user { background: #2a2a2a; align-self: flex-end; border-bottom-right-radius: 2px; white-space: pre-wrap; }
+        .msg-note { display: block; margin-top: 6px; font-size: 11px; color: #888; font-weight: normal; }
+        .msg-assistant { background: #181818; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 2px; width: 100%; overflow-x: auto; }
+        .placeholder { text-align: center; color: #666; margin-top: auto; margin-bottom: auto; }
+
+        /* Integriertes Markdown Styling */
+        .msg-assistant h1, .msg-assistant h2, .msg-assistant h3, .msg-assistant h4 { margin-top: 10px; margin-bottom: 5px; }
+        .msg-assistant p { margin: 6px 0; }
+        .msg-assistant ul, .msg-assistant ol { margin: 6px 0; padding-left: 22px; }
+        .msg-assistant blockquote { margin: 8px 0; padding: 4px 10px; border-left: 3px solid #555; color: #bbb; }
+        .msg-assistant hr { border: none; border-top: 1px solid #444; margin: 10px 0; }
+        .msg-assistant code { font-family: monospace; background: #000; padding: 2px 4px; border-radius: 3px; }
+        .code-wrap { position: relative; margin: 8px 0; }
+        .code-wrap pre { background: #000; padding: 28px 10px 10px; border-radius: 5px; overflow-x: auto; margin: 0; }
+        .code-wrap pre code { background: none; padding: 0; color: #d4d4d4; white-space: pre; }
+        .code-lang { position: absolute; top: 6px; left: 10px; font-size: 11px; color: #777; font-family: monospace; }
+        .code-copy { position: absolute; top: 4px; right: 4px; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 5px; font-size: 11px; padding: 3px 8px; cursor: pointer; }
+        .md-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; margin-top: 10px; }
+        .md-table th, .md-table td { border: 1px solid #444; padding: 8px; text-align: left; }
+        .md-table th { background: #2a2a2a; }
+
+        /* Syntax-Farben */
+        .tok-c { color: #7f8c8d; font-style: italic; }  /* Kommentar */
+        .tok-s { color: #98c379; }                      /* String */
+        .tok-d { color: #e5c07b; }                      /* Decorator / Präprozessor */
+        .tok-n { color: #d19a66; }                      /* Zahl */
+        .tok-k { color: #c678dd; font-weight: bold; }   /* Schlüsselwort / Tag */
+        .tok-b { color: #61afef; }                      /* Builtin / Attribut */
+        .tok-f { color: #56b6c2; }                      /* Funktionsaufruf */
+
+        .disabled-box { opacity: 0.4; pointer-events: none; }
+        .spinner { display: inline-block; animation: rotate 2s linear infinite; font-size: 16px; margin-left: 8px; vertical-align: middle; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        /* Slide-over Parameter Sidebar */
+        .sidebar { position: fixed; top: 0; right: -100%; width: 290px; height: 100%; background: #181818; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.7); transition: right 0.3s ease; padding: 20px; z-index: 1000; overflow-y: auto; }
+        .sidebar.open { right: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .sidebar-header h3 { margin: 0; font-size: 18px; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+        .param-group { margin-bottom: 18px; }
+        .param-group label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: #bbb; }
+        .param-group input[type=range] { width: 100%; accent-color: #4caf50; }
+        .slider-group { transition: opacity 0.3s; }
+        .slider-group.off { opacity: 0.3; }
+        .req-warn { border-color: #f44336 !important; }
+        .side-btn { width: 100%; background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; font-size: 13px; }
+        .side-title { font-size: 13px; color: #aaa; font-weight: bold; margin: 18px 0 8px; border-top: 1px solid #333; padding-top: 14px; }
+        .saved-item { display: flex; gap: 6px; margin-bottom: 6px; }
+        .saved-item .load { flex: 1; min-width: 0; text-align: left; background: #222; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; overflow: hidden; }
+        .saved-item .load small { display: block; color: #888; font-size: 10px; margin-top: 2px; }
+        .saved-item .del { background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; cursor: pointer; padding: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="index.html" class="hub-link" title="Hub">⌂</a>
+                <h2>🤖 Heinz UI</h2>
+                <span id="status-dot" class="status-dot" data-i18n-title="serverStatus" title="Server status"></span>
+            </div>
+            <select id="model-select" class="model-select" onchange="onModelChange()">
+                <option value="gemma2:2b">🧠 Gemma 2 (2B)</option>
+                <option value="qwen2.5:3b">🧠 Qwen 2.5 (3B)</option>
+                <option value="gemma:2b">🧠 Gemma 1 (2B)</option>
+            </select>
+            <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+            <button class="burger-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+
+        <div class="mode-container">
+            <label style="font-weight: bold; color: #aaa; font-size: 13px;" data-i18n="chooseMode">Choose working mode:</label>
+            <select id="mode-select" onchange="updateModeUI()">
+                <option value="wilson" data-i18n="m_wilson">🏕️ Wilson (Companion)</option>
+                <option value="heinz" data-i18n="m_heinz">🕵️ Heinz (Facts &amp; Slang)</option>
+                <option value="audit" data-i18n="m_audit">📄 Audit &amp; Text Tool</option>
+                <option value="code" data-i18n="m_code">👨‍💻 Code &amp; Syntax</option>
+                <option value="creative" data-i18n="m_creative">🎨 Creative &amp; Story</option>
+            </select>
+        </div>
+
+        <div class="chat-wrapper" id="chat-container"></div>
+
+        <div class="controls-wrapper">
+            <div id="context-wrapper">
+                <textarea id="context" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn')"></textarea>
+
+                <div class="token-dashboard">
+                    <span class="badge badge-prompt">P-Tok: <span id="dash-p-tok">0</span></span>
+                    <span class="badge badge-eval">A-Tok: <span id="dash-a-tok">0</span></span>
+                    <span class="badge badge-speed">Speed: <span id="dash-speed">0.0</span> T/s</span>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <input type="text" id="query" data-i18n-ph="queryPh" placeholder="What should Heinz do?" onkeydown="if(event.key === 'Enter') askGemma()">
+                <button class="voice-btn" onclick="startListening()">🎤</button>
+            </div>
+
+            <div class="action-row">
+                <button class="action-btn" id="send-btn" onclick="askGemma()" data-i18n="send">Send</button>
+                <button class="stop-btn" id="stop-btn" onclick="abortGeneration()" data-i18n="cancel">Cancel</button>
+                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (current one is saved)">➕</button>
+                <button class="new-btn" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat">📋</button>
+            </div>
+
+            <div class="audio-row">
+                <button class="audio-btn" style="background: #9c27b0;" onclick="speakResponse()" data-i18n="read">🔊 Read aloud</button>
+                <button class="audio-btn" style="background: #f44336;" onclick="stopSpeaking()" data-i18n="stop">🛑 Stop</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parameter Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 data-i18n="params">⚙️ Parameters</h3>
+            <button class="close-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+        <div class="param-group default-toggle">
+            <label style="justify-content:flex-start; gap:8px; color:#fff; font-weight:bold; cursor:pointer;">
+                <input type="checkbox" id="use-default" onchange="onDefaultToggle()" style="width:auto; margin:0;"> <span data-i18n="defaults">Default values</span>
+            </label>
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="defaultsHelp">Ignores the sliders and uses the model's internal Ollama defaults.</small>
+        </div>
+        <div class="param-group slider-group">
+            <label>Temperature: <span id="val-temp">0.7</span></label>
+            <input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()">
+        </div>
+        <div class="param-group slider-group">
+            <label>Top-P: <span id="val-topp">0.9</span></label>
+            <input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()">
+        </div>
+        <div class="param-group slider-group">
+            <label>Top-K: <span id="val-topk">40</span></label>
+            <input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()">
+        </div>
+        <div class="param-group slider-group">
+            <label>Context Window: <span id="val-ctx">8192</span></label>
+            <input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()">
+        </div>
+
+        <div class="side-title" data-i18n="chats">💬 Chats</div>
+        <button class="side-btn" onclick="saveChatNow()" data-i18n="saveChat">💾 Save current chat</button>
+        <button class="side-btn" onclick="discardChat()" data-i18n="discardChat">🗑️ Discard current chat</button>
+        <div id="saved-list"></div>
+    </div>
+
+    <script>
+        // ===== PARSER START =====
+        // Escape für alles, was in HTML landet
+        function esc(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // --- Syntax-Highlighting (offline, ohne Bibliothek) ---
+        const HL_KW = ['and','as','assert','async','await','break','class','continue','def','del','elif','else','except','finally','for','from','global','if','import','in','is','lambda','nonlocal','not','or','pass','raise','return','try','while','with','yield','True','False','None',
+            'const','let','var','function','new','this','typeof','instanceof','switch','case','default','throw','catch','null','undefined','true','false','export','extends','static','do','fi','then','done','esac',
+            'void','char','double','long','short','unsigned','signed','struct','enum','union','typedef','sizeof','public','private','protected','interface','implements','package','namespace','using','final','abstract','override','virtual','extern','inline','goto','volatile','template',
+            'fn','mut','pub','impl','trait','match','use','func','defer','chan','end','begin','local','nil','elseif','repeat','until'];
+        const HL_SQL = ['SELECT','FROM','WHERE','INSERT','INTO','VALUES','UPDATE','DELETE','CREATE','TABLE','JOIN','ON','GROUP','BY','ORDER','LIMIT','AND','OR','NOT','NULL','AS','SET','ALTER','DROP','INDEX','PRIMARY','KEY','LEFT','RIGHT','INNER','OUTER','HAVING','DISTINCT','UNION','LIKE','IN','IS','CASE','WHEN','THEN','ELSE','END'];
+        const HL_BI = ['print','len','range','int','str','float','list','dict','set','tuple','bool','open','input','type','isinstance','enumerate','zip','map','filter','sorted','sum','min','max','abs','round','super','self','cls','echo','cd','ls','cat','grep','console','require'];
+
+        const HL_HASH = new Set(['python','py','bash','sh','shell','zsh','yaml','yml','toml','ruby','rb','perl','pl','r','makefile','make','dockerfile','ini','conf','powershell','ps1','nginx','cmake']);
+        const HL_SLASH = new Set(['js','javascript','jsx','ts','typescript','tsx','c','h','cpp','c++','cc','hpp','java','go','golang','rust','rs','swift','kotlin','kt','cs','csharp','c#','dart','scala','groovy','css','scss','less','json','jsonc','json5','objc','glsl','solidity']);
+        const HL_DASH = new Set(['sql','lua','haskell','hs','ada','plsql','mysql','postgresql','sqlite']);
+        const HL_MARKUP = new Set(['html','htm','xml','svg','xhtml','vue']);
+
+        const HL_SRC = {
+            pre:   /#(?:include|define|undef|ifdef|ifndef|if|elif|else|endif|pragma|import|using|region|endregion)\b[^\n]*/.source,
+            cHash: /#[^\n]*/.source,
+            cSlash:/\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/.source,
+            cBoth: /#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/.source,
+            cDash: /--[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/.source,
+            cHtml: /<!--[\s\S]*?(?:-->|$)/.source,
+            str:   /(?:\b[rRbBfFuU]{1,2})?(?:"""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|`(?:\\.|[^`\\])*`/.source,
+            strPlain: /"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`/.source,
+            mStr:  /(?<==)"[^"\n]*"|(?<==)'[^'\n]*'/.source,
+            decor: /@[A-Za-z_][\w.]*/.source,
+            num:   /\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/.source,
+            call:  /\b[A-Za-z_]\w*(?=\()/.source,
+            tag:   /<\/?[A-Za-z][\w:-]*|\/?>/.source,
+            attr:  /\b[A-Za-z_:][\w:.-]*(?==)/.source
+        };
+        const HL_KW_SRC = '\\b(?:' + HL_KW.join('|') + ')\\b';
+        const HL_KWSQL_SRC = '\\b(?:' + HL_SQL.concat(HL_KW).join('|') + ')\\b';
+        const HL_BI_SRC = '\\b(?:' + HL_BI.join('|') + ')\\b';
+
+        const HL_FAMILIES = {
+            generic: { flags: 'g',  e: [['d',HL_SRC.pre],['c',HL_SRC.cBoth],['s',HL_SRC.str],['d',HL_SRC.decor],['n',HL_SRC.num],['k',HL_KW_SRC],['b',HL_BI_SRC],['f',HL_SRC.call]] },
+            hash:    { flags: 'g',  e: [['c',HL_SRC.cHash],['s',HL_SRC.str],['d',HL_SRC.decor],['n',HL_SRC.num],['k',HL_KW_SRC],['b',HL_BI_SRC],['f',HL_SRC.call]] },
+            slash:   { flags: 'g',  e: [['d',HL_SRC.pre],['c',HL_SRC.cSlash],['s',HL_SRC.strPlain],['d',HL_SRC.decor],['n',HL_SRC.num],['k',HL_KW_SRC],['b',HL_BI_SRC],['f',HL_SRC.call]] },
+            dash:    { flags: 'gi', e: [['c',HL_SRC.cDash],['s',HL_SRC.strPlain],['n',HL_SRC.num],['k',HL_KWSQL_SRC],['b',HL_BI_SRC],['f',HL_SRC.call]] },
+            markup:  { flags: 'g',  e: [['c',HL_SRC.cHtml],['s',HL_SRC.mStr],['k',HL_SRC.tag],['b',HL_SRC.attr]] }
+        };
+        for (const k in HL_FAMILIES) {
+            const f = HL_FAMILIES[k];
+            f.re = new RegExp(f.e.map(x => '(' + x[1] + ')').join('|'), f.flags);
+        }
+
+        function hlFamily(lang) {
+            if (HL_MARKUP.has(lang)) return 'markup';
+            if (HL_HASH.has(lang)) return 'hash';
+            if (HL_SLASH.has(lang)) return 'slash';
+            if (HL_DASH.has(lang)) return 'dash';
+            return 'generic';
+        }
+
+        function highlightCode(code, lang) {
+            const fam = HL_FAMILIES[hlFamily(lang)];
+            const re = fam.re;
+            let out = '', last = 0, m;
+            re.lastIndex = 0;
+            while ((m = re.exec(code)) !== null) {
+                if (m[0] === '') { re.lastIndex++; continue; }
+                let idx = 1;
+                while (idx < m.length && m[idx] === undefined) idx++;
+                const cls = fam.e[idx - 1][0];
+                out += esc(code.slice(last, m.index)) + '<span class="tok-' + cls + '">' + esc(m[0]) + '</span>';
+                last = re.lastIndex;
+            }
+            return out + esc(code.slice(last));
+        }
+
+        // --- Markdown-Parser ---
+        function inlineFmt(s) {
+            s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+            s = s.replace(/(^|[^*\w])\*([^*\s][^*\n]*?)\*(?![*\w])/g, '$1<em>$2</em>');
+            return s;
+        }
+
+        function parseOfflineMarkdown(text) {
+            if (!text) return '';
+            const PH0 = '', PH1 = '';
+            const blocks = [];
+            const inlines = [];
+
+            // 1) Code-Blöcke herauslösen (auch unvollständige beim Streamen)
+            let src = text.replace(/```([^\n`]*)\n([\s\S]*?)(?:```|$)/g, function (m, lang, code) {
+                blocks.push({ lang: lang.trim().split(/\s+/)[0] || '', code: code.replace(/\n$/, '') });
+                return '\n' + PH0 + 'B' + (blocks.length - 1) + PH1 + '\n';
+            });
+
+            // 2) Alles übrige escapen (XSS-Schutz), Inline-Code schützen
+            src = esc(src);
+            src = src.replace(/`([^`\n]+)`/g, function (m, c) {
+                inlines.push(c);
+                return PH0 + 'I' + (inlines.length - 1) + PH1;
+            });
+
+            const renderBlock = function (idx) {
+                const b = blocks[idx];
+                const lang = (b.lang || '').toLowerCase().replace(/[^\w+#.-]/g, '');
+                return '<div class="code-wrap"><span class="code-lang">' + lang + '</span><button type="button" class="code-copy">Copy</button><pre><code>' + highlightCode(b.code, lang) + '</code></pre></div>';
+            };
+
+            const cellsOf = function (r) {
+                let t = r.trim();
+                if (t.startsWith('|')) t = t.slice(1);
+                if (t.endsWith('|')) t = t.slice(0, -1);
+                return t.split('|');
+            };
+            const SEP = /^\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?$/;
+
+            const out = [];
+            let mode = '';
+            let buf = [];
+
+            const flush = function () {
+                if (!mode || !buf.length) { mode = ''; buf = []; return; }
+                if (mode === 'p') {
+                    out.push('<p>' + buf.map(inlineFmt).join('<br>') + '</p>');
+                } else if (mode === 'quote') {
+                    out.push('<blockquote>' + buf.map(inlineFmt).join('<br>') + '</blockquote>');
+                } else if (mode === 'ul' || mode === 'ol') {
+                    out.push('<' + mode + '>' + buf.map(function (x) { return '<li>' + inlineFmt(x) + '</li>'; }).join('') + '</' + mode + '>');
+                } else if (mode === 'table') {
+                    let html = '<table class="md-table">';
+                    let rows = buf.slice();
+                    if (rows.length > 1 && SEP.test(rows[1].trim())) {
+                        html += '<thead><tr>' + cellsOf(rows[0]).map(function (c) { return '<th>' + inlineFmt(c.trim()) + '</th>'; }).join('') + '</tr></thead>';
+                        rows = rows.slice(2);
+                    }
+                    html += '<tbody>';
+                    rows.forEach(function (r) {
+                        if (SEP.test(r.trim())) return;
+                        html += '<tr>' + cellsOf(r).map(function (c) { return '<td>' + inlineFmt(c.trim()) + '</td>'; }).join('') + '</tr>';
+                    });
+                    out.push(html + '</tbody></table>');
+                }
+                mode = ''; buf = [];
+            };
+            const setMode = function (m) { if (mode !== m) { flush(); mode = m; } };
+
+            const lines = src.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                const t = lines[i].trim();
+                let m;
+                if (t === '') { flush(); continue; }
+                if ((m = t.match(/^B(\d+)$/))) { flush(); out.push(renderBlock(parseInt(m[1], 10))); continue; }
+                if ((m = t.match(/^(#{1,4})\s+(.*)$/))) { flush(); out.push('<h' + m[1].length + '>' + inlineFmt(m[2]) + '</h' + m[1].length + '>'); continue; }
+                if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(t)) { flush(); out.push('<hr>'); continue; }
+                if (t.startsWith('|') && t.length > 1) { setMode('table'); buf.push(t); continue; }
+                if ((m = t.match(/^&gt;\s?(.*)$/))) { setMode('quote'); buf.push(m[1]); continue; }
+                if ((m = t.match(/^[-*+]\s+(.*)$/))) { setMode('ul'); buf.push(m[1]); continue; }
+                if ((m = t.match(/^\d+[.)]\s+(.*)$/))) { setMode('ol'); buf.push(m[1]); continue; }
+                setMode('p'); buf.push(t);
+            }
+            flush();
+
+            return out.join('\n').replace(/I(\d+)/g, function (m, i) { return '<code>' + inlines[parseInt(i, 10)] + '</code>'; });
+        }
+        // ===== PARSER END =====
+
+        // ===== Konfiguration =====
+        const OLLAMA_URL = 'http://localhost:11434';
+
+        const PROMPTS = {
+            en: {
+                respond: 'Respond in English.',
+                ctxLabel: 'Context / source text:',
+                wilson: "You are Wilson, a friendly and well-read companion. Draw on your general knowledge, explain things in context and answer in a fluent, narrative tone.",
+                heinz: "You are Heinz, a down-to-earth fact assistant with a dry, casual tone. Give short, factual answers. If you are not sure or do not know, say so instead of guessing.",
+                audit: "SYSTEM RULE: Analyze the context strictly and objectively. Execute the instruction without introduction or embellishment. If information is missing, answer exactly with: \"Information not in context.\"",
+                code: "SYSTEM RULE: You are a strict code generator. Output ONLY raw, executable code or exact terminal commands. Do NOT provide explanations, tutorials, or pleasantries unless explicitly asked. If the user provides code and asks for an explanation, be extremely brief, strictly technical, and use bullet points. Use standard libraries whenever possible.",
+                creative: "SYSTEM RULE: Write vividly and diversely. Use creative comparisons and smooth transitions."
+            },
+            de: {
+                respond: 'Antworte auf Deutsch.',
+                ctxLabel: 'Kontext / Rohtext:',
+                wilson: "Du bist Wilson, ein freundlicher und belesener Begleiter. Greife auf dein Allgemeinwissen zu, erkläre Dinge im Kontext und antworte in einem flüssigen, erzählenden Tonfall.",
+                heinz: "Du bist Heinz, ein bodenständiger Fakten-Assistent mit trockenem, lockerem Ton. Gib kurze, sachliche Antworten. Wenn du etwas nicht sicher weißt, sag das, statt zu raten.",
+                audit: "SYSTEMREGEL: Analysiere den Kontext streng und objektiv. Führe die Anweisung ohne Einleitung und Ausschmückung aus. Wenn Informationen fehlen, antworte exakt mit: \"Information nicht im Kontext.\"",
+                code: "SYSTEMREGEL: Du bist ein strenger Code-Generator. Gib NUR reinen, ausführbaren Code oder exakte Terminal-Befehle aus. Keine Erklärungen, Tutorials oder Höflichkeitsfloskeln, außer sie werden ausdrücklich verlangt. Wenn der Nutzer Code liefert und eine Erklärung will, antworte extrem knapp, rein technisch und in Stichpunkten. Nutze nach Möglichkeit Standardbibliotheken.",
+                creative: "SYSTEMREGEL: Schreibe lebendig und abwechslungsreich. Nutze kreative Vergleiche und fließende Übergänge."
+            }
+        };
+
+        // Modus-Presets: Modell + Sampling. Bei kleinen Modellen bewusst polarisiert.
+        // lockModel: Modell fest (Chat-Modi); sonst frei wählbar. ctx: 'none' | 'optional' | 'required'
+        const MODELS = ['gemma2:2b', 'qwen2.5:3b', 'gemma:2b'];
+        const MODE_PRESETS = {
+            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b', lockModel: true,  ctx: 'none',     color: '#2196F3' },
+            heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b', lockModel: true,  ctx: 'optional', color: '#e91e63' },
+            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b', lockModel: false, ctx: 'required', color: '#ff9800' },
+            code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b', lockModel: false, ctx: 'optional', color: '#607d8b' },
+            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b', lockModel: false, ctx: 'optional', color: '#9c27b0' }
+        };
+        function normalizeMode(m) {
+            if (m === 'werkzeug') return 'code';
+            return MODE_PRESETS[m] ? m : 'wilson';
+        }
+        const SPEECH_LANG = { en: 'en-US', de: 'de-DE' };
+
+        // ===== UI-Texte (Standard Englisch, Deutsch über den EN|DE-Schalter) =====
+        const I18N = {
+            en: {
+                serverStatus: 'Server status', langTitle: 'Switch language: prompts, answer language, speech input and read-aloud',
+                chooseMode: 'Choose working mode:',
+                m_wilson: '🏕️ Wilson (Companion)', m_heinz: '🕵️ Heinz (Facts & Slang)', m_audit: '📄 Audit & Text Tool',
+                m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
+                ctxOptional: 'Optional context / raw text (included with every request)...',
+                ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
+                ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
+                queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
+                newChatTitle: 'New chat (current one is saved)', copyChatTitle: 'Copy whole chat',
+                read: '🔊 Read aloud', stop: '🛑 Stop', params: '⚙️ Parameters', defaults: 'Default values',
+                defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
+                chats: '💬 Chats', saveChat: '💾 Save current chat', discardChat: '🗑️ Discard current chat',
+                stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stOffline: 'Ollama server offline',
+                micUnsupported: 'Speech recognition is not supported by this browser.',
+                ready: 'Ready for input...', readyNew: 'Ready for input... (new chat)', working: 'working...',
+                noChatToSave: 'No chat to save.', confirmDiscard: 'Discard current chat (do not save)?',
+                nothingSaved: 'Nothing saved yet.', ctxNote: '📎 Context: {n} characters',
+                hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
+                connFail: 'Connection to Ollama failed. Is the server running? ({m})',
+                aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
+                locale: 'en-GB'
+            },
+            de: {
+                serverStatus: 'Server-Status', langTitle: 'Sprache umschalten: Prompts, Antwortsprache, Spracheingabe und Vorlesen',
+                chooseMode: 'Arbeitsmodus wählen:',
+                m_wilson: '🏕️ Wilson (Plaudertasche)', m_heinz: '🕵️ Heinz (Fakten & Slang)', m_audit: '📄 Audit & Text-Werkzeug',
+                m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
+                ctxOptional: 'Optionaler Kontext / Rohtext (wird bei jeder Anfrage berücksichtigt)...',
+                ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
+                ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
+                queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
+                newChatTitle: 'Neuer Chat (aktueller wird gespeichert)', copyChatTitle: 'Gesamten Chat kopieren',
+                read: '🔊 Vorlesen', stop: '🛑 Stopp', params: '⚙️ Parameter', defaults: 'Standardwerte',
+                defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
+                chats: '💬 Chats', saveChat: '💾 Aktuellen Chat speichern', discardChat: '🗑️ Aktuellen Chat verwerfen',
+                stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stOffline: 'Ollama Server offline',
+                micUnsupported: 'Spracherkennung wird vom Browser nicht unterstützt.',
+                ready: 'Bereit für Eingaben...', readyNew: 'Bereit für Eingaben... (neuer Chat)', working: 'arbeitet...',
+                noChatToSave: 'Kein Chat zum Speichern.', confirmDiscard: 'Aktuellen Chat verwerfen (nicht speichern)?',
+                nothingSaved: 'Noch nichts gespeichert.', ctxNote: '📎 Kontext: {n} Zeichen',
+                hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
+                connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
+                aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
+                locale: 'de-DE'
+            }
+        };
+        function t(key, vars) {
+            let str = (I18N[settings.lang] && I18N[settings.lang][key]) || I18N.en[key] || key;
+            if (vars) Object.keys(vars).forEach(function (k) { str = str.replace('{' + k + '}', vars[k]); });
+            return str;
+        }
+        function applyI18n() {
+            document.documentElement.lang = settings.lang;
+            document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+            document.querySelectorAll('[data-i18n-title]').forEach(function (el) { el.title = t(el.getAttribute('data-i18n-title')); });
+            const ph = chatBox.querySelector('.placeholder');
+            if (ph && !chatHistory.length) ph.textContent = ph.getAttribute('data-new') ? t('readyNew') : t('ready');
+            applyModeStyling();
+            renderSavedList();
+        }
+
+        // ===== Zustand =====
+        let chatHistory = [];        // {role, content, note?}
+        let currentAbortController = null;
+        let generating = false;
+        let currentSavedId = null;
+        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null };
+
+        // ===== Speicher =====
+        function lsGet(key, fallback) {
+            try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+        }
+        function lsSet(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('localStorage nicht verfügbar', e); }
+        }
+        function lsRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+        function saveSettings() { lsSet('heinz_settings', settings); }
+
+        function persistCurrent() {
+            if (!chatHistory.length) { lsRemove('heinz_current'); return; }
+            lsSet('heinz_current', {
+                model: settings.model,
+                mode: settings.mode,
+                messages: chatHistory,
+                context: document.getElementById('context').value,
+                savedId: currentSavedId
+            });
+        }
+
+        // ===== UI Setup =====
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        const $ = id => document.getElementById(id);
+
+        function setSliders(t, p, k, c) {
+            $('param-temp').value = t; $('val-temp').innerText = t;
+            $('param-topp').value = p; $('val-topp').innerText = p;
+            $('param-topk').value = k; $('val-topk').innerText = k;
+            $('param-ctx').value = c; $('val-ctx').innerText = c;
+        }
+
+        function readSliders() {
+            return {
+                temp: parseFloat($('param-temp').value),
+                topp: parseFloat($('param-topp').value),
+                topk: parseInt($('param-topk').value, 10),
+                ctx: parseInt($('param-ctx').value, 10)
+            };
+        }
+
+        function onSlider() {
+            const v = readSliders();
+            $('val-temp').innerText = v.temp;
+            $('val-topp').innerText = v.topp;
+            $('val-topk').innerText = v.topk;
+            $('val-ctx').innerText = v.ctx;
+            settings.params = v;
+            saveSettings();
+        }
+
+        function onDefaultToggle() {
+            settings.useDefault = $('use-default').checked;
+            saveSettings();
+            applyModeStyling();
+        }
+
+        function applyModeStyling() {
+            const preset = MODE_PRESETS[settings.mode];
+            const ctxBox = $('context');
+            const modelSel = $('model-select');
+            $('context-wrapper').classList.toggle('disabled-box', preset.ctx === 'none');
+            $('send-btn').style.background = preset.color;
+            modelSel.disabled = preset.lockModel;
+            modelSel.style.opacity = preset.lockModel ? '0.6' : '1';
+            ctxBox.classList.remove('req-warn');
+            if (preset.ctx === 'required') {
+                ctxBox.placeholder = t('ctxRequired');
+                ctxBox.style.borderColor = '#ff9800';
+            } else {
+                ctxBox.placeholder = t('ctxOptional');
+                ctxBox.style.borderColor = '';
+            }
+            $('use-default').checked = !!settings.useDefault;
+            document.querySelectorAll('.slider-group').forEach(function (g) {
+                g.classList.toggle('off', !!settings.useDefault);
+                g.querySelector('input').disabled = !!settings.useDefault;
+            });
+        }
+
+        // Nutzer wechselt den Modus: Preset-Modell + Preset-Regler (außer bei Standardwerten)
+        function updateModeUI() {
+            settings.mode = normalizeMode($('mode-select').value);
+            const preset = MODE_PRESETS[settings.mode];
+            settings.model = preset.model;
+            $('model-select').value = preset.model;
+            if (!settings.useDefault) {
+                setSliders(preset.temp, preset.top_p, preset.top_k, parseInt($('param-ctx').value, 10));
+                settings.params = readSliders();
+            }
+            saveSettings();
+            applyModeStyling();
+            newChat(true);  // Moduswechsel = neuer Chat (der alte wird gespeichert)
+            checkServer();
+        }
+
+        function onModelChange() {
+            settings.model = $('model-select').value;
+            saveSettings();
+            persistCurrent();
+            checkServer();
+        }
+
+        function updateLangBtn() {
+            document.querySelectorAll('#lang-btn span').forEach(function (s) {
+                s.classList.toggle('active', s.getAttribute('data-l') === settings.lang);
+            });
+        }
+
+        function toggleLang() {
+            settings.lang = settings.lang === 'en' ? 'de' : 'en';
+            saveSettings();
+            updateLangBtn();
+            applyI18n();
+            window.speechSynthesis.cancel();
+        }
+
+        // ===== Server Status =====
+        async function checkServer() {
+            const statusDot = document.getElementById('status-dot');
+            const selectedModel = document.getElementById('model-select').value;
+            try {
+                const res = await fetch(OLLAMA_URL + '/api/ps');
+                const data = await res.json();
+                const isLoaded = data.models && data.models.some(m => m.name.startsWith(selectedModel));
+                if (isLoaded) {
+                    statusDot.className = 'status-dot status-active';
+                    statusDot.title = t('stDefault');
+                } else {
+                    statusDot.className = 'status-dot status-online';
+                    statusDot.title = t('stOnline');
+                }
+            } catch (e) {
+                statusDot.className = 'status-dot';
+                statusDot.title = t('stOffline');
+            }
+        }
+        setInterval(checkServer, 3000);
+
+        // ===== Sprache ein/aus =====
+        function startListening() {
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!Recognition) return alert(t('micUnsupported'));
+            const recognition = new Recognition();
+            recognition.lang = SPEECH_LANG[settings.lang];
+            const micBtn = document.querySelector('.voice-btn');
+            micBtn.style.background = '#f44336';
+            micBtn.innerText = '🔴';
+            recognition.onresult = (e) => { document.getElementById('query').value = e.results[0][0].transcript; };
+            recognition.onend = () => { micBtn.style.background = '#ff9800'; micBtn.innerText = '🎤'; };
+            recognition.onerror = () => { micBtn.style.background = '#ff9800'; micBtn.innerText = '🎤'; };
+            recognition.start();
+        }
+
+        function pickVoice(langTag) {
+            const voices = (window.speechSynthesis.getVoices && window.speechSynthesis.getVoices()) || [];
+            const norm = function (v) { return (v.lang || '').toLowerCase().replace('_', '-'); };
+            const full = langTag.toLowerCase();
+            const base = full.split('-')[0];
+            const matches = voices.filter(v => norm(v).startsWith(base));
+            return matches.find(v => v.localService && norm(v) === full)
+                || matches.find(v => v.localService)
+                || matches.find(v => norm(v) === full)
+                || matches[0] || null;
+        }
+
+        function speechText(md) {
+            return md
+                .replace(/```[\s\S]*?(?:```|$)/g, ' ')
+                .replace(/`([^`]*)`/g, '$1')
+                .replace(/[*_#>|~]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function lastAssistantText() {
+            for (let i = chatHistory.length - 1; i >= 0; i--) {
+                if (chatHistory[i].role === 'assistant') return chatHistory[i].content;
+            }
+            return '';
+        }
+
+        function speakResponse() {
+            const text = speechText(lastAssistantText());
+            if (!text) return;
+            window.speechSynthesis.cancel();
+            const tag = SPEECH_LANG[settings.lang];
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = tag;
+            const voice = pickVoice(tag);
+            if (voice) utter.voice = voice;
+            window.speechSynthesis.speak(utter);
+        }
+
+        function stopSpeaking() { window.speechSynthesis.cancel(); }
+
+        // ===== Nachrichten-Rendering =====
+        const chatBox = document.getElementById('chat-container');
+
+        function showPlaceholder(text, isNew) {
+            chatBox.innerHTML = '';
+            const d = document.createElement('div');
+            d.className = 'placeholder';
+            if (isNew) d.setAttribute('data-new', '1');
+            d.textContent = text;
+            chatBox.appendChild(d);
+        }
+
+        function clearPlaceholder() {
+            const p = chatBox.querySelector('.placeholder');
+            if (p) p.remove();
+        }
+
+        function appendUserMessage(text, note) {
+            clearPlaceholder();
+            const div = document.createElement('div');
+            div.className = 'msg msg-user';
+            div.appendChild(document.createTextNode(text));
+            if (note) {
+                const n = document.createElement('span');
+                n.className = 'msg-note';
+                n.textContent = note;
+                div.appendChild(n);
+            }
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendAssistantMessage(content, id) {
+            clearPlaceholder();
+            const div = document.createElement('div');
+            div.className = 'msg msg-assistant';
+            if (id) div.id = id;
+            div.innerHTML = parseOfflineMarkdown(content);
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        function appendLoadingMessage(id) {
+            clearPlaceholder();
+            const div = document.createElement('div');
+            div.className = 'msg msg-assistant';
+            div.id = id;
+            div.innerHTML = '<i>' + t('working') + ' <span class="spinner">⚙️</span></i>';
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        function updateAssistantMessage(id, content) {
+            const div = document.getElementById(id);
+            if (!div) return;
+            div.innerHTML = parseOfflineMarkdown(content);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function renderChatFromHistory() {
+            chatBox.innerHTML = '';
+            if (!chatHistory.length) { showPlaceholder(t('ready')); return; }
+            chatHistory.forEach(m => {
+                if (m.role === 'user') appendUserMessage(m.content, m.note);
+                else appendAssistantMessage(m.content);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function resetDashboard() {
+            document.getElementById('dash-p-tok').innerText = '0';
+            document.getElementById('dash-a-tok').innerText = '0';
+            document.getElementById('dash-speed').innerText = '0.0';
+        }
+
+        // Code-Blöcke kopieren (Event-Delegation)
+        function copyText(t) {
+            if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+            return new Promise(function (resolve, reject) {
+                const ta = document.createElement('textarea');
+                ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy') ? resolve() : reject(); } catch (e) { reject(e); }
+                ta.remove();
+            });
+        }
+        chatBox.addEventListener('click', function (e) {
+            const btn = e.target.closest('.code-copy');
+            if (!btn) return;
+            const code = btn.parentElement.querySelector('code');
+            if (!code) return;
+            copyText(code.textContent).then(function () {
+                btn.textContent = '✅';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+            }).catch(function () {
+                btn.textContent = '✖';
+                setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+            });
+        });
+
+        // Gesamten Chat als Text kopieren (Rohtext inkl. Code-Blöcken)
+        function copyWholeChat(btn) {
+            if (!chatHistory.length) return;
+            const text = chatHistory.map(function (m) {
+                return (m.role === 'user' ? 'Du:\n' : 'Heinz:\n') + m.content;
+            }).join('\n\n');
+            const old = btn.textContent;
+            copyText(text).then(function () {
+                btn.textContent = '✅';
+            }).catch(function () {
+                btn.textContent = '✖';
+            }).then(function () {
+                setTimeout(function () { btn.textContent = old; }, 1500);
+            });
+        }
+
+        // ===== Chats speichern / laden =====
+        function getSaved() { return lsGet('heinz_chats', []); }
+
+        function saveCurrentToList() {
+            if (!chatHistory.length) return;
+            const list = getSaved();
+            const first = chatHistory.find(m => m.role === 'user');
+            const entry = {
+                id: currentSavedId || Date.now(),
+                title: (first ? first.content : 'Chat').replace(/\s+/g, ' ').slice(0, 40),
+                ts: new Date().toLocaleString(t('locale')),
+                model: settings.model,
+                mode: settings.mode,
+                messages: chatHistory.slice(),
+                context: document.getElementById('context').value
+            };
+            const idx = list.findIndex(c => c.id === entry.id);
+            if (idx >= 0) list.splice(idx, 1);
+            list.unshift(entry);
+            lsSet('heinz_chats', list);
+            currentSavedId = entry.id;
+            renderSavedList();
+        }
+
+        function saveChatNow() {
+            if (!chatHistory.length) return alert(t('noChatToSave'));
+            saveCurrentToList();
+            persistCurrent();
+        }
+
+        function newChat(save) {
+            if (generating && currentAbortController) currentAbortController.abort();
+            if (save && chatHistory.length) saveCurrentToList();
+            chatHistory = [];
+            currentSavedId = null;
+            lsRemove('heinz_current');
+            showPlaceholder(t('readyNew'), true);
+            resetDashboard();
+        }
+
+        function discardChat() {
+            if (!chatHistory.length) return;
+            if (!confirm(t('confirmDiscard'))) return;
+            if (currentSavedId) {
+                lsSet('heinz_chats', getSaved().filter(c => c.id !== currentSavedId));
+            }
+            newChat(false);
+            renderSavedList();
+        }
+
+        function loadChat(id) {
+            const c = getSaved().find(x => x.id === id);
+            if (!c) return;
+            if (generating && currentAbortController) currentAbortController.abort();
+            if (chatHistory.length && currentSavedId !== id) saveCurrentToList();
+            settings.model = c.model || settings.model;
+            settings.mode = c.mode || settings.mode;
+            saveSettings();
+            applyUIFromSettings();
+            chatHistory = c.messages.slice();
+            currentSavedId = c.id;
+            document.getElementById('context').value = c.context || '';
+            renderChatFromHistory();
+            persistCurrent();
+            renderSavedList();
+            toggleSidebar();
+        }
+
+        function deleteChat(id) {
+            lsSet('heinz_chats', getSaved().filter(c => c.id !== id));
+            if (currentSavedId === id) { currentSavedId = null; persistCurrent(); }
+            renderSavedList();
+        }
+
+        function renderSavedList() {
+            const box = document.getElementById('saved-list');
+            box.innerHTML = '';
+            const list = getSaved();
+            if (!list.length) {
+                const s = document.createElement('small');
+                s.style.color = '#666';
+                s.textContent = t('nothingSaved');
+                box.appendChild(s);
+                return;
+            }
+            list.forEach(c => {
+                const row = document.createElement('div');
+                row.className = 'saved-item';
+                const load = document.createElement('button');
+                load.className = 'load';
+                load.appendChild(document.createTextNode(c.title));
+                const sm = document.createElement('small');
+                sm.textContent = c.model + ' · ' + c.mode + ' · ' + c.ts;
+                load.appendChild(sm);
+                load.onclick = () => loadChat(c.id);
+                const del = document.createElement('button');
+                del.className = 'del';
+                del.textContent = '🗑️';
+                del.onclick = () => deleteChat(c.id);
+                row.appendChild(load);
+                row.appendChild(del);
+                box.appendChild(row);
+            });
+        }
+
+        // ===== Senden / Abbrechen =====
+        function setGenerating(on) {
+            generating = on;
+            document.getElementById('send-btn').style.display = on ? 'none' : 'block';
+            document.getElementById('stop-btn').style.display = on ? 'block' : 'none';
+        }
+
+        function abortGeneration() {
+            if (currentAbortController) currentAbortController.abort();
+        }
+
+        function buildSystemPrompt(mode, contextText) {
+            const P = PROMPTS[settings.lang];
+            let sys = P[mode] + ' ' + P.respond;
+            if (contextText) sys += '\n\n' + P.ctxLabel + '\n' + contextText;
+            return sys;
+        }
+
+        async function askGemma() {
+            if (generating) return;
+            const contextText = document.getElementById('context').value.trim();
+            const queryInput = document.getElementById('query');
+            const queryText = queryInput.value.trim();
+            const mode = settings.mode;
+            const selectedModel = document.getElementById('model-select').value;
+
+            if (!queryText) return;
+            window.speechSynthesis.cancel();
+
+            const preset = MODE_PRESETS[mode];
+            if (preset.ctx === 'required' && !contextText) {
+                const box = $('context');
+                box.classList.add('req-warn');
+                box.placeholder = t('ctxRequiredWarn');
+                box.focus();
+                return;
+            }
+
+            const useCtx = !!contextText && preset.ctx !== 'none';
+            const note = useCtx ? t('ctxNote', { n: contextText.length }) : null;
+
+            chatHistory.push({ role: 'user', content: queryText, note: note });
+            appendUserMessage(queryText, note);
+            queryInput.value = '';
+
+            // Regeln + Kontext nur in der System-Nachricht -> nicht im Verlauf
+            const apiMessages = [{ role: 'system', content: buildSystemPrompt(mode, useCtx ? contextText : '') }]
+                .concat(chatHistory.map(m => ({ role: m.role, content: m.content })));
+
+            const msgId = 'msg-' + Date.now();
+            appendLoadingMessage(msgId);
+
+            currentAbortController = new AbortController();
+            setGenerating(true);
+
+            let outputBuffer = '';
+            let finalStats = null;
+            let aborted = false;
+            let errorMsg = null;
+            let renderTimer = null;
+
+            const scheduleRender = function () {
+                if (renderTimer) return;
+                renderTimer = setTimeout(function () {
+                    renderTimer = null;
+                    updateAssistantMessage(msgId, outputBuffer);
+                }, 60);
+            };
+
+            const handleJson = function (json) {
+                if (json.error) throw new Error(json.error);
+                if (json.message && json.message.content) {
+                    outputBuffer += json.message.content;
+                    scheduleRender();
+                }
+                if (json.done) finalStats = json;
+            };
+
+            const reqBody = { model: selectedModel, messages: apiMessages, stream: true };
+            if (!settings.useDefault) {
+                reqBody.options = {
+                    temperature: parseFloat($('param-temp').value),
+                    top_p: parseFloat($('param-topp').value),
+                    top_k: parseInt($('param-topk').value, 10),
+                    num_ctx: parseInt($('param-ctx').value, 10)
+                };
+            }
+
+            try {
+                const response = await fetch(OLLAMA_URL + '/api/chat', {
+                    method: 'POST',
+                    signal: currentAbortController.signal,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqBody)
+                });
+
+                if (!response.ok) {
+                    let detail = '';
+                    try { detail = (await response.text()).slice(0, 200); } catch (e) {}
+                    const hint = response.status === 404 ? t('hint404') : t('hintCors');
+                    throw new Error('HTTP ' + response.status + ' ' + detail + hint);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                // NDJSON sauber puffern: nur vollständige Zeilen parsen, Rest bleibt im Puffer
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    let idx;
+                    while ((idx = buffer.indexOf('\n')) >= 0) {
+                        const line = buffer.slice(0, idx).trim();
+                        buffer = buffer.slice(idx + 1);
+                        if (line) handleJson(JSON.parse(line));
+                    }
+                }
+                buffer += decoder.decode();
+                if (buffer.trim()) handleJson(JSON.parse(buffer.trim()));
+            } catch (err) {
+                if (err.name === 'AbortError') aborted = true;
+                else errorMsg = (err instanceof TypeError)
+                    ? t('connFail', { m: err.message })
+                    : err.message;
+            } finally {
+                if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+                currentAbortController = null;
+                setGenerating(false);
+            }
+
+            if (outputBuffer) {
+                let shown = outputBuffer;
+                if (aborted) shown += '\n\n*' + t('aborted') + '*';
+                if (errorMsg) shown += '\n\n**' + t('error') + '** ' + errorMsg;
+                updateAssistantMessage(msgId, shown);
+                chatHistory.push({ role: 'assistant', content: outputBuffer });
+            } else {
+                chatHistory.pop();  // keine Antwort: Frage nicht im Verlauf behalten
+                updateAssistantMessage(msgId, aborted
+                    ? '*' + t('aborted') + '*'
+                    : '**' + t('error') + '** ' + (errorMsg || t('noAnswer')));
+            }
+
+            if (finalStats) {
+                document.getElementById('dash-p-tok').innerText = finalStats.prompt_eval_count || 0;
+                document.getElementById('dash-a-tok').innerText = finalStats.eval_count || 0;
+                if (finalStats.eval_duration && finalStats.eval_count) {
+                    document.getElementById('dash-speed').innerText = (finalStats.eval_count / (finalStats.eval_duration / 1e9)).toFixed(1);
+                }
+            }
+
+            persistCurrent();
+        }
+
+        // ===== Start =====
+        function applyUIFromSettings() {
+            settings.mode = normalizeMode(settings.mode);
+            if (MODELS.indexOf(settings.model) < 0) settings.model = MODE_PRESETS[settings.mode].model;
+            $('model-select').value = settings.model;
+            $('mode-select').value = settings.mode;
+            updateLangBtn();
+            applyI18n();
+        }
+
+        (function init() {
+            const s = lsGet('heinz_settings', {});
+            if (s.model) settings.model = s.model;
+            if (s.mode) settings.mode = normalizeMode(s.mode);
+            if (s.lang === 'de' || s.lang === 'en') settings.lang = s.lang;
+            settings.useDefault = !!s.useDefault;
+            if (s.params && isFinite(s.params.temp)) settings.params = s.params;
+
+            const cur = lsGet('heinz_current', null);
+            if (cur && Array.isArray(cur.messages) && cur.messages.length) {
+                settings.model = cur.model || settings.model;
+                settings.mode = normalizeMode(cur.mode || settings.mode);
+                chatHistory = cur.messages;
+                currentSavedId = cur.savedId || null;
+                $('context').value = cur.context || '';
+            }
+
+            // Regler: gespeicherte Werte, sonst Preset des Modus
+            settings.mode = normalizeMode(settings.mode);
+            const pr = MODE_PRESETS[settings.mode];
+            const pm = settings.params || { temp: pr.temp, topp: pr.top_p, topk: pr.top_k, ctx: 8192 };
+            setSliders(pm.temp, pm.topp, pm.topk, pm.ctx || 8192);
+
+            applyUIFromSettings();
+            renderChatFromHistory();
+            renderSavedList();
+            checkServer();
+        })();
+    </script>
+</body>
+</html>
