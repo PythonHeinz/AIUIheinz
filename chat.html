@@ -195,6 +195,8 @@
                 <button class="close-btn" onclick="toggleSidebar()">✕</button>
             </span>
         </div>
+        <button class="side-btn" id="upd-btn" onclick="doUpdate()" data-i18n="updBtn">⬇ Check for updates</button>
+        <div id="upd-status" style="font-size:12px; color:#aaa; margin:-2px 0 12px; min-height:14px;"></div>
         <div class="param-group default-toggle">
             <label style="justify-content:flex-start; gap:8px; color:#fff; font-weight:bold; cursor:pointer;">
                 <input type="checkbox" id="use-default" onchange="onDefaultToggle()" style="width:auto; margin:0;"> <span data-i18n="defaults">Default values</span>
@@ -521,6 +523,7 @@
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
+                updBtn: '⬇ Check for updates', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date.', updDone: 'Updated ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
                 speedTitle: '⏱ Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm. Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
@@ -553,6 +556,7 @@
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
+                updBtn: '⬇ Nach Updates suchen', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand.', updDone: 'Aktualisiert ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
                 speedTitle: '⏱ Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm. Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
@@ -1236,6 +1240,35 @@
             }
 
             persistCurrent();
+        }
+
+        // ===== Update (git pull über den Server) =====
+        const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+        async function doUpdate() {
+            const st = $('upd-status'), btn = $('upd-btn');
+            if (generating || speedTesting) { st.textContent = t('updBusy'); return; }
+            btn.disabled = true; st.textContent = t('updRunning');
+            try {
+                const res = await fetch('api/update', { method: 'POST', headers: { 'X-Heinz': '1' } });
+                const j = await res.json();
+                if (!res.ok || !j.ok) {
+                    st.textContent = t('updErr', { m: (j.error || ('HTTP ' + res.status)) + (j.output ? ' - ' + j.output : '') });
+                    btn.disabled = false; return;
+                }
+                if (!j.changed) { st.textContent = t('updCurrent'); btn.disabled = false; return; }
+                st.textContent = t('updDone', { n: j.files.length });
+                if (j.restarting) {   // server.py changed: the server restarts itself, wait until it answers again
+                    await sleep(1500);
+                    for (let i = 0; i < 25; i++) {
+                        try { const r = await fetch('api/ping', { cache: 'no-store' }); if (r.ok) break; } catch (e) { /* noch nicht da */ }
+                        await sleep(1000);
+                    }
+                } else { await sleep(800); }
+                location.reload();
+            } catch (e) {
+                st.textContent = t('updErr', { m: e.message });
+                btn.disabled = false;
+            }
         }
 
         // ===== Tempo-Test =====

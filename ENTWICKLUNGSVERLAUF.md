@@ -132,3 +132,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tests: 19 Seitentests grün (neu: Symbol und Position der Knöpfe, Tempo-Test mit simuliertem Ollama, Abbruch ohne Threads, Start-Badge). Nur simuliert; die Zahlen kommen erst vom Handy.
 - Offen: Vorladen des Modells beim Moduswechsel; Update-Weg ohne Eingabe in Termux (Vorschläge an den Entwickler: automatisches `git pull` in `start.sh`, Update-Knopf im Hub; beides berührt das Fundament und braucht seine Freigabe).
 
+## 09.11.2026 – Update-Knopf (Chat „AIUIheinz-Chat“, Freigabe des Entwicklers; berührt Fundament)
+- Anlass: Neue Versionen kamen nur per `git pull` in Termux aufs Handy. Gewählt von drei Wegen: Update-Knopf in der Seite (statt nur automatisches `git pull` in `start.sh` oder gehostete Fassung auf GitHub Pages; beide bleiben Optionen für später).
+- `server.py`: neuer Endpunkt `POST /api/update` (`update_from_git`): `git pull --ff-only` im Projektordner, Schutz wie bei Schreibzugriffen (Header `X-Heinz`, gleiche Herkunft), nur mit `.git`, ein Lauf zugleich (Sperre), Zeitlimit 90 s. Antwort `{ok, changed, files, restarting, output}`. Hat sich `server.py` geändert, startet der Server 0,7 s nach der Antwort mit denselben Optionen neu (`os.execv`).
+- `chat.html`: Knopf „Nach Updates suchen“ oben in ☰ (Meldungen EN/DE: aktuell, aktualisiert, Fehler mit Git-Ausgabe), wartet nach Serverneustart auf `/api/ping`, lädt dann neu; Chat und Einstellungen bleiben erhalten. Sperrt sich während Antwort oder Tempo-Test.
+- Tests: 6 neue Servertests mit lokalem „GitHub“ (bare Repo), Entwickler- und Handy-Klon (Schutz, aktuell, Seitenänderung ohne Neustart, `server.py`-Änderung mit Neustart und neuer Version, Klon mit eigenen Commits scheitert sauber, kein Git-Ordner), 1 neuer Seitentest; Gegenprobe (Schutz entfernt) schlägt fehl. 18 Server- und 20 Seitentests grün. Nur simuliert.
+- Einmalig von Hand nötig: `git pull` und `bash start.sh`, weil der laufende Server den Endpunkt noch nicht kennt. Danach nicht mehr.
+- Offen: derselbe Knopf im Hub; `start.sh` mit automatischem Pull wäre nur nötig, wenn man ganz ohne Seite aktualisieren will.
+

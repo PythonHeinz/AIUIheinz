@@ -13,7 +13,8 @@ def free_port():
 
 
 class Server:
-    def __init__(self):
+    def __init__(self, root=None):
+        self.root = root or ROOT
         self.port = free_port()
         self.data = tempfile.mkdtemp(prefix="heinz-test-")
         self.proc = None
@@ -24,9 +25,9 @@ class Server:
 
     def start(self):
         self.proc = subprocess.Popen(
-            [sys.executable, os.path.join(ROOT, "server.py"),
+            [sys.executable, os.path.join(self.root, "server.py"),
              "--port", str(self.port), "--data", self.data, "--vitals-interval", "0"],
-            cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            cwd=self.root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(50):
             try:
                 urllib.request.urlopen(self.base + "/api/ping", timeout=1).read()

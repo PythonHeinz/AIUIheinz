@@ -307,6 +307,33 @@ class PageTest(unittest.TestCase):
         self.assertIn("at least one", page.inner_text("#st-status"))
         self.assertEqual(len(self.ollama.requests), 0)
 
+    def test_update_button_reports_states_and_reloads_after_update(self):
+        page = self.new_page()
+        calls = []
+        answers = [
+            (200, {"ok": True, "changed": False, "files": [], "restarting": False}),
+            (409, {"ok": False, "error": "git pull failed", "output": "Could not resolve host"}),
+            (200, {"ok": True, "changed": True, "files": ["chat.html"], "restarting": False}),
+        ]
+        def handle(route):
+            calls.append((route.request.method, route.request.headers.get("x-heinz")))
+            code, body = answers[len(calls) - 1]
+            route.fulfill(status=code, content_type="application/json", body=json.dumps(body))
+        page.route("**/api/update", handle)
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Hi")
+        page.click(".burger-btn")
+        page.click("#upd-btn")
+        page.wait_for_function("document.getElementById('upd-status').textContent.includes('up to date')")
+        page.click("#upd-btn")
+        page.wait_for_function("document.getElementById('upd-status').textContent.includes('Could not resolve host')")
+        self.assertFalse(page.is_disabled("#upd-btn"), "button usable again after an error")
+        with page.expect_navigation():
+            page.click("#upd-btn")
+        self.assertEqual(calls, [("POST", "1")] * 3)
+        self.assertEqual(page.locator(".msg-user").count(), 1, "chat survives the reload")
+        self.assertEqual(self.errors, [])
+
     def test_pull_to_refresh_is_disabled(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")

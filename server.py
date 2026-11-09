@@ -5,6 +5,7 @@ Start (in Termux, inside the ollama_ui folder):   python server.py
 Options:                                          python server.py --port 3000 --data data
 
 Uses only the Python standard library (nothing to install).
+POST /api/update runs `git pull --ff-only` in this folder (needs X-Heinz header); if server.py changed, the server restarts itself.
 Listens on 127.0.0.1 only, so other devices in the Wi-Fi cannot reach it.
 """
 import argparse
@@ -32,6 +33,47 @@ _vitals_latest = {}
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(APP_DIR, "data")
+
+
+_update_lock = threading.Lock()
+
+
+def _git(args, timeout=90):
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", LC_ALL="C")   # never wait for a password
+    return subprocess.run(["git", "-C", APP_DIR] + args, capture_output=True, text=True, timeout=timeout, env=env)
+
+
+def update_from_git():
+    """git pull --ff-only in the app folder (fixed command, no user input).
+    Returns (http status, result dict). 'restarting' is true when server.py itself changed."""
+    if not os.path.isdir(os.path.join(APP_DIR, ".git")):
+        return 409, {"ok": False, "error": "not a git checkout"}
+    if not _update_lock.acquire(blocking=False):
+        return 409, {"ok": False, "error": "update already running"}
+    try:
+        old = _git(["rev-parse", "HEAD"]).stdout.strip()
+        pull = _git(["pull", "--ff-only"])
+        out = (pull.stdout + pull.stderr).strip()[-500:]
+        if pull.returncode != 0:
+            return 409, {"ok": False, "error": "git pull failed", "output": out}
+        new = _git(["rev-parse", "HEAD"]).stdout.strip()
+        files = []
+        if new != old:
+            files = [f for f in _git(["diff", "--name-only", old, new]).stdout.split("\n") if f]
+        return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files, "output": out}
+    except FileNotFoundError:
+        return 500, {"ok": False, "error": "git is not installed"}
+    except subprocess.TimeoutExpired:
+        return 504, {"ok": False, "error": "git pull timed out (no internet?)"}
+    finally:
+        _update_lock.release()
+
+
+def _restart_self():
+    """Start the (possibly updated) server.py with the same options in this process."""
+    print("server.py changed: restarting ...")
+    sys.stdout.flush()
+    os.execv(sys.executable, [sys.executable, os.path.join(APP_DIR, "server.py")] + sys.argv[1:])
 
 
 TOOL_ID_RE = re.compile(r"^[a-z][a-z0-9\-]{0,31}$")
@@ -345,6 +387,15 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(200, {"ok": True})
 
     def do_POST(self):
+        path = urlparse(self.path).path
+        if path == "/api/update":
+            if not self._guard_write():
+                return
+            code, res = update_from_git()
+            self._json(code, res)
+            if res.get("restarting"):
+                threading.Timer(0.7, _restart_self).start()   # after the answer is sent
+            return
         self._json(405, {"error": "method not allowed"})
 
     def handle_one_request(self):
