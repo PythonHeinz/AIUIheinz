@@ -56,6 +56,9 @@
         /* Chat-Ausgabe */
         .chat-wrapper { flex: 1; min-height: 220px; position: relative; width: 100%; overflow-y: auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
         .msg { flex-shrink: 0; padding: 10px 15px; border-radius: 8px; max-width: 90%; word-break: break-word; line-height: 1.5; font-size: 15px; }
+        .msg { position: relative; }
+        .msg-copy { position: absolute; top: 4px; right: 4px; width: 30px; height: 28px; padding: 0; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 6px; font-size: 14px; line-height: 1; cursor: pointer; opacity: 0.85; }
+        .msg-assistant, .msg-user { padding-right: 42px; }
         .msg-user { background: #2a2a2a; align-self: flex-end; border-bottom-right-radius: 2px; white-space: pre-wrap; }
         .msg-note { display: block; margin-top: 6px; font-size: 11px; color: #888; font-weight: normal; }
         .msg-assistant { background: #181818; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 2px; width: 100%; overflow-x: auto; }
@@ -159,7 +162,7 @@
             <div class="action-row">
                 <button class="action-btn" id="send-btn" onclick="askGemma()" data-i18n="send">Send</button>
                 <button class="stop-btn" id="stop-btn" onclick="abortGeneration()" data-i18n="cancel">Cancel</button>
-                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (current one is saved)">➕</button>
+                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="Clear chat (it is saved in the chat list)">🗑️</button>
                 <button class="new-btn" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat">📋</button>
             </div>
 
@@ -422,7 +425,7 @@
                 ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
                 ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
                 queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
-                newChatTitle: 'New chat (current one is saved)', copyChatTitle: 'Copy whole chat',
+                newChatTitle: 'Clear chat (it is saved in the chat list)', copyChatTitle: 'Copy whole chat', copyMsgTitle: 'Copy this message (as Markdown text)',
                 read: '🔊 Read aloud', stop: '🛑 Stop', params: '⚙️ Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
                 chats: '💬 Chats', saveChat: '💾 Save current chat', discardChat: '🗑️ Discard current chat',
@@ -445,7 +448,7 @@
                 ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
                 ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
                 queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
-                newChatTitle: 'Neuer Chat (aktueller wird gespeichert)', copyChatTitle: 'Gesamten Chat kopieren',
+                newChatTitle: 'Chat leeren (wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
                 read: '🔊 Vorlesen', stop: '🛑 Stopp', params: '⚙️ Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
                 chats: '💬 Chats', saveChat: '💾 Aktuellen Chat speichern', discardChat: '🗑️ Aktuellen Chat verwerfen',
@@ -697,6 +700,17 @@
             if (p) p.remove();
         }
 
+        function attachCopy(div, raw) {
+            div._raw = raw;
+            let b = div.querySelector(':scope > .msg-copy');
+            if (!b) {
+                b = document.createElement('button');
+                b.type = 'button'; b.className = 'msg-copy'; b.textContent = '📋';
+                b.title = t('copyMsgTitle');
+                div.appendChild(b);
+            }
+        }
+
         function appendUserMessage(text, note) {
             clearPlaceholder();
             const div = document.createElement('div');
@@ -708,6 +722,7 @@
                 n.textContent = note;
                 div.appendChild(n);
             }
+            attachCopy(div, text);
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -718,6 +733,7 @@
             div.className = 'msg msg-assistant';
             if (id) div.id = id;
             div.innerHTML = parseOfflineMarkdown(content);
+            attachCopy(div, content);
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
             return div;
@@ -738,6 +754,7 @@
             const div = document.getElementById(id);
             if (!div) return;
             div.innerHTML = parseOfflineMarkdown(content);
+            attachCopy(div, content);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
@@ -769,6 +786,14 @@
             });
         }
         chatBox.addEventListener('click', function (e) {
+            const mb = e.target.closest('.msg-copy');
+            if (mb) {
+                const raw = mb.parentElement._raw || '';
+                if (!raw) return;
+                copyText(raw).then(function () { mb.textContent = '✅'; }).catch(function () { mb.textContent = '✖'; })
+                    .then(function () { setTimeout(function () { mb.textContent = '📋'; }, 1500); });
+                return;
+            }
             const btn = e.target.closest('.code-copy');
             if (!btn) return;
             const code = btn.parentElement.querySelector('code');
