@@ -94,3 +94,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 09.11.2026 – Abschluss des Root-Chats (Grundgerüst und Handytest)
 - Übergabe ergänzt: `docs/KONZEPT.md` Abschnitt 14 (Messungen, Beschlüsse), Kopieren auf zwei Ebenen (Blase und ganzer Chat) in Abschnitt 4, Regeln für neue Seiten in `UEBERGABE.md`.
 - Auf dem Handy bestätigt: Hub, Kopfzeile, EN/DE, Modelle-Liste, Chat-Archiv der alten Seite, Installation vom Hub. Nicht bestätigt: LiteRT-LM aus dem Hub (Server lief nicht), Dauertest gegen Signal 9.
+
+## 09.11.2026 – Design-Manifest (nur Dokument)
+- Neu: `docs/DESIGN.md` mit Grundsätzen, Farben, Schrift (Inter, Georgia, Monospace, Versalien), Formen, Navigationsziel (Bereichsumschalter, untere Leiste mit Mittelknopf, „Mehr“-Sheet), Kopierknopf auf zwei Ebenen, Regeln für den Splitscreen. Quellen: Screenshots des Entwicklers und die Variablen und Schriften aus dem Code von INCIheinz. Nichts davon ist umgesetzt.
+- Vorschlag: eigener Strang „AIUIheinz-Design“ (Fundament, ein Chat zur Zeit).
