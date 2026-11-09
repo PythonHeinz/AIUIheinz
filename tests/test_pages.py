@@ -16,8 +16,9 @@ PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/
 class FakeOllama:
     """Answers /api/tags, /api/ps and /api/chat (NDJSON stream) for a page."""
 
-    def __init__(self, page, chunks=("Hello", " world"), status=200):
+    def __init__(self, page, chunks=("Hello", " world"), status=200, tags=("gemma2:2b", "qwen2.5:3b", "gemma:2b")):
         self.requests = []   # parsed /api/chat bodies
+        self.tags = tags
         self.chunks = chunks
         self.status = status
         page.route("**/localhost:11434/**", self.handle)
@@ -25,7 +26,7 @@ class FakeOllama:
     def handle(self, route):
         url = route.request.url
         if url.endswith("/api/tags"):
-            body = {"models": [{"name": "gemma2:2b"}, {"name": "qwen2.5:3b"}, {"name": "gemma:2b"}]}
+            body = {"models": [{"name": n} for n in self.tags]}
             return route.fulfill(status=200, content_type="application/json", body=json.dumps(body))
         if url.endswith("/api/ps"):
             return route.fulfill(status=200, content_type="application/json",
@@ -126,6 +127,95 @@ class PageTest(unittest.TestCase):
         users = [m for m in self.ollama.requests[-1]["messages"] if m["role"] == "user"]
         self.assertEqual([m["content"] for m in users], ["Again"], "failed question must not stay in history")
         self.assertEqual(self.errors, [])
+
+    # ---- Chat-Strang, Schritt 1 ----
+    def test_num_thread_is_sent_saved_per_model_and_survives_default_values(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.send(page, "one")
+        self.assertEqual(self.ollama.requests[0]["options"]["num_thread"], 4, "default is 4")
+        page.evaluate("var e=document.getElementById('param-threads'); e.value=2; e.dispatchEvent(new Event('input'))")
+        self.send(page, "two")
+        self.assertEqual(self.ollama.requests[1]["options"]["num_thread"], 2)
+        # saved per model: other model keeps default, original model keeps 2 after reload
+        page.select_option("#model-select", "gemma:2b")
+        self.assertEqual(page.input_value("#param-threads"), "4")
+        page.select_option("#model-select", "gemma2:2b")
+        self.assertEqual(page.input_value("#param-threads"), "2")
+        page.reload()
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.assertEqual(page.input_value("#param-threads"), "2")
+        # sent even with "default values" (threads are speed, not sampling)
+        page.evaluate("var c=document.getElementById('use-default'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        self.send(page, "three")
+        self.assertEqual(self.ollama.requests[-1]["options"], {"num_thread": 2})
+        # 0 = Ollama default: not sent at all
+        page.evaluate("var e=document.getElementById('param-threads'); e.value=0; e.dispatchEvent(new Event('input'))")
+        self.send(page, "four")
+        self.assertNotIn("options", self.ollama.requests[-1])
+
+    def test_model_list_comes_from_ollama_and_heinz_mode_prefers_heinz_fakt(self):
+        page = self.new_page(tags=("qwen2.5:3b", "heinz-fakt:latest", "nomic-embed-text:latest", "gemma2:2b"))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        opts = page.eval_on_selector_all("#model-select option", "els => els.map(e => e.value)")
+        self.assertIn("heinz-fakt:latest", opts)
+        self.assertNotIn("nomic-embed-text:latest", opts, "embedding models are not chat models")
+        page.select_option("#mode-select", "heinz")
+        self.assertEqual(page.input_value("#model-select"), "heinz-fakt:latest")
+        self.assertFalse(page.is_disabled("#model-select"), "model stays selectable in every mode")
+        if page.is_checked("#use-default"):
+            page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.send(page, "Hey")
+        body = self.ollama.requests[0]
+        self.assertEqual(body["model"], "heinz-fakt:latest")
+        self.assertEqual(body["options"]["stop"], ["As an AI", "Als KI"])
+
+    def test_heinz_mode_falls_back_when_heinz_fakt_is_not_installed(self):
+        page = self.new_page()   # default tags: no heinz-fakt
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.select_option("#mode-select", "heinz")
+        self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b")
+
+    def test_own_system_prompt_sends_no_system_message(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("var c=document.getElementById('own-system'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        page.select_option("#mode-select", "heinz")
+        page.fill("#context", "Some context")
+        self.send(page, "Hey")
+        msgs = self.ollama.requests[0]["messages"]
+        self.assertEqual([m["role"] for m in msgs], ["user"], "no system message so the Modelfile persona stays")
+        self.assertIn("Respond in English.", msgs[0]["content"])
+        self.assertIn("Some context", msgs[0]["content"])
+        self.assertTrue(msgs[0]["content"].startswith("Context / source text:"))
+        self.assertIn("Hey", msgs[0]["content"])
+        # history keeps the plain question (language line and context are request-only)
+        self.send(page, "Again")
+        users = [m for m in self.ollama.requests[1]["messages"] if m["role"] == "user"]
+        self.assertEqual(users[0]["content"], "Hey", "earlier turns are sent as stored, without language line or context")
+        self.assertIn("Respond in English.", users[1]["content"], "only the last user message carries it")
+        stored = page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[0].content")
+        self.assertEqual(stored, "Hey")
+
+    def test_copy_whole_chat_labels_follow_language(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Hi")
+        page.evaluate("window.copyText = function (t) { window.__copied = t; return Promise.resolve(); }")
+        page.click("button[onclick^='copyWholeChat']")
+        self.assertTrue(page.evaluate("window.__copied").startswith("You:\nHi"))
+        page.click("#lang-btn")
+        page.click("button[onclick^='copyWholeChat']")
+        self.assertTrue(page.evaluate("window.__copied").startswith("Du:\nHi"))
+
+    def test_pull_to_refresh_is_disabled(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.assertEqual(page.evaluate("getComputedStyle(document.body).overscrollBehaviorY"), "none")
+        self.assertEqual(page.evaluate("getComputedStyle(document.documentElement).overscrollBehaviorY"), "none")
 
     def test_hub_shows_header_tools_and_status(self):
         page = self.new_page()

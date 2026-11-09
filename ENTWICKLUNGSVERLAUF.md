@@ -98,3 +98,13 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 09.11.2026 – Design-Manifest (nur Dokument)
 - Neu: `docs/DESIGN.md` mit Grundsätzen, Farben, Schrift (Inter, Georgia, Monospace, Versalien), Formen, Navigationsziel (Bereichsumschalter, untere Leiste mit Mittelknopf, „Mehr“-Sheet), Kopierknopf auf zwei Ebenen, Regeln für den Splitscreen. Quellen: Screenshots des Entwicklers und die Variablen und Schriften aus dem Code von INCIheinz. Nichts davon ist umgesetzt.
 - Vorschlag: eigener Strang „AIUIheinz-Design“ (Fundament, ein Chat zur Zeit).
+
+## 09.11.2026 – Chat-Strang, Schritt 1: Korrekturen an `chat.html` (Chat „AIUIheinz-Chat“)
+- Neu: Regler „CPU-Threads“ (0 bis 8, Standard 4, je Modell gespeichert in `settings.threads`), `options.num_thread` wird immer gesendet, auch bei „Standardwerte“; 0 sendet nichts.
+- Modellliste dynamisch aus `/api/tags` (Einbettungsmodelle ausgeblendet, Fallback-Liste ohne Ollama). Modell in jedem Modus frei wählbar (`lockModel` entfällt).
+- Modus als Daten: `model`, `alt` (Ersatz), `stop`. Heinz bevorzugt `heinz-fakt:latest` (Ersatz `qwen2.5:3b`) und sendet Stoppsequenzen „As an AI“ / „Als KI“ (nur ohne „Standardwerte“).
+- Neuer Haken „Eigenen Systemprompt des Modells nutzen“ (Standard aus, Verhalten wie bisher): keine System-Nachricht, damit die Persona aus dem Modelfile bleibt; Sprachzeile und Kontext stehen in der letzten Nutzernachricht der Anfrage, nicht im gespeicherten Verlauf.
+- „Ganzen Chat kopieren“: Beschriftung „You:/Du:“ nach Sprache. `overscroll-behavior-y: none` gegen Wischen zum Aktualisieren.
+- Tests: 6 neue Seitentests (15 Seitentests insgesamt, alle grün; `num_thread` per Gegenprobe als erkennbar geprüft). Simuliert, nicht auf dem Gerät: alles.
+- Offen (nur auf dem Handy klärbar): ersetzt eine mitgeschickte Systemnachricht den `SYSTEM` des Modelfiles (Annahme laut Konzept), hält `heinz-fakt` mit dem Haken das Startwort „Dude,“/„Digger,“, und ob die Stoppsequenzen zusätzlich zu denen im Modelfile wirken.
+

@@ -6,6 +6,7 @@
     <title>Heinz Ollama UI</title>
     <style>
         * { box-sizing: border-box; }
+        html, body { overscroll-behavior-y: none; }
         body { font-family: sans-serif; background: #121212; color: #e0e0e0; padding: 15px; margin: 0; width: 100%; overflow-x: hidden; padding-bottom: max(90px, 45vh); }
         .container { max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; height: 95vh; height: 95dvh; min-height: 600px; }
 
@@ -121,11 +122,7 @@
                 <h2>🤖 Heinz UI</h2>
                 <span id="status-dot" class="status-dot" data-i18n-title="serverStatus" title="Server status"></span>
             </div>
-            <select id="model-select" class="model-select" onchange="onModelChange()">
-                <option value="gemma2:2b">🧠 Gemma 2 (2B)</option>
-                <option value="qwen2.5:3b">🧠 Qwen 2.5 (3B)</option>
-                <option value="gemma:2b">🧠 Gemma 1 (2B)</option>
-            </select>
+            <select id="model-select" class="model-select" onchange="onModelChange()"></select>
             <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
             <button class="burger-btn" onclick="toggleSidebar()">☰</button>
         </div>
@@ -200,6 +197,18 @@
         <div class="param-group slider-group">
             <label>Context Window: <span id="val-ctx">8192</span></label>
             <input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()">
+        </div>
+
+        <div class="param-group">
+            <label><span data-i18n="threads">CPU threads (0 = Ollama default)</span><span id="val-threads">4</span></label>
+            <input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()">
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="threadsHelp">Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).</small>
+        </div>
+        <div class="param-group">
+            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
+                <input type="checkbox" id="own-system" onchange="onOwnSystem()" style="width:auto; margin:0;"> <span data-i18n="ownSystem">Use the model's own system prompt</span>
+            </label>
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="ownSystemHelp">Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.</small>
         </div>
 
         <div class="side-title" data-i18n="chats">💬 Chats</div>
@@ -399,15 +408,44 @@
         };
 
         // Modus-Presets: Modell + Sampling. Bei kleinen Modellen bewusst polarisiert.
-        // lockModel: Modell fest (Chat-Modi); sonst frei wählbar. ctx: 'none' | 'optional' | 'required'
-        const MODELS = ['gemma2:2b', 'qwen2.5:3b', 'gemma:2b'];
+        // Fallback-Liste, solange /api/tags nicht antwortet; danach gilt die echte Liste von Ollama.
+        const FALLBACK_MODELS = ['gemma2:2b', 'qwen2.5:3b', 'gemma:2b'];
+        let MODELS = FALLBACK_MODELS.slice();
+        // Modus = Daten: model (bevorzugt), alt (Ersatz, falls nicht installiert), stop (Stoppsequenzen).
+        // Modell ist in jedem Modus frei wählbar (Modus und Modell sind getrennte Angaben).
         const MODE_PRESETS = {
-            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b', lockModel: true,  ctx: 'none',     color: '#2196F3' },
-            heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b', lockModel: true,  ctx: 'optional', color: '#e91e63' },
-            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b', lockModel: false, ctx: 'required', color: '#ff9800' },
-            code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b', lockModel: false, ctx: 'optional', color: '#607d8b' },
-            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b', lockModel: false, ctx: 'optional', color: '#9c27b0' }
+            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#2196F3' },
+            heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63' },
+            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', color: '#ff9800' },
+            code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#607d8b' },
+            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#9c27b0' }
         };
+        // bevorzugtes Modell des Modus, sonst Ersatz, sonst erstes installiertes
+        function resolveModel(preset) {
+            const want = [preset.model].concat(preset.alt || []);
+            for (let i = 0; i < want.length; i++) if (MODELS.indexOf(want[i]) >= 0) return want[i];
+            return MODELS[0] || preset.model;
+        }
+        function fillModelSelect() {
+            const sel = $('model-select');
+            sel.innerHTML = '';
+            MODELS.forEach(function (m) {
+                const o = document.createElement('option');
+                o.value = m; o.textContent = '🧠 ' + m;
+                sel.appendChild(o);
+            });
+            if (MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
+            sel.value = settings.model;
+        }
+        async function loadModels() {
+            try {
+                const res = await fetch(OLLAMA_URL + '/api/tags');
+                const data = await res.json();
+                const names = (data.models || []).map(function (m) { return m.name; })
+                    .filter(function (n) { return !/embed/i.test(n); });
+                if (names.length) { MODELS = names; fillModelSelect(); saveSettings(); loadThreads(); }
+            } catch (e) { /* Ollama nicht erreichbar: Fallback-Liste bleibt */ }
+        }
         function normalizeMode(m) {
             if (m === 'werkzeug') return 'code';
             return MODE_PRESETS[m] ? m : 'wilson';
@@ -437,6 +475,9 @@
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
+                threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
+                ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
+                roleUser: 'You:', roleBot: 'Heinz:',
                 locale: 'en-GB'
             },
             de: {
@@ -460,6 +501,9 @@
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
+                threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
+                ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
+                roleUser: 'Du:', roleBot: 'Heinz:',
                 locale: 'de-DE'
             }
         };
@@ -484,7 +528,8 @@
         let currentAbortController = null;
         let generating = false;
         let currentSavedId = null;
-        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null };
+        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false };
+        const DEFAULT_THREADS = 4;
 
         // ===== Speicher =====
         function lsGet(key, fallback) {
@@ -544,14 +589,32 @@
             applyModeStyling();
         }
 
+        function threadsFor(model) {
+            const v = settings.threads && settings.threads[model];
+            return (typeof v === 'number' && v >= 0 && v <= 8) ? v : DEFAULT_THREADS;
+        }
+        function loadThreads() {
+            const n = threadsFor($('model-select').value || settings.model);
+            $('param-threads').value = n; $('val-threads').innerText = n;
+        }
+        function onThreads() {
+            const n = parseInt($('param-threads').value, 10);
+            $('val-threads').innerText = n;
+            if (!settings.threads) settings.threads = {};
+            settings.threads[$('model-select').value] = n;
+            saveSettings();
+        }
+        function onOwnSystem() {
+            settings.ownSystem = $('own-system').checked;
+            saveSettings();
+        }
+
         function applyModeStyling() {
             const preset = MODE_PRESETS[settings.mode];
             const ctxBox = $('context');
             const modelSel = $('model-select');
             $('context-wrapper').classList.toggle('disabled-box', preset.ctx === 'none');
             $('send-btn').style.background = preset.color;
-            modelSel.disabled = preset.lockModel;
-            modelSel.style.opacity = preset.lockModel ? '0.6' : '1';
             ctxBox.classList.remove('req-warn');
             if (preset.ctx === 'required') {
                 ctxBox.placeholder = t('ctxRequired');
@@ -561,6 +624,7 @@
                 ctxBox.style.borderColor = '';
             }
             $('use-default').checked = !!settings.useDefault;
+            $('own-system').checked = !!settings.ownSystem;
             document.querySelectorAll('.slider-group').forEach(function (g) {
                 g.classList.toggle('off', !!settings.useDefault);
                 g.querySelector('input').disabled = !!settings.useDefault;
@@ -571,8 +635,9 @@
         function updateModeUI() {
             settings.mode = normalizeMode($('mode-select').value);
             const preset = MODE_PRESETS[settings.mode];
-            settings.model = preset.model;
-            $('model-select').value = preset.model;
+            settings.model = resolveModel(preset);
+            $('model-select').value = settings.model;
+            loadThreads();
             if (!settings.useDefault) {
                 setSliders(preset.temp, preset.top_p, preset.top_k, parseInt($('param-ctx').value, 10));
                 settings.params = readSliders();
@@ -585,6 +650,7 @@
 
         function onModelChange() {
             settings.model = $('model-select').value;
+            loadThreads();
             saveSettings();
             persistCurrent();
             checkServer();
@@ -811,7 +877,7 @@
         function copyWholeChat(btn) {
             if (!chatHistory.length) return;
             const text = chatHistory.map(function (m) {
-                return (m.role === 'user' ? 'Du:\n' : 'Heinz:\n') + m.content;
+                return (m.role === 'user' ? t('roleUser') : t('roleBot')) + '\n' + m.content;
             }).join('\n\n');
             const old = btn.textContent;
             copyText(text).then(function () {
@@ -974,8 +1040,18 @@
             queryInput.value = '';
 
             // Regeln + Kontext nur in der System-Nachricht -> nicht im Verlauf
-            const apiMessages = [{ role: 'system', content: buildSystemPrompt(mode, useCtx ? contextText : '') }]
-                .concat(chatHistory.map(m => ({ role: m.role, content: m.content })));
+            let apiMessages;
+            if (settings.ownSystem) {
+                // Eigener Systemprompt des Modells (Modelfile) bleibt: keine System-Nachricht.
+                // Antwortsprache und Kontext wandern in die letzte Nutzernachricht (nur in der Anfrage, nicht im Verlauf).
+                const P = PROMPTS[settings.lang];
+                apiMessages = chatHistory.map(m => ({ role: m.role, content: m.content }));
+                const last = apiMessages[apiMessages.length - 1];
+                last.content = (useCtx ? P.ctxLabel + '\n' + contextText + '\n\n' : '') + last.content + '\n\n' + P.respond;
+            } else {
+                apiMessages = [{ role: 'system', content: buildSystemPrompt(mode, useCtx ? contextText : '') }]
+                    .concat(chatHistory.map(m => ({ role: m.role, content: m.content })));
+            }
 
             const msgId = 'msg-' + Date.now();
             appendLoadingMessage(msgId);
@@ -1014,7 +1090,11 @@
                     top_k: parseInt($('param-topk').value, 10),
                     num_ctx: parseInt($('param-ctx').value, 10)
                 };
+                if (preset.stop && preset.stop.length) reqBody.options.stop = preset.stop.slice();
             }
+            // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
+            const threads = parseInt($('param-threads').value, 10);
+            if (threads > 0) { reqBody.options = reqBody.options || {}; reqBody.options.num_thread = threads; }
 
             try {
                 const response = await fetch(OLLAMA_URL + '/api/chat', {
@@ -1087,8 +1167,8 @@
         // ===== Start =====
         function applyUIFromSettings() {
             settings.mode = normalizeMode(settings.mode);
-            if (MODELS.indexOf(settings.model) < 0) settings.model = MODE_PRESETS[settings.mode].model;
-            $('model-select').value = settings.model;
+            fillModelSelect();
+            loadThreads();
             $('mode-select').value = settings.mode;
             updateLangBtn();
             applyI18n();
@@ -1100,6 +1180,8 @@
             if (s.mode) settings.mode = normalizeMode(s.mode);
             if (s.lang === 'de' || s.lang === 'en') settings.lang = s.lang;
             settings.useDefault = !!s.useDefault;
+            settings.ownSystem = !!s.ownSystem;
+            if (s.threads && typeof s.threads === 'object') settings.threads = s.threads;
             if (s.params && isFinite(s.params.temp)) settings.params = s.params;
 
             const cur = lsGet('heinz_current', null);
@@ -1121,6 +1203,7 @@
             renderChatFromHistory();
             renderSavedList();
             checkServer();
+            loadModels();
         })();
     </script>
 </body>
