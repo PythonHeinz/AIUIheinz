@@ -174,7 +174,10 @@
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3 data-i18n="params">⚙️ Parameters</h3>
-            <button class="close-btn" onclick="toggleSidebar()">✕</button>
+            <span>
+                <button class="close-btn" onclick="location.reload()" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)">↻</button>
+                <button class="close-btn" onclick="toggleSidebar()">✕</button>
+            </span>
         </div>
         <div class="param-group default-toggle">
             <label style="justify-content:flex-start; gap:8px; color:#fff; font-weight:bold; cursor:pointer;">
@@ -475,6 +478,7 @@
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
+                reloadTitle: 'Reload page (chat and settings are kept)',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
@@ -501,6 +505,7 @@
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
+                reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
@@ -554,6 +559,14 @@
 
         // ===== UI Setup =====
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        // Tipp außerhalb der Leiste (zum Beispiel in den Chat) schließt sie; Werte gelten schon beim Verstellen.
+        // Kein preventDefault: Der Tipp in das Eingabefeld setzt den Cursor trotzdem.
+        document.addEventListener('pointerdown', function (e) {
+            const sb = document.getElementById('sidebar');
+            if (!sb.classList.contains('open')) return;
+            if (sb.contains(e.target) || e.target.closest('.burger-btn')) return;
+            sb.classList.remove('open');
+        }, true);
 
         const $ = id => document.getElementById(id);
 

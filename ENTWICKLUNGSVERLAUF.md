@@ -120,3 +120,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Noch nicht geprüft: Modellliste aus Ollama, Modus Heinz mit `heinz-fakt`, Haken „Eigenen Systemprompt nutzen“.
 - Idee: Geräteprofile (Threads je Prozessor) in `docs/GEPLANT.md`.
 
+## 09.11.2026 – Chat: Parameter-Leiste und Neu laden (Chat „AIUIheinz-Chat“)
+- Handytest bestätigt: Mit gesetztem Haken „Eigenen Systemprompt des Modells nutzen“ antwortet `heinz-fakt` im Modus Heinz mit „Digger, …“. Ursache des fehlenden Tons vorher: Der Heinz-Prompt der Seite ersetzt den Modelfile-Prompt (per `curl` mit „Banane“ gezeigt). Details in `docs/OLLAMA_UND_MODELLE.md`.
+- Neu: Ein Tipp außerhalb der Parameter-Leiste (zum Beispiel in den Chat oder das Eingabefeld) schließt sie; die Werte gelten schon beim Verstellen. Neuer Knopf ↻ „Seite neu laden“ in der Leiste (Chat und Einstellungen bleiben erhalten). Neuer Seitentest; 16 Seitentests grün, nur simuliert.
+- Beobachtung des Entwicklers: Nach einem Modellwechsel dauert die erste Antwort lange, danach geht es schnell. Vermutung (zu prüfen im Tempo-Test): Ollama lädt das Modell neu, wenn sich Optionen wie `num_thread` oder `num_ctx` ändern; das würde auch die lange Wartezeit nach dem Umstellen auf 8 Threads teilweise erklären. Im Tempo-Test `load_duration`, `prompt_eval_duration` und `eval_duration` getrennt ausweisen.
+

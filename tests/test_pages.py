@@ -211,6 +211,29 @@ class PageTest(unittest.TestCase):
         page.click("button[onclick^='copyWholeChat']")
         self.assertTrue(page.evaluate("window.__copied").startswith("Du:\nHi"))
 
+    def test_tap_outside_closes_sidebar_values_stay_and_reload_keeps_chat(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Hi")
+        page.click(".burger-btn")
+        self.assertTrue(page.evaluate("document.getElementById('sidebar').classList.contains('open')"))
+        page.evaluate("var e=document.getElementById('param-threads'); e.value=3; e.dispatchEvent(new Event('input'))")
+        # tap into the chat area on the left: sidebar closes, the setting is already applied
+        page.mouse.click(60, 400)
+        page.wait_for_function("!document.getElementById('sidebar').classList.contains('open')")
+        self.send(page, "Again")
+        self.assertEqual(self.ollama.requests[-1]["options"]["num_thread"], 3)
+        # taps inside the sidebar do not close it
+        page.click(".burger-btn")
+        page.click("#sidebar .side-title")
+        self.assertTrue(page.evaluate("document.getElementById('sidebar').classList.contains('open')"))
+        # reload button: chat and thread setting survive
+        page.click("#sidebar .close-btn:has-text('↻')")
+        page.wait_for_selector(".msg-assistant")
+        self.assertEqual(page.locator(".msg-user").count(), 2)
+        self.assertEqual(page.input_value("#param-threads"), "3")
+        self.assertEqual(self.errors, [])
+
     def test_pull_to_refresh_is_disabled(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
