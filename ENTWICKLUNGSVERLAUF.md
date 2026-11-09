@@ -108,3 +108,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tests: 6 neue Seitentests (15 Seitentests insgesamt, alle grün; `num_thread` per Gegenprobe als erkennbar geprüft). Simuliert, nicht auf dem Gerät: alles.
 - Offen (nur auf dem Handy klärbar): ersetzt eine mitgeschickte Systemnachricht den `SYSTEM` des Modelfiles (Annahme laut Konzept), hält `heinz-fakt` mit dem Haken das Startwort „Dude,“/„Digger,“, und ob die Stoppsequenzen zusätzlich zu denen im Modelfile wirken.
 
+
+## 09.11.2026 – Modellquellen-Recherche (Chat „AIUIheinz-Modelle“)
+- Nur Dokumente, kein Code: neu `docs/MODELLQUELLEN.md` (Quellen für Modelle nach Kategorien: lokal, Cloud gratis ohne/mit Key, Startguthaben, günstig/EU, Community, nicht mehr verfügbar), Vorschlag für eine Anbieterschicht als Daten (`providers.json`, Stufen der Offenheit, Datenschutzfeld) und Vorschlag „Funktionsplätze“ mit Nutzungsideen für externe Cloud-KI (Abschnitt I). Hinweiszeile in `docs/OLLAMA_UND_MODELLE.md`.
+- Zahlen stammen aus Drittquellen (Aug–Okt 2026), nicht aus Anbieterdokus; CORS je Anbieter ungeprüft. Nichts davon ist auf dem Gerät getestet.
+- Funktionsplätze und `providers.json` berühren das Fundament (Anbieterschicht, KONZEPT Abschnitt 7): erst Beschluss des Entwicklers, dann bauen.

@@ -2,6 +2,8 @@
 
 Stand 09.11.2026. Alles hier stammt aus dem Code und aus Angaben des Entwicklers; was nicht auf dem Gerät geprüft wurde, ist markiert.
 
+Quellen für weitere Modelle (Cloud gratis, günstig, EU, Community) und Vorschläge für Funktionsplätze: siehe `docs/MODELLQUELLEN.md` (Recherche, nichts davon gebaut).
+
 ## Orte (Pixel 9 Pro, Termux)
 | Was | Wert |
 |---|---|
