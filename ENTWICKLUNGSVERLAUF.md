@@ -168,3 +168,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Refaktor: `buildOptions` und `buildMessages` für echte Anfrage und Vorladen gemeinsam.
 - Tests: 24 Seitentests grün (neu: Vorladen mit gleichen Optionen, nicht doppelt, folgt Modus und Threads, abschaltbar; Kontext verändert den Systemprompt nicht; Schnellmodus). Gegenprobe (Kontext im Systemprompt) schlägt fehl. Nur simuliert; Wirkung auf dem Handy offen: Zeit bis zur ersten Antwort nach Moduswechsel mit und ohne Vorladen (Start-Badge), Schnellmodus gegen normal (Gesamtzeit).
 - Offen: Termux im Vordergrund (Termux:Float, Akku „Nicht eingeschränkt“, Wakelock) als Tempo-Test-Reihe; GPU/CPU-Schalter erst mit LiteRT-LM (Schritt 3); kürzerer Modelfile-Prompt von heinz-fakt nur nach Vergleichstest.
+
+## 10.11.2026 – Modusleiste (Chat „AIUIheinz-Chat“, Schritt 2 als Grundfunktion, nur `chat.html`)
+- Anstelle des Dropdowns steht oben eine Leiste mit Pillen je Modus (Emoji und Kurzname, aktiver Modus in der Modusfarbe, Höhe 40 px, alle fünf passen auf 426 px, auch auf Deutsch). Sie wird in `renderModeBar()` aus `MODE_PRESETS` gebaut, neue Modi erscheinen von selbst. Das Dropdown `#mode-select` bleibt unsichtbar als Zustandsträger.
+- Verhalten unverändert: Moduswechsel = neuer Chat, der alte wird gespeichert, Modus und Preset-Modell wechseln; während einer laufenden Antwort oder des Tempo-Tests ignoriert die Leiste Tipps.
+- Bewusst nicht gebaut (Grundfunktion, Feinschliff beim Design-Strang): eigener Verlauf je Modus, Gestaltung nach dem Manifest, Ausblenden von Modi je nach Online-/Offline-Betrieb. Dafür wäre ein Merkmal je Modus nötig (zum Beispiel `online: true/false`), das erst mit der Anbieterschicht (Schritt 3) und der Abgrenzung durch den Entwickler festgelegt wird.
+- Tests: 26 Seitentests grün (neu: Leiste, Wechsel, Sprache, Neuladen, Sperre während der Antwort). Nur simuliert, Screenshot bei 426 × 803 px geprüft.

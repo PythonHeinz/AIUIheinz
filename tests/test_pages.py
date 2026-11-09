@@ -129,7 +129,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         if page.is_checked("#use-default"):
             page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change'))")
-        page.select_option("#mode-select", "audit")
+        page.click("#mode-bar [data-mode=audit]")
         page.fill("#context", "Some context text")
         self.send(page, "Check it")
         body = self.ollama.requests[0]
@@ -184,7 +184,7 @@ class PageTest(unittest.TestCase):
         opts = page.eval_on_selector_all("#model-select option", "els => els.map(e => e.value)")
         self.assertIn("heinz-fakt:latest", opts)
         self.assertNotIn("nomic-embed-text:latest", opts, "embedding models are not chat models")
-        page.select_option("#mode-select", "heinz")
+        page.click("#mode-bar [data-mode=heinz]")
         self.assertEqual(page.input_value("#model-select"), "heinz-fakt:latest")
         self.assertFalse(page.is_disabled("#model-select"), "model stays selectable in every mode")
         if page.is_checked("#use-default"):
@@ -198,14 +198,14 @@ class PageTest(unittest.TestCase):
         page = self.new_page()   # default tags: no heinz-fakt
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.select_option("#mode-select", "heinz")
+        page.click("#mode-bar [data-mode=heinz]")
         self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b")
 
     def test_own_system_prompt_sends_no_system_message(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         page.evaluate("var c=document.getElementById('own-system'); c.checked=true; c.dispatchEvent(new Event('change'))")
-        page.select_option("#mode-select", "heinz")
+        page.click("#mode-bar [data-mode=heinz]")
         page.fill("#context", "Some context")
         self.send(page, "Hey")
         msgs = self.ollama.requests[0]["messages"]
@@ -251,14 +251,14 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         self.wait_preloads(page, 1)
-        page.select_option("#mode-select", "audit")
+        page.click("#mode-bar [data-mode=audit]")
         self.wait_preloads(page, 2)
         self.assertEqual(self.ollama.preloads[1]["model"], "qwen2.5:3b")
         page.evaluate("var e=document.getElementById('param-threads'); e.value=2; e.dispatchEvent(new Event('input'))")
         self.wait_preloads(page, 3)
         self.assertEqual(self.ollama.preloads[2]["options"]["num_thread"], 2)
         page.evaluate("var c=document.getElementById('preload-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
-        page.select_option("#mode-select", "creative")
+        page.click("#mode-bar [data-mode=creative]")
         page.wait_for_timeout(2000)
         self.assertEqual(len(self.ollama.preloads), 3, "switched off: no further preload")
         self.assertFalse(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).preload"))
@@ -266,7 +266,7 @@ class PageTest(unittest.TestCase):
     def test_context_changes_do_not_change_system_prompt(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
-        page.select_option("#mode-select", "code")
+        page.click("#mode-bar [data-mode=code]")
         self.send(page, "One")
         page.fill("#context", "Background text")
         self.send(page, "Two")
@@ -295,6 +295,38 @@ class PageTest(unittest.TestCase):
         page.evaluate("var c=document.getElementById('fast-mode'); c.checked=false; c.dispatchEvent(new Event('change'))")
         self.send(page, "Again")
         self.assertNotIn("num_predict", self.ollama.requests[-1]["options"])
+
+    def test_mode_bar_switches_modes_follows_language_and_waits_while_generating(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        pills = page.query_selector_all("#mode-bar .mode-pill")
+        self.assertEqual([p.get_attribute("data-mode") for p in pills], ["wilson", "heinz", "audit", "code", "creative"])
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "wilson")
+        self.assertFalse(page.is_visible("#mode-select"), "the dropdown is only the hidden state holder")
+        self.send(page, "First chat")
+        page.click("#mode-bar [data-mode=audit]")
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit")
+        self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b")
+        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).mode"), "audit")
+        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats')).length"), 1, "old chat saved on mode switch")
+        self.assertEqual(page.evaluate("document.querySelectorAll('.msg').length"), 0, "new mode starts a fresh chat")
+        page.click("#lang-btn")
+        self.assertEqual(page.inner_text("#mode-bar [data-mode=creative]").split(" ")[-1], "Kreativ")
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit", "language switch keeps the mode")
+        # every pill is on screen width-wise or reachable by sideways scroll, and tall enough to tap
+        self.assertGreaterEqual(page.evaluate("document.querySelector('#mode-bar .mode-pill').getBoundingClientRect().height"), 40)
+        page.reload()
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit", "mode survives reload")
+
+    def test_mode_bar_ignores_taps_while_an_answer_is_running(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("generating = true")
+        page.click("#mode-bar [data-mode=code]")
+        self.assertEqual(page.evaluate("settings.mode"), "wilson")
+        page.evaluate("generating = false")
+        page.click("#mode-bar [data-mode=code]")
+        self.assertEqual(page.evaluate("settings.mode"), "code")
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()

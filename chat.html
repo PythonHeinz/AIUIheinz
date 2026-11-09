@@ -27,8 +27,11 @@
         .lang-btn span.active { background: #4caf50; color: #fff; }
 
         /* Modus-Auswahl */
-        .mode-container { background: #1e1e1e; border: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; width: 100%; flex-shrink: 0; }
-        .mode-container select { width: 100%; font-size: 15px; padding: 10px; background: #2a2a2a; border: 1px solid #444; }
+        .mode-container { margin-bottom: 12px; display: flex; flex-direction: row; gap: 4px; width: 100%; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
+        .mode-container::-webkit-scrollbar { display: none; }
+        .mode-pill { flex: 0 0 auto; min-height: 40px; padding: 0 8px; border-radius: 99px; border: 1px solid #444; background: #1e1e1e; color: #ccc; font-size: 13px; cursor: pointer; white-space: nowrap; }
+        .mode-pill.active { color: #fff; font-weight: bold; border-color: transparent; }
+        .mode-pill:disabled { opacity: 0.5; }
 
         /* Eingabefelder */
         .controls-wrapper { flex-shrink: 0; }
@@ -144,9 +147,8 @@
         </div>
         <div id="preload-status" class="preload-status" style="display:none; font-size:11px; color:#888; margin:-4px 0 6px 2px;"></div>
 
-        <div class="mode-container">
-            <label style="font-weight: bold; color: #aaa; font-size: 13px;" data-i18n="chooseMode">Choose working mode:</label>
-            <select id="mode-select" onchange="updateModeUI()">
+        <div class="mode-container" id="mode-bar" role="tablist">
+            <select id="mode-select" onchange="updateModeUI()" style="display:none" aria-hidden="true">
                 <option value="wilson" data-i18n="m_wilson">🏕️ Wilson (Companion)</option>
                 <option value="heinz" data-i18n="m_heinz">🕵️ Heinz (Facts &amp; Slang)</option>
                 <option value="audit" data-i18n="m_audit">📄 Audit &amp; Text Tool</option>
@@ -527,6 +529,7 @@
             en: {
                 serverStatus: 'Server status', langTitle: 'Switch language: prompts, answer language, speech input and read-aloud',
                 chooseMode: 'Choose working mode:',
+                mb_wilson: 'Wilson', mb_heinz: 'Heinz', mb_audit: 'Audit', mb_code: 'Code', mb_creative: 'Creative',
                 m_wilson: '🏕️ Wilson (Companion)', m_heinz: '🕵️ Heinz (Facts & Slang)', m_audit: '📄 Audit & Text Tool',
                 m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
                 ctxOptional: 'Optional context / raw text (included with every request)...',
@@ -561,6 +564,7 @@
             de: {
                 serverStatus: 'Server-Status', langTitle: 'Sprache umschalten: Prompts, Antwortsprache, Spracheingabe und Vorlesen',
                 chooseMode: 'Arbeitsmodus wählen:',
+                mb_wilson: 'Wilson', mb_heinz: 'Heinz', mb_audit: 'Audit', mb_code: 'Code', mb_creative: 'Kreativ',
                 m_wilson: '🏕️ Wilson (Plaudertasche)', m_heinz: '🕵️ Heinz (Fakten & Slang)', m_audit: '📄 Audit & Text-Werkzeug',
                 m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
                 ctxOptional: 'Optionaler Kontext / Rohtext (wird bei jeder Anfrage berücksichtigt)...',
@@ -773,7 +777,35 @@
             }
         }
 
+        // Modusleiste: wird aus MODE_PRESETS gebaut (neue Modi erscheinen von selbst)
+        function renderModeBar() {
+            const bar = $('mode-bar');
+            bar.setAttribute('aria-label', t('chooseMode'));
+            bar.querySelectorAll('.mode-pill').forEach(function (b) { b.remove(); });
+            Object.keys(MODE_PRESETS).forEach(function (m) {
+                const full = t('m_' + m);
+                const emoji = (full.split(' ')[0] || '');
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'mode-pill' + (m === settings.mode ? ' active' : '');
+                b.setAttribute('data-mode', m);
+                b.setAttribute('role', 'tab');
+                b.setAttribute('aria-selected', m === settings.mode ? 'true' : 'false');
+                b.title = full;
+                b.textContent = emoji + ' ' + t('mb_' + m);
+                if (m === settings.mode) b.style.background = MODE_PRESETS[m].color;
+                b.onclick = function () { pickMode(m); };
+                bar.appendChild(b);
+            });
+        }
+        function pickMode(m) {
+            if (m === settings.mode || generating || speedTesting) return;
+            $('mode-select').value = m;
+            updateModeUI();
+        }
+
         function applyModeStyling() {
+            renderModeBar();
             const preset = MODE_PRESETS[settings.mode];
             const ctxBox = $('context');
             const modelSel = $('model-select');
