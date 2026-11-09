@@ -18,6 +18,8 @@ class FakeOllama:
 
     def __init__(self, page, chunks=("Hello", " world"), status=200, tags=("gemma2:2b", "qwen2.5:3b", "gemma:2b")):
         self.requests = []   # parsed /api/chat bodies
+        self.unloads = []    # /api/generate bodies (model unload)
+        self.loaded = False
         self.tags = tags
         self.chunks = chunks
         self.status = status
@@ -31,12 +33,24 @@ class FakeOllama:
         if url.endswith("/api/ps"):
             return route.fulfill(status=200, content_type="application/json",
                                  body=json.dumps({"models": [{"name": "gemma2:2b"}]}))
+        if url.endswith("/api/generate"):
+            self.unloads.append(json.loads(route.request.post_data))
+            self.loaded = False
+            return route.fulfill(status=200, content_type="application/json", body="{}")
         if url.endswith("/api/chat"):
-            self.requests.append(json.loads(route.request.post_data))
+            body = json.loads(route.request.post_data)
+            self.requests.append(body)
+            if body.get("stream") is False:   # speed test: one JSON object, speed = 2.5 tokens/s per thread
+                n = body["options"]["num_thread"]
+                load = 100000000 if self.loaded else 5000000000
+                self.loaded = True
+                return route.fulfill(status=200, content_type="application/json", body=json.dumps({
+                    "done": True, "load_duration": load, "prompt_eval_count": 25, "prompt_eval_duration": 500000000,
+                    "eval_count": 32, "eval_duration": int(32 / (2.5 * n) * 1e9)}))
             if self.status != 200:
                 return route.fulfill(status=self.status, body="nope")
             lines = [json.dumps({"message": {"role": "assistant", "content": c}, "done": False}) for c in self.chunks]
-            lines.append(json.dumps({"done": True, "prompt_eval_count": 60, "eval_count": 92, "eval_duration": 4000000000}))
+            lines.append(json.dumps({"done": True, "prompt_eval_count": 60, "eval_count": 92, "eval_duration": 4000000000, "load_duration": 2000000000, "prompt_eval_duration": 500000000}))
             return route.fulfill(status=200, content_type="application/x-ndjson", body="\n".join(lines) + "\n")
         return route.fulfill(status=404, body="")
 
@@ -90,6 +104,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text("#dash-p-tok"), "60")
         self.assertEqual(page.inner_text("#dash-a-tok"), "92")
         self.assertEqual(page.inner_text("#dash-speed"), "23.0")
+        self.assertEqual(page.inner_text("#dash-start"), "2.5", "load + prompt processing time")
         body = self.ollama.requests[0]
         self.assertTrue(body["stream"])
         self.assertEqual(body["messages"][0]["role"], "system")
@@ -233,6 +248,64 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator(".msg-user").count(), 2)
         self.assertEqual(page.input_value("#param-threads"), "3")
         self.assertEqual(self.errors, [])
+
+    def test_new_chat_button_and_copy_button_position(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Hi")
+        self.assertEqual(page.locator("button[onclick='newChat(true)'] svg").count(), 1, "line icon, not an emoji")
+        box = page.locator("#chat-container").bounding_box()
+        cb = page.locator(".chat-copy").bounding_box()
+        self.assertLess(cb["x"] - box["x"], 20, "copy button sits at the left edge of the chat window")
+        self.assertLess(cb["y"] - box["y"], 20, "... and at its top")
+        self.assertEqual(page.locator("button[onclick^='copyWholeChat']").count(), 1)
+        page.click("button[onclick='newChat(true)']")
+        self.assertEqual(page.locator(".msg-user").count(), 0)
+        self.assertEqual(len(json.loads(page.evaluate("localStorage.getItem('heinz_chats')"))), 1, "old chat is saved in the list")
+        self.assertEqual(page.inner_text("#dash-start"), "0.0")
+
+    def test_speed_test_runs_threads_cold_and_warm_and_copies_table(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click(".burger-btn")
+        page.evaluate("document.querySelectorAll('#st-threads input').forEach(i => i.checked = ['2','4'].includes(i.value))")
+        page.select_option("#st-termux", "hidden")
+        page.click("#st-start")
+        page.wait_for_function("document.getElementById('st-status').textContent.startsWith('Done')", timeout=20000)
+        rows = page.eval_on_selector_all("#st-table tr:not(:first-child)", "trs => trs.map(t => Array.from(t.cells).map(c => c.textContent))")
+        self.assertEqual([r[:2] for r in rows], [["2", "1"], ["2", "2"], ["4", "1"], ["4", "2"]])
+        self.assertEqual(rows[0][2], "5.0", "run 1 after unload shows the load time")
+        self.assertEqual(rows[1][2], "0.1", "run 2 is warm")
+        self.assertEqual(rows[1][5], "5.0", "2 threads = 5 tokens/s in the simulation")
+        self.assertEqual(rows[3][5], "10.0")
+        self.assertEqual(len(self.ollama.unloads), 2, "model unloaded before each thread value")
+        self.assertTrue(all(u["keep_alive"] == 0 for u in self.ollama.unloads))
+        reqs = [r for r in self.ollama.requests if r.get("stream") is False]
+        self.assertEqual([r["options"]["num_thread"] for r in reqs], [2, 2, 4, 4])
+        for r in reqs:
+            self.assertEqual((r["options"]["temperature"], r["options"]["num_predict"], r["options"]["seed"]), (0, 32, 1))
+            self.assertEqual([m["role"] for m in r["messages"]], ["user"])
+        self.assertNotEqual(reqs[0]["messages"][0]["content"], reqs[1]["messages"][0]["content"], "random tag defeats the prompt cache")
+        page.evaluate("window.copyText = function (t) { window.__copied = t; return Promise.resolve(); }")
+        page.click("#st-copy")
+        text = page.evaluate("window.__copied")
+        self.assertTrue(text.startswith("Heinz UI speed test |"))
+        self.assertIn("Termux hidden", text)
+        self.assertIn("4 | 2 | 0.1 | 25 | 50.0 | 10.0", text)
+        # last result is restored after a reload
+        page.reload()
+        self.assertEqual(page.locator("#st-table tr").count(), 5)
+        self.assertEqual(self.errors, [])
+
+    def test_speed_test_needs_a_thread_value_and_can_be_stopped(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.click(".burger-btn")
+        page.evaluate("document.querySelectorAll('#st-threads input').forEach(i => i.checked = false)")
+        page.click("#st-start")
+        self.assertIn("at least one", page.inner_text("#st-status"))
+        self.assertEqual(len(self.ollama.requests), 0)
 
     def test_pull_to_refresh_is_disabled(self):
         page = self.new_page()

@@ -41,6 +41,19 @@
         .badge-prompt { color: #00e676; border-color: #00e676; }
         .badge-eval { color: #29b6f6; border-color: #29b6f6; }
         .badge-speed { color: #ab47bc; border-color: #ab47bc; }
+        .badge-start { color: #fbbc05; border-color: #fbbc05; }
+        .chat-frame { flex: 1; min-height: 220px; position: relative; display: flex; flex-direction: column; margin-bottom: 15px; }
+        .chat-frame .chat-wrapper { flex: 1; min-height: 0; margin-bottom: 0; padding-top: 46px; }
+        .chat-copy { position: absolute; top: 8px; left: 8px; z-index: 2; width: 34px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 8px; cursor: pointer; }
+        .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .st-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+        .st-chips label { display: flex; align-items: center; gap: 4px; background: #222; border: 1px solid #444; border-radius: 99px; padding: 5px 10px; font-size: 13px; color: #ddd; cursor: pointer; }
+        .st-chips input { margin: 0; width: auto; }
+        #sidebar select { width: 100%; margin-bottom: 8px; }
+        .st-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 10.5px; margin-top: 8px; }
+        .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid #2a2a2a; }
+        .st-table th:first-child, .st-table td:first-child { text-align: left; }
+        .st-table th { color: #888; font-weight: normal; }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
         .input-row input { margin-bottom: 0; flex: 1; min-width: 0; }
@@ -138,7 +151,10 @@
             </select>
         </div>
 
-        <div class="chat-wrapper" id="chat-container"></div>
+        <div class="chat-frame">
+            <button class="chat-copy" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button>
+            <div class="chat-wrapper" id="chat-container"></div>
+        </div>
 
         <div class="controls-wrapper">
             <div id="context-wrapper">
@@ -148,6 +164,7 @@
                     <span class="badge badge-prompt">P-Tok: <span id="dash-p-tok">0</span></span>
                     <span class="badge badge-eval">A-Tok: <span id="dash-a-tok">0</span></span>
                     <span class="badge badge-speed">Speed: <span id="dash-speed">0.0</span> T/s</span>
+                    <span class="badge badge-start" data-i18n-title="startTitle" title="Time until the first word: model load + prompt processing">Start: <span id="dash-start">0.0</span> s</span>
                 </div>
             </div>
 
@@ -159,8 +176,7 @@
             <div class="action-row">
                 <button class="action-btn" id="send-btn" onclick="askGemma()" data-i18n="send">Send</button>
                 <button class="stop-btn" id="stop-btn" onclick="abortGeneration()" data-i18n="cancel">Cancel</button>
-                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="Clear chat (it is saved in the chat list)">🗑️</button>
-                <button class="new-btn" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat">📋</button>
+                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2 2 0 0 1 2.8 2.8L12 14.6 8 16l1.4-4z"/></svg></button>
             </div>
 
             <div class="audio-row">
@@ -213,6 +229,33 @@
             </label>
             <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="ownSystemHelp">Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.</small>
         </div>
+
+        <div class="side-title" data-i18n="speedTitle">⏱ Speed test</div>
+        <small style="color:#888; font-size:11px; display:block; margin-bottom:8px;" data-i18n="stNote">Fixed prompt, temperature 0, 32 tokens, model and context as set above.</small>
+        <div class="st-chips" id="st-threads">
+            <label><input type="checkbox" value="1">1</label>
+            <label><input type="checkbox" value="2" checked>2</label>
+            <label><input type="checkbox" value="3" checked>3</label>
+            <label><input type="checkbox" value="4" checked>4</label>
+            <label><input type="checkbox" value="6">6</label>
+            <label><input type="checkbox" value="8" checked>8</label>
+        </div>
+        <select id="st-prompt">
+            <option value="short" data-i18n="stShort">Short prompt (~20 tokens)</option>
+            <option value="long" data-i18n="stLong">Long prompt (~300 tokens)</option>
+        </select>
+        <select id="st-termux">
+            <option value="hidden" data-i18n="stTermuxHidden">Termux in the background</option>
+            <option value="visible" data-i18n="stTermuxVisible">Termux visible (split screen)</option>
+        </select>
+        <label style="display:flex; gap:8px; align-items:center; font-size:13px; color:#ddd; margin-bottom:8px; cursor:pointer;">
+            <input type="checkbox" id="st-cold" checked style="width:auto; margin:0;"> <span data-i18n="stCold">Unload model first (measures real load time)</span>
+        </label>
+        <button class="side-btn" id="st-start" onclick="startSpeedTest()" data-i18n="stStart">▶ Start test</button>
+        <button class="side-btn" id="st-stop" onclick="stopSpeedTest()" style="display:none;" data-i18n="stStop">■ Stop</button>
+        <div id="st-status" style="font-size:12px; color:#aaa; min-height:16px;"></div>
+        <div id="st-table"></div>
+        <button class="side-btn" id="st-copy" onclick="copySpeedTest()" style="display:none; margin-top:8px;" data-i18n="stCopy">📋 Copy results</button>
 
         <div class="side-title" data-i18n="chats">💬 Chats</div>
         <button class="side-btn" onclick="saveChatNow()" data-i18n="saveChat">💾 Save current chat</button>
@@ -466,7 +509,7 @@
                 ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
                 ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
                 queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
-                newChatTitle: 'Clear chat (it is saved in the chat list)', copyChatTitle: 'Copy whole chat', copyMsgTitle: 'Copy this message (as Markdown text)',
+                newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', copyMsgTitle: 'Copy this message (as Markdown text)',
                 read: '🔊 Read aloud', stop: '🛑 Stop', params: '⚙️ Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
                 chats: '💬 Chats', saveChat: '💾 Save current chat', discardChat: '🗑️ Discard current chat',
@@ -478,7 +521,12 @@
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
-                reloadTitle: 'Reload page (chat and settings are kept)',
+                reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
+                speedTitle: '⏱ Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm. Takes a few minutes; leave the phone alone meanwhile.',
+                stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
+                stCold: 'Unload model first (measures real load time)', stStart: '▶ Start test', stStop: '■ Stop', stCopy: '📋 Copy results',
+                stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
+                stBusy: 'Wait until the answer is finished.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
@@ -493,7 +541,7 @@
                 ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
                 ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
                 queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
-                newChatTitle: 'Chat leeren (wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
+                newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
                 read: '🔊 Vorlesen', stop: '🛑 Stopp', params: '⚙️ Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
                 chats: '💬 Chats', saveChat: '💾 Aktuellen Chat speichern', discardChat: '🗑️ Aktuellen Chat verwerfen',
@@ -505,7 +553,12 @@
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
-                reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)',
+                reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
+                speedTitle: '⏱ Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm. Dauert einige Minuten; das Handy solange in Ruhe lassen.',
+                stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
+                stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: '▶ Test starten', stStop: '■ Stopp', stCopy: '📋 Ergebnis kopieren',
+                stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
+                stBusy: 'Warte, bis die Antwort fertig ist.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
@@ -823,7 +876,7 @@
             const div = document.createElement('div');
             div.className = 'msg msg-assistant';
             div.id = id;
-            div.innerHTML = '<i>' + t('working') + ' <span class="spinner">⚙️</span></i>';
+            div.innerHTML = '<i>' + t('working') + ' <span class="wait-s"></span> <span class="spinner">⚙️</span></i>';
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
             return div;
@@ -851,6 +904,7 @@
             document.getElementById('dash-p-tok').innerText = '0';
             document.getElementById('dash-a-tok').innerText = '0';
             document.getElementById('dash-speed').innerText = '0.0';
+            document.getElementById('dash-start').innerText = '0.0';
         }
 
         // Code-Blöcke kopieren (Event-Delegation)
@@ -892,13 +946,13 @@
             const text = chatHistory.map(function (m) {
                 return (m.role === 'user' ? t('roleUser') : t('roleBot')) + '\n' + m.content;
             }).join('\n\n');
-            const old = btn.textContent;
+            const old = btn.innerHTML;
             copyText(text).then(function () {
                 btn.textContent = '✅';
             }).catch(function () {
                 btn.textContent = '✖';
             }).then(function () {
-                setTimeout(function () { btn.textContent = old; }, 1500);
+                setTimeout(function () { btn.innerHTML = old; }, 1500);
             });
         }
 
@@ -1026,7 +1080,7 @@
         }
 
         async function askGemma() {
-            if (generating) return;
+            if (generating || speedTesting) return;
             const contextText = document.getElementById('context').value.trim();
             const queryInput = document.getElementById('query');
             const queryText = queryInput.value.trim();
@@ -1068,6 +1122,11 @@
 
             const msgId = 'msg-' + Date.now();
             appendLoadingMessage(msgId);
+            const waitStart = Date.now();
+            const waitTimer = setInterval(function () {
+                const w = document.querySelector('#' + msgId + ' .wait-s');
+                if (w) w.textContent = Math.round((Date.now() - waitStart) / 1000) + ' s';
+            }, 1000);
 
             currentAbortController = new AbortController();
             setGenerating(true);
@@ -1149,6 +1208,7 @@
                     : err.message;
             } finally {
                 if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+                clearInterval(waitTimer);
                 currentAbortController = null;
                 setGenerating(false);
             }
@@ -1169,12 +1229,112 @@
             if (finalStats) {
                 document.getElementById('dash-p-tok').innerText = finalStats.prompt_eval_count || 0;
                 document.getElementById('dash-a-tok').innerText = finalStats.eval_count || 0;
+                document.getElementById('dash-start').innerText = (((finalStats.load_duration || 0) + (finalStats.prompt_eval_duration || 0)) / 1e9).toFixed(1);
                 if (finalStats.eval_duration && finalStats.eval_count) {
                     document.getElementById('dash-speed').innerText = (finalStats.eval_count / (finalStats.eval_duration / 1e9)).toFixed(1);
                 }
             }
 
             persistCurrent();
+        }
+
+        // ===== Tempo-Test =====
+        let speedTesting = false, stAbort = null, stRows = [], stMeta = null;
+        const ST_SHORT = 'Write the numbers from one to twenty as words, separated by commas.';
+        const ST_LONG = 'Summarize the following text in one sentence.\n\n' +
+            'The quick brown fox jumps over the lazy dog while the sun sets slowly behind the distant hills and the river keeps flowing. '.repeat(12);
+        function stFmt(v, d) { return (isFinite(v) ? v : 0).toFixed(d); }
+        async function stRun(model, n, promptKey, ctx, signal) {
+            // Zufallsmarke am Anfang: verhindert, dass Ollama den Prompt aus dem Zwischenspeicher nimmt
+            const tag = 'Test ' + Math.floor(Math.random() * 1e6) + '. ';
+            const body = {
+                model: model, stream: false, keep_alive: '10m',
+                messages: [{ role: 'user', content: tag + (promptKey === 'long' ? ST_LONG : ST_SHORT) }],
+                options: { temperature: 0, seed: 1, num_predict: 32, num_ctx: ctx, num_thread: n }
+            };
+            const t0 = performance.now();
+            const res = await fetch(OLLAMA_URL + '/api/chat', { method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const j = await res.json();
+            if (j.error) throw new Error(j.error);
+            return {
+                load: (j.load_duration || 0) / 1e9,
+                pTok: j.prompt_eval_count || 0,
+                pTps: j.prompt_eval_duration ? (j.prompt_eval_count || 0) / (j.prompt_eval_duration / 1e9) : 0,
+                gTps: j.eval_duration ? (j.eval_count || 0) / (j.eval_duration / 1e9) : 0,
+                total: (performance.now() - t0) / 1000
+            };
+        }
+        function renderSpeedTest() {
+            const box = $('st-table');
+            if (!stRows.length) { box.innerHTML = ''; $('st-copy').style.display = 'none'; return; }
+            let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load s</th><th>P-Tok</th><th>P t/s</th><th>Gen t/s</th><th>Tot s</th></tr>';
+            stRows.forEach(function (r) {
+                h += '<tr><td>' + r.n + '</td><td>' + r.run + '</td><td>' + stFmt(r.load, 1) + '</td><td>' + r.pTok + '</td><td>' + stFmt(r.pTps, 1) + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
+            });
+            box.innerHTML = h + '</table>';
+            $('st-copy').style.display = 'block';
+        }
+        function speedTestText() {
+            const m = stMeta || {};
+            const head = 'Heinz UI speed test | ' + (m.date || '') + ' | model ' + (m.model || '') + ' | ctx ' + (m.ctx || '') + ' | prompt ' + (m.prompt || '') +
+                ' | Termux ' + (m.termux || '') + ' | cold start ' + (m.cold ? 'yes' : 'no') + ' | temp 0, 32 tokens, stream off';
+            const lines = ['Thr | Run | Load s | P-Tok | P t/s | Gen t/s | Total s'];
+            stRows.forEach(function (r) {
+                lines.push([r.n, r.run, stFmt(r.load, 1), r.pTok, stFmt(r.pTps, 1), stFmt(r.gTps, 1), stFmt(r.total, 1)].join(' | '));
+            });
+            return head + '\n' + lines.join('\n');
+        }
+        function copySpeedTest() {
+            const b = $('st-copy'); const old = b.textContent;
+            copyText(speedTestText()).then(function () { b.textContent = '✅'; }).catch(function () { b.textContent = '✖'; })
+                .then(function () { setTimeout(function () { b.textContent = old; }, 1500); });
+        }
+        function stopSpeedTest() { if (stAbort) stAbort.abort(); }
+        async function startSpeedTest() {
+            if (speedTesting) return;
+            if (generating) { $('st-status').textContent = t('stBusy'); return; }
+            const list = Array.prototype.slice.call(document.querySelectorAll('#st-threads input:checked')).map(function (i) { return parseInt(i.value, 10); });
+            if (!list.length) { $('st-status').textContent = t('stNone'); return; }
+            const model = $('model-select').value;
+            const ctx = parseInt($('param-ctx').value, 10);
+            const promptKey = $('st-prompt').value;
+            const cold = $('st-cold').checked;
+            stRows = []; renderSpeedTest();
+            stMeta = { date: new Date().toISOString().slice(0, 16).replace('T', ' '), model: model, ctx: ctx, prompt: promptKey, termux: $('st-termux').value, cold: cold };
+            speedTesting = true; stAbort = new AbortController();
+            $('st-start').style.display = 'none'; $('st-stop').style.display = 'block';
+            let status = '', timer = null, t0 = 0;
+            const setStatus = function (n, r) {
+                t0 = Date.now();
+                if (timer) clearInterval(timer);
+                const upd = function () { $('st-status').textContent = t('stRunning', { n: n, r: r, s: Math.round((Date.now() - t0) / 1000) }); };
+                upd(); timer = setInterval(upd, 1000);
+            };
+            try {
+                for (let i = 0; i < list.length; i++) {
+                    const n = list[i];
+                    if (cold) {
+                        await fetch(OLLAMA_URL + '/api/generate', { method: 'POST', signal: stAbort.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: model, keep_alive: 0 }) });
+                        await new Promise(function (r) { setTimeout(r, 800); });
+                    }
+                    for (let run = 1; run <= 2; run++) {
+                        setStatus(n, run);
+                        const r = await stRun(model, n, promptKey, ctx, stAbort.signal);
+                        r.n = n; r.run = run;
+                        stRows.push(r); renderSpeedTest();
+                    }
+                }
+                status = t('stDone');
+            } catch (e) {
+                status = (e.name === 'AbortError') ? t('stStopped') : t('stErr', { m: e.message });
+            } finally {
+                if (timer) clearInterval(timer);
+                speedTesting = false; stAbort = null;
+                $('st-start').style.display = 'block'; $('st-stop').style.display = 'none';
+                $('st-status').textContent = status;
+                if (stRows.length) lsSet('heinz_speedtest', { rows: stRows, meta: stMeta });
+            }
         }
 
         // ===== Start =====
@@ -1217,6 +1377,8 @@
             renderSavedList();
             checkServer();
             loadModels();
+            const lastSt = lsGet('heinz_speedtest', null);
+            if (lastSt && Array.isArray(lastSt.rows)) { stRows = lastSt.rows; stMeta = lastSt.meta; renderSpeedTest(); }
         })();
     </script>
 </body>
