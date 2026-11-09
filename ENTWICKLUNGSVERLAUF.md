@@ -72,3 +72,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 
 ## 09.11.2026 – Basis von heinz-fakt geklärt (nur Dokument)
 - Auf dem Handy mit `ollama show … --modelfile` verglichen: `heinz-fakt` und das abliterierte Qwen (Rademacher) haben denselben Gewichte-Blob `d0b449b2…cbb3f`; `qwen2.5:3b` hat einen anderen. Eingetragen in `docs/OLLAMA_UND_MODELLE.md`.
+
+## 09.11.2026 – Handytest Grundgerüst (Messwerte vom Gerät, Beobachtung des Entwicklers)
+- Hub, Kopfzeile, Kacheln, EN/DE, Modelle-Liste (6 Ollama-Modelle) laufen auf dem Pixel; LiteRT-LM zeigte erwartungsgemäß „nicht erreichbar“ (Server lief nicht).
+- Chrome bot auf `chat.html` nur „Verknüpfung erstellen“ an („Diese App kann nicht installieren werden“): `chat.html` hat kein Manifest. Installation vom Hub aus ist noch zu prüfen.
+- Tempo mit Ollama (heinz-fakt): Chrome allein im Vordergrund kaum erträglich langsam; mit Termux im Splitscreen deutlich schneller (Speed-Badge 1,8 und 2,7 T/s). Das stützt die Hintergrund-Drosselung von Termux als Ursache; ob LiteRT-LM genauso betroffen ist, ist offen.
+- Heinz Fakt (abliteriertes Qwen 2.5 3B): Salzsäure-Frage auf Deutsch beantwortet (inhaltlich falsch), auf Englisch abgelehnt. Eine Stichprobe, kein Ergebnis; Refusal-Test mit Zählung durch Code ist offen.
