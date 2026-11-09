@@ -17,7 +17,8 @@ class FakeOllama:
     """Answers /api/tags, /api/ps and /api/chat (NDJSON stream) for a page."""
 
     def __init__(self, page, chunks=("Hello", " world"), status=200, tags=("gemma2:2b", "qwen2.5:3b", "gemma:2b")):
-        self.requests = []   # parsed /api/chat bodies
+        self.requests = []   # parsed /api/chat bodies (without preload requests)
+        self.preloads = []   # preload requests (num_predict 1, stream false)
         self.unloads = []    # /api/generate bodies (model unload)
         self.loaded = False
         self.tags = tags
@@ -39,6 +40,10 @@ class FakeOllama:
             return route.fulfill(status=200, content_type="application/json", body="{}")
         if url.endswith("/api/chat"):
             body = json.loads(route.request.post_data)
+            if (body.get("options") or {}).get("num_predict") == 1:   # model preload
+                self.preloads.append(body)
+                return route.fulfill(status=200, content_type="application/json", body=json.dumps({
+                    "done": True, "load_duration": 1000000000, "prompt_eval_count": 10, "eval_count": 1}))
             self.requests.append(body)
             if body.get("stream") is False:   # speed test: one JSON object, speed = 2.5 tokens/s per thread
                 n = body["options"]["num_thread"]
@@ -130,7 +135,9 @@ class PageTest(unittest.TestCase):
         body = self.ollama.requests[0]
         self.assertEqual(body["model"], "qwen2.5:3b")
         self.assertAlmostEqual(body["options"]["temperature"], 0.15)
-        self.assertIn("Some context text", body["messages"][0]["content"])
+        self.assertNotIn("Some context text", body["messages"][0]["content"], "context is not part of the system prompt")
+        self.assertEqual(body["messages"][0]["role"], "system")
+        self.assertTrue(body["messages"][-1]["content"].startswith("Context / source text:\nSome context text"))
 
     def test_http_error_is_shown_and_question_removed_from_history(self):
         page = self.new_page(status=404)
@@ -214,6 +221,80 @@ class PageTest(unittest.TestCase):
         self.assertIn("Respond in English.", users[1]["content"], "only the last user message carries it")
         stored = page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[0].content")
         self.assertEqual(stored, "Hey")
+
+    def wait_preloads(self, page, n, timeout=6000):
+        waited = 0
+        while len(self.ollama.preloads) < n and waited < timeout:
+            page.wait_for_timeout(100)   # lets Playwright serve the routed requests
+            waited += 100
+        self.assertGreaterEqual(len(self.ollama.preloads), n)
+
+    def test_model_is_preloaded_with_same_options_and_not_twice(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.wait_preloads(page, 1)
+        pre = self.ollama.preloads[0]
+        self.assertEqual(pre["messages"][0]["role"], "system")
+        self.assertEqual(pre["messages"][-1], {"role": "user", "content": "."})
+        self.assertEqual(pre["keep_alive"], "30m")
+        self.assertFalse(pre["stream"])
+        self.send(page, "Hi")
+        req = self.ollama.requests[0]
+        self.assertEqual(req["keep_alive"], "30m")
+        self.assertEqual(req["messages"][0]["content"], pre["messages"][0]["content"], "same system prompt so it stays cached")
+        for k in ("num_ctx", "num_thread"):
+            self.assertEqual(req["options"][k], pre["options"][k], k + " must match or Ollama reloads the model")
+        page.wait_for_timeout(1800)
+        self.assertEqual(len(self.ollama.preloads), 1, "no second preload for unchanged settings")
+
+    def test_preload_follows_mode_threads_and_can_be_switched_off(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.wait_preloads(page, 1)
+        page.select_option("#mode-select", "audit")
+        self.wait_preloads(page, 2)
+        self.assertEqual(self.ollama.preloads[1]["model"], "qwen2.5:3b")
+        page.evaluate("var e=document.getElementById('param-threads'); e.value=2; e.dispatchEvent(new Event('input'))")
+        self.wait_preloads(page, 3)
+        self.assertEqual(self.ollama.preloads[2]["options"]["num_thread"], 2)
+        page.evaluate("var c=document.getElementById('preload-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        page.select_option("#mode-select", "creative")
+        page.wait_for_timeout(2000)
+        self.assertEqual(len(self.ollama.preloads), 3, "switched off: no further preload")
+        self.assertFalse(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).preload"))
+
+    def test_context_changes_do_not_change_system_prompt(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.select_option("#mode-select", "code")
+        self.send(page, "One")
+        page.fill("#context", "Background text")
+        self.send(page, "Two")
+        a, b = self.ollama.requests[0]["messages"], self.ollama.requests[1]["messages"]
+        self.assertEqual(a[0], b[0])
+        self.assertNotIn("Background text", b[0]["content"])
+        self.assertTrue(b[-1]["content"].startswith("Context / source text:\nBackground text\n\nTwo"))
+
+    def test_fast_mode_limits_tokens_asks_for_plain_text_and_shows_raw_text(self):
+        page = self.new_page(chunks=("**bold** and", " <b>tag</b>"))
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("var c=document.getElementById('fast-mode'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        page.evaluate("var n=document.getElementById('param-fastn'); n.value=96; n.dispatchEvent(new Event('change'))")
+        self.send(page, "Hi")
+        req = self.ollama.requests[0]
+        self.assertEqual(req["options"]["num_predict"], 96)
+        self.assertIn("plain text", req["messages"][0]["content"])
+        html = page.inner_html(".msg-assistant")
+        self.assertNotIn("<strong>", html)
+        self.assertNotIn("<b>tag", html, "raw text is escaped, not interpreted")
+        self.assertIn("**bold** and &lt;b&gt;tag&lt;/b&gt;", html)
+        self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[1].plain"))
+        page.reload()
+        self.assertNotIn("<strong>", page.inner_html(".msg-assistant"), "history keeps the plain look")
+        # normal mode again: no num_predict, markdown rendered
+        page.evaluate("var c=document.getElementById('fast-mode'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.send(page, "Again")
+        self.assertNotIn("num_predict", self.ollama.requests[-1]["options"])
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()

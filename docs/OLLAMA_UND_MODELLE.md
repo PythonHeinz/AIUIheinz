@@ -90,3 +90,13 @@ Empfehlung (vorläufig): `num_thread` 3 oder 4 setzen statt den Ollama-Standard 
 
 **Systemprompt (09.11.2026, Handy, `curl /api/chat`, `heinz-fakt:latest`):** Eine mitgeschickte Systemnachricht („Antworte nur mit dem Wort Banane.“) ersetzt den Modelfile-Prompt: Antwort „Banane“. Folge: Sendet die Seite im Modus Heinz ihren eigenen Prompt, geht die Persona („Digger,“) verloren. Mit gesetztem Haken „Eigenen Systemprompt des Modells nutzen“ (keine Systemnachricht) antwortet `heinz-fakt` in der Seite mit „Digger, …“ (Prompt 351 Token bei einer Kurzfrage, vor allem der Modelfile-Prompt; Speed 4,3 Token/s). Beobachtung: Die erste Antwort nach einem Modellwechsel braucht lange (Laden des Modells, `load_duration` im curl-Test 5,5 s, plus Prompt-Verarbeitung), danach geht es schnell.
 
+
+## Tempo-Messreihen (Tempo-Test im Chat, 09.11.2026, Pixel 9 Pro, Einzelläufe, 32 Token, Temperatur 0)
+Erzeugen in Token/s, Lauf 2 (warm), Spannen über sechs Reihen mit Termux sichtbar oder im Hintergrund, ctx 11264:
+| Modell | 2 Threads | 3 | 4 | 8 |
+|---|---|---|---|---|
+| gemma2:2b | 6,9–9,8 | 2,0–7,0 | 1,4–4,5 | 0,3–4,8 |
+| heinz-fakt:latest | 4,2–8,9 | 1,1–7,5 | 1,1–4,9 | 0,2–3,7 |
+- 2 Threads ist am stabilsten; 3 und 4 Threads schwanken stark (gleiche Einstellung 1,2 bis 7,3 Token/s); 8 Threads mit Termux im Hintergrund 0,2–0,3, sichtbar 3,6–4,8.
+- heinz-fakt: Prompt 363 Token (Modelfile-Prompt rund 340), Prompt-Verarbeitung kalt 12–20 s, Laden 4–14 s, warm je 1–2 s. gemma2:2b: Prompt 32 Token, 0,5–1 s.
+- Das Pixel 9 Pro hat nach Herstellerangabe 1 starken, 3 mittlere und 4 schwache Kerne; viele Threads landen auf schwachen Kernen, der langsamste bestimmt den Takt. Wärme bei Dauerlast und Android-Drosselung im Hintergrund sind Vermutungen, nicht gemessen.

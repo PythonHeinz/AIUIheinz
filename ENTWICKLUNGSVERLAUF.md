@@ -158,3 +158,13 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Messwerte (Handy, Einzelläufe, Rauschen möglich): 2 Threads 5,3–6,8 Token/s Erzeugen, 3 Threads 1,7–3,0; Lauf 1 Laden 5,7–11,1 s; Prompt 363 Token. Ein Lauf über 8 Threads steht aus. Lange Kaltstarts (17–21 s) stammen vom Modelfile-Prompt.
 - Tests: 20 Server- und 20 Seitentests grün (Beste Threads, Übernehmen). Breite der Tabelle in der Seitenleiste (250 px) geprüft. Nur simuliert.
 - Offen: Läuft ein Threadwechsel ohne „Modell vorher entladen“ ohne neues Laden? Modell nach Moduswechsel vorladen; kürzerer Modelfile-Prompt.
+
+## 10.11.2026 – Tempo-Maßnahmen im Chat (Chat „AIUIheinz-Chat“, nur `chat.html`)
+- Grundlage: Messreihen des Entwicklers vom 09.11. (gemma2:2b und heinz-fakt, je Threadzahl; 2 Threads am stabilsten, 8 Threads mit Termux im Hintergrund 0,2–0,3 Token/s, erster Aufruf 25–30 s, davon 12–20 s Prompt-Verarbeitung durch den Modelfile-Prompt von heinz-fakt und 4–14 s Laden). Prompts der Seite sind klein (Wilson und Heinz je rund 50 Token); der Parser ist nicht der Engpass.
+- **Systemprompt konstant:** Kontext steht jetzt vorn in der letzten Nutzernachricht statt im Systemprompt (`buildMessages`). Der Systemprompt (Modus, Sprache, Schnellmodus) bleibt gleich und damit im Ollama-Zwischenspeicher. Verhaltensänderung: Im Audit-Modus liegt der Kontext nicht mehr in der Systemnachricht, auf dem Handy prüfen, ob die Antwortqualität gleich bleibt.
+- **Modell vorladen:** nach Seitenstart und bei Wechsel von Modus, Modell, Threads, Kontextgröße, Sprache, Schnellmodus, Eigenem Systemprompt (1,2 s Verzögerung, nicht doppelt bei gleichen Einstellungen, bricht beim Senden ab). Statuszeile „Modell wird vorbereitet / bereit“. Ein-/Ausschalter in ☰ (Standard an).
+- **keep_alive 30 m** in jeder Anfrage (Standard von Ollama 5 min).
+- **Schnellmodus** (☰): Bitte um knappe Antwort ohne Markdown im Systemprompt, `num_predict` (Standard 150, einstellbar 16–1024), Anzeige als Rohtext ohne Parser.
+- Refaktor: `buildOptions` und `buildMessages` für echte Anfrage und Vorladen gemeinsam.
+- Tests: 24 Seitentests grün (neu: Vorladen mit gleichen Optionen, nicht doppelt, folgt Modus und Threads, abschaltbar; Kontext verändert den Systemprompt nicht; Schnellmodus). Gegenprobe (Kontext im Systemprompt) schlägt fehl. Nur simuliert; Wirkung auf dem Handy offen: Zeit bis zur ersten Antwort nach Moduswechsel mit und ohne Vorladen (Start-Badge), Schnellmodus gegen normal (Gesamtzeit).
+- Offen: Termux im Vordergrund (Termux:Float, Akku „Nicht eingeschränkt“, Wakelock) als Tempo-Test-Reihe; GPU/CPU-Schalter erst mit LiteRT-LM (Schritt 3); kürzerer Modelfile-Prompt von heinz-fakt nur nach Vergleichstest.

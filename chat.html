@@ -77,6 +77,7 @@
         .msg-assistant, .msg-user { padding-right: 42px; }
         .msg-user { background: #2a2a2a; align-self: flex-end; border-bottom-right-radius: 2px; white-space: pre-wrap; }
         .msg-note { display: block; margin-top: 6px; font-size: 11px; color: #888; font-weight: normal; }
+        .msg-assistant.plain-text { white-space: pre-wrap; }
         .msg-assistant { background: #181818; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 2px; width: 100%; overflow-x: auto; }
         .placeholder { text-align: center; color: #666; margin-top: auto; margin-bottom: auto; }
 
@@ -141,6 +142,7 @@
             <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
             <button class="burger-btn" onclick="toggleSidebar()">☰</button>
         </div>
+        <div id="preload-status" class="preload-status" style="display:none; font-size:11px; color:#888; margin:-4px 0 6px 2px;"></div>
 
         <div class="mode-container">
             <label style="font-weight: bold; color: #aaa; font-size: 13px;" data-i18n="chooseMode">Choose working mode:</label>
@@ -232,6 +234,20 @@
                 <input type="checkbox" id="own-system" onchange="onOwnSystem()" style="width:auto; margin:0;"> <span data-i18n="ownSystem">Use the model's own system prompt</span>
             </label>
             <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="ownSystemHelp">Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.</small>
+        </div>
+
+        <div class="param-group">
+            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
+                <input type="checkbox" id="fast-mode" onchange="onFast()" style="width:auto; margin:0;"> <span data-i18n="fastMode">Fast mode (short plain-text answer)</span>
+            </label>
+            <label style="margin-top:6px;"><span data-i18n="fastN">Max. answer tokens</span><input type="number" id="param-fastn" min="16" max="1024" step="16" value="150" onchange="onFast()" style="width:80px;"></label>
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small>
+        </div>
+        <div class="param-group">
+            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
+                <input type="checkbox" id="preload-on" onchange="onPreloadToggle()" style="width:auto; margin:0;"> <span data-i18n="preloadOpt">Preload model</span>
+            </label>
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="preloadHelp">Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.</small>
         </div>
 
         <div class="side-title" data-i18n="speedTitle">⏱ Speed test</div>
@@ -441,6 +457,7 @@
         const PROMPTS = {
             en: {
                 respond: 'Respond in English.',
+                plain: 'Reply briefly in plain text: no Markdown, no lists, no tables, no bold.',
                 ctxLabel: 'Context / source text:',
                 wilson: "You are Wilson, a friendly and well-read companion. Draw on your general knowledge, explain things in context and answer in a fluent, narrative tone.",
                 heinz: "You are Heinz, a down-to-earth fact assistant with a dry, casual tone. Give short, factual answers. If you are not sure or do not know, say so instead of guessing.",
@@ -450,6 +467,7 @@
             },
             de: {
                 respond: 'Antworte auf Deutsch.',
+                plain: 'Antworte knapp in reinem Text: kein Markdown, keine Listen, keine Tabellen, kein Fettdruck.',
                 ctxLabel: 'Kontext / Rohtext:',
                 wilson: "Du bist Wilson, ein freundlicher und belesener Begleiter. Greife auf dein Allgemeinwissen zu, erkläre Dinge im Kontext und antworte in einem flüssigen, erzählenden Tonfall.",
                 heinz: "Du bist Heinz, ein bodenständiger Fakten-Assistent mit trockenem, lockerem Ton. Gib kurze, sachliche Antworten. Wenn du etwas nicht sicher weißt, sag das, statt zu raten.",
@@ -535,6 +553,7 @@
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
                 stBusy: 'Wait until the answer is finished.', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: '✔ Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
+                fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: '⏳ Preparing model…', preReady: '✓ Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
                 locale: 'en-GB'
@@ -568,6 +587,7 @@
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
                 stBusy: 'Warte, bis die Antwort fertig ist.', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '✔ {n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
+                fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: '⏳ Modell wird vorbereitet…', preReady: '✓ Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
                 locale: 'de-DE'
@@ -594,7 +614,7 @@
         let currentAbortController = null;
         let generating = false;
         let currentSavedId = null;
-        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false };
+        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false, preload: true, fast: false, fastN: 150 };
         const DEFAULT_THREADS = 4;
 
         // ===== Speicher =====
@@ -655,6 +675,7 @@
             $('val-ctx').innerText = v.ctx;
             settings.params = v;
             saveSettings();
+            schedulePreload();
         }
 
         function onDefaultToggle() {
@@ -677,10 +698,79 @@
             if (!settings.threads) settings.threads = {};
             settings.threads[$('model-select').value] = n;
             saveSettings();
+            schedulePreload();
         }
         function onOwnSystem() {
             settings.ownSystem = $('own-system').checked;
             saveSettings();
+            schedulePreload();
+        }
+        function onFast() {
+            settings.fast = $('fast-mode').checked;
+            const n = parseInt($('param-fastn').value, 10);
+            if (n > 0) settings.fastN = Math.min(1024, Math.max(16, n));
+            $('param-fastn').value = settings.fastN;
+            saveSettings();
+            schedulePreload();
+        }
+        function onPreloadToggle() {
+            settings.preload = $('preload-on').checked;
+            saveSettings();
+            if (settings.preload) schedulePreload(); else abortPreload();
+        }
+
+        // ===== Modell vorladen: Modell und Systemprompt im Hintergrund warm machen =====
+        const KEEP_ALIVE = '30m';
+        let preloadAbort = null, preloadTimer = null, preloadKey = '', preloadHideTimer = null;
+        function preloadKeyNow() {
+            return [$('model-select').value, settings.mode, !!settings.ownSystem, settings.lang, !!settings.fast,
+                !!settings.useDefault, parseInt($('param-ctx').value, 10), parseInt($('param-threads').value, 10)].join('|');
+        }
+        function setPreloadStatus(kind) {
+            const el = $('preload-status');
+            clearTimeout(preloadHideTimer);
+            if (!kind) { el.style.display = 'none'; return; }
+            el.textContent = t(kind === 'loading' ? 'preLoading' : 'preReady');
+            el.style.display = 'block';
+            if (kind === 'ready') preloadHideTimer = setTimeout(function () { el.style.display = 'none'; }, 4000);
+        }
+        function abortPreload() {
+            clearTimeout(preloadTimer);
+            if (preloadAbort) { preloadAbort.abort(); preloadAbort = null; }
+            setPreloadStatus('');
+        }
+        function schedulePreload() {
+            clearTimeout(preloadTimer);
+            if (!settings.preload) return;
+            preloadTimer = setTimeout(preloadModel, 1200);
+        }
+        async function preloadModel() {
+            if (!settings.preload || generating || speedTesting) return;
+            const model = $('model-select').value;
+            const key = preloadKeyNow();
+            if (!model || key === preloadKey) return;
+            if (preloadAbort) preloadAbort.abort();
+            const ac = new AbortController();
+            preloadAbort = ac;
+            setPreloadStatus('loading');
+            try {
+                const opts = buildOptions(MODE_PRESETS[settings.mode]);
+                delete opts.stop; delete opts.num_predict;
+                opts.num_predict = 1;
+                const res = await fetch(OLLAMA_URL + '/api/chat', {
+                    method: 'POST', signal: ac.signal, headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: model, stream: false, keep_alive: KEEP_ALIVE, options: opts,
+                        messages: buildMessages(false, '', [{ role: 'user', content: '.' }]) })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                await res.json();
+                preloadKey = key;
+                if (preloadAbort === ac) setPreloadStatus('ready');
+            } catch (e) {
+                if (e.name !== 'AbortError' && preloadAbort === ac) setPreloadStatus('');
+            } finally {
+                if (preloadAbort === ac) preloadAbort = null;
+            }
         }
 
         function applyModeStyling() {
@@ -699,6 +789,9 @@
             }
             $('use-default').checked = !!settings.useDefault;
             $('own-system').checked = !!settings.ownSystem;
+            $('fast-mode').checked = !!settings.fast;
+            $('param-fastn').value = settings.fastN;
+            $('preload-on').checked = settings.preload;
             document.querySelectorAll('.slider-group').forEach(function (g) {
                 g.classList.toggle('off', !!settings.useDefault);
                 g.querySelector('input').disabled = !!settings.useDefault;
@@ -712,6 +805,7 @@
             settings.model = resolveModel(preset);
             $('model-select').value = settings.model;
             loadThreads();
+            schedulePreload();
             if (!settings.useDefault) {
                 setSliders(preset.temp, preset.top_p, preset.top_k, parseInt($('param-ctx').value, 10));
                 settings.params = readSliders();
@@ -725,6 +819,7 @@
         function onModelChange() {
             settings.model = $('model-select').value;
             loadThreads();
+            schedulePreload();
             saveSettings();
             persistCurrent();
             checkServer();
@@ -742,6 +837,7 @@
             updateLangBtn();
             applyI18n();
             window.speechSynthesis.cancel();
+            schedulePreload();
         }
 
         // ===== Server Status =====
@@ -867,13 +963,18 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function appendAssistantMessage(content, id) {
+        // Schnellmodus: reiner Text ohne Markdown-Verarbeitung (spart Rechenzeit und zeigt die Rohausgabe)
+        function setAssistantContent(div, content, plain) {
+            div.classList.toggle('plain-text', !!plain);
+            if (plain) div.textContent = content; else div.innerHTML = parseOfflineMarkdown(content);
+            attachCopy(div, content);
+        }
+        function appendAssistantMessage(content, id, plain) {
             clearPlaceholder();
             const div = document.createElement('div');
             div.className = 'msg msg-assistant';
             if (id) div.id = id;
-            div.innerHTML = parseOfflineMarkdown(content);
-            attachCopy(div, content);
+            setAssistantContent(div, content, plain);
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
             return div;
@@ -890,11 +991,10 @@
             return div;
         }
 
-        function updateAssistantMessage(id, content) {
+        function updateAssistantMessage(id, content, plain) {
             const div = document.getElementById(id);
             if (!div) return;
-            div.innerHTML = parseOfflineMarkdown(content);
-            attachCopy(div, content);
+            setAssistantContent(div, content, plain);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
@@ -903,7 +1003,7 @@
             if (!chatHistory.length) { showPlaceholder(t('ready')); return; }
             chatHistory.forEach(m => {
                 if (m.role === 'user') appendUserMessage(m.content, m.note);
-                else appendAssistantMessage(m.content);
+                else appendAssistantMessage(m.content, null, m.plain);
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -1080,11 +1180,39 @@
             if (currentAbortController) currentAbortController.abort();
         }
 
-        function buildSystemPrompt(mode, contextText) {
+        // Der Systemprompt bleibt gleich (nur Modus, Sprache, Schnellmodus): so bleibt er im Zwischenspeicher
+        // von Ollama und das Vorladen greift. Der Kontext steht vorn in der letzten Nutzernachricht.
+        function buildSystemPrompt(mode) {
             const P = PROMPTS[settings.lang];
-            let sys = P[mode] + ' ' + P.respond;
-            if (contextText) sys += '\n\n' + P.ctxLabel + '\n' + contextText;
-            return sys;
+            return P[mode] + ' ' + P.respond + (settings.fast ? ' ' + P.plain : '');
+        }
+        function buildMessages(useCtx, contextText, history) {
+            const P = PROMPTS[settings.lang];
+            const msgs = history.map(m => ({ role: m.role, content: m.content }));
+            const last = msgs[msgs.length - 1];
+            last.content = (useCtx ? P.ctxLabel + '\n' + contextText + '\n\n' : '') + last.content;
+            if (settings.ownSystem) {
+                // Eigener Systemprompt des Modells (Modelfile) bleibt: keine System-Nachricht,
+                // Antwortsprache (und Schnellmodus) gehen in die letzte Nutzernachricht.
+                last.content += '\n\n' + P.respond + (settings.fast ? ' ' + P.plain : '');
+                return msgs;
+            }
+            return [{ role: 'system', content: buildSystemPrompt(settings.mode) }].concat(msgs);
+        }
+        function buildOptions(preset) {
+            const o = {};
+            if (!settings.useDefault) {
+                o.temperature = parseFloat($('param-temp').value);
+                o.top_p = parseFloat($('param-topp').value);
+                o.top_k = parseInt($('param-topk').value, 10);
+                o.num_ctx = parseInt($('param-ctx').value, 10);
+                if (preset.stop && preset.stop.length) o.stop = preset.stop.slice();
+            }
+            // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
+            const threads = parseInt($('param-threads').value, 10);
+            if (threads > 0) o.num_thread = threads;
+            if (settings.fast) o.num_predict = settings.fastN;
+            return o;
         }
 
         async function askGemma() {
@@ -1114,19 +1242,10 @@
             appendUserMessage(queryText, note);
             queryInput.value = '';
 
-            // Regeln + Kontext nur in der System-Nachricht -> nicht im Verlauf
-            let apiMessages;
-            if (settings.ownSystem) {
-                // Eigener Systemprompt des Modells (Modelfile) bleibt: keine System-Nachricht.
-                // Antwortsprache und Kontext wandern in die letzte Nutzernachricht (nur in der Anfrage, nicht im Verlauf).
-                const P = PROMPTS[settings.lang];
-                apiMessages = chatHistory.map(m => ({ role: m.role, content: m.content }));
-                const last = apiMessages[apiMessages.length - 1];
-                last.content = (useCtx ? P.ctxLabel + '\n' + contextText + '\n\n' : '') + last.content + '\n\n' + P.respond;
-            } else {
-                apiMessages = [{ role: 'system', content: buildSystemPrompt(mode, useCtx ? contextText : '') }]
-                    .concat(chatHistory.map(m => ({ role: m.role, content: m.content })));
-            }
+            abortPreload();
+            const warmKey = preloadKeyNow();
+            const fastUsed = !!settings.fast;
+            const apiMessages = buildMessages(useCtx, contextText, chatHistory);
 
             const msgId = 'msg-' + Date.now();
             appendLoadingMessage(msgId);
@@ -1149,7 +1268,7 @@
                 if (renderTimer) return;
                 renderTimer = setTimeout(function () {
                     renderTimer = null;
-                    updateAssistantMessage(msgId, outputBuffer);
+                    updateAssistantMessage(msgId, outputBuffer, fastUsed);
                 }, 60);
             };
 
@@ -1162,19 +1281,9 @@
                 if (json.done) finalStats = json;
             };
 
-            const reqBody = { model: selectedModel, messages: apiMessages, stream: true };
-            if (!settings.useDefault) {
-                reqBody.options = {
-                    temperature: parseFloat($('param-temp').value),
-                    top_p: parseFloat($('param-topp').value),
-                    top_k: parseInt($('param-topk').value, 10),
-                    num_ctx: parseInt($('param-ctx').value, 10)
-                };
-                if (preset.stop && preset.stop.length) reqBody.options.stop = preset.stop.slice();
-            }
-            // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
-            const threads = parseInt($('param-threads').value, 10);
-            if (threads > 0) { reqBody.options = reqBody.options || {}; reqBody.options.num_thread = threads; }
+            const reqBody = { model: selectedModel, messages: apiMessages, stream: true, keep_alive: KEEP_ALIVE };
+            const opts = buildOptions(preset);
+            if (Object.keys(opts).length) reqBody.options = opts;
 
             try {
                 const response = await fetch(OLLAMA_URL + '/api/chat', {
@@ -1223,10 +1332,11 @@
 
             if (outputBuffer) {
                 let shown = outputBuffer;
-                if (aborted) shown += '\n\n*' + t('aborted') + '*';
-                if (errorMsg) shown += '\n\n**' + t('error') + '** ' + errorMsg;
-                updateAssistantMessage(msgId, shown);
-                chatHistory.push({ role: 'assistant', content: outputBuffer });
+                if (aborted) shown += fastUsed ? '\n\n' + t('aborted') : '\n\n*' + t('aborted') + '*';
+                if (errorMsg) shown += fastUsed ? '\n\n' + t('error') + ' ' + errorMsg : '\n\n**' + t('error') + '** ' + errorMsg;
+                updateAssistantMessage(msgId, shown, fastUsed);
+                chatHistory.push(fastUsed ? { role: 'assistant', content: outputBuffer, plain: true } : { role: 'assistant', content: outputBuffer });
+                if (finalStats && !aborted && !errorMsg) preloadKey = warmKey;
             } else {
                 chatHistory.pop();  // keine Antwort: Frage nicht im Verlauf behalten
                 updateAssistantMessage(msgId, aborted
@@ -1436,6 +1546,9 @@
             if (s.lang === 'de' || s.lang === 'en') settings.lang = s.lang;
             settings.useDefault = !!s.useDefault;
             settings.ownSystem = !!s.ownSystem;
+            settings.preload = s.preload !== false;
+            settings.fast = !!s.fast;
+            if (s.fastN > 0) settings.fastN = parseInt(s.fastN, 10);
             if (s.threads && typeof s.threads === 'object') settings.threads = s.threads;
             if (s.params && isFinite(s.params.temp)) settings.params = s.params;
 
@@ -1458,7 +1571,7 @@
             renderChatFromHistory();
             renderSavedList();
             checkServer();
-            loadModels();
+            loadModels().then(schedulePreload);
             showVersion();
             const lastSt = lsGet('heinz_speedtest', null);
             if (lastSt && Array.isArray(lastSt.rows)) { stRows = lastSt.rows; stMeta = lastSt.meta; renderSpeedTest(); }
