@@ -55,7 +55,7 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - Der Entwickler arbeitet auf Deutsch; Antworten sachlich und knapp, ohne Lob und Begeisterung.
 
 ## Tests
-- **Einmal aus einem frischen Klon starten und die Playwright-Tests laufen lassen**, sobald sie im Repo liegen (`tests/`). Dabei darf nichts fehlen, was nur lokal existiert.
+- `tests/` liegt im Repo: `bash tests/run_all.sh` startet `test_server.py` (nur Standardbibliothek: Schutzregeln, Dateien, Papierkorb, gesperrte Pfade) und `test_pages.py` (Playwright, Pixel-Viewport, simuliertes Ollama: alle Seiten laden ohne Fehler und ohne Anfragen nach außen, Chat streamt, Badges, Sprachumschaltung, Moduswechsel, Fehlerfall). Neue Funktionen bekommen dort einen Test; vor dem Push aus einem frischen Klon laufen lassen.
 - Im Chat-Container mit Playwright und der vorinstallierten Chromium-Version; Ollama wird mit `page.route('**/localhost:11434/**', …)` simuliert (Pfade der Installation vor Gebrauch prüfen). `node --check` für die Skriptblöcke.
 - Server mit curl prüfen: fehlender Header, fremder Origin, `../` im Namen, ungültige Endung, Löschen nach `_trash`, `/server.py` und `/data` müssen 404 liefern.
 - Echte Modelle laufen nur auf dem Handy. Nach jeder Änderung sagen, was der Entwickler dort prüfen soll. Nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief.

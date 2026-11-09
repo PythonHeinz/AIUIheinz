@@ -21,6 +21,9 @@ Projektinstruktion für neue Chats: `NAECHSTER_CHAT.md` (im Projektordner, eine 
 
 Aktualisieren: `cd ~/AIUIheinz && git pull`, Server neu starten. Der Ordner `data/` (Tabellen, Messwerte) ist nicht im Repo und bleibt beim Pull unberührt.
 
+## Tests
+Server und Seiten werden ohne Ollama getestet (Ollama wird simuliert). Einmalig `pip install playwright && playwright install chromium`, dann `bash tests/run_all.sh`. Echte Modelle laufen nur auf dem Handy.
+
 ## Dokumentation
 - `STAND.md` (nur im Projektordner, nicht im Repo) Stand je Modul, aktive Arbeit, nächste Aufgaben
 - `UEBERGABE.md` Start für neue Chats, Fallstricke, Regeln
