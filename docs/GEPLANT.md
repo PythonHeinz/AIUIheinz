@@ -16,6 +16,7 @@ Stand 09.11.2026. Reihenfolge der konkreten Aufgaben steht in `STAND.md` („Nä
 - **Chat:** Chats speichern und später fortführen, Python-Code mit Farbmarkierung offline (Absicht des Entwicklers; Stand im Chat-Modul gegen `chat.html` prüfen).
 
 ## Plattform
+- **Geräteprofile für die veröffentlichte Fassung (Idee des Entwicklers, 09.11.2026):** Voreinstellungen je Handy-Prozessor (Threads, Kontext, Modellvorschlag), entweder zur Auswahl oder automatisch erkannt, damit die KI auf fremden Geräten direkt schnell läuft. Grundlage: `num_thread` hat sich auf dem Pixel 9 Pro als größter Tempohebel gezeigt. Ungeklärt: ob der Browser genug Geräteinfo liefert (Kernzahl über `navigator.hardwareConcurrency`, Chipname eher nicht); Messreihe je Gerät nötig.
 - Zweites Gerät als reine Experimentierhardware für lokale Modelle (zunächst ein Pixel mit neuerem Tensor-Chip, später ein gebrauchtes Gerät mit 24 GB RAM und Snapdragon, mit Root oder alternativem System), um 4B bis 12B zu testen. Erfahrungen vom Pixel 9 Pro sollen übertragen werden.
 - Das Projekt soll auch am PC laufen können (`python server.py --vitals-interval 0`), sobald dort ein Ollama zur Verfügung steht (nicht geprüft).
 

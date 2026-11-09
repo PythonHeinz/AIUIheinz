@@ -113,3 +113,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Nur Dokumente, kein Code: neu `docs/MODELLQUELLEN.md` (Quellen für Modelle nach Kategorien: lokal, Cloud gratis ohne/mit Key, Startguthaben, günstig/EU, Community, nicht mehr verfügbar), Vorschlag für eine Anbieterschicht als Daten (`providers.json`, Stufen der Offenheit, Datenschutzfeld) und Vorschlag „Funktionsplätze“ mit Nutzungsideen für externe Cloud-KI (Abschnitt I). Hinweiszeile in `docs/OLLAMA_UND_MODELLE.md`.
 - Zahlen stammen aus Drittquellen (Aug–Okt 2026), nicht aus Anbieterdokus; CORS je Anbieter ungeprüft. Nichts davon ist auf dem Gerät getestet.
 - Funktionsplätze und `providers.json` berühren das Fundament (Anbieterschicht, KONZEPT Abschnitt 7): erst Beschluss des Entwicklers, dann bauen.
+
+## 09.11.2026 – Handytest Chat-Schritt 1 (Beobachtung des Entwicklers, Chat „AIUIheinz-Chat“)
+- Auf dem Pixel mit `git pull` und `bash start.sh` getestet: 4 CPU-Threads schnell (4,8 Token/s bei 12 Antwort-Token), 8 Threads sehr langsam, zurück auf 4 wieder schnell; Gesprächsverlauf wird berücksichtigt. Einzelbeobachtung, Sichtbarkeit von Termux nicht festgehalten (siehe `docs/OLLAMA_UND_MODELLE.md`, Abschnitt Threads).
+- Gemeldet: „Ganzen Chat kopieren“ funktioniere noch nicht (Art des Fehlers offen, im nächsten Schritt klären).
+- Noch nicht geprüft: Modellliste aus Ollama, Modus Heinz mit `heinz-fakt`, Haken „Eigenen Systemprompt nutzen“.
+- Idee: Geräteprofile (Threads je Prozessor) in `docs/GEPLANT.md`.
+
