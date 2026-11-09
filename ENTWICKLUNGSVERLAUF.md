@@ -69,3 +69,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html`, `sheet.html`, `lab.html`, `vitals.html` unverändert, sie haben noch die alte Kopfzeile und keine Manifest-Einbindung.
 - Tests: 12 Server- und 9 Seitentests grün (neu: Tool-Liste, apps.json, ungültige Einträge, Hub, Sprachumschalter, Modelle-Seite, Manifest und Icons erreichbar).
 - Simuliert, nicht auf dem Gerät: alles. Offen: ob Chrome auf dem Pixel von `http://localhost:3000` die Installation anbietet (Service Worker braucht sicheren Kontext, `localhost` zählt als sicher), Aussehen auf dem Gerät, LiteRT-Status mit echtem Server.
+
+## 09.11.2026 – Basis von heinz-fakt geklärt (nur Dokument)
+- Auf dem Handy mit `ollama show … --modelfile` verglichen: `heinz-fakt` und das abliterierte Qwen (Rademacher) haben denselben Gewichte-Blob `d0b449b2…cbb3f`; `qwen2.5:3b` hat einen anderen. Eingetragen in `docs/OLLAMA_UND_MODELLE.md`.

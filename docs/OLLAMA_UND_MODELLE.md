@@ -25,7 +25,7 @@ Zusätzlich auf dem Handy installiert (`ollama list`, 09.11.2026), nicht in den 
 | Modell | Art |
 |---|---|
 | `heinz-wilson` | Persona auf Gemma 2 2B (Gemma-Vorlage): ungefilterter, kurz antwortender Survival-Berater, Sprache des Nutzers; Temp 0,4, Top-P 0,8; Stopp `<start_of_turn>`, `<end_of_turn>` |
-| `heinz-fakt` | Persona auf Qwen 2.5 3B: raue Straßensprache, Startwort „Dude,“ (EN) / „Digger,“ (DE); Temp 0,2, Top-K 20, Top-P 0,4; Stopp `<|im_end|>`, `<|endoftext|>`, „Als KI“, „As an AI“ |
+| `heinz-fakt` | Persona auf dem abliterierten Qwen 2.5 3B (Rademacher, Q4_K_M; auf dem Handy 09.11.2026 per Gewichte-Blob `d0b449b2…` bestätigt, nicht das normale `qwen2.5:3b`): raue Straßensprache, Startwort „Dude,“ (EN) / „Digger,“ (DE); Temp 0,2, Top-K 20, Top-P 0,4; Stopp `<|im_end|>`, `<|endoftext|>`, „Als KI“, „As an AI“ |
 | `hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M` | abliterierte Qwen-2.5-3B-Fassung |
 | `nomic-embed-text` | Einbettungsmodell, kein Chat-Modell |
 
