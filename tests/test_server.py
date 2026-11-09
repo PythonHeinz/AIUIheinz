@@ -166,12 +166,27 @@ class UpdateTest(unittest.TestCase):
         self.assertEqual(self.post(dict(H, Origin="http://evil.example"))[0], 403)
         self.assertEqual(self.get("/index.html"), "version one", "a refused call must not update anything")
 
+    def head(self):
+        return git("rev-parse", "--short", "HEAD", cwd=self.phone).stdout.strip()
+
     def test_up_to_date(self):
         st, res = self.post()
         self.assertEqual(st, 200)
         self.assertTrue(res["ok"])
         self.assertFalse(res["changed"])
         self.assertFalse(res["restarting"])
+        self.assertEqual(res["to"], self.head())
+
+    def test_ping_and_update_report_the_version(self):
+        app = json.loads(self.get("/api/ping"))["app"]
+        first = self.head()
+        self.assertEqual(app["commit"], first)
+        self.assertRegex(app["date"], r"^\d{4}-\d{2}-\d{2}$")
+        self.push_change("index.html", "version two")
+        st, res = self.post()
+        new = git("rev-parse", "--short", "HEAD", cwd=self.work).stdout.strip()
+        self.assertEqual((res["from"], res["to"]), (first, new))
+        self.assertEqual(json.loads(self.get("/api/ping"))["app"]["commit"], new, "ping shows the new version without restart")
 
     def test_page_change_is_pulled_without_restart(self):
         self.push_change("index.html", "version two")
@@ -219,6 +234,8 @@ class UpdateTest(unittest.TestCase):
         r = c.getresponse()
         self.assertEqual(r.status, 409)
         self.assertEqual(json.loads(r.read())["error"], "not a git checkout")
+        with urllib.request.urlopen(srv.base + "/api/ping", timeout=5) as p:
+            self.assertIsNone(json.loads(p.read())["app"], "no version without git")
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

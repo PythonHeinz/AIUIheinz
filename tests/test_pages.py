@@ -311,20 +311,25 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         calls = []
         answers = [
-            (200, {"ok": True, "changed": False, "files": [], "restarting": False}),
+            (200, {"ok": True, "changed": False, "files": [], "restarting": False, "from": "abc1234", "to": "abc1234"}),
             (409, {"ok": False, "error": "git pull failed", "output": "Could not resolve host"}),
-            (200, {"ok": True, "changed": True, "files": ["chat.html"], "restarting": False}),
+            (200, {"ok": True, "changed": True, "files": ["chat.html"], "restarting": False, "from": "abc1234", "to": "def5678"}),
         ]
         def handle(route):
             calls.append((route.request.method, route.request.headers.get("x-heinz")))
             code, body = answers[len(calls) - 1]
             route.fulfill(status=code, content_type="application/json", body=json.dumps(body))
         page.route("**/api/update", handle)
+        page.route("**/api/ping", lambda route: route.fulfill(status=200, content_type="application/json",
+                   body=json.dumps({"ok": True, "version": "1", "app": {"commit": "abc1234", "date": "2026-11-09"}})))
         page.goto(self.srv.base + "/chat.html")
         self.send(page, "Hi")
         page.click(".burger-btn")
+        page.wait_for_function("document.getElementById('upd-ver').textContent.includes('abc1234')")
+        self.assertEqual(page.inner_text("#upd-ver"), "⬇ abc1234 · 2026-11-09", "pill shows commit and date")
         page.click("#upd-btn")
         page.wait_for_function("document.getElementById('upd-status').textContent.includes('up to date')")
+        self.assertIn("(abc1234)", page.inner_text("#upd-status"))
         page.click("#upd-btn")
         page.wait_for_function("document.getElementById('upd-status').textContent.includes('Could not resolve host')")
         self.assertFalse(page.is_disabled("#upd-btn"), "button usable again after an error")

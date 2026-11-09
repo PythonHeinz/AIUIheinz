@@ -140,3 +140,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Einmalig von Hand nötig: `git pull` und `bash start.sh`, weil der laufende Server den Endpunkt noch nicht kennt. Danach nicht mehr.
 - Offen: derselbe Knopf im Hub; `start.sh` mit automatischem Pull wäre nur nötig, wenn man ganz ohne Seite aktualisieren will.
 
+## 09.11.2026 – Versions-Pille am Update-Knopf (Chat „AIUIheinz-Chat“; berührt Fundament, Wunsch des Entwicklers nach dem Vorbild von INCIheinz)
+- `server.py`: `app_version()` liefert kurzen Commit und Commit-Datum (aus Git, zwischengespeichert, nach jedem Update neu gelesen). `GET /api/ping` enthält jetzt `app: {commit, date}` (ohne Git `null`), `POST /api/update` liefert zusätzlich `from`, `to`, `date`.
+- `chat.html`: Der Knopf oben in ☰ ist eine Pille mit dem Stand („⬇ 611e62d · 2026-11-09“); Tippen sucht nach Updates. Meldungen nennen den Stand („Schon auf dem neuesten Stand (611e62d)“, „Aktualisiert 47b3269 → 611e62d“). Ohne Server steht nur „⬇ Update“.
+- Tests: 19 Server- und 20 Seitentests grün (neu: Version in Ping und Update, ohne Git `null`, Pille und Meldungen). Nur simuliert.
+- Hinweis: Als „Version“ dient der Git-Commit samt Datum, keine eigene Versionsnummer. Eine Nummer (zum Beispiel `VERSION` in der Seite) wäre eine Ergänzung, falls gewünscht.
+

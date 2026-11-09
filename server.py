@@ -36,6 +36,23 @@ DATA_DIR = os.path.join(APP_DIR, "data")
 
 
 _update_lock = threading.Lock()
+_app_version = None
+
+
+def app_version(refresh=False):
+    """Short commit and date of the checked-out version ({'commit','date'}), or None without git. Cached."""
+    global _app_version
+    if _app_version is None or refresh:
+        _app_version = {}
+        if os.path.isdir(os.path.join(APP_DIR, ".git")):
+            try:
+                c = _git(["rev-parse", "--short", "HEAD"], timeout=10).stdout.strip()
+                d = _git(["log", "-1", "--format=%cs"], timeout=10).stdout.strip()
+                if c:
+                    _app_version = {"commit": c, "date": d}
+            except Exception:
+                pass
+    return _app_version or None
 
 
 def _git(args, timeout=90):
@@ -60,7 +77,10 @@ def update_from_git():
         files = []
         if new != old:
             files = [f for f in _git(["diff", "--name-only", old, new]).stdout.split("\n") if f]
-        return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files, "output": out}
+        ver = app_version(refresh=True) or {}
+        old_short = _git(["rev-parse", "--short", old]).stdout.strip() if old else ""
+        return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files, "output": out,
+                     "from": old_short, "to": ver.get("commit", ""), "date": ver.get("date", "")}
     except FileNotFoundError:
         return 500, {"ok": False, "error": "git is not installed"}
     except subprocess.TimeoutExpired:
@@ -300,7 +320,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/ping":
-            return self._json(200, {"ok": True, "version": VERSION, "data": DATA_DIR})
+            return self._json(200, {"ok": True, "version": VERSION, "data": DATA_DIR, "app": app_version()})
         if path == "/api/tools":
             return self._json(200, {"tools": load_tools()})
         if path == "/api/vitals":
