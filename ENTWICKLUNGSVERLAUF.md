@@ -151,3 +151,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu: `VERSION.txt` (`1.0`). `server.py` `app_version()` liest sie und gibt `version`, `commit`, `date` in `/api/ping` und (`version`, `from`, `to`, `date`) in `/api/update` zurück. Pille: „⬇ v1.0 · <Commit> · <Datum>“.
 - Tests: 20 Server- und 20 Seitentests grün (neu: Versionsnummer in Ping, neu gelesen nach Update). Nur simuliert.
 
+
+## 09.11.2026 – Tempo-Test: Prompt-Zeit, beste Threads übernehmen (Chat „AIUIheinz-Chat“)
+- Anlass: Erste Messung des Entwicklers (`heinz-fakt:latest`, 2 und 3 Threads). Die Prompt-Token/s im Lauf 2 waren irreführend: Ollama nimmt den gleichen Präfix (Modelfile-Systemprompt, rund 340 Token) aus dem Zwischenspeicher; `prompt_eval_count` meldet trotzdem den ganzen Prompt.
+- `chat.html`: Neue Spalte „P s“ (`prompt_eval_duration`); „P t/s“ nur noch im Lauf 1, im Lauf 2 steht „–“. Zeile „Beste: N Threads (X Token/s)“ (je Threadwert Lauf 2, sonst Lauf 1, höchste Erzeugungsrate) und Knopf „N Threads für dieses Modell übernehmen“ (schreibt `settings.threads[Modell]`). Kopiertext mit gleichen Spalten, Hinweis zum Zwischenspeicher und „Best“-Zeile.
+- Messwerte (Handy, Einzelläufe, Rauschen möglich): 2 Threads 5,3–6,8 Token/s Erzeugen, 3 Threads 1,7–3,0; Lauf 1 Laden 5,7–11,1 s; Prompt 363 Token. Ein Lauf über 8 Threads steht aus. Lange Kaltstarts (17–21 s) stammen vom Modelfile-Prompt.
+- Tests: 20 Server- und 20 Seitentests grün (Beste Threads, Übernehmen). Breite der Tabelle in der Seitenleiste (250 px) geprüft. Nur simuliert.
+- Offen: Läuft ein Threadwechsel ohne „Modell vorher entladen“ ohne neues Laden? Modell nach Moduswechsel vorladen; kürzerer Modelfile-Prompt.

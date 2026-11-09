@@ -259,6 +259,8 @@
         <button class="side-btn" id="st-stop" onclick="stopSpeedTest()" style="display:none;" data-i18n="stStop">■ Stop</button>
         <div id="st-status" style="font-size:12px; color:#aaa; min-height:16px;"></div>
         <div id="st-table"></div>
+        <div id="st-best" style="font-size:13px; color:#8ab4f8; margin-top:8px;"></div>
+        <button class="side-btn" id="st-apply" onclick="applyBestThreads()" style="display:none; margin-top:6px;"></button>
         <button class="side-btn" id="st-copy" onclick="copySpeedTest()" style="display:none; margin-top:8px;" data-i18n="stCopy">📋 Copy results</button>
 
         <div class="side-title" data-i18n="chats">💬 Chats</div>
@@ -527,11 +529,11 @@
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
                 updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
-                speedTitle: '⏱ Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm. Takes a few minutes; leave the phone alone meanwhile.',
+                speedTitle: '⏱ Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
                 stCold: 'Unload model first (measures real load time)', stStart: '▶ Start test', stStop: '■ Stop', stCopy: '📋 Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
-                stBusy: 'Wait until the answer is finished.',
+                stBusy: 'Wait until the answer is finished.', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: '✔ Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
@@ -560,11 +562,11 @@
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
                 updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
-                speedTitle: '⏱ Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm. Dauert einige Minuten; das Handy solange in Ruhe lassen.',
+                speedTitle: '⏱ Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
                 stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: '▶ Test starten', stStop: '■ Stopp', stCopy: '📋 Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
-                stBusy: 'Warte, bis die Antwort fertig ist.',
+                stBusy: 'Warte, bis die Antwort fertig ist.', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '✔ {n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
@@ -1311,30 +1313,59 @@
             return {
                 load: (j.load_duration || 0) / 1e9,
                 pTok: j.prompt_eval_count || 0,
+                pS: (j.prompt_eval_duration || 0) / 1e9,
                 pTps: j.prompt_eval_duration ? (j.prompt_eval_count || 0) / (j.prompt_eval_duration / 1e9) : 0,
                 gTps: j.eval_duration ? (j.eval_count || 0) / (j.eval_duration / 1e9) : 0,
                 total: (performance.now() - t0) / 1000
             };
         }
+        // Beste Threads: höchste Erzeugungsgeschwindigkeit (warmer Lauf 2, sonst Lauf 1)
+        function stBest() {
+            const byN = {};
+            stRows.forEach(function (r) { if (!byN[r.n] || r.run >= byN[r.n].run) byN[r.n] = r; });
+            let best = null;
+            Object.keys(byN).forEach(function (k) {
+                const r = byN[k];
+                if (!best || r.gTps > best.v) best = { n: r.n, v: r.gTps };
+            });
+            return best;
+        }
+        function applyBestThreads() {
+            const best = stBest();
+            if (!best || !stMeta) return;
+            if (!settings.threads) settings.threads = {};
+            settings.threads[stMeta.model] = best.n;
+            saveSettings();
+            if ($('model-select').value === stMeta.model) loadThreads();
+            $('st-status').textContent = t('stApplied', { n: best.n, m: stMeta.model });
+        }
         function renderSpeedTest() {
             const box = $('st-table');
             if (!stRows.length) { box.innerHTML = ''; $('st-copy').style.display = 'none'; return; }
-            let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load s</th><th>P-Tok</th><th>P t/s</th><th>Gen t/s</th><th>Tot s</th></tr>';
+            let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load</th><th>P-Tok</th><th>P s</th><th>P t/s</th><th>Gen</th><th>Tot</th></tr>';
             stRows.forEach(function (r) {
-                h += '<tr><td>' + r.n + '</td><td>' + r.run + '</td><td>' + stFmt(r.load, 1) + '</td><td>' + r.pTok + '</td><td>' + stFmt(r.pTps, 1) + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
+                h += '<tr><td>' + r.n + '</td><td>' + r.run + '</td><td>' + stFmt(r.load, 1) + '</td><td>' + r.pTok + '</td><td>' + (r.pS == null ? '–' : stFmt(r.pS, 1)) +
+                    '</td><td>' + (r.run === 1 ? stFmt(r.pTps, 1) : '–') + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
             });
             box.innerHTML = h + '</table>';
+            const best = stBest();
+            $('st-best').textContent = best ? t('stBest', { n: best.n, v: stFmt(best.v, 1) }) : '';
+            $('st-apply').style.display = best ? 'block' : 'none';
+            if (best) $('st-apply').textContent = t('stApply', { n: best.n });
             $('st-copy').style.display = 'block';
         }
         function speedTestText() {
             const m = stMeta || {};
             const head = 'Heinz UI speed test | ' + (m.date || '') + ' | model ' + (m.model || '') + ' | ctx ' + (m.ctx || '') + ' | prompt ' + (m.prompt || '') +
                 ' | Termux ' + (m.termux || '') + ' | cold start ' + (m.cold ? 'yes' : 'no') + ' | temp 0, 32 tokens, stream off';
-            const lines = ['Thr | Run | Load s | P-Tok | P t/s | Gen t/s | Total s'];
+            const lines = ['Thr | Run | Load s | P-Tok | P s | P t/s | Gen t/s | Total s'];
             stRows.forEach(function (r) {
-                lines.push([r.n, r.run, stFmt(r.load, 1), r.pTok, stFmt(r.pTps, 1), stFmt(r.gTps, 1), stFmt(r.total, 1)].join(' | '));
+                lines.push([r.n, r.run, stFmt(r.load, 1), r.pTok, r.pS == null ? '-' : stFmt(r.pS, 1), r.run === 1 ? stFmt(r.pTps, 1) : '-', stFmt(r.gTps, 1), stFmt(r.total, 1)].join(' | '));
             });
-            return head + '\n' + lines.join('\n');
+            const best = stBest();
+            const notes = ['P-Tok = whole prompt incl. the model\'s system prompt; P t/s only for run 1 (run 2 reuses the cached prefix, so its speed would be too high).'];
+            if (best) notes.push('Best: ' + best.n + ' threads (' + stFmt(best.v, 1) + ' tokens/s)');
+            return head + '\n' + lines.join('\n') + '\n' + notes.join('\n');
         }
         function copySpeedTest() {
             const b = $('st-copy'); const old = b.textContent;
