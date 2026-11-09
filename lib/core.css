@@ -1,0 +1,41 @@
+/* Heinz UI shared styles: dark, minimal, Google colours. Header follows the INCIheinz look. */
+:root { --bg:#000; --surf:#121212; --line:#2a2a2a; --pri:#4285f4; --txt:#e8eaed; --sub:#9aa0a6; --green:#34a853; --yellow:#fbbc05; --red:#ea4335; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--txt); font-family: sans-serif; }
+body { min-height: 100vh; }
+#app-header { position: sticky; top: 0; z-index: 10; }
+#app-header header { min-height: 58px; background: var(--surf); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+header .slot { width: 76px; display: flex; align-items: center; }
+header .slot.right { justify-content: flex-end; }
+header .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+header .ring { width: 32px; height: 32px; border: 1.8px solid var(--pri); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+header b { display: block; font-size: 1.15rem; font-weight: 600; color: var(--pri); line-height: 1; letter-spacing: -.02em; }
+header b span { color: var(--txt); font-weight: 500; }
+header small { display: block; font-size: .6rem; letter-spacing: .2em; color: var(--sub); margin-top: 3px; font-weight: 500; text-transform: uppercase; }
+header .ib { background: none; border: 0; color: var(--pri); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; font-size: 22px; text-decoration: none; }
+.lang-btn { background: #202124; border: 1px solid #3c4043; color: #fff; font-size: 12px; font-weight: bold; padding: 3px; border-radius: 8px; cursor: pointer; display: flex; gap: 2px; }
+.lang-btn span { padding: 5px 6px; border-radius: 5px; color: #80868b; }
+.lang-btn span.active { background: var(--green); color: #fff; }
+main.page { max-width: 600px; margin: 0 auto; padding: 14px 16px max(90px, 45vh); }
+.dot { height: 11px; width: 11px; border-radius: 50%; background: var(--red); display: inline-block; flex: none; }
+.dot.on { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+.dot.run { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.status { background: #202124; border: 1px solid #3c4043; border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; font-size: 14px; color: #bdc1c6; line-height: 1.6; }
+.status .row { display: flex; align-items: center; gap: 8px; }
+.status b { color: #fff; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+a.card { display: block; text-decoration: none; color: #fff; border-radius: 16px; padding: 16px 18px; position: relative; }
+.card h2 { margin: 0 0 6px; font-size: 19px; }
+.card p { margin: 0; font-size: 14px; opacity: .92; line-height: 1.4; }
+.card .ico { font-size: 26px; display: block; margin-bottom: 6px; }
+.card .tag { position: absolute; top: 12px; right: 12px; font-size: 11px; border: 1px solid rgba(255,255,255,.55); border-radius: 10px; padding: 2px 8px; }
+.c-blue { background: #4285f4; } .c-green { background: #34a853; } .c-red { background: #ea4335; }
+.c-yellow { background: #fbbc05; color: #202124 !important; } .c-yellow .tag { border-color: rgba(0,0,0,.45); }
+.c-gray { background: #202124; border: 1px solid #3c4043; color: #bdc1c6 !important; }
+.sect { margin: 20px 0 8px; font-size: 12px; letter-spacing: .15em; color: var(--sub); text-transform: uppercase; }
+.panel { background: #202124; border: 1px solid #3c4043; border-radius: 12px; padding: 14px; font-size: 14px; line-height: 1.5; color: #bdc1c6; margin-bottom: 14px; }
+.panel h3 { margin: 0 0 6px; color: #fff; font-size: 16px; }
+.panel a { color: var(--pri); }
+table.list { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom: 1px solid #2f3134; }
+.foot { margin-top: 22px; font-size: 12px; color: #5f6368; text-align: center; }

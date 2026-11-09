@@ -34,6 +34,48 @@ APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(APP_DIR, "data")
 
 
+TOOL_ID_RE = re.compile(r"^[a-z][a-z0-9\-]{0,31}$")
+TOOL_KEYS = ("id", "name", "desc", "icon", "entry", "color", "status", "order", "legacy")
+
+
+def load_tools():
+    """Tool registry: every tools/<id>/tool.json describes one tool of the hub.
+
+    Optional data/apps.json {"enabled": ["chat", ...]} limits the list.
+    Broken or unknown entries are skipped, never fatal.
+    """
+    tools = []
+    base = os.path.join(APP_DIR, "tools")
+    if os.path.isdir(base):
+        for d in sorted(os.listdir(base)):
+            f = os.path.join(base, d, "tool.json")
+            if not (TOOL_ID_RE.match(d) and os.path.isfile(f)):
+                continue
+            try:
+                with open(f, encoding="utf-8") as fh:
+                    raw = json.load(fh)
+            except (OSError, ValueError):
+                continue
+            if not isinstance(raw, dict) or raw.get("id") != d or not isinstance(raw.get("entry"), str):
+                continue
+            entry = raw["entry"]
+            if "://" in entry or entry.startswith("//") or ".." in entry:
+                continue
+            tools.append({k: raw[k] for k in TOOL_KEYS if k in raw})
+    enabled = None
+    try:
+        with open(os.path.join(DATA_DIR, "apps.json"), encoding="utf-8") as fh:
+            e = json.load(fh).get("enabled")
+            if isinstance(e, list):
+                enabled = [str(x) for x in e]
+    except (OSError, ValueError, AttributeError):
+        pass
+    if enabled is not None:
+        tools = [t for t in tools if t["id"] in enabled]
+    tools.sort(key=lambda t: (t.get("order", 100) if isinstance(t.get("order", 100), (int, float)) else 100, t["id"]))
+    return tools
+
+
 def _run_json(cmd, timeout=6):
     """Run a Termux:API command and parse its JSON output. None on any problem."""
     if not shutil.which(cmd[0]):
@@ -177,6 +219,7 @@ def vitals_history(hours, max_points=500):
 
 class Handler(SimpleHTTPRequestHandler):
     server_version = "HeinzServer/" + VERSION
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".webmanifest": "application/manifest+json", ".js": "text/javascript"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=APP_DIR, **kwargs)
@@ -216,6 +259,8 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/api/ping":
             return self._json(200, {"ok": True, "version": VERSION, "data": DATA_DIR})
+        if path == "/api/tools":
+            return self._json(200, {"tools": load_tools()})
         if path == "/api/vitals":
             with _vitals_lock:
                 cur = dict(_vitals_latest)

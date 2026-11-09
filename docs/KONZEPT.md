@@ -22,10 +22,11 @@ Stand 09.11.2026, Chat „AIUIheinz“. **Nichts davon ist gebaut.** Grundlage s
 AIUIheinz/
   server.py        Standardbibliothek; Tool-Liste, Dateien, später optional Proxy
   start.sh         Termux-Start
-  hub/             Hub, zeigt die aktivierten Tools
-  lib/             markdown.js, highlight.js, i18n.js, core.js, providers.js
-  tools/
-    chat/  filter/  models/  sheet/     je Ordner: tool.json + index.html
+  index.html       Hub (liegt im Wurzelordner), baut die Kacheln aus /api/tools
+  manifest.webmanifest, sw.js, icons/   App-Installation (PWA)
+  lib/             core.js + core.css (gebaut), später markdown.js, highlight.js, providers.js
+  tools/<id>/tool.json   Beschreibung je Tool; entry zeigt auf die Seite (chat.html, sheet.html usw. bleiben vorerst im Wurzelordner)
+  tools/models/ tools/filter/   Platzhalter-Seiten
   data/            nicht im Repo: apps.json, models.json, personas.json, Tabellen
 ```
 - **Ein Port für alles.** `server.py` liefert jedes Tool unter eigenem Pfad aus (`/chat`, `/filter`, später `/convert2`). Das spart Prozesse in Termux.
@@ -34,6 +35,8 @@ AIUIheinz/
 - **Datenordner je Tool:** `data/<tool-id>/`. Die bestehende Datei-Schnittstelle bleibt, die Schutzregeln (Header `X-Heinz`, Origin-Prüfung, Namensregex, kein Ausliefern von `/data`, `/server.py`, `/start.sh`) gelten unverändert für jeden neuen Endpunkt.
 - **Bibliotheken ausgelagert:** Markdown-Parser, Syntaxfarben, Übersetzungstabellen und gemeinsame Funktionen (`lsGet/lsSet`, Kopfzeile) liegen einmal in `lib/`. Das beseitigt die fünffache Kopie.
 - **Convert2** (Markdown-Konverter) kommt später als eigenes Tool, ist nicht Teil dieses Konzepts.
+
+**Stand Grundgerüst (09.11.2026, nur im Test simuliert):** `GET /api/tools` liest `tools/*/tool.json` (Felder id, name, desc, icon, entry, color, status, order, legacy); `data/apps.json` mit `{"enabled": [...]}` filtert. Ungültige Einträge (Ordner ≠ id, `entry` mit `://`, `//` oder `..`) werden übersprungen. `lib/core.js`: `Heinz.header`, `Heinz.store(tool)` (Präfix `heinz.<tool>.`), Sprache über den bestehenden Schlüssel `heinz_settings.lang`, `pingOllama`, `pingLiteRT` (no-cors), `litertModels`. Kopfzeile nach INCIheinz-Vorbild: Ring mit Gehirn-Symbol, Schriftzug AIUI+heinz, kleine Beschriftung. Nicht auf dem Gerät geprüft: Installation über Chrome von `localhost:3000`.
 
 ## 3 Tools
 | Tool | Quelle | Entscheidung |

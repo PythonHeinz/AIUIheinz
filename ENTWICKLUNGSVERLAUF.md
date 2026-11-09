@@ -62,3 +62,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Die Datei `~/ollama_ui/chat.html` auf dem Handy (SHA-256 `f5207677…ad206`) war neuer als die Repo-Fassung. Unterschied (43 Diff-Zeilen): Kopieren-Symbol 📋 an jeder Nachrichtenblase (`attachCopy`, Klick-Handler `.msg-copy`, Texte `copyMsgTitle` EN/DE) und der Knopf „Chat leeren“ 🗑️ statt „Neuer Chat“ ➕ (`newChatTitle`). Ansonsten unverändert.
 - Übernommen unverändert vom Handy. Der Seitentest erwartete die Antwort ohne Kopieren-Symbol und war im ersten Push (`ec84818`) rot; im Folgecommit angepasst (Test prüft jetzt auch, dass jede Blase ein Kopieren-Symbol hat), danach 15 von 15 grün. Die Sicherung im PC-Ordner `HeinzUI-Chat-Backup-2026-11-09` enthält jetzt diese Fassung (`chat.html`) und die ältere Repo-Fassung (`chat-repo-7caa1d4.html`).
 - Folge fürs Konzept: Kopieren je Blase ist schon da; offen bleibt „Ganzen Chat kopieren“ mit sprachabhängigen Beschriftungen.
+
+## 09.11.2026 – Grundgerüst (Chat „AIUIheinz“)
+- Neu: Hub `index.html` mit Kopfzeile im INCIheinz-Stil (Ring mit Gehirn-Symbol, Schriftzug AIUIheinz), Kacheln aus `/api/tools`, Statuszeile Ollama und LiteRT-LM (letzteres per no-cors-Anfrage), alte Seiten (Lab, Vitals) unter „Alte Versionen“.
+- Neu: `lib/core.js`, `lib/core.css`, `tools/*/tool.json`, `server.py` (`/api/tools`, `.webmanifest`-Typ), Platzhalter `tools/models/` (nur Liste) und `tools/filter/`, `manifest.webmanifest`, `sw.js`, `icons/` (192, 512, maskable, per Playwright gerendert).
+- `chat.html`, `sheet.html`, `lab.html`, `vitals.html` unverändert, sie haben noch die alte Kopfzeile und keine Manifest-Einbindung.
+- Tests: 12 Server- und 9 Seitentests grün (neu: Tool-Liste, apps.json, ungültige Einträge, Hub, Sprachumschalter, Modelle-Seite, Manifest und Icons erreichbar).
+- Simuliert, nicht auf dem Gerät: alles. Offen: ob Chrome auf dem Pixel von `http://localhost:3000` die Installation anbietet (Service Worker braucht sicheren Kontext, `localhost` zählt als sicher), Aussehen auf dem Gerät, LiteRT-Status mit echtem Server.

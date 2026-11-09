@@ -1,0 +1,16 @@
+{
+  "id": "filter",
+  "name": {
+    "en": "Filter",
+    "de": "Filter"
+  },
+  "desc": {
+    "en": "Rate lists and texts by your rule (successor of Data Lab). Placeholder.",
+    "de": "Listen und Texte nach deiner Regel bewerten (Nachfolger des Data Lab). Platzhalter."
+  },
+  "icon": "🧪",
+  "entry": "tools/filter/index.html",
+  "color": "yellow",
+  "status": "placeholder",
+  "order": 30
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Models</title>
+<link rel="stylesheet" href="/lib/core.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page">
+    <div class="panel" id="intro"></div>
+    <div class="sect" id="h-ollama">Ollama</div>
+    <div class="panel"><table class="list" id="ollama"></table></div>
+    <div class="sect" id="h-litert">LiteRT-LM</div>
+    <div class="panel" id="litert"></div>
+</main>
+<script src="/lib/core.js"></script>
+<script>
+(function () {
+    var D = {
+        en: { sub: 'models', intro: 'Placeholder. This page will manage models and the CPU/GPU choice for both engines. For now it only lists what is installed.', off: 'Ollama not reachable.', none: 'No models.', lOff: 'Not reachable, or this page is not allowed by CORS. Start with: litert-lm serve --cors-origin http://localhost:3000', loadedTag: 'loaded' },
+        de: { sub: 'modelle', intro: 'Platzhalter. Hier werden später Modelle und die Wahl CPU/GPU für beide Engines verwaltet. Vorerst nur eine Liste der installierten Modelle.', off: 'Ollama nicht erreichbar.', none: 'Keine Modelle.', lOff: 'Nicht erreichbar, oder CORS erlaubt diese Seite nicht. Start mit: litert-lm serve --cors-origin http://localhost:3000', loadedTag: 'geladen' }
+    };
+    var o = null, l;
+    function t(k) { return Heinz.t(D, k); }
+    function gb(n) { return (n / 1e9).toFixed(1) + ' GB'; }
+    function render() {
+        document.getElementById('intro').textContent = t('intro');
+        var el = document.getElementById('ollama');
+        if (o === null) return;
+        if (!o.up) el.innerHTML = '<tr><td>' + t('off') + '</td></tr>';
+        else if (!o.models.length) el.innerHTML = '<tr><td>' + t('none') + '</td></tr>';
+        else el.innerHTML = o.models.map(function (m) { return '<tr><td>' + Heinz.esc(m.name) + (o.loaded.indexOf(m.name) >= 0 ? ' · ' + t('loadedTag') : '') + '</td><td>' + gb(m.size) + '</td></tr>'; }).join('');
+        var le = document.getElementById('litert');
+        if (l === undefined) return;
+        le.textContent = l === null ? t('lOff') : (l.length ? l.join(', ') : t('none'));
+    }
+    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
+    Heinz.onLang(render); render();
+    fetch('http://localhost:11434/api/tags').then(function (r) { return r.json(); }).then(function (tags) {
+        return Heinz.pingOllama();
+    }).then(function (r) { o = r; render(); }, function () { o = { up: false, models: [], loaded: [] }; render(); });
+    Heinz.litertModels().then(function (r) { l = r; render(); });
+})();
+</script>
+</body>
+</html>

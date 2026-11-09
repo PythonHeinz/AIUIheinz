@@ -1,0 +1,16 @@
+{
+  "id": "sheet",
+  "name": {
+    "en": "Sheet",
+    "de": "Sheet"
+  },
+  "desc": {
+    "en": "Keep a table and talk to it. The model only translates, the program counts.",
+    "de": "Eine Tabelle führen und mit ihr sprechen. Das Modell übersetzt nur, das Programm zählt."
+  },
+  "icon": "📊",
+  "entry": "sheet.html",
+  "color": "red",
+  "status": "ready",
+  "order": 40
+}

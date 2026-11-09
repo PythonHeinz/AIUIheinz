@@ -44,7 +44,8 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - **lab.html:** drei Schritte (Daten, Regel, Ausführen), Spaltenwahl als Chips, Kontrollspalte mit Trefferquote (`takeLabels`, `normCat`, `mkResult`), Presets mood/urgency/spam/topic/material/custom, Export CSV und JSON.
 - **sheet.html:** Zustand `headers, rows, qtyCol, log, undoStack`; `parseCSV`, `systemPrompt()`, `schema()`, `translate()`, `cleanCmd()`, `matches()/findRows()`, `evaluate(c)` (liefert `{error}`, `{text,idx,table}` oder `{plan}`), `applyPlan()`, `undoLast()`; Dateien über `srvOpen/srvSave/srvAutoSave` (nur mit Server). Sicherheitsregeln: Bestätigung standardmäßig an, Abbruch bei Entnahme über Bestand, Hinzufügen nur bei genau einer Zeile, `set` nur mit Filter. Mengenspalte wird per Namens-Regex erkannt (`menge|anzahl|bestand|stück|stk|qty|quantity|stock|count|amount`).
 - **vitals.html:** `drawChart()` (SVG, Fadenkreuz, Tooltip), `refreshLatest/refreshHistory`, `runBench`.
-- **server.py:** `Handler`, `sample_vitals`, `vitals_loop`, `vitals_history`.
+- **server.py:** `Handler`, `sample_vitals`, `vitals_loop`, `vitals_history`, `load_tools` (`/api/tools`).
+- **Grundgerüst:** `index.html` (Hub), `lib/core.js` + `lib/core.css` (Kopfzeile, Sprache, `Heinz.store`, Engine-Status; neue Seiten binden beides ein und legen `<div id="app-header">` an), `tools/<id>/tool.json`, `manifest.webmanifest`, `sw.js` (Netzwerk zuerst, nie `/api/`), `icons/`. Neues Tool = Ordner mit `tool.json` (id = Ordnername). Fundament: nur ein Chat zur Zeit ändert diese Dateien.
 
 ## Designregeln des Entwicklers
 - Minimalistisch, schwarzer Hintergrund, kräftige Google-Farben (`#4285f4`, `#34a853`, `#fbbc05`, `#ea4335`).

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Filter</title>
+<link rel="stylesheet" href="/lib/core.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page">
+    <div class="panel"><h3 id="h"></h3><div id="p"></div></div>
+    <a class="card c-gray" href="/lab.html"><span class="ico">🧪</span><h2 id="old"></h2></a>
+</main>
+<script src="/lib/core.js"></script>
+<script>
+(function () {
+    var D = {
+        en: { sub: 'filter', h: 'Filter (placeholder)', p: 'Small models classify and convert text under strict rules; code does the counting. Built in its own strand.', old: 'Open the old Data Lab' },
+        de: { sub: 'filter', h: 'Filter (Platzhalter)', p: 'Kleine Modelle klassifizieren und wandeln Text nach strengen Regeln um; Zählen macht der Code. Wird in einem eigenen Strang gebaut.', old: 'Altes Data Lab öffnen' }
+    };
+    function render() { ['h', 'p', 'old'].forEach(function (k) { document.getElementById(k).textContent = Heinz.t(D, k); }); }
+    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
+    Heinz.onLang(render); render();
+})();
+</script>
+</body>
+</html>

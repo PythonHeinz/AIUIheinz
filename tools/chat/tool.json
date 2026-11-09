@@ -1,0 +1,16 @@
+{
+  "id": "chat",
+  "name": {
+    "en": "Chat",
+    "de": "Chat"
+  },
+  "desc": {
+    "en": "Talk to your local models: Wilson, Heinz, Audit, Code, Creative.",
+    "de": "Sprich mit deinen lokalen Modellen: Wilson, Heinz, Audit, Code, Creative."
+  },
+  "icon": "💬",
+  "entry": "chat.html",
+  "color": "blue",
+  "status": "ready",
+  "order": 10
+}

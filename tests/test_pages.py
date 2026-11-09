@@ -10,7 +10,7 @@ from helpers import Server
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html"]
+PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html"]
 
 
 class FakeOllama:
@@ -59,8 +59,9 @@ class PageTest(unittest.TestCase):
         self.errors, self.external = [], []
         page.on("pageerror", lambda e: self.errors.append(str(e)))
         page.on("request", lambda r: self.external.append(r.url) if not (
-            r.url.startswith(self.srv.base) or "localhost:11434" in r.url or r.url.startswith("data:") or r.url.startswith("blob:")) else None)
+            r.url.startswith(self.srv.base) or "localhost:11434" in r.url or "127.0.0.1:9379" in r.url or r.url.startswith("data:") or r.url.startswith("blob:")) else None)
         self.ollama = FakeOllama(page, **fake)
+        page.route("**/127.0.0.1:9379/**", lambda route: route.abort())   # LiteRT-LM not running in tests
         self.addCleanup(ctx.close)
         return page
 
@@ -125,6 +126,47 @@ class PageTest(unittest.TestCase):
         users = [m for m in self.ollama.requests[-1]["messages"] if m["role"] == "user"]
         self.assertEqual([m["content"] for m in users], ["Again"], "failed question must not stay in history")
         self.assertEqual(self.errors, [])
+
+    def test_hub_shows_header_tools_and_status(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("a.card[data-tool]")
+        self.assertEqual(page.locator("header .ring svg").count(), 1)
+        self.assertIn("AIUI", page.inner_text("header b"))
+        ids = page.eval_on_selector_all("a.card[data-tool]", "els => els.map(e => e.dataset.tool)")
+        self.assertEqual(ids[:4], ["chat", "models", "filter", "sheet"])
+        self.assertIn("lab", ids)
+        self.assertEqual(page.locator("#legacy a.card").count(), 2)
+        page.wait_for_function("document.querySelector('#t-ollama').textContent.includes('gemma2:2b')")
+        self.assertEqual(self.errors, [])
+
+    def test_language_toggle_switches_hub_and_persists(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("a.card[data-tool]")
+        page.click("#lang-btn")
+        self.assertIn("Modelle", page.inner_text("#tools"))
+        self.assertEqual(json.loads(page.evaluate("localStorage.getItem('heinz_settings')"))["lang"], "de")
+        page.goto(self.srv.base + "/tools/filter/index.html")
+        self.assertIn("Platzhalter", page.inner_text(".panel"))
+
+    def test_models_placeholder_lists_ollama_models(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/models/index.html")
+        page.wait_for_function("document.querySelector('#ollama').textContent.includes('gemma2:2b')")
+        self.assertIn("LiteRT", page.text_content("#h-litert"))
+        self.assertEqual(self.errors, [])
+
+    def test_manifest_and_service_worker_installable(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        href = page.get_attribute("link[rel=manifest]", "href")
+        m = page.evaluate("h => fetch(h).then(r => r.json())", href)
+        self.assertEqual(m["display"], "standalone")
+        for icon in m["icons"]:
+            r = page.request.get(self.srv.base + icon["src"])
+            self.assertEqual(r.status, 200, icon["src"])
+        self.assertEqual(page.request.get(self.srv.base + "/sw.js").status, 200)
 
 
 if __name__ == "__main__":

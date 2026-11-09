@@ -1,0 +1,17 @@
+{
+  "id": "vitals",
+  "name": {
+    "en": "Phone Vitals (old)",
+    "de": "Phone Vitals (alt)"
+  },
+  "desc": {
+    "en": "Battery, temperature and speed over time. Will be removed; the speed test moves to Models.",
+    "de": "Akku, Temperatur und Tempo im Verlauf. Entfällt; der Tempotest zieht nach Modelle."
+  },
+  "icon": "📱",
+  "entry": "vitals.html",
+  "color": "gray",
+  "status": "ready",
+  "order": 91,
+  "legacy": true
+}

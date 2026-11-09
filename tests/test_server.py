@@ -29,7 +29,7 @@ class ServerTest(unittest.TestCase):
         self.assertTrue(json.loads(data)["ok"])
 
     def test_pages_served(self):
-        for p in ("/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html"):
+        for p in ("/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/lib/core.js", "/lib/core.css", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png", "/tools/models/index.html", "/tools/filter/index.html"):
             st, _ = self.req("GET", p)
             self.assertEqual(st, 200, p)
 
@@ -37,6 +37,30 @@ class ServerTest(unittest.TestCase):
         for p in ("/server.py", "/data", "/data/x.csv", "/start.sh", "/SERVER.PY"):
             st, _ = self.req("GET", p)
             self.assertEqual(st, 404, p)
+
+    def test_tools_listing(self):
+        st, data = self.req("GET", "/api/tools")
+        self.assertEqual(st, 200)
+        ids = [t["id"] for t in json.loads(data)["tools"]]
+        self.assertEqual(ids, ["chat", "models", "filter", "sheet", "lab", "vitals"])
+
+    def test_tools_apps_json_and_invalid_entries(self):
+        d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "zz-bad")
+        os.makedirs(d, exist_ok=True)
+        try:
+            with open(os.path.join(d, "tool.json"), "w") as f:
+                json.dump({"id": "zz-bad", "name": {"en": "x"}, "entry": "https://evil.example/"}, f)
+            ids = [t["id"] for t in json.loads(self.req("GET", "/api/tools")[1])["tools"]]
+            self.assertNotIn("zz-bad", ids)
+        finally:
+            os.remove(os.path.join(d, "tool.json")); os.rmdir(d)
+        with open(os.path.join(self.srv.data, "apps.json"), "w") as f:
+            json.dump({"enabled": ["chat", "sheet"]}, f)
+        try:
+            ids = [t["id"] for t in json.loads(self.req("GET", "/api/tools")[1])["tools"]]
+            self.assertEqual(ids, ["chat", "sheet"])
+        finally:
+            os.remove(os.path.join(self.srv.data, "apps.json"))
 
     def test_unknown_api(self):
         st, _ = self.req("GET", "/api/nope")

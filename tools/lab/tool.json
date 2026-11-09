@@ -1,0 +1,17 @@
+{
+  "id": "lab",
+  "name": {
+    "en": "Data Lab (old)",
+    "de": "Data Lab (alt)"
+  },
+  "desc": {
+    "en": "Still available until Filter replaces it.",
+    "de": "Bleibt, bis Filter es ersetzt."
+  },
+  "icon": "🧪",
+  "entry": "lab.html",
+  "color": "gray",
+  "status": "ready",
+  "order": 90,
+  "legacy": true
+}

@@ -1,0 +1,16 @@
+{
+  "id": "models",
+  "name": {
+    "en": "Models",
+    "de": "Modelle"
+  },
+  "desc": {
+    "en": "See and manage the models of your engines. Placeholder: list only.",
+    "de": "Modelle deiner Engines ansehen und verwalten. Platzhalter: nur Liste."
+  },
+  "icon": "🧠",
+  "entry": "tools/models/index.html",
+  "color": "green",
+  "status": "placeholder",
+  "order": 20
+}
