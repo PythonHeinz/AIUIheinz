@@ -73,3 +73,13 @@ Bekannt: Ollama lässt Aufrufe von `localhost`/`127.0.0.1` zu. Wird die Seite ü
 | `GET /api/vitals/history?hours=N` | Verlauf, höchstens 500 Punkte |
 
 Dateinamen: `^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,63}\.(csv|json|txt)$`, höchstens 5 MB. `/data`, `/server.py`, `/start.sh` werden nicht ausgeliefert. Messwerte (jede Minute, `--vitals-interval 0` schaltet ab): Akku, Status, Akkutemperatur (Termux:API), CPU-Temperatur (`/sys/class/thermal`, oft gesperrt), freier und gesamter RAM, Load, Luftdruck (`termux-sensor`).
+
+## Threads (Messung 09.11.2026, Pixel 9 Pro, gemma2:2b, 40 Token, Einzelläufe)
+| num_thread | Termux sichtbar | Termux nicht sichtbar |
+|---|---|---|
+| 8 | 5,72 T/s | 0,32 T/s |
+| 4 | 10,34 | 2,78 |
+| 3 | 10,9 | nicht gemessen |
+| 2 | 7,12 | 4,9 |
+| 1 | 8,03 | nicht gemessen |
+Empfehlung (vorläufig): `num_thread` 3 oder 4 setzen statt den Ollama-Standard zu nutzen. Details in `ENTWICKLUNGSVERLAUF.md`.
