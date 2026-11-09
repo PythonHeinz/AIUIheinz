@@ -40,16 +40,24 @@ _app_version = None
 
 
 def app_version(refresh=False):
-    """Short commit and date of the checked-out version ({'commit','date'}), or None without git. Cached."""
+    """Version number (VERSION.txt) plus short commit and date ({'version','commit','date'}); keys missing
+    when unknown, None when nothing is known. Cached; read again after an update."""
     global _app_version
     if _app_version is None or refresh:
         _app_version = {}
+        try:
+            with open(os.path.join(APP_DIR, "VERSION.txt"), encoding="utf-8") as f:
+                v = f.read().strip()[:20]
+            if v:
+                _app_version["version"] = v
+        except OSError:
+            pass
         if os.path.isdir(os.path.join(APP_DIR, ".git")):
             try:
                 c = _git(["rev-parse", "--short", "HEAD"], timeout=10).stdout.strip()
                 d = _git(["log", "-1", "--format=%cs"], timeout=10).stdout.strip()
                 if c:
-                    _app_version = {"commit": c, "date": d}
+                    _app_version.update({"commit": c, "date": d})
             except Exception:
                 pass
     return _app_version or None
@@ -80,7 +88,7 @@ def update_from_git():
         ver = app_version(refresh=True) or {}
         old_short = _git(["rev-parse", "--short", old]).stdout.strip() if old else ""
         return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files, "output": out,
-                     "from": old_short, "to": ver.get("commit", ""), "date": ver.get("date", "")}
+                     "from": old_short, "to": ver.get("commit", ""), "date": ver.get("date", ""), "version": ver.get("version", "")}
     except FileNotFoundError:
         return 500, {"ok": False, "error": "git is not installed"}
     except subprocess.TimeoutExpired:

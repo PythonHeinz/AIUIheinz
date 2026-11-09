@@ -28,6 +28,12 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(st, 200)
         self.assertTrue(json.loads(data)["ok"])
 
+    def test_app_has_a_version_number(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "VERSION.txt")) as f:
+            v = f.read().strip()
+        self.assertRegex(v, r"^\d+\.\d+")
+        self.assertEqual(json.loads(self.req("GET", "/api/ping")[1])["app"]["version"], v)
+
     def test_pages_served(self):
         for p in ("/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/lib/core.js", "/lib/core.css", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png", "/tools/models/index.html", "/tools/filter/index.html"):
             st, _ = self.req("GET", p)
@@ -133,6 +139,8 @@ class UpdateTest(unittest.TestCase):
         shutil.copy(SERVER_PY, os.path.join(self.work, "server.py"))
         with open(os.path.join(self.work, "index.html"), "w") as f:
             f.write("version one")
+        with open(os.path.join(self.work, "VERSION.txt"), "w") as f:
+            f.write("1.0\n")
         git("add", "-A", cwd=self.work)
         git("commit", "-m", "one", cwd=self.work)
         git("push", "origin", "HEAD:main", cwd=self.work)
@@ -181,12 +189,16 @@ class UpdateTest(unittest.TestCase):
         app = json.loads(self.get("/api/ping"))["app"]
         first = self.head()
         self.assertEqual(app["commit"], first)
+        self.assertEqual(app["version"], "1.0")
         self.assertRegex(app["date"], r"^\d{4}-\d{2}-\d{2}$")
         self.push_change("index.html", "version two")
         st, res = self.post()
         new = git("rev-parse", "--short", "HEAD", cwd=self.work).stdout.strip()
         self.assertEqual((res["from"], res["to"]), (first, new))
         self.assertEqual(json.loads(self.get("/api/ping"))["app"]["commit"], new, "ping shows the new version without restart")
+        self.push_change("VERSION.txt", "1.1\n")
+        self.assertEqual(self.post()[1]["version"], "1.1")
+        self.assertEqual(json.loads(self.get("/api/ping"))["app"]["version"], "1.1", "version number is read again after an update")
 
     def test_page_change_is_pulled_without_restart(self):
         self.push_change("index.html", "version two")

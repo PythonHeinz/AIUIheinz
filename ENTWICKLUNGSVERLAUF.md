@@ -146,3 +146,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tests: 19 Server- und 20 Seitentests grün (neu: Version in Ping und Update, ohne Git `null`, Pille und Meldungen). Nur simuliert.
 - Hinweis: Als „Version“ dient der Git-Commit samt Datum, keine eigene Versionsnummer. Eine Nummer (zum Beispiel `VERSION` in der Seite) wäre eine Ergänzung, falls gewünscht.
 
+## 09.11.2026 – Version 1.0 (Chat „AIUIheinz-Chat“; berührt Fundament: `server.py`)
+- Wunsch des Entwicklers: Der Stand mit Chat-Korrekturen, Tempo-Test und Update-Knopf heißt **Version 1.0**, weil er damit erstmals ohne PC am Handy arbeiten kann (Updates laufen über die Pille).
+- Neu: `VERSION.txt` (`1.0`). `server.py` `app_version()` liest sie und gibt `version`, `commit`, `date` in `/api/ping` und (`version`, `from`, `to`, `date`) in `/api/update` zurück. Pille: „⬇ v1.0 · <Commit> · <Datum>“.
+- Tests: 20 Server- und 20 Seitentests grün (neu: Versionsnummer in Ping, neu gelesen nach Update). Nur simuliert.
+

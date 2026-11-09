@@ -1252,7 +1252,13 @@
             try {
                 const r = await fetch('api/ping', { cache: 'no-store' });
                 const j = await r.json();
-                if (j.app && j.app.commit) label = '⬇ ' + j.app.commit + (j.app.date ? ' · ' + j.app.date : '');
+                if (j.app) {
+                    const parts = [];
+                    if (j.app.version) parts.push('v' + j.app.version);
+                    if (j.app.commit) parts.push(j.app.commit);
+                    if (j.app.date) parts.push(j.app.date);
+                    if (parts.length) label = '⬇ ' + parts.join(' · ');
+                }
             } catch (e) { /* ohne Server keine Version */ }
             $('upd-ver').textContent = label;
         }
