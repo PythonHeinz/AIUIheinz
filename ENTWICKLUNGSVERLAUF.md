@@ -284,3 +284,14 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Rubrik "Chats" aus den Einstellungen entfernt (Verwaltung über die Chat-Liste links).
 - Equalizer: Pillenform (4 Balken) etwa unter der Menü-Taste; feste Farben: grün = Antwort (Pegel), orange = Denken (Welle) / Laden (Lichtlauf), rot = offline.
 - App-Höhe: `height:100%` mit `max-height:100dvh` statt `100dvh` (Eingabezeile war auf dem Handy nach unten verrutscht, vermutlich dvh-Abweichung; nicht auf dem Gerät bestätigt).
+
+## 2026-11-10 · AIUIheinz-Design · Feinschliff nach Handytest (14:10)
+- Laufdisplay: Engine blau (#8ab4f8), Modell gelb (#fdd663), unabhängig vom Modus; die Buttons Engine/Modell im Einstellungs-Panel tragen dieselben Farben (zweizeilig: Label + aktueller Wert, 78 % Breite, zentriert).
+- Kopfzeile: Laufdisplay, Sprachschalter (fast runde Segmente) und Menü-Taste 44 px hoch; Equalizer-Pille so breit wie Sprachschalter + Menü-Taste (Balkenzahl nach Breite), Statustext mit Abstand davor.
+- Lesen/Stopp: beide Buttons immer sichtbar unter der Eingabe, je nach Zustand deaktiviert (Stopp nur beim Antworten, Vorlesen nur mit Ausgabe).
+- Prompt mehrzeilig: Text läuft volle Breite, Mikro/Senden klein darunter rechts, Vollbild-Symbol oben rechts (Klasse `.multi`).
+- Scrollen: der Chat folgt der Live-Ausgabe nur, solange nicht nach oben gescrollt wurde; Pfeil-Button (`#jump-bottom`) springt ans Ende.
+- Antwort-Aktionen (Kopieren, Teilen wenn vom Browser unterstützt, Markdown herunterladen) unter jeder Modellantwort; Kopierbutton der eigenen Eingabe bleibt rechts am Modul.
+- Update-Seite: Pille UPDATE und LED-Zeile mittig, 78 % Breite; LED-Text links, vertikal mittig.
+- API-Schlüssel-Feld: `type=text` mit `-webkit-text-security` und Autofill-Sperrattributen, damit Android den Passwort-Manager nicht anbietet (nicht auf dem Gerät bestätigt).
+- Neuer Test für Scrollverhalten und Aktionsleiste; Tests 55 + 20 grün (simuliert).

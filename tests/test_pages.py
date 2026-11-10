@@ -135,7 +135,7 @@ class PageTest(unittest.TestCase):
     def send(self, page, text):
         page.fill("#query", text)
         page.click("#send-btn")
-        page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#stop-btn').offsetParent")
+        page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && document.querySelector('#stop-btn').disabled")
 
     def test_all_pages_load_without_errors_and_stay_offline(self):
         page = self.new_page()
@@ -407,6 +407,25 @@ class PageTest(unittest.TestCase):
         page.click("#saved-list .saved-item .load >> text=Code question")
         self.assertEqual(page.evaluate("settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
+
+    def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.assertTrue(page.is_disabled("#read-btn"), "read aloud needs an answer")
+        self.assertTrue(page.is_disabled("#stop-btn"), "stop needs a running prompt")
+        self.send(page, "Hi there")
+        self.assertFalse(page.is_disabled("#read-btn"))
+        acts = page.locator(".msg-assistant > .msg-acts")
+        self.assertEqual(acts.count(), 1, "copy/download row sits at the end of the answer")
+        self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-copy").count(), 1)
+        self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-dl").count(), 1)
+        page.evaluate("for (let i = 0; i < 40; i++) { const d = document.createElement('div'); d.className = 'msg msg-user'; d.textContent = 'filler ' + i; chatBox.appendChild(d); } jumpBottom()")
+        page.evaluate("chatBox.scrollTop = 0")
+        page.wait_for_function("document.getElementById('jump-bottom').hidden === false")
+        page.evaluate("stickBottom()")
+        self.assertEqual(page.evaluate("chatBox.scrollTop"), 0, "live output must not pull the view down while reading above")
+        page.click("#jump-bottom")
+        self.assertTrue(page.evaluate("chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 5"))
 
     def test_status_ring_red_without_engine_blue_when_ready_green_while_answering(self):
         page = self.new_page()
@@ -953,7 +972,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text("#read-lbl"), "Stop reading")
         page.evaluate("updateReadBtn(false)")
         self.assertEqual(page.inner_text("#read-lbl"), "Read aloud")
-        self.assertFalse(page.is_visible("#stop-btn"), "generation stop only shows while answering")
+        self.assertTrue(page.is_disabled("#stop-btn"), "stop is only available while answering")
 
     def test_every_symbol_used_exists_in_the_sprite_and_no_emoji_icons_remain(self):
         page = self.new_page()

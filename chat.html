@@ -21,7 +21,9 @@
         /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
-        .chip { flex: 1; min-width: 0; height: 48px; border-radius: 14px; background: #0a0b0d; border: 1px solid var(--line); padding: 0; display: block; overflow: hidden; cursor: pointer; line-height: 0; color: var(--txt); }
+        .top .lang-btn { height: 44px; box-sizing: border-box; padding: 3px; gap: 2px; align-items: center; }
+        .top .lang-btn span { width: 34px; height: 36px; min-width: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+        .chip { flex: 1; min-width: 0; height: 44px; border-radius: 14px; background: #0a0b0d; border: 1px solid var(--line); padding: 0; display: block; overflow: hidden; cursor: pointer; line-height: 0; color: var(--txt); }
         .chip canvas { display: block; width: 100%; height: 100%; }
         .chip .hid { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
         .chip .ct { flex: 1; min-width: 0; }
@@ -46,10 +48,13 @@
         .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
         #menu-sheet .sh-head h3 { text-align: center; padding-left: 0; }
         #menu-sheet #sh-back:not([hidden]) + h3, #menu-sheet #q-reload[hidden] + #sh-back + h3 { }
-        .upd-pill { min-height: 32px; padding: 0 12px; font-size: .72rem; letter-spacing: .08em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; margin-right: 4px; }
-        .bigbtn { display: block; width: 100%; height: 46px; margin-top: 8px; border-radius: 14px; border: 1px solid var(--ol); background: var(--card); color: var(--txt); font: 600 1rem/1 inherit; font-family: inherit; text-align: center; cursor: pointer; }
-        .bigbtn:active { background: color-mix(in srgb, var(--acc) 14%, var(--card)); }
-        .bsub { display: block; text-align: center; color: var(--sub); font-size: .74rem; padding: 3px 8px 2px; min-height: 1.2em; word-break: break-word; }
+        .upd-pill { display: flex; width: 78%; height: 46px; margin: 10px auto 0; justify-content: center; align-items: center; border-radius: 16px; font-size: .8rem; letter-spacing: .14em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; }
+        .updled { width: 78%; margin: 10px auto 4px; }
+        .bigbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 78%; height: 56px; margin: 8px auto 0; padding: 0 12px; border-radius: 16px; border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 8%, var(--card)); color: var(--txt); font-family: inherit; text-align: center; cursor: pointer; --bc: var(--ol); }
+        .bigbtn small { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--bc); font-weight: 600; line-height: 1; }
+        .bigbtn b { font-size: .88rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--bc); line-height: 1.2; }
+        .bigbtn.eng { --bc: var(--m2); } .bigbtn.mod { --bc: var(--m4); }
+        .bigbtn:active { background: color-mix(in srgb, var(--bc) 20%, var(--card)); }
         .pwin { margin: 12px -4px 8px; padding: 10px 12px 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
         .pw-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); font-weight: 600; margin-bottom: 8px; }
         .pw-head .scope { letter-spacing: 0; text-transform: none; font-weight: 400; font-size: .64rem; color: var(--muted); }
@@ -82,8 +87,8 @@
         #menu-sheet .pg[data-pg=main] .row.open .go { transform: rotate(180deg); }
         .quick .rule { height: 6px; }
         .srow { display: flex; align-items: center; gap: 10px; height: 26px; margin: -6px 0 2px; flex: none; }
-        #preload-status { flex: 1; min-width: 0; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 6px; background: #0a0b0d; box-sizing: content-box; }
+        #preload-status { flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #0a0b0d; box-sizing: content-box; }
 
         /* Modusleiste */
         .modes { display: flex; gap: 2px; flex: none; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); }
@@ -105,12 +110,19 @@
         .cnt:empty { display: none; }
 
         /* Chat */
-        .chat-wrapper { flex: 1; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 18px; padding: 10px 2px 14px; }
+        .cwrap { position: relative; flex: 1; min-height: 120px; display: flex; flex-direction: column; }
+        .jump { position: absolute; right: 10px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ol); background: var(--card); color: var(--txt); display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+        .chat-wrapper { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 18px; padding: 10px 2px 14px; }
         .msg { position: relative; flex: none; word-break: break-word; }
         .msg-user { align-self: flex-end; max-width: 88%; background: var(--card); border: 1px solid var(--ol); border-radius: 18px 18px 4px 18px; padding: 10px 40px 10px 14px; font-size: .98rem; line-height: 1.45; white-space: pre-wrap; }
         .msg-assistant { align-self: stretch; font-family: var(--serif); font-size: 1.04rem; line-height: 1.6; padding: 0 34px 0 2px; overflow-x: auto; }
         .msg-assistant.plain-text { white-space: pre-wrap; }
         .msg-note { display: block; margin-top: 6px; font-size: 11px; color: var(--sub); font-family: var(--font); }
+        .msg-acts { display: flex; gap: 2px; margin-top: 6px; }
+        .msg-acts .msg-copy { position: static; }
+        .msg-acts button { width: 34px; height: 34px; padding: 0; background: none; border: 0; color: var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .msg-acts button:active { background: var(--card); }
+        .msg-assistant { padding-right: 2px !important; }
         .msg-copy { position: absolute; top: 2px; right: 2px; width: 30px; height: 30px; padding: 0; background: none; border: 0; color: var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .msg-copy:active { background: var(--card); }
         .placeholder { text-align: center; color: var(--muted); margin: auto 0; font-size: .92rem; }
@@ -145,12 +157,19 @@
         :root[data-theme="lt"] .prompt { background: var(--surf); border-color: var(--edge); }
         .prompt textarea { flex: 1; min-width: 0; align-self: stretch; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: 1rem; line-height: 1.4; padding: 8px 6px 8px 8px; max-height: 40dvh; overflow-y: auto; }
         .prompt textarea::placeholder { color: var(--muted); }
+        .prompt { position: relative; }
+        .prompt.multi { flex-wrap: wrap; }
+        .prompt.multi textarea { flex: 1 1 100%; order: 1; padding-right: 36px; }
+        .prompt.multi .xp { position: absolute; top: 8px; right: 10px; }
+        .prompt.multi .pbtns { order: 2; width: 100%; justify-content: flex-end; }
+        .prompt.multi .round { width: 36px; height: 36px; }
         .prompt .xp { width: 34px; height: 34px; align-self: flex-start; }
         .prompt .round { width: 44px; height: 44px; }
         .voice-btn.rec { background: var(--red); border-color: var(--red); color: #fff; }
         .acts { display: flex; gap: 8px; flex: none; margin: 8px 0 0; min-height: 36px; }
         .acts .pill { min-height: 36px; padding: 0 14px; font-size: .82rem; }
-        #stop-btn { display: none; }
+        .acts .pill { flex: 1; justify-content: center; }
+        .acts .pill:disabled { opacity: .4; }
         .ctx { flex: none; margin: 10px 0 12px; border: 1.5px dashed var(--edge); border-radius: 14px; padding: 8px 12px 6px; }
         .ctx.req { border-color: var(--orange); }
         .ctx-h { display: flex; align-items: center; gap: 8px; }
@@ -255,7 +274,7 @@
             <button class="ibtn chat-copy" type="button" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="i"><use href="lib/icons.svg#i-copy"/></svg></button>
             <button class="ibtn new-btn" type="button" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="i"><use href="lib/icons.svg#i-plus"/></svg></button>
         </div>
-        <div class="chat-wrapper" id="chat-container"></div>
+        <div class="cwrap"><div class="chat-wrapper" id="chat-container"></div><button class="jump" id="jump-bottom" type="button" onclick="jumpBottom()" hidden aria-label="Scroll to end"><svg class="i"><use href="lib/icons.svg#i-chev-d"/></svg></button></div>
 
         <div class="metrics" id="dashboard">
             <span class="m m1"><i>P</i> <b id="dash-p-tok">0</b></span>
@@ -273,8 +292,8 @@
             </span>
         </div>
         <div class="acts">
-            <button class="pill" id="read-btn" type="button" onclick="toggleRead()"><svg class="i sm"><use href="lib/icons.svg#i-volume"/></svg><span id="read-lbl" data-i18n="readAloud">Read aloud</span></button>
-            <button class="pill danger" id="stop-btn" type="button" onclick="abortGeneration()"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stopGen">Stop</span></button>
+            <button class="pill" id="read-btn" type="button" disabled onclick="toggleRead()"><svg class="i sm"><use href="lib/icons.svg#i-volume"/></svg><span id="read-lbl" data-i18n="readAloud">Read aloud</span></button>
+            <button class="pill danger" id="stop-btn" type="button" disabled onclick="abortGeneration()"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stopGen">Stop</span></button>
         </div>
         <div class="ctx" id="context-wrapper">
             <div class="ctx-h"><span class="caps" id="ctx-label">Context · optional</span><small id="ctx-count"></small>
@@ -313,17 +332,14 @@
             <button class="ibtn" id="q-reload" type="button" onclick="location.reload()" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)" aria-label="Reload page"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button>
             <button id="sh-back" class="ibtn" type="button" onclick="showPage('main')" data-i18n-title="back" title="Back" hidden><svg class="i"><use href="lib/icons.svg#i-arrow-l"/></svg></button>
             <h3 id="sh-title">Menu</h3>
-            <button class="pill upd-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates" hidden data-i18n="updBtn">UPDATE</button>
             <button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button>
         </div>
         <div class="sh-body">
 
             <div class="pg on" data-pg="main">
                 <div class="quick" id="quick">
-                    <button class="bigbtn" type="button" id="q-engine" data-go="engine" onclick="showPage('engine')" data-i18n="engine">Engine</button>
-                    <small class="bsub" id="q-engine-sub"></small>
-                    <button class="bigbtn" type="button" id="q-model" onclick="openModelsFromPanel()" data-i18n="modelsTitle">Model</button>
-                    <small class="bsub" id="q-model-sub"></small>
+                    <button class="bigbtn eng" type="button" id="q-engine" data-go="engine" onclick="showPage('engine')"><small data-i18n="engine">Engine</small><b id="q-engine-val"></b></button>
+                    <button class="bigbtn mod" type="button" id="q-model" onclick="openModelsFromPanel()"><small data-i18n="modelsTitle">Model</small><b id="q-model-val"></b></button>
 
                     <div class="pwin">
                         <div class="pw-head"><span><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden></i></span><span class="scope" data-i18n="scNow">from the next message</span></div>
@@ -377,7 +393,7 @@
                 </div>
                 <div id="eng-key" hidden>
                     <label class="fld" data-i18n="apiKey">API key (stays in this browser)</label>
-                    <input type="password" id="prov-key" class="inp" onchange="onProviderKey()" autocomplete="off" style="margin-top:4px">
+                    <input type="text" id="prov-key" class="inp" onchange="onProviderKey()" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="k-heinz" data-lpignore="true" data-1p-ignore data-form-type="other" style="margin-top:4px;-webkit-text-security:disc;text-security:disc">
                     <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" class="help" style="color:var(--pri)" data-i18n="getKey">Get a key</a>
                 </div>
                 <div id="eng-model" hidden>
@@ -431,7 +447,8 @@
 
             <div class="pg" data-pg="update">
                 <span id="upd-ver" class="sr-only"></span>
-                <div class="led" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
+                <button class="pill upd-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates" data-i18n="updBtn">UPDATE</button>
+                <div class="led updled" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
                 <div id="upd-status" class="help" style="min-height:16px"></div>
             </div>
         </div>
@@ -769,7 +786,7 @@
                 ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
                 ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
                 queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
-                newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', copyMsgTitle: 'Copy this message (as Markdown text)',
+                newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', shareTitle: 'Share', downloadTitle: 'Download as Markdown', copyMsgTitle: 'Copy this message (as Markdown text)',
                 read: 'Read aloud', stop: 'Stop', params: 'Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
                 chats: 'Chats', saveChat: 'Save current chat', discardChat: 'Discard current chat',
@@ -813,7 +830,7 @@
                 ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
                 ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
                 queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
-                newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
+                newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', shareTitle: 'Teilen', downloadTitle: 'Als Markdown herunterladen', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
                 read: 'Vorlesen', stop: 'Stopp', params: 'Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
                 chats: 'Chats', saveChat: 'Aktuellen Chat speichern', discardChat: 'Aktuellen Chat verwerfen',
@@ -1244,6 +1261,17 @@
         // ===== Nachrichten-Rendering =====
         const chatBox = document.getElementById('chat-container');
 
+        // Folgt der Live-Ausgabe, solange nicht nach oben gescrollt wurde; Pfeil springt zum Ende
+        let stuck = true;
+        function nearBottom() { return chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 60; }
+        function stickBottom(force) {
+            if (force) stuck = true;
+            if (stuck) chatBox.scrollTop = chatBox.scrollHeight;
+            updateJump();
+        }
+        function updateJump() { const j = document.getElementById('jump-bottom'); if (j) j.hidden = nearBottom() || chatBox.scrollHeight <= chatBox.clientHeight + 40; }
+        chatBox.addEventListener('scroll', function () { stuck = nearBottom(); updateJump(); }, { passive: true });
+        function jumpBottom() { stuck = true; chatBox.scrollTop = chatBox.scrollHeight; updateJump(); }
         function showPlaceholder(text, isNew) {
             chatBox.innerHTML = '';
             const d = document.createElement('div');
@@ -1260,6 +1288,18 @@
 
         function attachCopy(div, raw) {
             div._raw = raw;
+            if (div.classList.contains('msg-assistant')) {
+                let r = div.querySelector(':scope > .msg-acts');
+                if (!r) {
+                    r = document.createElement('div'); r.className = 'msg-acts';
+                    r.innerHTML = '<button type="button" class="msg-copy" title="' + esc(t('copyMsgTitle')) + '">' + ICON('copy') + '</button>' +
+                        (navigator.share ? '<button type="button" class="msg-share" title="' + esc(t('shareTitle')) + '">' + ICON('share') + '</button>' : '') +
+                        '<button type="button" class="msg-dl" title="' + esc(t('downloadTitle')) + '">' + ICON('download') + '</button>';
+                }
+                div.appendChild(r);   // immer ans Ende (nach neu gerendertem Inhalt)
+                updateActs();
+                return;
+            }
             let b = div.querySelector(':scope > .msg-copy');
             if (!b) {
                 b = document.createElement('button');
@@ -1282,7 +1322,7 @@
             }
             attachCopy(div, text);
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            stickBottom(true);
             updateChatBar();
         }
 
@@ -1299,7 +1339,7 @@
             if (id) div.id = id;
             setAssistantContent(div, content, plain);
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            stickBottom();
             return div;
         }
 
@@ -1310,7 +1350,7 @@
             div.id = id;
             div.innerHTML = '<i>' + t('working') + ' <span class="wait-s"></span> <span class="spinner"></span></i>';
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            stickBottom();
             return div;
         }
 
@@ -1318,7 +1358,7 @@
             const div = document.getElementById(id);
             if (!div) return;
             setAssistantContent(div, content, plain);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            stickBottom();
         }
 
         function renderChatFromHistory() {
@@ -1328,7 +1368,7 @@
                 if (m.role === 'user') appendUserMessage(m.content, m.note);
                 else appendAssistantMessage(m.content, null, m.plain);
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
+            stickBottom(true);
             updateChatBar();
         }
 
@@ -1353,10 +1393,21 @@
         chatBox.addEventListener('click', function (e) {
             const mb = e.target.closest('.msg-copy');
             if (mb) {
-                const raw = mb.parentElement._raw || '';
+                const raw = mb.closest('.msg')._raw || '';
                 if (!raw) return;
                 copyText(raw).then(function () { mb.innerHTML = ICON('check'); }).catch(function () { mb.innerHTML = ICON('x'); })
                     .then(function () { setTimeout(function () { mb.innerHTML = ICON('copy'); }, 1500); });
+                return;
+            }
+            const sb = e.target.closest('.msg-share');
+            if (sb) { const raw = sb.closest('.msg')._raw || ''; if (raw && navigator.share) navigator.share({ text: raw }).catch(function () {}); return; }
+            const db = e.target.closest('.msg-dl');
+            if (db) {
+                const raw = db.closest('.msg')._raw || ''; if (!raw) return;
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([raw], { type: 'text/markdown' }));
+                a.download = 'heinz-answer-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.md';
+                document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
                 return;
             }
             const btn = e.target.closest('.code-copy');
@@ -1524,7 +1575,7 @@
         function setGenerating(on) {
             generating = on; gotToken = false;
             $('send-btn').disabled = on;
-            $('stop-btn').style.display = on ? 'inline-flex' : 'none';
+            $('stop-btn').disabled = !on;
             renderRing();
         }
 
@@ -1715,16 +1766,15 @@
             const W = g.cols;
             const m = updState.mode, ver = ($('upd-ver').textContent || '').toUpperCase();
             const txt = { idle: ver, check: t('pxCheck'), restart: t('pxRestart'), done: t('pxDone'), current: t('pxCurrent'), err: t('pxErr') }[m] || '';
-            const tw = Math.max(0, txt.length * 4 - 1), x0 = tw < g.cols - 4 ? Math.floor((g.cols - tw) / 2) : 2;
-            g.ticker('upd-t', 1, x0, txt, m === 'err' ? '#ea4335' : m === 'done' || m === 'current' ? '#34a853' : '#8ab4f8', { small: true, loop: false });
-            if (m === 'check') g.rect(2 + (g.frameNo * 2) % Math.max(1, W - 20), 9, 14, 2, '#fbbc04');
-            else if (m === 'restart') g.rect(2, 9, Math.round((W - 4) * Math.min(1, updState.f / 25)), 2, '#fbbc04');
-            else if (m === 'done' || m === 'current') g.rect(2, 9, W - 4, 2, '#34a853');
-            else if (m === 'err') g.rect(2, 9, W - 4, 2, '#ea4335');
+            g.ticker('upd-t', 3, 4, txt, m === 'err' ? '#ea4335' : m === 'done' || m === 'current' ? '#34a853' : '#8ab4f8', { small: true, loop: false });
+            if (m === 'check') g.rect(4 + (g.frameNo * 2) % Math.max(1, W - 24), 9, 14, 1, '#fbbc04');
+            else if (m === 'restart') g.rect(4, 9, Math.round((W - 8) * Math.min(1, updState.f / 25)), 1, '#fbbc04');
+            else if (m === 'done' || m === 'current') g.rect(4, 9, W - 8, 1, '#34a853');
+            else if (m === 'err') g.rect(4, 9, W - 8, 1, '#ea4335');
         }
         function setUpd(mode, f) {
             updState = { mode: mode, f: f || 0 };
-            if (!updPx) { if (!window.Heinz || !Heinz.Pixel) return; updPx = new Heinz.Pixel($('upd-led'), { rows: 12, pitch: 2, dot: 1.5 }); }
+            if (!updPx) { if (!window.Heinz || !Heinz.Pixel) return; updPx = new Heinz.Pixel($('upd-led'), { rows: 11, pitch: 2, dot: 1.5 }); }
             updPx.run(updDraw, { live: function () { return updState.mode === 'check'; } });
         }
         async function doUpdate() {
@@ -1899,7 +1949,7 @@
         function showPage(id) {
             curPage = id;
             document.querySelectorAll('#menu-sheet .pg').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-pg') === id); });
-            $('sh-back').hidden = id === 'main'; $('q-reload').hidden = id !== 'main'; $('upd-btn').hidden = id !== 'update';
+            $('sh-back').hidden = id === 'main'; $('q-reload').hidden = id !== 'main'; 
             setSheetTitle();
             if (id === 'update') setUpd(updState.mode === 'check' ? 'idle' : updState.mode);
             document.querySelector('#menu-sheet .sh-body').scrollTop = 0;
@@ -1914,6 +1964,7 @@
         // ===== Pixeldisplays: Modellchip (Engine, Modell) und Equalizer in der Statuszeile =====
         const pulse = { e: 0 };
         let chipPx = null, eqPx = null, gotToken = false;
+        const CLR_ENG = '#8ab4f8', CLR_MOD = '#fdd663';
         const PX_DIM = '#3c4043', PX_SUB = '#9aa0a6';
         const STATUS_COLORS = { red: '#ea4335', orange: '#fb8c00', blue: '#4285f4', green: '#34a853' };
         function drawChip(p) {
@@ -1922,13 +1973,13 @@
             const online = !pv.local && !pv.custom;
             const eng = (pv.name + (online ? ' · ' + t('chipOnline') : '')).toUpperCase();
             const x1 = p.cols - 11;
-            p.ticker('c1', 4, 4, eng, online ? '#fb8c00' : PX_SUB, { x1: x1, small: true });
-            p.ticker('c2', 12, 4, settings.model || '–', preset.color, { x1: x1 });
-            p.sprite(['#...#', '.#.#.', '..#..'], p.cols - 8, 10, PX_SUB);
+            p.ticker('c1', 3, 4, eng, CLR_ENG, { x1: x1, small: true });
+            p.ticker('c2', 11, 4, settings.model || '–', CLR_MOD, { x1: x1 });
+            p.sprite(['#...#', '.#.#.', '..#..'], p.cols - 8, 9, PX_SUB);
         }
         // Equalizer: Pegel schlagen bei jedem Token aus; Denken = ruhige Welle, Laden = Lichtlauf, sonst Grundlinie
         function drawEq(p) {
-            const f = p.frameNo, N = 4;
+            const f = p.frameNo, N = Math.max(3, Math.floor(p.cols / 3));
             pulse.e *= 0.88;
             for (let i = 0; i < N; i++) {
                 let h = 1, c = STATUS_COLORS[eqState.color] || PX_DIM;
@@ -1952,13 +2003,23 @@
             if (eqPx) eqPx.wake();
         }
         function chipWake() { if (chipPx) chipPx.wake(); }
+        // Equalizer-Pille so breit wie Sprachschalter + Menütaste
+        function sizeEq() {
+            const l = document.querySelector('.top .lang-btn'), b = document.querySelector('.top .burger-btn');
+            if (!l || !b || !eqPx) return;
+            const w = Math.round(b.getBoundingClientRect().right - l.getBoundingClientRect().left);
+            if (w < 60) return;
+            eqPx.fixedCols = Math.max(9, Math.floor((w - 2 - 16) / 3));
+            eqPx.resize(); eqPx.redraw();
+        }
         function initChip() {
             if (chipPx || !$('chip-led')) return;
-            chipPx = new Heinz.Pixel($('chip-led'), { rows: 24, pitch: 2, dot: 1.5 });
+            chipPx = new Heinz.Pixel($('chip-led'), { rows: 22, pitch: 2, dot: 1.5 });
             chipPx.run(drawChip);
             eqPx = new Heinz.Pixel($('eq-led'), { rows: 6, cols: 11, pitch: 3 });
             eqPx.run(drawEq, { live: eqLive });
-            window.addEventListener('resize', function () { chipPx.resize(); chipPx.redraw(); });
+            sizeEq();
+            window.addEventListener('resize', function () { chipPx.resize(); chipPx.redraw(); sizeEq(); });
         }
         // ===== Schnellbereich im Einstellungs-Panel: Engine, Modell, Parameter =====
         let qStatus = '', qLockEng = null, modelFromPanel = false;
@@ -2015,14 +2076,12 @@
             if (modelFromPanel) $('model-sheet').classList.add('open'); else openLayer('model-sheet');
         }
         function renderQuick() {
-            if (!$('q-engine-sub')) return;
+            if (!$('q-engine-val')) return;
             const pv = PV.get(settings.provider) || PV.get('ollama');
             const online = !pv.local && !pv.custom;
-            let sub = pv.name + (online ? ' · ' + t('chipOnline') : '');
             const noKey = pv.needsKey && !PV.getKey(pv.id);
-            $('q-engine-sub').textContent = sub + (noKey ? ' · ' + t('qNoKey') : '');
-            $('q-engine-sub').style.color = noKey ? 'var(--orange)' : '';
-            $('q-model-sub').textContent = $('model-select').value || settings.model || '–';
+            $('q-engine-val').textContent = pv.name + (online ? ' · ' + t('chipOnline') : '') + (noKey ? ' · ' + t('qNoKey') : '');
+            $('q-model-val').textContent = $('model-select').value || settings.model || '–';
             const list = $('q-eng-list');
             list.innerHTML = PV.list().map(function (p) {
                 const on = !p.local && !p.custom, locked = on && !PV.onlineAllowed();
@@ -2048,7 +2107,12 @@
             $('chip-model').textContent = settings.model || '–';
             initChip(); chipWake(); renderQuick();
         }
+        function updateActs() {
+            const has = Array.prototype.some.call(chatBox.querySelectorAll('.msg-assistant'), function (d) { return !!d._raw; });
+            $('read-btn').disabled = !has && !speaking;
+        }
         function updateChatBar() {
+            updateActs();
             const first = chatHistory.find(function (m) { return m.role === 'user'; });
             $('chat-title').textContent = first ? first.content.replace(/\s+/g, ' ').slice(0, 40) : t('chatNew');
             const n = getSaved().filter(function (c) { return (c.mode || 'wilson') === settings.mode; }).length;
@@ -2087,6 +2151,10 @@
         function autosize() {
             const ta = $('query');
             if (ta.closest('.full')) return;
+            const box = ta.closest('.prompt'), was = box.classList.contains('multi'), v = ta.value;
+            ta.style.height = 'auto';
+            const multi = !!v && (v.indexOf('\n') >= 0 || ta.scrollHeight > 52 || (was && v.length > 28));
+            box.classList.toggle('multi', multi);
             ta.style.height = 'auto';
             ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.4) + 'px';
         }
