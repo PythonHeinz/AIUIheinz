@@ -66,8 +66,9 @@ class FakeOllama:
 class FakeOpenAI:
     """OpenAI-style engine (LiteRT-LM on 127.0.0.1:9379, or an online provider): /models and streamed /chat/completions."""
 
-    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True, finish="stop", reasoning=0):
+    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True, finish="stop", reasoning=0, native=None):
         self.requests = []    # (headers, body) of /chat/completions
+        self.native, self.native_calls = native, []    # Google: native list (/v1beta/models) as dicts; calls = (url, headers)
         self.model_calls = 0
         self.models, self.chunks, self.status, self.usage = models, chunks, status, usage
         self.finish, self.reasoning = finish, reasoning
@@ -78,6 +79,11 @@ class FakeOpenAI:
         if route.request.method == "OPTIONS":
             return route.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
         cors = {"access-control-allow-origin": "*"}
+        if "/v1beta/models" in url:
+            self.native_calls.append((url, route.request.headers))
+            if self.native is None:
+                return route.fulfill(status=404, headers=cors, body="no")
+            return route.fulfill(status=200, content_type="application/json", headers=cors, body=json.dumps({"models": self.native}))
         if url.endswith("/models"):
             self.model_calls += 1
             if self.status != 200:
@@ -792,6 +798,7 @@ class PageTest(unittest.TestCase):
     def google_page(self, model, **fake):
         page = self.new_page()
         g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", models=(model, "gemini-2.5-flash"), **fake)
+        self.g_native_default = None
         page.goto(self.srv.base + "/chat.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true)")
         page.reload()
@@ -942,6 +949,66 @@ class PageTest(unittest.TestCase):
         self.assertEqual(len(g.requests), n)
         self.assertEqual(page.evaluate("settings.provider"), "ollama")
         self.assertNotIn("gemini", page.evaluate("settings.model"), "no cloud model on a local engine")
+
+    NATIVE = [
+        {"name": "models/gemini-3.8-flash", "displayName": "Gemini 3.8 Flash", "inputTokenLimit": 1048576, "outputTokenLimit": 65536, "thinking": True, "supportedGenerationMethods": ["generateContent", "countTokens"]},
+        {"name": "models/gemini-embedding-2", "inputTokenLimit": 8192, "outputTokenLimit": 1, "supportedGenerationMethods": ["embedContent"]},
+        {"name": "models/gemini-2.5-flash", "inputTokenLimit": 1048576, "outputTokenLimit": 65536, "thinking": True, "supportedGenerationMethods": ["generateContent"]},
+    ]
+
+    def test_google_native_model_list_filters_to_chat_models_and_shows_limits(self):
+        page, g = self.google_page("models/gemini-3.8-flash", native=self.NATIVE)
+        page.evaluate("HeinzProviders.setKey('custom', 'AIza-test'); loadModels()")
+        page.wait_for_function("MODELS.length === 2")
+        self.assertEqual(page.evaluate("MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "no embedding model, newest first")
+        url, hdr = g.native_calls[-1]
+        self.assertNotIn("AIza", url, "the key never appears in the URL")
+        self.assertEqual(hdr.get("x-goog-api-key"), "AIza-test")
+        page.evaluate("renderModelSheet()")
+        sheet = page.text_content("#model-list")
+        self.assertIn("1M", sheet)
+        self.assertIn("thinking", sheet)
+        self.assertIn("inputTokenLimit 1048576", page.evaluate("paramsText()"))
+        # counter test: another engine never asks Google for its list
+        n = len(g.native_calls)
+        page.evaluate("switchProvider('ollama')"); page.wait_for_timeout(200)
+        self.assertEqual(len(g.native_calls), n)
+
+    def test_google_native_list_failure_is_reported_and_compatible_list_is_used(self):
+        page = self.new_page()
+        g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/v1beta/openai/**", models=("models/a", "models/b"))
+        page.route("https://generativelanguage.googleapis.com/v1beta/models**", lambda r: r.abort())   # e.g. CORS: no workaround
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true)")
+        page.reload()
+        self.pick_engine(page, "custom")
+        self.menu(page, "engine")
+        page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
+        page.wait_for_function("MODELS.length === 2")
+        self.assertIn("Native Google list not readable", page.text_content("#eng-status"))
+
+    def test_google_native_list_is_not_requested_while_online_is_off(self):
+        page = self.new_page()
+        g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", native=self.NATIVE)
+        page.goto(self.srv.base + "/chat.html")
+        code = page.evaluate("""async () => { HeinzProviders.setCustomUrl('https://generativelanguage.googleapis.com/v1beta/openai'); try { await HeinzProviders.models('custom'); return 'sent'; } catch (e) { return e.code; } }""")
+        self.assertEqual(code, "ONLINE_BLOCKED")
+        self.assertEqual(g.native_calls, [])
+
+    def test_gemini_38_flash_fast_stage_is_low_because_minimal_is_rejected(self):
+        # Handytest 11.11.2026: HTTP 400 "Thinking level MINIMAL is not supported" bei gemini-3.8-flash
+        page, g = self.google_page("models/gemini-3.8-flash")
+        page.click("#think-fast")
+        self.send(page, "Hi")
+        self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "low")
+        # counter test: gemini-3-flash-preview keeps "minimal"
+        page.evaluate("settings.model='models/gemini-3-flash-preview'; document.getElementById('model-select').value='models/gemini-3-flash-preview'")
+        self.assertEqual(page.evaluate("thinkRule().fast"), "minimal")
+
+    def test_very_short_answers_show_no_speed(self):
+        page, g = self.google_page("gemini-3-flash", chunks=("OK",), usage=False)
+        self.send(page, "Hi")
+        self.assertEqual(page.inner_text("#dash-speed"), "–")
 
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.

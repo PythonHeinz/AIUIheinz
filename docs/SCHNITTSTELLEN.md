@@ -215,3 +215,15 @@ Der Chat liest `lib/capabilities.json` (Regler nach Zustand, Schnell/Tief über 
 - Nimmt die kompatible Route `top_k` an oder lehnt sie es ab (Regler steht auf „unverified“)?
 - Verhalten bei Temperatur unter 1,0 bei Gemini 3 (Empfehlungsknopf).
 Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Regler, Denkstufe und die letzten Token-Werte, nie Schlüssel.
+
+### 8.1 Gemessen am Pixel 9 Pro, Google AI Studio, `gemini-3.8-flash` (11.11.2026, Heinz-Modus, Prompt „Antworte nur mit dem Wort OK.“)
+- **Modell-IDs:** Die Modellliste der kompatiblen Route liefert Namen mit Präfix (`models/gemini-3.8-flash`). Es gibt kein `gemini-3-flash`, nur `gemini-3-flash-preview`, `gemini-3.5-flash`, `…3.6/3.7/3.8-flash`. Die Liste enthält auch Embedding-, TTS-, Bild-, Live- und Robotik-Modelle, die nicht chatten können.
+- **Standard (nichts gesendet):** Antwort „OK.“, In 63, Out 2, Start 2,6 s. **Tief** (`reasoning_effort: high`): Antwort „OK“, In 63, Out 1, Start 2,7 s. In beiden Läufen **kein** `reasoning_tokens` im Stream (der Think-Chip blieb aus). Ob die kompatible Route Denk-Token nicht meldet oder das Modell bei dieser Frage nicht denkt, ist **offen**; `outputIncludesReasoning` bleibt `unknown`.
+- **Schnell (`reasoning_effort: minimal`): Fehler 400** „Thinking level MINIMAL is not supported for this model“ (`INVALID_ARGUMENT`). Daher hat `gemini-3.8-flash` in `capabilities.json` eine eigene Regel mit `fast: low`; `gemini-3-flash` und `-flash-preview` behalten `minimal` (dort nicht widerlegt).
+- **Token-Grenze:** Mit Schnellmodus (150 Token) und Frage nach drei Primzahlen kam nur „1“ und der Abbruch (`finish_reason: length`). Eine Antwort von drei Zeilen braucht weit weniger als 150 Token, also **zählen Denk-Token zur Grenze** (am Gerät bestätigt), auch wenn sie nicht als `reasoning_tokens` gemeldet wurden.
+- **Temperatur:** 1,0 (Empfehlung) lief ohne Auffälligkeit. Der Lauf mit 0,3 ist nicht eindeutig dokumentiert (Export fehlt); drei Antworten zum Allgäu waren sauber, ohne Schleifen.
+- **`top_k`:** Wird auf der kompatiblen Route **gar nicht gesendet** (der Adapter schickt nur temperature, top_p, max_tokens, stop, reasoning_effort). Der Regler hat dort also keine Wirkung; erst eine native Anfrage (`generateContent`, `topK`) würde ihn nutzen.
+- **Geschwindigkeit:** Bei Antworten unter 5 Token ist T/s nicht aussagekräftig (333 T/s bei 2 Token); die Seite zeigt dann „–“.
+
+### 8.2 Native Modellliste (11.11.2026, simuliert getestet, am Gerät noch offen)
+`GET https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000` mit Kopfzeile `x-goog-api-key` (Schlüssel nie in der URL), nur hinter „Online erlauben“. Gefiltert auf `generateContent`; je Modell werden `inputTokenLimit`, `outputTokenLimit`, `thinking`, `topK`, `maxTemperature` gelesen und im Modellblatt und im Export gezeigt. Bei Fehler (z. B. CORS) steht in der Statuszeile „Native Google-Liste nicht lesbar“ und die kompatible Liste wird gezeigt; es gibt keinen Umweg.

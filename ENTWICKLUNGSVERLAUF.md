@@ -411,3 +411,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Kennzahlen: Denk-Token als eigener Chip, „~“ bei Schätzung, Tooltip mit beiden Geschwindigkeiten. `outputIncludesReasoning` ist unbekannt: nichts abgezogen, Export vermerkt „nicht vergleichbar“. Export (`paramsText`) um Zustand je Regler, Denkstufe und letzte Token-Werte ergänzt, nie Schlüssel.
 - Modellwahl: „Einmal gewählt, bleibt gewählt“. `loadModels` ersetzt ein gewähltes Modell nie durch einen Listeneintrag; `switchProvider` speichert sofort (`persistCurrent`); `init` nimmt Engine und Modell als Paar. Ursache der abgeschnittenen Cloud-Antworten (Eintrag „Korrektur: Cloud-Antworten“ oben) vom Entwickler bestätigt: der Schnellmodus mit 150 Token.
 - Tests: 7 neue Seitentests (gesperrte Regler grau und nicht im Body, `reasoning_effort` ohne `thinking_level`, kein Schalter ohne Regel, `unknown` aktiv mit Marke, Empfehlung, Denk-Token, Ladefehler, Online aus, Modell bleibt) mit gegengeprüften Gegenfällen; zwei Mutationen erkannt. Nur simuliert, nicht auf dem Gerät geprüft.
+
+## 11.11.2026 – Handytest Schnittstellen, native Google-Modellliste (Chat „AIUIheinz-Chat“)
+- Handytest (Entwickler, Gemini 3.8 flash): Regler-Zustände, Hinweise, Schnell/Tief-Schalter und Modellwahl je Engine arbeiten wie gedacht. Messwerte in `docs/SCHNITTSTELLEN.md` 8.1.
+- Fehler gefunden: „Schnell“ sendete `minimal`, Google lehnt das bei `gemini-3.8-flash` mit 400 ab. Neue Regel `gemini-3.8-flash` in `lib/capabilities.json` mit `fast: low`.
+- Native Google-Modellliste (`lib/providers.js`, `models()` und `modelMeta()`): nur Chat-Modelle (`generateContent`), Limits und Denk-Flag im Modellblatt und Export, Schlüssel nur im Header, bei Fehler Meldung und kompatible Liste.
+- T/s bei Antworten unter 5 Token nicht mehr berechnet (zeigte 333 T/s bei 2 Token), Anzeige „–“.
+- Offen: `top_k` wird auf der kompatiblen Route nicht gesendet; native Anfrage (`generateContent`) wäre ein größerer Umbau der Anbieterschicht. Nur simuliert getestet.
