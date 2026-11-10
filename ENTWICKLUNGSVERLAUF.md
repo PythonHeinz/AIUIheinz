@@ -187,3 +187,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu: Die Liste „Chats“ zeigt standardmäßig nur die Chats des aktiven Modus; ein Knopf darunter schaltet auf alle Modi. Aus der vollen Liste geladen, springt die Seite in Modus und Modell des Chats (wie bisher).
 - Tests: 28 Seitentests grün (neu: Liste je Modus, Sprung beim Laden; der Test schlug vor der Korrektur fehl). Nur simuliert.
 - Offen (Idee des Entwicklers): einen Chat eines Modus bewusst in einem anderen Modus weiterführen; bisher geht das über Kopieren in das Kontextfeld.
+
+## 10.11.2026 – Ampel folgt dem Zustand, Planung „Zwei Bereiche“ (Chat „AIUIheinz-Chat“, `chat.html`, `docs/GEPLANT.md`)
+- Ampel neben „Heinz UI“: Rot = Ollama nicht erreichbar, Orange = Ollama läuft, das gewählte Modell ist nicht geladen, Grün = gewähltes Modell ist im Arbeitsspeicher (`/api/ps`). Fehler: Der Zustand wurde nur beim Start und bei Modus- oder Modellwechsel geprüft, deshalb blieb sie nach dem Laden Orange. Jetzt Prüfung auch nach dem Vorladen, nach jeder Antwort und alle 10 s.
+- Tests: 29 Seitentests grün (neu: Grün, Orange, Rot). Nur simuliert.
+- `docs/GEPLANT.md`: neuer Abschnitt „Zwei Bereiche“ (Bereich A Ausprobieren und Modelle, Bereich B schlanker Chat, offene Abgrenzung online/offline, Folgen für die nächsten Schritte). Zur Weitergabe an den Konzept-Chat; im Konzept selbst noch nicht eingearbeitet.

@@ -787,6 +787,7 @@
                 await res.json();
                 preloadKey = key;
                 if (preloadAbort === ac) setPreloadStatus('ready');
+                checkServer();
             } catch (e) {
                 if (e.name !== 'AbortError' && preloadAbort === ac) setPreloadStatus('');
             } finally {
@@ -1403,6 +1404,7 @@
                 updateAssistantMessage(msgId, shown, fastUsed);
                 chatHistory.push(fastUsed ? { role: 'assistant', content: outputBuffer, plain: true } : { role: 'assistant', content: outputBuffer });
                 if (finalStats && !aborted && !errorMsg) preloadKey = warmKey;
+                checkServer();
             } else {
                 chatHistory.pop();  // keine Antwort: Frage nicht im Verlauf behalten
                 updateAssistantMessage(msgId, aborted
@@ -1638,6 +1640,7 @@
             renderSavedList();
             checkServer();
             loadModels().then(schedulePreload);
+            setInterval(function () { if (!document.hidden) checkServer(); }, 10000);   // Ampel folgt dem echten Zustand (z. B. Modell geht nach keep_alive schlafen)
             showVersion();
             const lastSt = lsGet('heinz_speedtest', null);
             if (lastSt && Array.isArray(lastSt.rows)) { stRows = lastSt.rows; stMeta = lastSt.meta; renderSpeedTest(); }

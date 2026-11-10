@@ -361,6 +361,17 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
 
+    def test_status_dot_turns_green_when_the_model_is_loaded_and_red_without_server(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.wait_preloads(page, 1)
+        page.wait_for_function("document.getElementById('status-dot').classList.contains('status-active')")   # gemma2:2b is in /api/ps
+        page.click("#mode-bar [data-mode=audit]")        # qwen2.5:3b is not loaded: orange
+        page.wait_for_function("document.getElementById('status-dot').classList.contains('status-online')")
+        page.route("**/localhost:11434/**", lambda r: r.abort())   # server gone: red
+        page.evaluate("checkServer()")
+        page.wait_for_function("!document.getElementById('status-dot').classList.contains('status-online') && !document.getElementById('status-dot').classList.contains('status-active')")
+
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
