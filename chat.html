@@ -16,6 +16,8 @@
         .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
         .status-dot { height: 12px; width: 12px; border-radius: 50%; background-color: #ff5252; display: inline-block; flex-shrink: 0; transition: background-color 0.3s; }
         .status-online { background-color: #ff9800; box-shadow: 0 0 8px #ff9800; }
+        #engine-box input[type=text], #engine-box input[type=password] { background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+        .status-cloud { background-color: #4285f4; box-shadow: 0 0 8px #4285f4; }
         .status-active { background-color: #4caf50; box-shadow: 0 0 8px #4caf50; }
 
         select { background: #1e1e1e; color: #fff; border: 1px solid #333; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; }
@@ -203,6 +205,34 @@
         </div>
         <button class="ver-pill" id="upd-btn" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates"><span id="upd-ver">⬇</span></button>
         <div id="upd-status" style="font-size:12px; color:#aaa; margin:-2px 0 12px; min-height:14px;"></div>
+        <div class="param-group" id="engine-box">
+            <label><span data-i18n="engine">Engine</span></label>
+            <select id="provider-select" onchange="onProvider()" style="width:100%;"></select>
+            <div id="eng-backend" style="display:none; margin-top:8px;">
+                <label><span data-i18n="backend">Backend (LiteRT-LM)</span></label>
+                <select id="backend-select" onchange="onBackend()" style="width:100%;"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
+            </div>
+            <div id="eng-url" style="display:none; margin-top:8px;">
+                <label><span data-i18n="engineUrl">Endpoint address (…/v1)</span></label>
+                <input type="text" id="prov-url" onchange="onProviderUrl()" placeholder="http://127.0.0.1:8080/v1" style="width:100%;">
+            </div>
+            <div id="eng-key" style="display:none; margin-top:8px;">
+                <label><span data-i18n="apiKey">API key (stays in this browser)</span></label>
+                <input type="password" id="prov-key" onchange="onProviderKey()" autocomplete="off" style="width:100%;">
+                <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#8ab4f8;" data-i18n="getKey">Get a key</a>
+            </div>
+            <div id="eng-model" style="display:none; margin-top:8px;">
+                <label><span data-i18n="modelId">Model name (if the list stays empty)</span></label>
+                <input type="text" id="model-free" onchange="onModelFree()" style="width:100%;">
+                <button class="side-btn" type="button" onclick="loadModels()" style="margin-top:6px;" data-i18n="reloadModels">↻ Load model list</button>
+            </div>
+            <small id="eng-note" style="color:#888; font-size:11px; display:block; margin-top:6px;"></small>
+            <div id="eng-status" style="font-size:12px; color:#f9a825; margin-top:4px; min-height:14px;"></div>
+            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer; margin-top:10px;">
+                <input type="checkbox" id="online-on" onchange="onOnlineToggle()" style="width:auto; margin:0;"> <span data-i18n="onlineAllow">Allow online (default off)</span>
+            </label>
+            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
+        </div>
         <div class="param-group default-toggle">
             <label style="justify-content:flex-start; gap:8px; color:#fff; font-weight:bold; cursor:pointer;">
                 <input type="checkbox" id="use-default" onchange="onDefaultToggle()" style="width:auto; margin:0;"> <span data-i18n="defaults">Default values</span>
@@ -288,6 +318,7 @@
         <div id="saved-list"></div>
     </div>
 
+    <script src="lib/providers.js"></script>
     <script>
         // ===== PARSER START =====
         // Escape für alles, was in HTML landet
@@ -456,6 +487,7 @@
 
         // ===== Konfiguration =====
         const OLLAMA_URL = 'http://localhost:11434';
+        const PV = window.HeinzProviders;
 
         const PROMPTS = {
             en: {
@@ -502,22 +534,93 @@
         function fillModelSelect() {
             const sel = $('model-select');
             sel.innerHTML = '';
-            MODELS.forEach(function (m) {
+            const names = MODELS.slice();
+            if (settings.provider !== 'ollama' && settings.model && names.indexOf(settings.model) < 0) names.unshift(settings.model);
+            names.forEach(function (m) {
                 const o = document.createElement('option');
                 o.value = m; o.textContent = '🧠 ' + m;
                 sel.appendChild(o);
             });
-            if (MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
+            if (settings.provider === 'ollama' && MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
+            if (settings.provider !== 'ollama' && !settings.model) settings.model = names[0] || '';
             sel.value = settings.model;
         }
+        function setEngStatus(msg) { $('eng-status').textContent = msg || ''; }
         async function loadModels() {
+            const prov = settings.provider;
+            const p = PV.get(prov);
+            setEngStatus('');
             try {
-                const res = await fetch(OLLAMA_URL + '/api/tags');
-                const data = await res.json();
-                const names = (data.models || []).map(function (m) { return m.name; })
-                    .filter(function (n) { return !/embed/i.test(n); });
-                if (names.length) { MODELS = names; fillModelSelect(); saveSettings(); loadThreads(); }
-            } catch (e) { /* Ollama nicht erreichbar: Fallback-Liste bleibt */ }
+                const names = await PV.models(prov);
+                if (prov !== settings.provider) return;   // Engine wurde inzwischen gewechselt
+                if (names.length) {
+                    MODELS = names;
+                    if (prov !== 'ollama' && names.indexOf(settings.model) < 0) settings.model = (settings.modelByProvider[prov] && names.indexOf(settings.modelByProvider[prov]) >= 0) ? settings.modelByProvider[prov] : names[0];
+                    fillModelSelect(); saveSettings(); loadThreads();
+                } else if (prov !== 'ollama') { MODELS = []; fillModelSelect(); setEngStatus(t('noModels')); }
+            } catch (e) {
+                if (prov === 'ollama') return;   /* Ollama nicht erreichbar: Fallback-Liste bleibt */
+                MODELS = []; fillModelSelect();
+                if (e.code === 'ONLINE_BLOCKED') setEngStatus(t('onlineBlocked'));
+                else if (e.code === 'NO_KEY') setEngStatus(t('needKey'));
+                else setEngStatus(t('modelsFail', { m: e.message }));
+            }
+        }
+        // ===== Engine (Anbieterschicht lib/providers.js) =====
+        function fillProviderSelect() {
+            const sel = $('provider-select');
+            sel.innerHTML = '';
+            PV.list().forEach(function (p) {
+                if (!p.local && !p.custom && !PV.onlineAllowed()) return;   // Online-Engines erscheinen erst mit „Online erlauben“
+                const o = document.createElement('option');
+                o.value = p.id; o.textContent = (p.custom || p.local ? '' : '☁ ') + p.name;
+                sel.appendChild(o);
+            });
+            if (!sel.querySelector('option[value="' + settings.provider + '"]')) settings.provider = 'ollama';
+            sel.value = settings.provider;
+        }
+        function renderEngineUI() {
+            const p = PV.get(settings.provider) || PV.get('ollama');
+            const isOllama = settings.provider === 'ollama';
+            $('online-on').checked = PV.onlineAllowed();
+            $('eng-backend').style.display = p.backends ? 'block' : 'none';
+            $('backend-select').value = settings.backend;
+            $('eng-url').style.display = p.custom ? 'block' : 'none';
+            $('prov-url').value = p.custom ? PV.getCustomUrl() : '';
+            $('eng-key').style.display = (p.needsKey || (p.custom && !p.local)) ? 'block' : 'none';
+            $('prov-key').value = PV.getKey(p.id);
+            const link = $('prov-keylink'); link.style.display = p.keyUrl ? 'inline' : 'none'; if (p.keyUrl) link.href = p.keyUrl;
+            $('eng-model').style.display = isOllama ? 'none' : 'block';
+            $('model-free').value = isOllama ? '' : (settings.model || '');
+            $('eng-note').textContent = p.note ? (p.note[settings.lang] || p.note.en) : t('engLocalNote');
+            // Threads, Eigener Systemprompt und Vorladen gibt es nur bei Ollama
+            [$('param-threads'), $('own-system'), $('preload-on')].forEach(function (el) {
+                const g = el.closest('.param-group'); if (g) g.classList.toggle('off', !isOllama); el.disabled = !isOllama;
+            });
+        }
+        function switchProvider(id) {
+            if (settings.model) settings.modelByProvider[settings.provider] = settings.model;
+            settings.provider = id;
+            settings.model = settings.modelByProvider[id] || (id === 'ollama' ? resolveModel(MODE_PRESETS[settings.mode]) : '');
+            MODELS = id === 'ollama' ? FALLBACK_MODELS.slice() : [];
+            fillProviderSelect(); renderEngineUI(); fillModelSelect(); saveSettings(); loadThreads();
+            loadModels(); checkServer(); schedulePreload();
+        }
+        function onProvider() { switchProvider($('provider-select').value); }
+        function onBackend() { settings.backend = $('backend-select').value; saveSettings(); }
+        function onProviderUrl() { PV.setCustomUrl($('prov-url').value); renderEngineUI(); loadModels(); checkServer(); }
+        function onProviderKey() { PV.setKey(settings.provider, $('prov-key').value.trim()); loadModels(); }
+        function onModelFree() {
+            const v = $('model-free').value.trim();
+            if (!v) return;
+            settings.model = v; settings.modelByProvider[settings.provider] = v;
+            fillModelSelect(); saveSettings(); persistCurrent();
+        }
+        function onOnlineToggle() {
+            PV.setOnlineAllowed($('online-on').checked);
+            const p = PV.get(settings.provider);
+            if (!PV.onlineAllowed() && p && !p.local) { switchProvider('ollama'); return; }
+            fillProviderSelect(); renderEngineUI(); loadModels();
         }
         function normalizeMode(m) {
             if (m === 'werkzeug') return 'code';
@@ -541,10 +644,18 @@
                 read: '🔊 Read aloud', stop: '🛑 Stop', params: '⚙️ Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
                 chats: '💬 Chats', saveChat: '💾 Save current chat', discardChat: '🗑️ Discard current chat',
-                stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stOffline: 'Ollama server offline',
+                stCloud: 'Online engine (not checked, nothing is sent until you ask)', stEngineUp: 'Engine reachable', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stOffline: 'Ollama server offline',
                 micUnsupported: 'Speech recognition is not supported by this browser.',
                 ready: 'Ready for input...', readyNew: 'Ready for input... (new chat)', working: 'working...',
                 noChatToSave: 'No chat to save.', confirmDiscard: 'Discard current chat (do not save)?',
+                engine: 'Engine', backend: 'Backend (LiteRT-LM)', engineUrl: 'Endpoint address (…/v1)', apiKey: 'API key (stays in this browser)', getKey: 'Get a key',
+                modelId: 'Model name (if the list stays empty)', reloadModels: '↻ Load model list', onlineAllow: 'Allow online (default off)',
+                onlineHelp: 'Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.',
+                onlineBlocked: 'Online is switched off. Tick "Allow online" in the menu to use this engine.', needKey: 'This engine needs an API key (menu → Engine).',
+                hintKey: ' (API key rejected or missing rights)', hintLimit: ' (rate limit reached, try again later)', hintNoModel: ' (model name unknown to this engine?)',
+                connFailGeneric: 'Connection to {n} failed ({m}). The engine may be offline, the address wrong, or the provider blocks browser access (CORS).',
+                modelsFail: 'Could not load the model list: {m}', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
+                engLocalNote: 'Runs on this device.',
                 nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: '📎 Context: {n} characters',
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
@@ -576,10 +687,18 @@
                 read: '🔊 Vorlesen', stop: '🛑 Stopp', params: '⚙️ Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
                 chats: '💬 Chats', saveChat: '💾 Aktuellen Chat speichern', discardChat: '🗑️ Aktuellen Chat verwerfen',
-                stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stOffline: 'Ollama Server offline',
+                stCloud: 'Online-Engine (nicht geprüft, nichts wird gesendet, bis du fragst)', stEngineUp: 'Engine erreichbar', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stOffline: 'Ollama Server offline',
                 micUnsupported: 'Spracherkennung wird vom Browser nicht unterstützt.',
                 ready: 'Bereit für Eingaben...', readyNew: 'Bereit für Eingaben... (neuer Chat)', working: 'arbeitet...',
                 noChatToSave: 'Kein Chat zum Speichern.', confirmDiscard: 'Aktuellen Chat verwerfen (nicht speichern)?',
+                engine: 'Engine', backend: 'Backend (LiteRT-LM)', engineUrl: 'Adresse des Endpunkts (…/v1)', apiKey: 'API-Schlüssel (bleibt in diesem Browser)', getKey: 'Schlüssel holen',
+                modelId: 'Modellname (falls die Liste leer bleibt)', reloadModels: '↻ Modellliste laden', onlineAllow: 'Online erlauben (Standard aus)',
+                onlineHelp: 'Aus: nichts verlässt dieses Gerät. An: Online-Engines erscheinen; nur die Nachrichten des aktuellen Chats gehen an die gewählte Engine, nie andere Chats oder Daten.',
+                onlineBlocked: 'Online ist ausgeschaltet. Im Menü „Online erlauben“ anhaken, um diese Engine zu nutzen.', needKey: 'Diese Engine braucht einen API-Schlüssel (Menü → Engine).',
+                hintKey: ' (API-Schlüssel abgelehnt oder ohne Rechte)', hintLimit: ' (Limit erreicht, später erneut versuchen)', hintNoModel: ' (Modellname dieser Engine unbekannt?)',
+                connFailGeneric: 'Verbindung zu {n} fehlgeschlagen ({m}). Die Engine ist vielleicht aus, die Adresse falsch oder der Anbieter sperrt Browserzugriff (CORS).',
+                modelsFail: 'Modellliste nicht ladbar: {m}', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
+                engLocalNote: 'Läuft auf diesem Gerät.',
                 nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: '📎 Kontext: {n} Zeichen',
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
@@ -612,6 +731,7 @@
             if (ph && !chatHistory.length) ph.textContent = ph.getAttribute('data-new') ? t('readyNew') : t('ready');
             applyModeStyling();
             renderSavedList();
+            renderEngineUI();
         }
 
         // ===== Zustand =====
@@ -619,7 +739,7 @@
         let currentAbortController = null;
         let generating = false;
         let currentSavedId = null;
-        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false, preload: true, fast: false, fastN: 150 };
+        let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false, preload: true, fast: false, fastN: 150, provider: 'ollama', backend: 'cpu', modelByProvider: {} };
         const DEFAULT_THREADS = 4;
 
         // ===== Speicher =====
@@ -636,6 +756,7 @@
             if (!chatHistory.length) { lsRemove('heinz_current'); return; }
             lsSet('heinz_current', {
                 model: settings.model,
+                provider: settings.provider,
                 mode: settings.mode,
                 messages: chatHistory,
                 context: document.getElementById('context').value,
@@ -728,7 +849,7 @@
         const KEEP_ALIVE = '30m';
         let preloadAbort = null, preloadTimer = null, preloadKey = '', preloadHideTimer = null;
         function preloadKeyNow() {
-            return [$('model-select').value, settings.mode, !!settings.ownSystem, settings.lang, !!settings.fast,
+            return [settings.provider, $('model-select').value, settings.mode, !!settings.ownSystem, settings.lang, !!settings.fast,
                 !!settings.useDefault, parseInt($('param-ctx').value, 10), parseInt($('param-threads').value, 10)].join('|');
         }
         function setPreloadStatus(kind) {
@@ -746,25 +867,19 @@
         }
         function schedulePreload() {
             clearTimeout(preloadTimer);
-            if (!settings.preload) return;
+            if (!settings.preload || settings.provider !== 'ollama') return;
             preloadTimer = setTimeout(preloadModel, 1200);
         }
         // Es bleibt nur das gewählte Modell im Arbeitsspeicher: sonst halten mehrere Modelle (mit 30 min keep_alive)
         // und große Kontexte den Speicher, und Android beendet Termux (Absturz am Handy 10.11.2026).
         async function unloadOthers(model) {
             try {
-                const r = await fetch(OLLAMA_URL + '/api/ps');
-                const d = await r.json();
-                const others = (d.models || []).map(function (m) { return m.name; })
-                    .filter(function (n) { return n !== model; });
-                await Promise.all(others.map(function (n) {
-                    return fetch(OLLAMA_URL + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model: n, keep_alive: 0 }) });
-                }));
+                const others = (await PV.loaded('ollama')).filter(function (n) { return n !== model; });
+                await Promise.all(others.map(function (n) { return PV.unload('ollama', n); }));
             } catch (e) { /* ohne Ollama nichts zu tun */ }
         }
         async function preloadModel() {
-            if (!settings.preload || generating || speedTesting) return;
+            if (!settings.preload || generating || speedTesting || settings.provider !== 'ollama') return;
             const model = $('model-select').value;
             const key = preloadKeyNow();
             if (!model || key === preloadKey) return;
@@ -778,13 +893,8 @@
                 const opts = buildOptions(MODE_PRESETS[settings.mode]);
                 delete opts.stop; delete opts.num_predict;
                 opts.num_predict = 1;
-                const res = await fetch(OLLAMA_URL + '/api/chat', {
-                    method: 'POST', signal: ac.signal, headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: model, stream: false, keep_alive: KEEP_ALIVE, options: opts,
-                        messages: buildMessages(false, '', [{ role: 'user', content: '.' }]) })
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                await res.json();
+                await PV.chat('ollama', { model: model, stream: false, keepAlive: KEEP_ALIVE, options: opts, signal: ac.signal,
+                    messages: buildMessages(false, '', [{ role: 'user', content: '.' }]) });
                 preloadKey = key;
                 if (preloadAbort === ac) setPreloadStatus('ready');
                 checkServer();
@@ -855,7 +965,7 @@
             if (chatHistory.length) saveCurrentToList();
             settings.mode = normalizeMode($('mode-select').value);
             const preset = MODE_PRESETS[settings.mode];
-            settings.model = resolveModel(preset);
+            if (settings.provider === 'ollama') settings.model = resolveModel(preset);
             $('model-select').value = settings.model;
             loadThreads();
             schedulePreload();
@@ -871,6 +981,8 @@
 
         function onModelChange() {
             settings.model = $('model-select').value;
+            settings.modelByProvider[settings.provider] = settings.model;
+            $('model-free').value = settings.provider === 'ollama' ? '' : settings.model;
             loadThreads();
             schedulePreload();
             saveSettings();
@@ -896,11 +1008,25 @@
         // ===== Server Status =====
         async function checkServer() {
             const statusDot = document.getElementById('status-dot');
+            const prov = settings.provider;
+            const p = PV.get(prov);
+            if (p && !p.local) {   // Online-Engines werden nie von selbst angefragt
+                statusDot.className = 'status-dot status-cloud';
+                statusDot.title = t('stCloud');
+                return;
+            }
+            if (prov !== 'ollama') {
+                const up = await PV.ping(prov);
+                if (prov !== settings.provider) return;
+                statusDot.className = up ? 'status-dot status-active' : 'status-dot';
+                statusDot.title = up ? t('stEngineUp') : t('stOffline');
+                return;
+            }
             const selectedModel = document.getElementById('model-select').value;
             try {
-                const res = await fetch(OLLAMA_URL + '/api/ps');
-                const data = await res.json();
-                const isLoaded = data.models && data.models.some(m => m.name.startsWith(selectedModel));
+                const names = await PV.loaded('ollama');
+                if (prov !== settings.provider) return;
+                const isLoaded = names.some(n => n.startsWith(selectedModel));
                 if (isLoaded) {
                     statusDot.className = 'status-dot status-active';
                     statusDot.title = t('stDefault');
@@ -1129,6 +1255,7 @@
                 title: (first ? first.content : 'Chat').replace(/\s+/g, ' ').slice(0, 40),
                 ts: new Date().toLocaleString(t('locale')),
                 model: settings.model,
+                provider: settings.provider,
                 mode: settings.mode,
                 messages: chatHistory.slice(),
                 context: document.getElementById('context').value
@@ -1172,7 +1299,11 @@
             if (!c) return;
             if (generating && currentAbortController) currentAbortController.abort();
             if (chatHistory.length && currentSavedId !== id) saveCurrentToList();
-            settings.model = c.model || settings.model;
+            const want = c.provider || 'ollama';
+            const wp = PV.get(want);
+            if (wp && (wp.local || PV.onlineAllowed())) settings.provider = want; else settings.provider = 'ollama';   // Online-Chat ohne „Online erlauben“: lokal öffnen
+            if (settings.provider === want) settings.model = c.model || settings.model;
+            else settings.model = resolveModel(MODE_PRESETS[c.mode || settings.mode] || MODE_PRESETS.wilson);
             settings.mode = c.mode || settings.mode;
             saveSettings();
             applyUIFromSettings();
@@ -1215,7 +1346,7 @@
                 load.className = 'load';
                 load.appendChild(document.createTextNode(c.title));
                 const sm = document.createElement('small');
-                sm.textContent = c.model + ' · ' + c.mode + ' · ' + c.ts;
+                sm.textContent = (c.provider && c.provider !== 'ollama' ? c.provider + ' · ' : '') + c.model + ' · ' + c.mode + ' · ' + c.ts;
                 load.appendChild(sm);
                 load.onclick = () => loadChat(c.id);
                 const del = document.createElement('button');
@@ -1250,7 +1381,7 @@
             const msgs = history.map(m => ({ role: m.role, content: m.content }));
             const last = msgs[msgs.length - 1];
             last.content = (useCtx ? P.ctxLabel + '\n' + contextText + '\n\n' : '') + last.content;
-            if (settings.ownSystem) {
+            if (settings.ownSystem && settings.provider === 'ollama') {
                 // Eigener Systemprompt des Modells (Modelfile) bleibt: keine System-Nachricht,
                 // Antwortsprache (und Schnellmodus) gehen in die letzte Nutzernachricht.
                 last.content += '\n\n' + P.respond + (settings.fast ? ' ' + P.plain : '');
@@ -1276,9 +1407,22 @@
             }
             // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
             const threads = parseInt($('param-threads').value, 10);
-            if (threads > 0) o.num_thread = threads;
+            if (threads > 0 && settings.provider === 'ollama') o.num_thread = threads;
             if (settings.fast) o.num_predict = settings.fastN;
             return o;
+        }
+
+        function errText(err, prov) {
+            if (err.code === 'ONLINE_BLOCKED') return t('onlineBlocked');
+            if (err.code === 'NO_KEY') return t('needKey');
+            if (err.http) {
+                if (prov === 'ollama') return err.message + (err.http === 404 ? t('hint404') : t('hintCors'));
+                return err.message + (err.http === 401 || err.http === 403 ? t('hintKey') : err.http === 429 ? t('hintLimit') : err.http === 404 ? t('hintNoModel') : '');
+            }
+            if (err instanceof TypeError) {
+                return prov === 'ollama' ? t('connFail', { m: err.message }) : t('connFailGeneric', { n: (PV.get(prov) || {}).name || prov, m: err.message });
+            }
+            return err.message;
         }
 
         async function askGemma() {
@@ -1338,58 +1482,20 @@
                 }, 60);
             };
 
-            const handleJson = function (json) {
-                if (json.error) throw new Error(json.error);
-                if (json.message && json.message.content) {
-                    outputBuffer += json.message.content;
-                    scheduleRender();
-                }
-                if (json.done) finalStats = json;
-            };
-
-            const reqBody = { model: selectedModel, messages: apiMessages, stream: true, keep_alive: KEEP_ALIVE };
+            const prov = settings.provider;
             const opts = buildOptions(preset);
-            if (Object.keys(opts).length) reqBody.options = opts;
 
             try {
-                await unloadOthers(selectedModel);
-                const response = await fetch(OLLAMA_URL + '/api/chat', {
-                    method: 'POST',
+                if (prov === 'ollama') await unloadOthers(selectedModel);
+                const result = await PV.chat(prov, {
+                    model: selectedModel, messages: apiMessages, options: opts, keepAlive: KEEP_ALIVE, backend: settings.backend,
                     signal: currentAbortController.signal,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(reqBody)
+                    onDelta: function (d) { outputBuffer += d; scheduleRender(); }
                 });
-
-                if (!response.ok) {
-                    let detail = '';
-                    try { detail = (await response.text()).slice(0, 200); } catch (e) {}
-                    const hint = response.status === 404 ? t('hint404') : t('hintCors');
-                    throw new Error('HTTP ' + response.status + ' ' + detail + hint);
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-
-                // NDJSON sauber puffern: nur vollständige Zeilen parsen, Rest bleibt im Puffer
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    let idx;
-                    while ((idx = buffer.indexOf('\n')) >= 0) {
-                        const line = buffer.slice(0, idx).trim();
-                        buffer = buffer.slice(idx + 1);
-                        if (line) handleJson(JSON.parse(line));
-                    }
-                }
-                buffer += decoder.decode();
-                if (buffer.trim()) handleJson(JSON.parse(buffer.trim()));
+                finalStats = result.stats;
             } catch (err) {
                 if (err.name === 'AbortError') aborted = true;
-                else errorMsg = (err instanceof TypeError)
-                    ? t('connFail', { m: err.message })
-                    : err.message;
+                else errorMsg = errText(err, prov);
             } finally {
                 if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
                 clearInterval(waitTimer);
@@ -1413,12 +1519,10 @@
             }
 
             if (finalStats) {
-                document.getElementById('dash-p-tok').innerText = finalStats.prompt_eval_count || 0;
-                document.getElementById('dash-a-tok').innerText = finalStats.eval_count || 0;
-                document.getElementById('dash-start').innerText = (((finalStats.load_duration || 0) + (finalStats.prompt_eval_duration || 0)) / 1e9).toFixed(1);
-                if (finalStats.eval_duration && finalStats.eval_count) {
-                    document.getElementById('dash-speed').innerText = (finalStats.eval_count / (finalStats.eval_duration / 1e9)).toFixed(1);
-                }
+                document.getElementById('dash-p-tok').innerText = finalStats.promptTokens || 0;
+                document.getElementById('dash-a-tok').innerText = finalStats.outputTokens || 0;
+                document.getElementById('dash-start').innerText = (((finalStats.loadMs || 0) + (finalStats.promptMs || 0)) / 1000).toFixed(1);
+                if (finalStats.tokensPerSec) document.getElementById('dash-speed').innerText = finalStats.tokensPerSec.toFixed(1);
             }
 
             persistCurrent();
@@ -1554,6 +1658,7 @@
         async function startSpeedTest() {
             if (speedTesting) return;
             if (generating) { $('st-status').textContent = t('stBusy'); return; }
+            if (settings.provider !== 'ollama') { $('st-status').textContent = t('stOnlyOllama'); return; }
             const list = Array.prototype.slice.call(document.querySelectorAll('#st-threads input:checked')).map(function (i) { return parseInt(i.value, 10); });
             if (!list.length) { $('st-status').textContent = t('stNone'); return; }
             const model = $('model-select').value;
@@ -1603,6 +1708,8 @@
             fillModelSelect();
             loadThreads();
             $('mode-select').value = settings.mode;
+            fillProviderSelect();
+            renderEngineUI();
             updateLangBtn();
             applyI18n();
         }
@@ -1616,12 +1723,16 @@
             settings.ownSystem = !!s.ownSystem;
             settings.preload = s.preload !== false;
             settings.fast = !!s.fast;
+            if (s.backend === 'gpu') settings.backend = 'gpu';
+            if (s.modelByProvider && typeof s.modelByProvider === 'object') settings.modelByProvider = s.modelByProvider;
+            if (s.provider && PV.get(s.provider) && (PV.get(s.provider).local || PV.onlineAllowed())) settings.provider = s.provider;
             if (s.fastN > 0) settings.fastN = parseInt(s.fastN, 10);
             if (s.threads && typeof s.threads === 'object') settings.threads = s.threads;
             if (s.params && isFinite(s.params.temp)) settings.params = s.params;
 
             const cur = lsGet('heinz_current', null);
             if (cur && Array.isArray(cur.messages) && cur.messages.length) {
+                if (cur.provider && PV.get(cur.provider) && (PV.get(cur.provider).local || PV.onlineAllowed())) settings.provider = cur.provider;
                 settings.model = cur.model || settings.model;
                 settings.mode = normalizeMode(cur.mode || settings.mode);
                 chatHistory = cur.messages;

@@ -60,6 +60,38 @@ class FakeOllama:
         return route.fulfill(status=404, body="")
 
 
+class FakeOpenAI:
+    """OpenAI-style engine (LiteRT-LM on 127.0.0.1:9379, or an online provider): /models and streamed /chat/completions."""
+
+    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True):
+        self.requests = []    # (headers, body) of /chat/completions
+        self.model_calls = 0
+        self.models, self.chunks, self.status, self.usage = models, chunks, status, usage
+        page.route(pattern, self.handle)
+
+    def handle(self, route):
+        url = route.request.url
+        if route.request.method == "OPTIONS":
+            return route.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
+        cors = {"access-control-allow-origin": "*"}
+        if url.endswith("/models"):
+            self.model_calls += 1
+            if self.status != 200:
+                return route.fulfill(status=self.status, headers=cors, body="nope")
+            return route.fulfill(status=200, content_type="application/json", headers=cors,
+                                 body=json.dumps({"data": [{"id": m} for m in self.models]}))
+        if url.endswith("/chat/completions"):
+            self.requests.append((route.request.headers, json.loads(route.request.post_data)))
+            if self.status != 200:
+                return route.fulfill(status=self.status, headers=cors, body="nope")
+            lines = ["data: " + json.dumps({"choices": [{"delta": {"content": c}}]}) for c in self.chunks]
+            if self.usage:
+                lines.append("data: " + json.dumps({"choices": [], "usage": {"prompt_tokens": 21, "completion_tokens": 7}}))
+            lines.append("data: [DONE]")
+            return route.fulfill(status=200, content_type="text/event-stream", headers=cors, body="\n\n".join(lines) + "\n\n")
+        return route.fulfill(status=404, body="")
+
+
 class PageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -371,6 +403,150 @@ class PageTest(unittest.TestCase):
         page.route("**/localhost:11434/**", lambda r: r.abort())   # server gone: red
         page.evaluate("checkServer()")
         page.wait_for_function("!document.getElementById('status-dot').classList.contains('status-online') && !document.getElementById('status-dot').classList.contains('status-active')")
+
+    def pick_engine(self, page, engine):
+        page.click(".burger-btn")
+        page.select_option("#provider-select", engine)
+        page.click(".close-btn:has-text('✕')")
+
+    def test_online_is_off_by_default_nothing_leaves_and_online_engines_are_hidden(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        opts = page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)")
+        self.assertEqual(opts, ["ollama", "litert", "custom"])
+        self.assertFalse(page.evaluate("HeinzProviders.onlineAllowed()"))
+        code = page.evaluate("""async () => { try { await HeinzProviders.chat('openrouter', {model:'x', messages:[{role:'user',content:'hi'}]}); return 'sent'; } catch (e) { return e.code; } }""")
+        self.assertEqual(code, "ONLINE_BLOCKED")
+        self.send(page, "Hello")
+        self.assertEqual(self.external, [], "no request left this device")
+
+    def test_litert_engine_models_backend_stats_and_traffic_light(self):
+        page = self.new_page()
+        lit = FakeOpenAI(page, "**/127.0.0.1:9379/**", models=("gemma4-e2b", "other"))
+        page.goto(self.srv.base + "/chat.html")
+        self.pick_engine(page, "litert")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length === 2")
+        self.assertEqual(page.input_value("#model-select"), "gemma4-e2b")
+        page.wait_for_function("document.getElementById('status-dot').classList.contains('status-active')")
+        n_preloads = len(self.ollama.preloads)
+        page.fill("#query", "Hi")
+        page.click("#send-btn")
+        page.wait_for_function("document.querySelector('.msg-assistant') && document.querySelector('.msg-assistant').innerText.includes('Hi there')")
+        h, body = lit.requests[0]
+        self.assertEqual(body["model"], "gemma4-e2b", "CPU: plain model name")
+        self.assertEqual(body["messages"][0]["role"], "system")
+        self.assertNotIn("num_thread", json.dumps(body))
+        self.assertEqual(page.inner_text("#dash-p-tok"), "21")
+        self.assertEqual(page.inner_text("#dash-a-tok"), "7")
+        page.click(".burger-btn")
+        page.select_option("#backend-select", "gpu")
+        page.click(".close-btn:has-text('✕')")
+        self.send(page, "Again")
+        self.assertEqual(lit.requests[1][1]["model"], "gemma4-e2b,gpu", "GPU is chosen through the model field")
+        self.assertEqual(len(self.ollama.preloads), n_preloads, "no Ollama preload while another engine is active")
+        self.assertEqual(self.external, [])
+        self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).provider") == "litert")
+
+    def test_online_engine_needs_switch_and_key_and_sends_only_the_current_chat(self):
+        page = self.new_page()
+        orr = FakeOpenAI(page, "https://openrouter.ai/**", models=("meta/free-model:free",))
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Private earlier question")      # an Ollama chat that must never reach the provider
+        page.click("#mode-bar [data-mode=heinz]")        # saves it to the chat list
+        page.click(".burger-btn")
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        opts = page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)")
+        self.assertIn("openrouter", opts)
+        page.select_option("#provider-select", "openrouter")
+        self.assertIn("API key", page.inner_text("#eng-key"))
+        page.fill("#model-free", "meta/free-model:free")
+        page.dispatch_event("#model-free", "change")
+        page.click(".close-btn:has-text('✕')")
+        page.fill("#query", "Public question")
+        page.click("#send-btn")
+        page.wait_for_function("document.querySelector('.msg-assistant') && document.querySelector('.msg-assistant').innerText.includes('API key')")
+        self.assertEqual(orr.requests, [], "no key: refused before anything is sent")
+        page.click(".burger-btn")
+        page.fill("#prov-key", "sk-test-123")
+        page.dispatch_event("#prov-key", "change")
+        page.click(".close-btn:has-text('✕')")
+        page.fill("#query", "Public question")
+        page.click("#send-btn")
+        page.wait_for_function("document.querySelector('.msg-assistant:last-of-type') && document.querySelector('.msg-assistant:last-of-type').innerText.includes('Hi there')")
+        headers, body = orr.requests[0]
+        self.assertEqual(headers["authorization"], "Bearer sk-test-123")
+        self.assertEqual(body["model"], "meta/free-model:free")
+        sent = json.dumps(body)
+        self.assertNotIn("Private earlier question", sent, "only the current chat leaves the device")
+        self.assertIn("Public question", sent)
+        self.assertEqual(sorted(body.keys()), ["messages", "model", "stop", "stream", "stream_options", "temperature", "top_p"])
+        self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "status-dot status-cloud")
+        # switching online off returns to Ollama
+        page.click(".burger-btn")
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.assertEqual(page.evaluate("settings.provider"), "ollama")
+        self.assertNotIn("openrouter", page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)"))
+
+    def test_online_errors_are_explained(self):
+        page = self.new_page()
+        orr = FakeOpenAI(page, "https://openrouter.ai/**", status=401)
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('openrouter', 'bad')")
+        page.reload()
+        self.pick_engine(page, "openrouter")
+        page.fill("#model-free", "m"); page.dispatch_event("#model-free", "change")
+        self.send(page, "Hi")
+        text = page.inner_text(".msg-assistant")
+        self.assertIn("HTTP 401", text)
+        self.assertIn("API key rejected", text)
+
+    def test_custom_endpoint_local_works_offline_and_remote_counts_as_online(self):
+        page = self.new_page()
+        loc = FakeOpenAI(page, "http://127.0.0.1:8080/**", models=("local-model",))
+        remote = FakeOpenAI(page, "https://example.test/**")
+        page.goto(self.srv.base + "/chat.html")
+        self.pick_engine(page, "custom")
+        page.click(".burger-btn")
+        page.fill("#prov-url", "http://127.0.0.1:8080/v1"); page.dispatch_event("#prov-url", "change")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length === 1")
+        page.click(".close-btn:has-text('✕')")
+        self.send(page, "Hi")
+        self.assertEqual(len(loc.requests), 1, "a local address needs no online switch")
+        page.click(".burger-btn")
+        page.fill("#prov-url", "https://example.test/v1"); page.dispatch_event("#prov-url", "change")
+        page.click(".close-btn:has-text('✕')")
+        self.send(page, "Hi again")
+        self.assertEqual(remote.requests, [], "a remote address is blocked while online is off")
+        self.assertIn("Online is switched off", page.inner_text(".msg-assistant:last-of-type"))
+
+    def test_speed_test_is_ollama_only_and_online_chat_opens_locally_when_online_is_off(self):
+        page = self.new_page()
+        orr = FakeOpenAI(page, "https://openrouter.ai/**")
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('openrouter', 'k')")
+        page.reload()
+        self.pick_engine(page, "openrouter")
+        page.fill("#model-free", "m"); page.dispatch_event("#model-free", "change")
+        self.send(page, "Online chat")
+        page.evaluate("saveChatNow()")
+        page.click(".burger-btn")
+        page.click("#st-start")
+        self.assertIn("Ollama", page.inner_text("#st-status"))
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        page.reload()
+        page.click(".burger-btn")
+        page.click("#chats-scope")
+        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))[0].provider"), "openrouter")
+        page.click("#saved-list .saved-item .load")
+        self.assertEqual(page.evaluate("settings.provider"), "ollama", "an online chat opens locally while online is off")
+        self.assertEqual(page.evaluate("chatHistory.length"), 2)
+
+    def test_openai_stream_without_usage_is_marked_approximate(self):
+        page = self.new_page()
+        FakeOpenAI(page, "**/127.0.0.1:9379/**", chunks=("a", "b", "c"), usage=False)
+        page.goto(self.srv.base + "/chat.html")
+        r = page.evaluate("""async () => { const x = await HeinzProviders.chat('litert', {model:'m', messages:[{role:'user',content:'hi'}]}); return [x.text, x.stats.outputTokens, x.stats.approx]; }""")
+        self.assertEqual(r, ["abc", 3, True])
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()
