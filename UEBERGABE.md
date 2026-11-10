@@ -60,7 +60,7 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - **Grundgerüst:** `index.html` (Hub), `lib/core.js` + `lib/core.css` (Kopfzeile, Sprache, `Heinz.store`, Engine-Status; neue Seiten binden beides ein und legen `<div id="app-header">` an), `tools/<id>/tool.json`, `manifest.webmanifest`, `sw.js` (Netzwerk zuerst, nie `/api/`), `icons/`. Neues Tool = Ordner mit `tool.json` (id = Ordnername; `area` `chat`|`tools` bestimmt den Bereich im Hub, `symbol` ist ein Symbol aus `lib/icons.svg`; `appicon` optional Bildpfad für die Kachel im Bereich Tools; `icon` (Emoji) wird vom Hub nicht mehr gezeigt). Pixeldisplay: `lib/pixel.js` (siehe `docs/DESIGN.md` 4a; Chat-Klasse `.sr` ist belegt, siehe Entwicklungsverlauf). Fundament: nur ein Chat zur Zeit ändert diese Dateien.
 
 ## Designregeln des Entwicklers
-- Minimalistisch, schwarzer Hintergrund, kräftige Google-Farben (`#4285f4`, `#34a853`, `#fbbc05`, `#ea4335`).
+- Minimalistisch. **Verbindlich ist `docs/DESIGN.md`:** Themes Hell, Dunkel, Auto (Dunkel mit schwarzem Hintergrund), Farben nur über Variablen aus `lib/core.css`; Modusfarbe nur an Linien, Pillen und Sendeknopf; Signalfarben (Rot, Orange, Blau, Grün) nur für Status; Pixeldisplays nur im Chat-Kopf; Hub ohne Modusfarbe.
 - Oberfläche Englisch als Standard, Deutsch nur über den EN|DE-Schalter. Das gilt für Oberfläche, Prompts und Sprache.
 - Alle Parameter bleiben manuell regelbar, Voreinstellungen sind nur Vorschläge.
 - Zielgerät: Pixel 9 Pro, Viewport rund 426 × 803 px, Pixeldichte 2,25. Alles muss ohne seitliches Scrollen passen; Tasten nicht in zweite Zeilen abschneiden.
@@ -100,3 +100,5 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 
 ## Regeln für Änderungen (mehrere Chats)
 Vor der ersten Änderung: im angehängten Repo `git pull` und `git log`, `STAND.md` Abschnitt „Aktive Arbeit“ lesen; bei Eintrag unter 24 Stunden oder berührtem Fremdmodul den Entwickler fragen. Eigene Zeile in „Aktive Arbeit“ sofort in `STAND.md` im Ordner eintragen (die Datei liegt nur im Ordner, also kein Commit). Nach der Änderung: im Repo ENTWICKLUNGSVERLAUF.md und bei Bedarf UEBERGABE.md ändern, nach `main` pushen, am PC in `AIUIheinz\repo` `git pull`, mit `cmp` prüfen. Danach im Ordner STAND.md (Zeile entfernen, Nächste Aufgaben anpassen) und die Zeile in INDEX.md aktualisieren. Nur ein Chat baut gleichzeitig.
+
+- Designer-Fallstricke (10.11.2026, nicht auf dem Gerät bestätigt): Seitenhöhe `height:100%` mit `max-height:100dvh` (reines `100dvh` ließ die Eingabezeile auf dem Pixel nach unten rutschen); API-Schlüsselfeld als `type=text` mit `-webkit-text-security` gegen den Passwort-Manager; ein Sprachwechsel ändert den Systemprompt und lädt das Modell neu (bewusst); neue Texte immer EN und DE und die Antwortsprache folgt dem Schalter.

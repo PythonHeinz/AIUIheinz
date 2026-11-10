@@ -327,3 +327,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Update-LED mit 5×7-Schrift (2 Pixel Rand oben/unten bei 11 Zeilen).
 - Antwortsprache strikt: Systemprompt „strikt Englisch/Deutsch, auch bei fremdsprachiger Eingabe“. Sprachwechsel lädt das Modell neu (Preload, Prompt ändert sich) – bewusst.
 - Nicht auf dem Gerät getestet.
+
+## 10.11.2026 – Konzept: Release Candidate (Chat „AIUIheinz“, nur Dokumente)
+- `docs/KONZEPT.md` Abschnitt 17: Stand des Release Candidate (Commit 036ff46) mit Aufbau, Farblogik, Handy-Messung des Tempo-Tests (qwen2.5:3b, 2 Threads am schnellsten) und offenen Punkten; Hub- und Chat-Beschreibung in 15.1 angepasst.
+- `UEBERGABE.md`: Zeile „Designregeln“ verweist auf `docs/DESIGN.md` (Themes statt „schwarz und Google-Farben“), Designer-Fallstricke ergänzt. `docs/OLLAMA_UND_MODELLE.md`: Messung ergänzt.

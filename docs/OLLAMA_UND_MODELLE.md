@@ -104,3 +104,5 @@ Erzeugen in Token/s, Lauf 2 (warm), Spannen über sechs Reihen mit Termux sichtb
 ## Termux im Vordergrund (Plan, ungeprüft)
 Messreihe 09.11.2026: Mit Termux im Hintergrund fielen 8 Threads auf 0,2–0,3 Token/s, sichtbar auf 3,6–4,8. Zu prüfen als eigene Reihe: (a) Akku „Nicht eingeschränkt“ für Termux plus Wakelock, (b) Termux:Float (schwebendes Fenster, braucht „Über anderen Apps einblenden“; Termux und Termux:Float aus derselben Quelle), (c) Termux:Widget als Ein-Tipp-Start von `start.sh` nach einem Absturz. Jeweils Tempo-Test mit „Termux sichtbar/Hintergrund“ vermerken.
 Absturz 10.11.2026: Nach Wilson, Heinz, Audit mit vorgeladenen Modellen (`keep_alive` 30 m) beendete Android Termux; Ursache vermutlich mehrere gleichzeitig geladene Modelle. Maßnahme: Seite entlädt andere Modelle; Ollama mit `OLLAMA_MAX_LOADED_MODELS=1` starten.
+
+**Tempo-Test in der App (10.11.2026, Pixel 9 Pro, `qwen2.5:3b`, Termux im Hintergrund, 32 Token):** Gen Lauf 2 in Token/s: 2 Threads 8,9; 3 Threads 3,6; 4 Threads 1,5; 8 Threads 0,3. Empfehlung des Tests: 2 Threads. Einzelmessung, Details in `docs/KONZEPT.md` 17.2.
