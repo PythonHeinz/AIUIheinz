@@ -311,3 +311,12 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Statuszeile: kleine LED in Statusfarbe vor dem Text (Variante A), Text mit Abstand zum Equalizer.
 - Engine-/Modell-Pillen schlanker (50 px, 74 %) mit viel Schwarzraum und dezentem Glow; UPDATE-Pille gleicher Glow.
 - Kopfzeile: Abstände um Sprachschalter angeglichen (Menü-Taste schmaler, rückt näher).
+
+## 2026-11-10 – AIUIheinz-Design: Korrekturen Gruppe 1 (15:45-Meldung)
+- LED-Punkte kleiner und schärfer (Raster, Zeichen- und Zellgröße unverändert): `Pixel` Punkt = 0,55 × Raster, Glow halbiert.
+- Stopp: runder Knopf mit Quadrat ersetzt den Sendeknopf nur während der Ausgabe; Vorlesen als Symbol in der Aktionszeile unter der letzten Antwort. Die Zeile unter dem Eingabefeld entfällt.
+- Farblogik: rot/orange = fehlende Verbindung/Information (Ollama ohne geladenes Modell: orange), blau = bereit und „denkt“ (Balken blau), grün nur beim Antworten. Cloud bereit = blau. Wählpunkte beim Vorbereiten orange. Keine Symbole mehr in den Statustexten.
+- Ring-Button mit dunklem Rahmen wie die Equalizer-Pille; Update-LED über die volle Breite; Chatleiste enger, „Neuer Chat“ abgesetzt mit Hintergrund.
+- Fehler behoben: Modellliste zeigte bei fremder Engine Ollama-Modelle (`modelsFor` merkt die Engine der Liste).
+- Nicht auf dem Gerät getestet (nur Playwright, simulierter Server).
+- Geplant (nicht gebaut): Modell-Standard vs. eigene Werte, App-Sicherung unter App → Info/Sicherung/Update, Prompt-Verwaltung (Prompt-Bibliothek: benannte Systemprompts, Auswahl je Modus/Chat, Schnellwahl, Export/Import) erst viel später.

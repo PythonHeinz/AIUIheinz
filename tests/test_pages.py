@@ -135,7 +135,7 @@ class PageTest(unittest.TestCase):
     def send(self, page, text):
         page.fill("#query", text)
         page.click("#send-btn")
-        page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && document.querySelector('#stop-btn').disabled")
+        page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#send-btn').classList.contains('stopping')")
 
     def test_all_pages_load_without_errors_and_stay_offline(self):
         page = self.new_page()
@@ -432,10 +432,9 @@ class PageTest(unittest.TestCase):
     def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
-        self.assertTrue(page.is_disabled("#read-btn"), "read aloud needs an answer")
-        self.assertTrue(page.is_disabled("#stop-btn"), "stop needs a running prompt")
+        self.assertEqual(page.locator(".msg-read").count(), 0)
         self.send(page, "Hi there")
-        self.assertFalse(page.is_disabled("#read-btn"))
+        self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-read").count(), 1, "read aloud sits under the last answer")
         acts = page.locator(".msg-assistant > .msg-acts")
         self.assertEqual(acts.count(), 1, "copy/download row sits at the end of the answer")
         self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-copy").count(), 1)
@@ -454,7 +453,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('status-dot').classList.contains('status-online')")
         self.assertIn("s-blue", page.evaluate("document.getElementById('status-dot').className"), "engine answers: blue")
         page.evaluate("generating = true; gotToken = false; renderRing()")
-        self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-orange') && document.getElementById('status-dot').classList.contains('status-active')"), "waiting for the first token: orange")
+        self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-blue') && document.getElementById('status-dot').classList.contains('status-active')"), "waiting for the first token: blue")
         page.evaluate("gotToken = true; renderRing()")
         self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-green') && document.getElementById('status-dot').classList.contains('status-active')"), "answering: green")
         page.evaluate("generating = false; renderRing()")
@@ -550,7 +549,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("Private earlier question", sent, "only the current chat leaves the device")
         self.assertIn("Public question", sent)
         self.assertEqual(sorted(body.keys()), ["messages", "model", "stop", "stream", "stream_options", "temperature", "top_p"])
-        self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "ring-btn status-dot status-cloud s-green")
+        self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "ring-btn status-dot status-cloud s-blue")
         self.assertIn("ONLINE", page.inner_text("#chip-engine").upper(), "header chip tells that this engine is online")
         # switching online off returns to Ollama
         page.click(".burger-btn")
@@ -988,12 +987,16 @@ class PageTest(unittest.TestCase):
     def test_read_aloud_button_turns_into_stop_reading(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
-        self.assertEqual(page.inner_text("#read-lbl"), "Read aloud")
+        self.send(page, "Hi")
+        self.assertIn("i-volume", page.get_attribute(".msg-read use", "href"))
         page.evaluate("updateReadBtn(true)")
-        self.assertEqual(page.inner_text("#read-lbl"), "Stop reading")
+        self.assertIn("i-stop", page.get_attribute(".msg-read use", "href"))
         page.evaluate("updateReadBtn(false)")
-        self.assertEqual(page.inner_text("#read-lbl"), "Read aloud")
-        self.assertTrue(page.is_disabled("#stop-btn"), "stop is only available while answering")
+        self.assertIn("i-volume", page.get_attribute(".msg-read use", "href"))
+        page.evaluate("setGenerating(true)")
+        self.assertIn("i-stop", page.get_attribute("#send-btn use", "href"), "stop replaces send while answering")
+        page.evaluate("setGenerating(false)")
+        self.assertIn("i-send", page.get_attribute("#send-btn use", "href"))
 
     def test_every_symbol_used_exists_in_the_sprite_and_no_emoji_icons_remain(self):
         page = self.new_page()
