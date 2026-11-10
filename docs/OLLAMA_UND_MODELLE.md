@@ -100,3 +100,7 @@ Erzeugen in Token/s, Lauf 2 (warm), Spannen über sechs Reihen mit Termux sichtb
 - 2 Threads ist am stabilsten; 3 und 4 Threads schwanken stark (gleiche Einstellung 1,2 bis 7,3 Token/s); 8 Threads mit Termux im Hintergrund 0,2–0,3, sichtbar 3,6–4,8.
 - heinz-fakt: Prompt 363 Token (Modelfile-Prompt rund 340), Prompt-Verarbeitung kalt 12–20 s, Laden 4–14 s, warm je 1–2 s. gemma2:2b: Prompt 32 Token, 0,5–1 s.
 - Das Pixel 9 Pro hat nach Herstellerangabe 1 starken, 3 mittlere und 4 schwache Kerne; viele Threads landen auf schwachen Kernen, der langsamste bestimmt den Takt. Wärme bei Dauerlast und Android-Drosselung im Hintergrund sind Vermutungen, nicht gemessen.
+
+## Termux im Vordergrund (Plan, ungeprüft)
+Messreihe 09.11.2026: Mit Termux im Hintergrund fielen 8 Threads auf 0,2–0,3 Token/s, sichtbar auf 3,6–4,8. Zu prüfen als eigene Reihe: (a) Akku „Nicht eingeschränkt“ für Termux plus Wakelock, (b) Termux:Float (schwebendes Fenster, braucht „Über anderen Apps einblenden“; Termux und Termux:Float aus derselben Quelle), (c) Termux:Widget als Ein-Tipp-Start von `start.sh` nach einem Absturz. Jeweils Tempo-Test mit „Termux sichtbar/Hintergrund“ vermerken.
+Absturz 10.11.2026: Nach Wilson, Heinz, Audit mit vorgeladenen Modellen (`keep_alive` 30 m) beendete Android Termux; Ursache vermutlich mehrere gleichzeitig geladene Modelle. Maßnahme: Seite entlädt andere Modelle; Ollama mit `OLLAMA_MAX_LOADED_MODELS=1` starten.

@@ -284,6 +284,7 @@
         <div class="side-title" data-i18n="chats">💬 Chats</div>
         <button class="side-btn" onclick="saveChatNow()" data-i18n="saveChat">💾 Save current chat</button>
         <button class="side-btn" onclick="discardChat()" data-i18n="discardChat">🗑️ Discard current chat</button>
+        <button class="side-btn" id="chats-scope" onclick="toggleChatScope()" style="margin-top:6px;"></button>
         <div id="saved-list"></div>
     </div>
 
@@ -544,7 +545,7 @@
                 micUnsupported: 'Speech recognition is not supported by this browser.',
                 ready: 'Ready for input...', readyNew: 'Ready for input... (new chat)', working: 'working...',
                 noChatToSave: 'No chat to save.', confirmDiscard: 'Discard current chat (do not save)?',
-                nothingSaved: 'Nothing saved yet.', ctxNote: '📎 Context: {n} characters',
+                nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: '📎 Context: {n} characters',
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
@@ -579,7 +580,7 @@
                 micUnsupported: 'Spracherkennung wird vom Browser nicht unterstützt.',
                 ready: 'Bereit für Eingaben...', readyNew: 'Bereit für Eingaben... (neuer Chat)', working: 'arbeitet...',
                 noChatToSave: 'Kein Chat zum Speichern.', confirmDiscard: 'Aktuellen Chat verwerfen (nicht speichern)?',
-                nothingSaved: 'Noch nichts gespeichert.', ctxNote: '📎 Kontext: {n} Zeichen',
+                nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: '📎 Kontext: {n} Zeichen',
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
@@ -822,6 +823,7 @@
 
         function applyModeStyling() {
             renderModeBar();
+            renderSavedList();
             const preset = MODE_PRESETS[settings.mode];
             const ctxBox = $('context');
             const modelSel = $('model-select');
@@ -848,6 +850,8 @@
 
         // Nutzer wechselt den Modus: Preset-Modell + Preset-Regler (außer bei Standardwerten)
         function updateModeUI() {
+            // Zuerst den alten Chat unter seinem Modus und Modell speichern, danach erst umstellen
+            if (chatHistory.length) saveCurrentToList();
             settings.mode = normalizeMode($('mode-select').value);
             const preset = MODE_PRESETS[settings.mode];
             settings.model = resolveModel(preset);
@@ -860,7 +864,7 @@
             }
             saveSettings();
             applyModeStyling();
-            newChat(true);  // Moduswechsel = neuer Chat (der alte wird gespeichert)
+            newChat(false);  // Moduswechsel = neuer Chat (der alte ist oben schon gespeichert)
             checkServer();
         }
 
@@ -1186,14 +1190,20 @@
             renderSavedList();
         }
 
+        let chatScopeAll = false;
+        function toggleChatScope() { chatScopeAll = !chatScopeAll; renderSavedList(); }
+
         function renderSavedList() {
             const box = document.getElementById('saved-list');
             box.innerHTML = '';
-            const list = getSaved();
+            const all = getSaved();
+            // Chats werden je Modus geführt; „alle Modi“ zeigt die ganze Liste (Laden springt dann in den Modus des Chats)
+            const list = chatScopeAll ? all : all.filter(c => (c.mode || 'wilson') === settings.mode);
+            $('chats-scope').textContent = t(chatScopeAll ? 'scopeAll' : 'scopeMode');
             if (!list.length) {
                 const s = document.createElement('small');
                 s.style.color = '#666';
-                s.textContent = t('nothingSaved');
+                s.textContent = t(all.length ? 'nothingInMode' : 'nothingSaved');
                 box.appendChild(s);
                 return;
             }

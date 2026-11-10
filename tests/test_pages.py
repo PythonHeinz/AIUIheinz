@@ -342,6 +342,25 @@ class PageTest(unittest.TestCase):
         self.send(page, "Go")
         self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, self.ollama.unloads, "also before a real request")
 
+    def test_saved_chats_are_listed_per_mode_and_load_into_their_own_mode(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Wilson question")
+        page.click("#mode-bar [data-mode=code]")        # saves the Wilson chat
+        self.send(page, "Code question")
+        page.click("#mode-bar [data-mode=wilson]")      # saves the Code chat
+        titles = lambda: page.eval_on_selector_all("#saved-list .saved-item .load", "els => els.map(e => e.firstChild.textContent)")
+        self.assertEqual(titles(), ["Wilson question"], "only the chats of the active mode")
+        page.click("#mode-bar [data-mode=audit]")
+        self.assertEqual(titles(), [])
+        self.assertIn("this mode", page.inner_text("#saved-list"))
+        page.click(".burger-btn")
+        page.click("#chats-scope")                       # all modes
+        self.assertEqual(sorted(titles()), ["Code question", "Wilson question"])
+        page.click("#saved-list .saved-item .load >> text=Code question")
+        self.assertEqual(page.evaluate("settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
+
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")

@@ -181,3 +181,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Fix: Vor Vorladen und vor jeder Anfrage entlädt die Seite alle anderen geladenen Modelle (`/api/ps`, `/api/generate` mit `keep_alive:0`, `unloadOthers`). Zusätzlich für Ollama selbst: `OLLAMA_MAX_LOADED_MODELS=1` vor dem Start setzen (nicht in `start.sh` eingebaut, Fundament).
 - Audit: Die erste Anfrage mit Kontext im Nutzertext (Änderung „Kontext ans Nachrichtenende“) beantwortete qwen2.5:3b zweimal mit „Information not in context.“, obwohl 230 Zeichen Kontext da waren. Modi mit Pflicht-Kontext (`ctxInSystem`, bisher nur Audit) legen den Kontext deshalb wieder in die Systemnachricht; die übrigen Modi behalten ihn in der Nutzernachricht. Ursache nicht abschließend belegt (ein Fall).
 - Tests: 27 Seitentests grün (neu: nur das gewählte Modell bleibt geladen; Audit-Kontext im System). Nur simuliert.
+
+## 10.11.2026 – Chats je Modus (Chat „AIUIheinz-Chat“, nur `chat.html`)
+- Fehler gefunden (Beobachtung des Entwicklers: gespeicherte Chats landen im „falschen“ Modus): Beim Moduswechsel wurde der alte Chat erst gespeichert, nachdem `settings.mode` und `settings.model` schon auf den neuen Modus gestellt waren, und trug dadurch Modus und Modell des neuen. Jetzt wird zuerst gespeichert, dann umgestellt (`updateModeUI`). Bereits vorhandene Einträge in `heinz_chats` bleiben mit dem damals falschen Modus gespeichert.
+- Neu: Die Liste „Chats“ zeigt standardmäßig nur die Chats des aktiven Modus; ein Knopf darunter schaltet auf alle Modi. Aus der vollen Liste geladen, springt die Seite in Modus und Modell des Chats (wie bisher).
+- Tests: 28 Seitentests grün (neu: Liste je Modus, Sprung beim Laden; der Test schlug vor der Korrektur fehl). Nur simuliert.
+- Offen (Idee des Entwicklers): einen Chat eines Modus bewusst in einem anderen Modus weiterführen; bisher geht das über Kopieren in das Kontextfeld.
