@@ -337,3 +337,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Parameter-Fenster mit Reitern Parameter | Prompts (Platzhalter). Umschalter „Modell-Standard | Meine Werte“ ersetzt den Haken; bei Modell-Standard sind die Regler gesperrt; Speichern gilt je Modell und wird bei „Meine Werte“ automatisch geladen.
 - Statustext: Tipp zeigt den vollen Text (8 s). „Modellliste geladen“ öffnet die Modellliste. Papierkorb-Pille invertiert. Erste Nachricht mehr Abstand, Modusnamen größer, Speedtest-Zeilen farbig.
 - Antwortsprache wieder wie vorher („Respond in English.“), keine Verschärfung.
+
+## 2026-11-10 – AIUIheinz-Design: Korrekturen 17:30
+- Status gelb = Handshake offen (Cloud/eigene Engine, Modellliste noch nicht geladen), blau = bestätigt. Equalizer: blau = langsamer Ping, gelb = langsames Blinken. Vorladen gibt es weiter nur lokal.
+- Heinz-UI-Logo als Strichschrift (SVG, 1,3 Einheiten dick), Ring-Fassung dünner. Segment Modell-Standard/Meine Werte schaltet sofort. Punkt vor dem aktiven Reiter; Reset heißt „Zurücksetzen“.
+- „Modellliste laden“ nur, bis eine Liste da ist; danach ist die Statuszeile (unterstrichen) der Zugang. Statustext oben klappt per Tipp mehrzeilig auf, ohne den Equalizer zu verschieben.
+- Tempo-Test: Termux-Haken statt Auswahl (Standard im Hintergrund), bei Cloud-Engines komplett ausgegraut; Zeilenfarbe je Thread-Zahl (beide Läufe gleich).
+- Sprachschalter kleiner, Modus-Zeile 6 px tiefer. Nicht auf dem Gerät getestet.
