@@ -421,6 +421,32 @@ class PageTest(unittest.TestCase):
         bottom = page.evaluate("document.querySelector('#saved-list .saved-item:last-child .acts2').getBoundingClientRect().bottom")
         self.assertLessEqual(bottom, page.evaluate("innerHeight") - 30, "pills must not touch the screen bottom")
 
+    def test_select_opens_a_themed_popup_not_wider_than_the_field(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("openPanel && 0")  if False else None
+        page.evaluate("document.body.insertAdjacentHTML('beforeend','<select id=tsel class=sel style=\"position:fixed;top:100px;left:20px;width:200px\"><option value=a>A</option><option value=b>B</option></select>')")
+        page.click("#tsel")
+        self.assertEqual(page.locator(".sel-pop .sel-opt").count(), 2)
+        self.assertLessEqual(page.evaluate("document.querySelector('.sel-pop').getBoundingClientRect().width"), 200.5)
+        page.click(".sel-pop .sel-opt >> nth=1")
+        self.assertEqual(page.evaluate("document.getElementById('tsel').value"), "b")
+        self.assertEqual(page.locator(".sel-pop").count(), 0)
+
+    def test_selects_use_our_own_popup_with_the_width_of_the_select(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("openMenu(); showPage('engine')")
+        page.wait_for_timeout(400)
+        sel = page.evaluate("(function(){var s=document.getElementById('provider-select');var r=s.getBoundingClientRect();return [r.width, s.options.length, s.value, s.options[s.options.length-1].value]})()")
+        page.evaluate("document.getElementById('provider-select').click()")
+        self.assertEqual(page.locator(".hz-pop button").count(), sel[1])
+        w = page.evaluate("document.querySelector('.hz-pop').getBoundingClientRect().width")
+        self.assertLessEqual(abs(w - sel[0]), 1)
+        page.evaluate("document.querySelector('.hz-pop button:last-child').click()")
+        self.assertEqual(page.evaluate("document.getElementById('provider-select').value"), sel[3])
+        self.assertEqual(page.locator(".hz-pop").count(), 0)
+
     def test_rename_chat_in_the_title_bar_and_pin_in_the_list(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
@@ -1018,10 +1044,10 @@ class PageTest(unittest.TestCase):
         acc = lambda: page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()")
         self.assertEqual(acc(), "#00acc1")
         page.click("#mode-bar [data-mode=creative]")
-        self.assertEqual(acc(), "#a142f4")
-        self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('send-btn')).backgroundColor"), "rgb(161, 66, 244)")
+        self.assertEqual(acc(), "#b184ec")
+        self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('send-btn')).backgroundColor"), "rgb(177, 132, 236)")
         page.click("#mode-bar [data-mode=audit]")
-        self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('send-btn')).color"), "rgb(32, 33, 36)", "dark arrow on the yellow button")
+        self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('send-btn')).color"), "rgb(28, 26, 20)", "dark arrow on the sand-gold audit button")
 
     def test_theme_light_dark_auto_persists_and_menu_shows_it(self):
         ctx = self.browser.new_context(viewport=VIEWPORT, color_scheme="dark")
@@ -1154,9 +1180,34 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.is_visible("#mode-bar"))
         self.assertFalse(page.is_visible("#context-wrapper"))
         self.assertTrue(page.is_visible("#query"))
+        page.wait_for_timeout(400)
+        self.assertEqual(page.evaluate("document.querySelector('.top').getBoundingClientRect().height"), 0, "header slides away while typing")
         page.evaluate("document.activeElement.blur()")
         page.wait_for_function("!document.body.classList.contains('kbd')")
         self.assertTrue(page.is_visible("#mode-bar"))
+        page.wait_for_timeout(400)
+        self.assertGreater(page.evaluate("document.querySelector('.top').getBoundingClientRect().height"), 50, "header returns")
+
+    def test_context_field_is_one_line_until_focused_and_telemetry_labels(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.click("#mode-bar [data-mode=audit]")
+        h0 = page.evaluate("document.getElementById('context').getBoundingClientRect().height")
+        self.assertLessEqual(h0, 28)
+        page.focus("#context")
+        page.wait_for_timeout(300)
+        self.assertGreater(page.evaluate("document.getElementById('context').getBoundingClientRect().height"), 40)
+        self.assertEqual(page.inner_text("#dashboard .m1 i"), "In")
+        self.assertEqual(page.inner_text("#dashboard .m2 i"), "Out")
+
+    def test_telemetry_colours_follow_performance_thresholds(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("document.getElementById('dash-speed').textContent='22.0'; document.getElementById('dash-start').textContent='12.0'; perfColors()")
+        self.assertEqual(page.evaluate("document.getElementById('dash-speed').style.color"), "var(--green)")
+        self.assertEqual(page.evaluate("document.getElementById('dash-start').style.color"), "var(--orange)")
+        page.evaluate("document.getElementById('dash-speed').textContent='3.0'; perfColors()")
+        self.assertEqual(page.evaluate("document.getElementById('dash-speed').style.color"), "var(--orange)")
 
     def test_hub_areas_switch_and_persist(self):
         page = self.new_page()

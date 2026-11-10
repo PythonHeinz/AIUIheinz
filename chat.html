@@ -21,7 +21,8 @@
         /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
-        .top { gap: 12px; }
+        .top { gap: 12px; transition: max-height .22s ease, opacity .18s ease, margin .22s ease; max-height: 76px; }
+        body.kbd .top, body.kbd-ctx .top { max-height: 0; opacity: 0; overflow: hidden; margin: 0; pointer-events: none; }
         .ring-btn.s-yellow { --s: #fbbc04; }
         #ring-logo { display: block; }
         .top .burger-btn { width: 30px; margin-left: -6px; }
@@ -208,6 +209,10 @@
         .ctx-h .caps { flex: 1; font-size: .62rem; }
         .ctx-h small { color: var(--muted); font-size: .7rem; font-family: var(--mono); }
         .ctx .ibtn { width: 32px; height: 32px; }
+        .ctx:not(:focus-within):not(.full) { padding-top: 5px; padding-bottom: 3px; }
+        .ctx:not(:focus-within):not(.full) .ctx-h { display: none; }
+        .ctx:not(:focus-within):not(.full) textarea { height: 24px; }
+        .ctx textarea { transition: height .15s ease; }
         .ctx textarea { display: block; width: 100%; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: .9rem; line-height: 1.4; padding: 2px 0 4px; height: 44px; max-height: 20dvh; }
         .ctx textarea::placeholder { color: var(--muted); }
         #context.req-warn::placeholder { color: var(--red); }
@@ -239,6 +244,7 @@
         .row .ck { color: var(--pri); visibility: hidden; } .row.sel-on .ck { visibility: visible; }
         .ver-pill { width: 100%; justify-content: flex-start; font-family: var(--mono); font-size: .82rem; }
         .st-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+        .st-sticky { position: sticky; bottom: 0; z-index: 2; padding: 14px 0 8px; margin-top: 6px; background: linear-gradient(to bottom, transparent, var(--surf) 30%); }
         .st-core { display: flex; gap: 5px; margin: 6px 0 2px; } .st-core i { width: 18px; height: 18px; border-radius: 6px; background: color-mix(in srgb, var(--tc) 28%, #0a0b0d); border: 1px solid var(--tc); box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 40%, transparent); }
         .st-core small { align-self: center; margin-left: 6px; color: var(--sub); font-size: .7rem; }
         .st-chips label.tile { --tc: #b9f7d2; flex: 1 0 28%; justify-content: center; border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); background: #0a0b0d; border-radius: 14px; padding: 12px 0; font-family: var(--mono); font-size: 1rem; color: var(--sub); box-shadow: 0 0 10px color-mix(in srgb, var(--tc) 14%, transparent); }
@@ -285,7 +291,7 @@
         .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
         .saved-item.open .acts2 { display: flex; }
-        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; }
+        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; padding-top: 10px; }
         .saved-item .acts2 .pill { flex: 1; min-height: 34px; padding: 0; }
         .saved-item .acts2 .pill span { display: none; }
         .saved-item .acts2 .pill.danger { background: var(--card); color: var(--red); border-color: var(--red); }
@@ -326,8 +332,8 @@
         <div class="cwrap"><div class="chat-wrapper" id="chat-container"></div><button class="jump" id="jump-bottom" type="button" onclick="jumpBottom()" hidden aria-label="Scroll to end"><svg class="i"><use href="lib/icons.svg#i-chev-d"/></svg></button></div>
 
         <div class="metrics" id="dashboard">
-            <span class="m m1"><i>P</i> <b id="dash-p-tok">0</b></span>
-            <span class="m m2"><i>A</i> <b id="dash-a-tok">0</b></span>
+            <span class="m m1" title="Input tokens (prompt)"><i>In</i> <b id="dash-p-tok">0</b></span>
+            <span class="m m2" title="Output tokens (answer)"><i>Out</i> <b id="dash-a-tok">0</b></span>
             <span class="m m3"><b id="dash-speed">0.0</b> <i>T/s</i></span>
             <span class="m m4" data-i18n-title="startTitle" title="Time until the first word: model load + prompt processing"><i data-i18n="mStart">Start</i> <b id="dash-start">0.0</b> <i>s</i></span>
         </div>
@@ -343,7 +349,7 @@
         <div class="ctx" id="context-wrapper">
             <div class="ctx-h"><span class="caps" id="ctx-label">Context · optional</span><small id="ctx-count"></small>
                 <button class="ibtn" type="button" onclick="toggleFull('context-wrapper')" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button></div>
-            <textarea id="context" rows="2" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn'); updateCtxCount()"></textarea>
+            <textarea id="context" rows="1" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn'); updateCtxCount()"></textarea>
         </div>
     </div>
 
@@ -490,7 +496,7 @@
                 <div id="st-status" class="help" style="min-height:16px"></div>
                 <div id="st-table"></div>
                 <div id="st-best" class="help" style="color:var(--pri)"></div>
-                <div class="st-btns">
+                <div class="st-btns st-sticky">
                     <button class="pill" id="st-apply" type="button" onclick="applyBestThreads()" style="display:none"></button>
                     <button class="pill" id="st-copy" type="button" onclick="copySpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span data-i18n="stCopy">Copy results</span></button>
                 </div>
@@ -719,9 +725,9 @@
         const MODE_PRESETS = {
             wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#00acc1', on: '#fff' },
             heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63', on: '#fff' },
-            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#fbbc05', on: '#202124' },
+            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#d2b56a', on: '#1c1a14' },
             code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#6b8ba4', on: '#fff' },
-            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#a142f4', on: '#fff' }
+            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#b184ec', on: '#17111f' }
         };
         // bevorzugtes Modell des Modus, sonst Ersatz, sonst erstes installiertes
         function resolveModel(preset) {
@@ -1469,7 +1475,7 @@
             document.getElementById('dash-p-tok').innerText = '0';
             document.getElementById('dash-a-tok').innerText = '0';
             document.getElementById('dash-speed').innerText = '0.0';
-            document.getElementById('dash-start').innerText = '0.0';
+            document.getElementById('dash-start').innerText = '0.0'; perfColors();
         }
 
         // Code-Blöcke kopieren (Event-Delegation)
@@ -1672,7 +1678,7 @@
             let p = row.parentNode;
             while (p && p !== document.body && !(p.scrollHeight > p.clientHeight + 2 && /(auto|scroll)/.test(getComputedStyle(p).overflowY))) p = p.parentNode;
             if (!p || p === document.body) return;
-            const over = row.getBoundingClientRect().bottom - p.getBoundingClientRect().bottom + 110;
+            const over = row.getBoundingClientRect().bottom - p.getBoundingClientRect().bottom + 44;
             if (over > 0) p.scrollBy({ top: over, behavior: 'smooth' });
         }
         function renderSavedList() {
@@ -1926,6 +1932,7 @@
                 document.getElementById('dash-a-tok').innerText = finalStats.outputTokens || 0;
                 document.getElementById('dash-start').innerText = (((finalStats.loadMs || 0) + (finalStats.promptMs || 0)) / 1000).toFixed(1);
                 if (finalStats.tokensPerSec) document.getElementById('dash-speed').innerText = finalStats.tokensPerSec.toFixed(1);
+                perfColors();
             }
 
             persistCurrent();
@@ -2233,6 +2240,13 @@
             }
         }
         const eqState = { color: 'red' };
+        // Performance colours of the telemetry pills (preliminary thresholds for a phone; tune with measured values, see docs/DESIGN.md)
+        const PERF = { tpsGood: 15, tpsSlow: 6, startGood: 2, startSlow: 8 };
+        function perfColors() {
+            const sp = parseFloat($('dash-speed').textContent) || 0, st = parseFloat($('dash-start').textContent) || 0;
+            $('dash-speed').style.color = !sp ? '' : sp >= PERF.tpsGood ? 'var(--green)' : sp < PERF.tpsSlow ? 'var(--orange)' : '';
+            $('dash-start').style.color = !st ? '' : st <= PERF.startGood ? 'var(--green)' : st > PERF.startSlow ? 'var(--orange)' : '';
+        }
         function eqLive() { return generating || !!preloadAbort || speaking || pulse.e > 0.03 || ((eqState.color === 'blue' || eqState.color === 'yellow') && !document.hidden); }
         function renderStatusRow(title, color) {
             const el = $('preload-status');
@@ -2280,6 +2294,7 @@
         window.addEventListener('resize', fitApp); window.addEventListener('pageshow', fitApp); window.addEventListener('orientationchange', fitApp);
         if (window.visualViewport) window.visualViewport.addEventListener('resize', fitApp);
         [150, 500, 1200, 2500].forEach(function (ms) { setTimeout(fitApp, ms); });
+        Heinz.enhanceSelects('select.sel');
         function initRingLogo() { Heinz.ringLogo($('ring-logo')); }
         function initChip() {
             initRingLogo();
