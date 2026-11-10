@@ -180,6 +180,20 @@
         .metrics { display: flex; gap: 6px; flex: none; margin: 4px 0 8px; }
         .m { flex: 1 1 0; min-width: 0; height: 28px; border-radius: 99px; background: var(--card); border: 1px solid var(--ol); display: flex; align-items: center; justify-content: center; gap: 4px; font: 600 11px var(--mono); white-space: nowrap; color: var(--sub); }
         .m b { font-weight: 700; } .m i { font-style: normal; }
+        .m5 b { color: var(--sub); }
+        /* Denken: Schnell | Tief (nur bei Modellen, die denken) */
+        .think { flex: none; display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+        .think .seg2 { margin: 0; width: 148px; flex: none; }
+        .think small { flex: 1; min-width: 0; color: var(--sub); font-size: .7rem; line-height: 1.3; }
+        /* Schnittstellenwissen: Regler nach Zustand (lib/capabilities.json) */
+        .slidercard.cap-blocked { opacity: .45; cursor: help; }
+        .slidercard input.cap-lock { pointer-events: none; }
+        .cap-row { grid-column: 1 / -1; }
+        .cap-tag { border: 0; background: none; padding: 2px 0; font: 600 .66rem var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+        .cap-tag.unk { color: var(--orange); }
+        .cap-text { font-size: .72rem; line-height: 1.4; color: var(--sub); margin-top: 2px; }
+        .cap-text .pill { margin: 4px 0 0; }
+        body.kbd .think { display: none; }
         .m1 b { color: var(--m1); } .m2 b { color: var(--m2); } .m3 b { color: var(--m3); } .m4 b { color: var(--m4); }
 
         /* Prompt */
@@ -352,6 +366,12 @@
             <span class="m m2" title="Output tokens (answer)"><i>Out</i> <b id="dash-a-tok">0</b></span>
             <span class="m m3"><b id="dash-speed">0.0</b> <i>T/s</i></span>
             <span class="m m4" data-i18n-title="startTitle" title="Time until the first word: model load + prompt processing"><i data-i18n="mStart">Start</i> <b id="dash-start">0.0</b> <i>s</i></span>
+            <span class="m m5" id="m-think" hidden><i data-i18n="mThink">Think</i> <b id="dash-think">0</b></span>
+        </div>
+        <div class="think" id="think-row" hidden>
+            <span class="caps" data-i18n="thinkLbl">Thinking</span>
+            <div class="seg2"><button type="button" id="think-fast" onclick="setThink('fast')" data-i18n="thinkFast">Fast</button><button type="button" id="think-deep" onclick="setThink('deep')" data-i18n="thinkDeep">Deep</button></div>
+            <small id="think-note"></small>
         </div>
 
         <div class="prompt" id="prompt-wrap">
@@ -421,10 +441,10 @@
                         <div class="seg2"><button type="button" id="seg-model" onclick="setParamSrc('model')" data-i18n="segModel">Model</button><button type="button" id="seg-mode" onclick="setParamSrc('mode')" data-i18n="segMode">Mode</button><button type="button" id="seg-own" onclick="setParamSrc('own')" data-i18n="segOwn">Mine</button></div>
                         <input type="checkbox" id="use-default" hidden onchange="onDefaultToggle()">
                         <div class="pw-sl">
-                            <div class="slidercard slider-group"><div class="sc-top"><b>Temp</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b>Temp</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-topp" data-cap-card="top_p"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-topk" data-cap-card="top_k"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
                         </div>
                         <div class="q-btns" id="q-btn-row">
                             <button class="pill" type="button" id="q-reset" onclick="resetParams()" data-i18n="qReset">Reset</button>
@@ -433,7 +453,7 @@
                         </div>
                         <small class="help" id="q-note"></small>
                             <div class="thr"><div class="caps" id="thr-title" style="margin:12px 0 2px"></div>
-                            <div class="slidercard param-group" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"></div>
+                            <div class="slidercard param-group" id="sc-threads" data-cap-card="num_thread" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"></div>
                                 <small class="help" id="thr-note"></small></div>
                         </div>
                     </div>
@@ -444,7 +464,7 @@
                     <div class="grpbox">
                 <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" onchange="onFast()"><i></i></span></label>
 <button class="row" type="button" id="fastn-toggle" onclick="var c=document.getElementById('fastn-card');c.hidden=!c.hidden;this.classList.toggle('open',!c.hidden)"><span class="tx"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b></span><output id="fastn-val" class="mono"></output><svg class="i sm go"><use href="lib/icons.svg#i-chev-d"/></svg></button>
-                <div class="slidercard" id="fastn-card" hidden><div class="sc-top"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="300" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
+                <div class="slidercard" id="fastn-card" data-cap-card="max_tokens" hidden><div class="sc-top"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="300" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
                     </div>
                 </div>
 
@@ -769,6 +789,7 @@
             updateChip(); renderModelSheet();
             const mp = $('ml-pill'); if (mp) mp.hidden = settings.provider !== 'ollama' && MODELS.length > 0;
             $('eng-status').classList.toggle('tappable', MODELS.length > 0 && settings.provider !== 'ollama');
+            renderCaps(); renderThink();
         }
         function setEngStatus(msg) { $('eng-status').textContent = msg || ''; }
         let modelsSeq = 0, modelsAbort = null;
@@ -786,7 +807,9 @@
                 if (prov !== settings.provider) return;   // Engine wurde inzwischen gewechselt
                 if (names.length) {
                     MODELS = names; modelsFor = prov; hs[prov] = true; checkServer();
-                    if (prov !== 'ollama' && names.indexOf(settings.model) < 0) settings.model = (settings.modelByProvider[prov] && names.indexOf(settings.modelByProvider[prov]) >= 0) ? settings.modelByProvider[prov] : names[0];
+                    // Ein gewähltes Modell wird nie durch die Liste ersetzt (auch wenn eine kurze oder andere Liste es nicht enthält);
+                    // nur wenn für diese Engine noch nichts gewählt wurde, kommt der erste Eintrag als Vorschlag.
+                    if (prov !== 'ollama' && !settings.model) settings.model = settings.modelByProvider[prov] || names[0];
                     fillModelSelect(); saveSettings(); loadThreads();
                     if (prov !== 'ollama') setEngStatus(t('modelsDone', { n: names.length }));
                 } else if (prov !== 'ollama') { MODELS = []; fillModelSelect(); setEngStatus(t('noModels')); }
@@ -838,6 +861,7 @@
             settings.model = settings.modelByProvider[id] || (id === 'ollama' ? resolveModel(MODE_PRESETS[settings.mode]) : '');
             MODELS = id === 'ollama' ? FALLBACK_MODELS.slice() : []; modelsFor = id;
             fillProviderSelect(); renderEngineUI(); fillModelSelect(); saveSettings(); loadThreads(); applySavedParams();
+            persistCurrent();   // Engine und Modell gehören zusammen: auch im laufenden Chat festhalten, sonst springt die Engine nach dem Neuladen zurück
             loadModels(); checkServer(); schedulePreload();
         }
         function onProvider() { switchProvider($('provider-select').value); }
@@ -888,7 +912,12 @@
                 onlineBlocked: 'Online is switched off. Tick "Allow online" in the menu to use this engine.', needKey: 'This engine needs an API key (menu → Engine).',
                 hintKey: ' (API key rejected or missing rights)', hintLimit: ' (rate limit reached, try again later)', hintNoModel: ' (model name unknown to this engine?)',
                 connFailGeneric: 'Connection to {n} failed ({m}). The engine may be offline, the address wrong, or the provider blocks browser access (CORS).',
-                modelsFail: 'Could not load the model list: {m}', modelsLoading: 'Loading model list…', modelsDone: 'Model list loaded: {n} entries.', cutLength: '(Answer cut off: the engine stopped at its token limit. Thinking models such as Gemini count their thinking tokens too. Turn off fast mode or raise the limit.)', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
+                modelsFail: 'Could not load the model list: {m}', modelsLoading: 'Loading model list…',
+                mThink: 'Think', thinkLbl: 'Thinking', thinkFast: 'Fast', thinkDeep: 'Deep', thinkDefault: 'model default', thinkSent: 'sends reasoning_effort: {e}',
+                capUnk: 'unverified', capLocked: 'locked', capNote: 'note', capRec: 'Recommended: {v}', capApply: 'Use recommendation',
+                capSt_unknown: 'Not verified yet: the value is sent, but it is unknown whether the engine uses it.', capSt_off: 'This engine ignores the setting, so it is not sent.', capSt_error: 'This model rejects the setting with an error, so it is not sent.', capSt_fixed: 'Fixed by the model, cannot be changed here.', capSt_config: 'Set in the engine configuration, not in the request (needs server.py, planned), so it is not sent.',
+                capSrc: 'Source', capSrc_belegt: 'vendor documentation', capSrc_drittquelle: 'third-party source', capSrc_code: 'our own code', capSrc_vermutet: 'assumed', capSrc_unbekannt: 'unknown',
+                thinkTip: 'Thinking tokens, reported separately. Whether Out already includes them is not known yet, so nothing is subtracted and values are not comparable between engines.', estTip: 'estimated from stream chunks (the engine reported no usage)', modelsDone: 'Model list loaded: {n} entries.', cutLength: '(Answer cut off: the engine stopped at its token limit. Thinking models such as Gemini count their thinking tokens too. Turn off fast mode or raise the limit.)', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
                 engLocalNote: 'Runs on this device.',
                 nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: 'Context: {n} characters',
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
@@ -932,7 +961,12 @@
                 onlineBlocked: 'Online ist ausgeschaltet. Im Menü „Online erlauben“ anhaken, um diese Engine zu nutzen.', needKey: 'Diese Engine braucht einen API-Schlüssel (Menü → Engine).',
                 hintKey: ' (API-Schlüssel abgelehnt oder ohne Rechte)', hintLimit: ' (Limit erreicht, später erneut versuchen)', hintNoModel: ' (Modellname dieser Engine unbekannt?)',
                 connFailGeneric: 'Verbindung zu {n} fehlgeschlagen ({m}). Die Engine ist vielleicht aus, die Adresse falsch oder der Anbieter sperrt Browserzugriff (CORS).',
-                modelsFail: 'Modellliste nicht ladbar: {m}', modelsLoading: 'Modellliste wird geladen…', modelsDone: 'Modellliste geladen: {n} Einträge.', cutLength: '(Antwort abgeschnitten: Die Engine hat an ihrer Token-Grenze gestoppt. Denk-Modelle wie Gemini zählen ihre Denk-Token mit. Schnellmodus ausschalten oder Grenze erhöhen.)', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
+                modelsFail: 'Modellliste nicht ladbar: {m}', modelsLoading: 'Modellliste wird geladen…',
+                mThink: 'Denken', thinkLbl: 'Denken', thinkFast: 'Schnell', thinkDeep: 'Tief', thinkDefault: 'Modellstandard', thinkSent: 'sendet reasoning_effort: {e}',
+                capUnk: 'ungeklärt', capLocked: 'gesperrt', capNote: 'Hinweis', capRec: 'Empfohlen: {v}', capApply: 'Empfehlung übernehmen',
+                capSt_unknown: 'Noch nicht geprüft: der Wert wird gesendet, ob die Engine ihn nutzt, ist unbekannt.', capSt_off: 'Diese Engine ignoriert die Einstellung, deshalb wird sie nicht gesendet.', capSt_error: 'Dieses Modell lehnt die Einstellung mit einem Fehler ab, deshalb wird sie nicht gesendet.', capSt_fixed: 'Vom Modell fest vorgegeben, hier nicht änderbar.', capSt_config: 'Wird in der Konfiguration der Engine gesetzt, nicht in der Anfrage (braucht server.py, geplant), deshalb nicht gesendet.',
+                capSrc: 'Quelle', capSrc_belegt: 'Anbieterdoku', capSrc_drittquelle: 'Drittquelle', capSrc_code: 'eigener Code', capSrc_vermutet: 'vermutet', capSrc_unbekannt: 'unbekannt',
+                thinkTip: 'Denk-Token, getrennt gezeigt. Ob Out sie schon enthält, ist noch nicht bekannt: es wird nichts abgezogen, die Werte sind zwischen Engines nicht vergleichbar.', estTip: 'geschätzt aus den Stream-Stücken (die Engine meldete keine Nutzung)', modelsDone: 'Modellliste geladen: {n} Einträge.', cutLength: '(Antwort abgeschnitten: Die Engine hat an ihrer Token-Grenze gestoppt. Denk-Modelle wie Gemini zählen ihre Denk-Token mit. Schnellmodus ausschalten oder Grenze erhöhen.)', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
                 engLocalNote: 'Läuft auf diesem Gerät.',
                 nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: 'Kontext: {n} Zeichen',
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
@@ -1488,7 +1522,21 @@
             updateChatBar();
         }
 
+        // Antwort-Kennzahlen getrennt: Denk-Tokens eigener Wert, Quelle (Anbieter oder Schätzung) sichtbar.
+        // Solange unklar ist, ob die Ausgabe die Denk-Tokens enthält (outputIncludesReasoning = unknown), wird nichts abgezogen und nichts als vergleichbar ausgegeben.
+        let lastStats = null;
+        function showStatsExtra(st) {
+            const rt = st ? (st.reasoningTokens || 0) : 0;
+            $('m-think').hidden = !(rt > 0);
+            $('dash-think').textContent = rt;
+            const est = st && (st.approx || st.source === 'estimate');
+            $('dash-a-tok').textContent = (est ? '~' : '') + (st ? (st.outputTokens || 0) : 0);
+            $('dash-a-tok').title = est ? t('estTip') : '';
+            const sp = $('dash-speed');
+            sp.title = st && rt > 0 ? t('thinkTip') + ' (' + (st.tokensPerSec || 0).toFixed(1) + ' / ' + (st.tokensPerSecAll || 0).toFixed(1) + ' T/s)' : '';
+        }
         function resetDashboard() {
+            lastStats = null; showStatsExtra(null);
             document.getElementById('dash-p-tok').innerText = '0';
             document.getElementById('dash-a-tok').innerText = '0';
             document.getElementById('dash-speed').innerText = '0.0';
@@ -1823,17 +1871,18 @@
         }
         function buildOptions(preset) {
             const o = {};
+            // Gesperrte Regler (Zustand off, error, fixed, config in lib/capabilities.json) werden nicht gesendet
             if (!settings.useDefault) {
-                o.temperature = parseFloat($('param-temp').value);
-                o.top_p = parseFloat($('param-topp').value);
-                o.top_k = parseInt($('param-topk').value, 10);
-                o.num_ctx = parseInt($('param-ctx').value, 10);
-                if (preset.stop && preset.stop.length) o.stop = preset.stop.slice();
+                if (capSendable('temperature')) o.temperature = parseFloat($('param-temp').value);
+                if (capSendable('top_p')) o.top_p = parseFloat($('param-topp').value);
+                if (capSendable('top_k')) o.top_k = parseInt($('param-topk').value, 10);
+                if (capSendable('num_ctx')) o.num_ctx = parseInt($('param-ctx').value, 10);
+                if (preset.stop && preset.stop.length && capSendable('stop')) o.stop = preset.stop.slice();
             }
             // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
             const threads = parseInt($('param-threads').value, 10);
-            if (threads > 0 && settings.provider === 'ollama') o.num_thread = threads;
-            if (settings.fast) o.num_predict = settings.fastN;
+            if (threads > 0 && settings.provider === 'ollama' && capSendable('num_thread')) o.num_thread = threads;
+            if (settings.fast && capSendable('max_tokens')) o.num_predict = settings.fastN;
             return o;
         }
 
@@ -1914,6 +1963,7 @@
                 if (prov === 'ollama') await unloadOthers(selectedModel);
                 const result = await PV.chat(prov, {
                     model: selectedModel, messages: apiMessages, options: opts, keepAlive: KEEP_ALIVE, backend: settings.backend,
+                    reasoningEffort: thinkEffort(),
                     signal: currentAbortController.signal,
                     onDelta: function (d) { outputBuffer += d; scheduleRender(); pulse.e = Math.min(1, pulse.e + 0.3); if (!gotToken) { gotToken = true; renderRing(); } if (eqPx) eqPx.wake(); }
                 });
@@ -1949,6 +1999,7 @@
                 document.getElementById('dash-a-tok').innerText = finalStats.outputTokens || 0;
                 document.getElementById('dash-start').innerText = (((finalStats.loadMs || 0) + (finalStats.promptMs || 0)) / 1000).toFixed(1);
                 if (finalStats.tokensPerSec) document.getElementById('dash-speed').innerText = finalStats.tokensPerSec.toFixed(1);
+                lastStats = finalStats; showStatsExtra(finalStats);
                 perfColors();
             }
 
@@ -2426,6 +2477,28 @@
             if (th > 0) o += '\nnum_thread ' + th;
             o += '\n\nModelfile:\nPARAMETER temperature ' + v.temp + '\nPARAMETER top_p ' + v.topp + '\nPARAMETER top_k ' + v.topk + '\nPARAMETER num_ctx ' + v.ctx;
             if (th > 0) o += '\nPARAMETER num_thread ' + th;
+            o += capsExport();
+            return o;
+        }
+        // Testwerte für den Modellagenten: Zustand je Regler, Denkstufe, Token-Werte getrennt. Nie Schlüssel.
+        function capsExport() {
+            if (!window.HeinzCaps || !HeinzCaps.ready()) return '';
+            const c = capCtx(), d = HeinzCaps.data();
+            let o = '\n\nCapabilities (' + c.id + ' / ' + c.model + '):';
+            Object.keys(d.parameters || {}).forEach(function (k) {
+                const cell = HeinzCaps.cell(c.id, c.url, c.model, k);
+                o += '\n' + k + ': ' + cell.state + (cell.status ? ' [' + cell.status + ']' : '') + (typeof cell.recommended === 'number' ? ' recommended ' + cell.recommended : '');
+            });
+            const r = thinkRule();
+            if (r) o += '\nthinking: ' + (thinkStage() || 'model default') + (thinkEffort() ? ' -> reasoning_effort ' + thinkEffort() : ' (nothing sent)');
+            if (lastStats) {
+                const st = lastStats;
+                o += '\n\nLast answer: promptTokens ' + (st.promptTokens || 0) + ', outputTokens ' + (st.outputTokens || 0) + ', reasoningTokens ' + (st.reasoningTokens || 0) +
+                    ', visibleTokens ' + (st.visibleTokens || 0) + ', totalTokens ' + (st.totalTokens || 0) + ', source ' + (st.source || '?') + (st.approx ? ' (estimate)' : '') +
+                    ', finish ' + (st.finishReason || '?') + ', tokensPerSec ' + (st.tokensPerSec || 0).toFixed(1) + ', tokensPerSecAll ' + (st.tokensPerSecAll || 0).toFixed(1);
+                const oir = d.stats && d.stats.outputIncludesReasoning;
+                if ((st.reasoningTokens || 0) > 0 && (!oir || oir === 'unknown')) o += '\nNote: outputIncludesReasoning unknown, values not comparable.';
+            }
             return o;
         }
         function copyParams() {
@@ -2448,6 +2521,96 @@
             $('model-search').value = ''; renderModelSheet();
             modelFromPanel = $('menu-sheet').classList.contains('open');
             if (modelFromPanel) $('model-sheet').classList.add('open'); else openLayer('model-sheet');
+        }
+        // ===== Schnittstellenwissen: Regler nach Zustand, Denken (HeinzCaps, lib/capabilities.json) =====
+        // Zustände: on = regelbar; unknown = regelbar, gesendet, als „ungeklärt“ gekennzeichnet; off/error/fixed/config = ausgegraut, nicht gesendet.
+        const CAP_BLOCKED = ['off', 'error', 'fixed', 'config'];
+        const CAP_CARDS = ['sc-temp', 'sc-topp', 'sc-topk', 'sc-ctx', 'sc-threads', 'fastn-card'];
+        let capOpen = {};
+        function capCtx() {
+            const pv = PV.get(settings.provider) || PV.get('ollama');
+            return { id: pv.id, url: pv.baseUrl, model: $('model-select').value || settings.model || '' };
+        }
+        function capCell(key) { const c = capCtx(); return window.HeinzCaps ? HeinzCaps.cell(c.id, c.url, c.model, key) : { state: 'on' }; }
+        function capBlocked(cell) { return CAP_BLOCKED.indexOf(cell.state) >= 0; }
+        function capSendable(key) { return !capBlocked(capCell(key)); }
+        function capHint(cell) { return cell.hint ? (cell.hint[settings.lang] || cell.hint.en) : ''; }
+        function capInfo(cell) {
+            let txt = capHint(cell);
+            if (!txt && cell.state !== 'on') txt = t('capSt_' + cell.state);
+            if (cell.status) txt += (txt ? ' ' : '') + t('capSrc') + ': ' + t('capSrc_' + cell.status) + '.';
+            return txt;
+        }
+        function renderCaps() {
+            if (!window.HeinzCaps || !HeinzCaps.ready()) return;
+            const src = paramSrc();
+            CAP_CARDS.forEach(function (id) {
+                const card = $(id); if (!card) return;
+                const cell = capCell(card.getAttribute('data-cap-card'));
+                const blocked = capBlocked(cell), unk = cell.state === 'unknown', hint = capHint(cell);
+                card.classList.toggle('cap-blocked', blocked);
+                card.setAttribute('data-cap-state', cell.state);
+                const inp = card.querySelector('input');
+                if (inp) {
+                    inp.classList.toggle('cap-lock', blocked);
+                    if (id === 'sc-threads') inp.disabled = blocked || settings.provider !== 'ollama';
+                    else if (id === 'fastn-card') inp.disabled = blocked;
+                    else inp.disabled = blocked || src !== 'own';
+                }
+                let row = card.querySelector('.cap-row');
+                const rec = typeof cell.recommended === 'number' && id === 'sc-temp' ? cell.recommended : null;
+                const hasTag = blocked || unk || hint;
+                if (!hasTag && rec === null) { if (row) row.remove(); return; }
+                if (!row) { row = document.createElement('div'); row.className = 'cap-row'; card.appendChild(row); }
+                const open = !!capOpen[id];
+                const tag = blocked ? t('capLocked') : unk ? t('capUnk') : t('capNote');
+                let html = hasTag ? '<button type="button" class="cap-tag' + (unk ? ' unk' : '') + '" data-cap-toggle="' + id + '">' + esc(tag) + '</button>' : '';
+                if (hasTag && open) html += '<div class="cap-text">' + esc(capInfo(cell)) + '</div>';
+                if (rec !== null) {
+                    const cur = parseFloat($('param-temp').value);
+                    html += '<div class="cap-text">' + esc(hint ? hint : '') + (hint ? ' ' : '') + '<b>' + esc(t('capRec', { v: rec })) + '</b>' +
+                        (cur !== rec && !settings.modesOnly ? '<br><button type="button" class="pill" data-cap-apply="' + rec + '">' + esc(t('capApply')) + '</button>' : '') + '</div>';
+                }
+                row.innerHTML = html;
+            });
+        }
+        document.addEventListener('click', function (e) {
+            const ap = e.target.closest && e.target.closest('[data-cap-apply]');
+            if (ap) { applyRecommended(parseFloat(ap.getAttribute('data-cap-apply'))); return; }
+            const card = e.target.closest && e.target.closest('[data-cap-card]');
+            if (!card || !card.id) return;
+            if (card.classList.contains('cap-blocked') || e.target.closest('[data-cap-toggle]')) { capOpen[card.id] = !capOpen[card.id]; renderCaps(); }
+        });
+        function applyRecommended(v) {
+            if (paramSrc() !== 'own') setParamSrc('own');   // der Wert wird zu „Meine“; die Modusvorgaben bleiben unberührt
+            $('param-temp').value = v; onSlider();
+        }
+        // Denken als ein Schalter Schnell | Tief (nur bei Modellen, deren Regel ein thinking-Objekt hat)
+        function thinkRule() { const c = capCtx(); return window.HeinzCaps && HeinzCaps.ready() ? HeinzCaps.thinking(c.id, c.url, c.model) : null; }
+        function thinkKey() { const c = capCtx(); return c.id + '|' + c.model; }
+        function thinkStage() { const v = (settings.thinkBy || {})[thinkKey()]; return v === 'fast' || v === 'deep' ? v : ''; }
+        // reasoning_effort = Name der Stufe aus der Regel (Schlüssel von effortMap); nie zusammen mit thinking_level oder thinking_budget
+        function thinkEffort() {
+            const r = thinkRule(), st = thinkStage();
+            if (!r || !st) return '';
+            const e = r[st];
+            return e && r.effortMap && Object.prototype.hasOwnProperty.call(r.effortMap, e) ? e : '';
+        }
+        function setThink(st) {
+            if (!thinkRule()) return;
+            if (!settings.thinkBy) settings.thinkBy = {};
+            const k = thinkKey();
+            if (settings.thinkBy[k] === st) delete settings.thinkBy[k]; else settings.thinkBy[k] = st;   // zweites Tippen = zurück auf Modellstandard
+            saveSettings(); renderThink();
+        }
+        function renderThink() {
+            const row = $('think-row'); if (!row) return;
+            const r = thinkRule();
+            row.hidden = !r;
+            if (!r) return;
+            const st = thinkStage(), e = thinkEffort();
+            $('think-fast').classList.toggle('on', st === 'fast'); $('think-deep').classList.toggle('on', st === 'deep');
+            $('think-note').textContent = e ? t('thinkSent', { e: e }) : t('thinkDefault');
         }
         function renderQuick() {
             if (!$('q-engine-val')) return;
@@ -2477,6 +2640,7 @@
             else if (src === 'model') $('q-note').textContent = nativeParams[nativeKey()] ? t('qNoteModel', { m: tgt.split(' · ')[0] }) : t('qNoteModelNone');
             else if (src === 'mode') $('q-note').textContent = t('qNoteMode', { m: t('mb_' + settings.mode) });
             else $('q-note').textContent = sp ? (d ? t('qNoteOwnDirty', { m: tgt }) : t('qNoteOwn', { m: tgt })) : t('qNoteOwnNew', { m: tgt });
+            renderCaps(); renderThink();
         }
         function updateChip() {
             const p = PV.get(settings.provider) || PV.get('ollama');
@@ -2606,6 +2770,7 @@
             if (s.params && isFinite(s.params.temp)) settings.params = s.params;
             if (s.modelParams && typeof s.modelParams === 'object') settings.modelParams = s.modelParams;
             if (s.paramSrcBy && typeof s.paramSrcBy === 'object') settings.paramSrcBy = s.paramSrcBy;
+            if (s.thinkBy && typeof s.thinkBy === 'object') settings.thinkBy = s.thinkBy;
 
             const cur = lsGet('heinz_current', null);
             if (cur && Array.isArray(cur.messages) && cur.messages.length) {
@@ -2616,6 +2781,11 @@
                 currentSavedId = cur.savedId || null; currentName = cur.name || '';
                 $('context').value = cur.context || '';
             }
+
+            // Engine und Modell kommen immer als Paar: Wurde die gespeicherte Engine abgelehnt (zum Beispiel Online aus),
+            // gehört das gespeicherte Modell zu einer anderen Engine und wird nicht übernommen.
+            const modelOwner = (cur && Array.isArray(cur.messages) && cur.messages.length && cur.provider) ? cur.provider : (s.provider || 'ollama');
+            if (settings.provider !== modelOwner) settings.model = (settings.modelByProvider && settings.modelByProvider[settings.provider]) || '';
 
             // Regler: gespeicherte Werte, sonst Preset des Modus
             settings.mode = normalizeMode(settings.mode);
@@ -2628,6 +2798,7 @@
             renderSavedList();
             autosize(); updateCtxCount();
             checkServer();
+            if (window.HeinzCaps) HeinzCaps.load().then(function () { renderQuick(); renderCaps(); renderThink(); });
             loadModels().then(schedulePreload);
             setInterval(function () { if (!document.hidden) checkServer(); }, 10000);   // Ampel folgt dem echten Zustand (z. B. Modell geht nach keep_alive schlafen)
             showVersion();

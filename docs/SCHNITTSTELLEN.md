@@ -206,3 +206,12 @@ Jede Zelle trägt den **Status** der Quelle: `belegt` (Anbieterdoku), `drittquel
 **Bewusst offen gelassen:** top_k und seed bei Google (kompatibel), alle Penalties außerhalb Gemini 3, Parameter von OpenRouter, Groq, Mistral einzeln, Denken bei Ollama und den übrigen Cloud-Anbietern. Die Datei enthält dafür `unknown`, nie eine geratene Sperre.
 
 **Token-Statistik (Vorschlag, Block `stats` der Datei):** Eingabe, Ausgabe (wie die Engine zählt), Denken, sichtbare Ausgabe, Gesamt, Quelle (Anbieter oder Schätzung), Tempo für sichtbare Ausgabe und für Ausgabe plus Denken. Ob die Ausgabezahl die Denk-Token enthält, ist je Engine offen (`outputIncludesReasoning`); das klärt die Sonde, bis dahin zeigt die Anzeige beide Zahlen getrennt und rechnet nicht ab.
+
+## 8 Umsetzung im Chat und offene Messungen (10.11.2026, Strang Chat)
+
+Der Chat liest `lib/capabilities.json` (Regler nach Zustand, Schnell/Tief über `reasoning_effort`, Denk-Token getrennt). **Gemessene Funde gibt es noch keine**: alles lief nur gegen simulierte Server. Auf dem Handy (Google AI Studio, Gemini 3.x) sind zu prüfen und danach hier einzutragen:
+- Kommt `reasoning_effort` an und ändert „Schnell“ gegenüber „Tief“ die Denk-Token (`reasoningTokens`)?
+- Sind `outputTokens` inklusive oder exklusive Denk-Token (`outputIncludesReasoning`)? Bis dahin zieht die Seite nichts ab.
+- Nimmt die kompatible Route `top_k` an oder lehnt sie es ab (Regler steht auf „unverified“)?
+- Verhalten bei Temperatur unter 1,0 bei Gemini 3 (Empfehlungsknopf).
+Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Regler, Denkstufe und die letzten Token-Werte, nie Schlüssel.

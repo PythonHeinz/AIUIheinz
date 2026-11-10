@@ -786,6 +786,163 @@ class PageTest(unittest.TestCase):
         self.assertIn("Ye", page.inner_text(".msg-assistant"))
         self.assertEqual(page.evaluate("chatHistory[chatHistory.length-1].content"), "Ye", "the note is not stored in the history")
 
+    # ===== Schnittstellenwissen (docs/AUFTRAG_Chat_Schnittstellen.md): Regler nach Zustand, Denken =====
+    GOOGLE = "https://generativelanguage.googleapis.com/v1beta/openai"
+
+    def google_page(self, model, **fake):
+        page = self.new_page()
+        g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", models=(model, "gemini-2.5-flash"), **fake)
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true)")
+        page.reload()
+        self.pick_engine(page, "custom")
+        self.menu(page, "engine")
+        page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
+        page.keyboard.press("Escape")
+        page.evaluate("m => { document.getElementById('model-free').value = m; onModelFree(); }", model)
+        page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
+        page.evaluate("renderCaps(); renderThink()")
+        return page, g
+
+    def test_blocked_controls_are_greyed_out_and_not_sent_while_unknown_ones_stay_active_with_tag(self):
+        page, g = self.google_page("gemini-3-flash")
+        self.assertEqual(page.evaluate("document.getElementById('sc-ctx').dataset.capState"), "fixed")
+        self.assertTrue(page.evaluate("document.getElementById('sc-ctx').classList.contains('cap-blocked')"))
+        self.assertTrue(page.evaluate("document.querySelector('#sc-ctx input').disabled"))
+        self.assertTrue(page.evaluate("document.getElementById('sc-threads').classList.contains('cap-blocked')"))
+        # top_k is unknown on the compatible route: active, with tag
+        self.assertEqual(page.evaluate("document.getElementById('sc-topk').dataset.capState"), "unknown")
+        self.assertFalse(page.evaluate("document.getElementById('sc-topk').classList.contains('cap-blocked')"))
+        self.assertIn("unverified", page.inner_text("#sc-topk .cap-tag").lower())
+        # tapping a blocked card shows the reason
+        page.evaluate("document.getElementById('sc-ctx').click()")
+        self.assertIn("Fixed per model", page.inner_text("#sc-ctx .cap-text"))
+        opts = page.evaluate("buildOptions(MODE_PRESETS[settings.mode])")
+        self.assertNotIn("num_ctx", opts)
+        self.assertNotIn("num_thread", opts)
+        self.assertIn("temperature", opts)
+        self.assertIn("top_k", opts, "unknown state is still sent")
+        self.send(page, "Hi")
+        body = g.requests[-1][1]
+        self.assertNotIn("num_ctx", body)
+        self.assertNotIn("num_thread", body)
+        # counter test: the same controls are active and sent on Ollama
+        page.evaluate("switchProvider('ollama')")
+        page.wait_for_timeout(200)
+        self.assertFalse(page.evaluate("document.getElementById('sc-ctx').classList.contains('cap-blocked')"))
+        self.assertIn("num_ctx", page.evaluate("buildOptions(MODE_PRESETS[settings.mode])"))
+
+    def test_thinking_switch_sends_reasoning_effort_never_with_thinking_level(self):
+        page, g = self.google_page("gemini-3-flash")
+        self.assertFalse(page.is_hidden("#think-row"))
+        self.assertIn("model default", page.inner_text("#think-note").lower())
+        self.send(page, "default")
+        b0 = g.requests[-1][1]
+        self.assertNotIn("reasoning_effort", b0, "default = send nothing")
+        page.click("#think-deep")
+        self.send(page, "deep")
+        b1 = g.requests[-1][1]
+        self.assertEqual(b1.get("reasoning_effort"), "high")
+        for k in ("thinking_level", "thinking_budget"):
+            self.assertNotIn(k, b1)
+        self.assertNotIn("thinking_config", json.dumps(b1))
+        page.click("#think-fast")
+        self.send(page, "fast")
+        self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "minimal", "fast = the rule's fast stage")
+        # state is saved per model and survives a reload
+        page.reload()
+        page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
+        self.assertEqual(page.evaluate("thinkStage()"), "fast")
+        # tapping the active stage again goes back to the model default
+        page.evaluate("renderThink()")
+        page.click("#think-fast")
+        self.assertEqual(page.evaluate("thinkEffort()"), "")
+
+    def test_model_without_thinking_rule_shows_no_switch_and_sends_no_effort(self):
+        page, g = self.google_page("some-unknown-model")
+        self.assertTrue(page.is_hidden("#think-row"))
+        self.send(page, "Hi")
+        self.assertNotIn("reasoning_effort", g.requests[-1][1])
+        # counter test: Ollama has no thinking switch either
+        page.evaluate("switchProvider('ollama')")
+        page.wait_for_timeout(200)
+        self.assertTrue(page.is_hidden("#think-row"))
+
+    def test_recommended_temperature_is_offered_never_set_silently(self):
+        page, g = self.google_page("gemini-3-flash")
+        before = page.evaluate("parseFloat(document.getElementById('param-temp').value)")
+        self.assertNotEqual(before, 1.0)
+        self.assertIn("Recommended: 1", page.inner_text("#sc-temp .cap-row"))
+        self.assertEqual(page.evaluate("parseFloat(document.getElementById('param-temp').value)"), before, "nothing set silently")
+        presets = page.evaluate("JSON.stringify(MODE_PRESETS)")
+        page.evaluate("document.querySelector('#sc-temp [data-cap-apply]').click()")
+        self.assertEqual(page.evaluate("parseFloat(document.getElementById('param-temp').value)"), 1.0)
+        self.assertEqual(page.evaluate("JSON.stringify(MODE_PRESETS)"), presets, "mode presets untouched")
+        self.assertEqual(page.locator("#sc-temp [data-cap-apply]").count(), 0, "button gone once applied")
+        # counter test: a model without a recommendation shows no button
+        page.evaluate("settings.model='gemini-2.5-flash'; document.getElementById('model-select').value='gemini-2.5-flash'; renderCaps()")
+        self.assertEqual(page.locator("[data-cap-apply]").count(), 0)
+
+    def test_reasoning_tokens_shown_separately_and_estimate_marked(self):
+        page, g = self.google_page("gemini-3-flash", reasoning=40)
+        self.send(page, "Hi")
+        self.assertFalse(page.is_hidden("#m-think"))
+        self.assertEqual(page.inner_text("#dash-think"), "40")
+        self.assertEqual(page.inner_text("#dash-a-tok"), "7", "output tokens are not reduced by thinking tokens")
+        txt = page.evaluate("paramsText()")
+        self.assertIn("reasoningTokens 40", txt)
+        self.assertIn("not comparable", txt)
+        self.assertIn("frequency_penalty: error", txt)
+        self.assertNotIn("AIza", txt)
+        # counter test: no reasoning tokens, no chip
+        page2, _ = self.google_page("gemini-3-flash")
+        self.send(page2, "Hi")
+        self.assertTrue(page2.is_hidden("#m-think"))
+        # estimate (stream without usage) carries the tilde
+        page3, _ = self.google_page("gemini-3-flash", usage=False)
+        self.send(page3, "Hi")
+        self.assertTrue(page3.inner_text("#dash-a-tok").startswith("~"))
+
+    def test_capabilities_load_failure_keeps_all_controls_active(self):
+        page = self.new_page()
+        page.route("**/lib/capabilities.json", lambda route: route.fulfill(status=404, body=""))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_timeout(300)
+        self.assertEqual(page.locator(".cap-blocked").count(), 0)
+        self.assertTrue(page.is_hidden("#think-row"))
+        self.assertIn("num_ctx", page.evaluate("buildOptions(MODE_PRESETS[settings.mode])"))
+
+    def test_online_off_sends_nothing_and_chosen_model_stays_per_engine(self):
+        page = self.new_page()
+        g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", models=("a", "b"))
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true)")
+        page.reload()
+        self.pick_engine(page, "custom")
+        self.menu(page, "engine")
+        page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length >= 2")
+        page.keyboard.press("Escape")
+        page.evaluate("document.getElementById('model-free').value = 'gemini-3-flash'; onModelFree()")
+        self.assertEqual(page.evaluate("settings.model"), "gemini-3-flash")
+        # a list that does not contain the chosen model does not replace it
+        page.evaluate("loadModels()")
+        page.wait_for_timeout(300)
+        self.assertEqual(page.evaluate("settings.model"), "gemini-3-flash")
+        # engine and model survive a reload as a pair
+        page.reload()
+        page.wait_for_timeout(400)
+        self.assertEqual(page.evaluate("[settings.provider, settings.model]"), ["custom", "gemini-3-flash"])
+        # online off: back to local, no request to Google
+        n = len(g.requests)
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        page.reload()
+        self.send(page, "Hi")
+        self.assertEqual(len(g.requests), n)
+        self.assertEqual(page.evaluate("settings.provider"), "ollama")
+        self.assertNotIn("gemini", page.evaluate("settings.model"), "no cloud model on a local engine")
+
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
         page = self.new_page()
@@ -1005,10 +1162,10 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         self.send(page, "Hi")
-        tops = page.eval_on_selector_all("#dashboard .m", "els => els.map(e => Math.round(e.getBoundingClientRect().top))")
+        tops = page.eval_on_selector_all("#dashboard .m:not([hidden])", "els => els.map(e => Math.round(e.getBoundingClientRect().top))")
         self.assertEqual(len(tops), 4)
         self.assertEqual(len(set(tops)), 1, "four chips on one line")
-        ws = page.eval_on_selector_all("#dashboard .m", "els => els.map(e => e.scrollWidth <= e.clientWidth)")
+        ws = page.eval_on_selector_all("#dashboard .m:not([hidden])", "els => els.map(e => e.scrollWidth <= e.clientWidth)")
         self.assertTrue(all(ws), "no text overflows its chip")
         h1 = page.locator("#query").bounding_box()["height"]
         page.fill("#query", "\n".join(["line %d" % i for i in range(30)]))
