@@ -230,3 +230,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Hub: Pixeldisplay mit Ollama/LiteRT-LM direkt unter der Kopfzeile (ersetzt die Statuszeilen; unsichtbarer Text für Screenreader und Tests), Bereiche als Reiter „Chats & Modelle“ / „Tools“, Tools als App-Drawer (Kacheln, `appicon` möglich), Chat-Eintrag heißt „Heinz UI“ (Arbeitsname), Slogan in Georgia kursiv, Fußzeile „Offline first“. `server.py` reicht `appicon` durch.
 - Tests angepasst (51 Seiten-, 20 Servertests grün, simuliert; nicht auf dem Handy).
 
+
+## 10.11.2026 – Konzept auf drei Bereiche und den Stand nach dem Design-Strang gebracht (Chat „AIUIheinz“, nur Dokumente)
+- `docs/KONZEPT.md`: Abschnitt 15 neu gefasst. 15.1 (was es gibt: Design-Fundament, neuer Hub mit Reitern und Pixeldisplay, neuer Chat, Anbieterschicht, Server), 15.2 (Abweichungen: Themes statt Einheitsschwarz, Symbolsatz, keine untere Leiste), 15.3 (drei Bereiche A, B, C; im Hub zwei Reiter), 15.5 (Strangstand), 15.6 (offene Punkte, neu: Handytest der Design-Umbauten, Tools im Hub). Abschnitt 12 mit aktuellem Stand je Schritt.
+- Zuschnitt der drei Bereiche ist meine Ableitung aus `docs/DESIGN.md` und `docs/GEPLANT.md`; Namen und Zuordnung sind laut Design-Strang offen und gehören dem Entwickler.
+- Grundlage: Commit `a86ff2e`; selbst gelaufen: 20 Server- und 51 Seitentests grün (simuliert).

@@ -2,7 +2,7 @@
 
 Stand 10.11.2026. Reihenfolge der konkreten Aufgaben steht in `STAND.md` („Nächste Aufgaben“). Hier steht, was darüber hinaus besprochen wurde. Nichts davon ist beschlossen, außer wo es „beschlossen“ heißt.
 
-## Zwei Bereiche (Richtung des Entwicklers, 10.11.2026; im Konzept eingearbeitet in `docs/KONZEPT.md` Abschnitt 15.3)
+## Zwei Bereiche (Richtung des Entwicklers, 10.11.2026; im Konzept eingearbeitet in `docs/KONZEPT.md` Abschnitt 15.3, dort inzwischen als drei Bereiche; diese Fassung ist überholt)
 Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind offen; „beschlossen“ ist hier nur, was der Entwickler so gesagt hat, die Ableitungen sind als Vorschlag gekennzeichnet.
 
 **Bereich A – Ausprobieren und Modelle (Arbeitsname offen: „Research“ oder „Model Manager“).** Zweck: Nutzer sollen auf ihrem Handy mit lokalen Sprachmodellen spielen und herausfinden, welche Modelle und Prozessor-Einstellungen am besten passen.
