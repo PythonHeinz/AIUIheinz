@@ -16,15 +16,16 @@
         @media (prefers-color-scheme: light) { :root[data-theme="auto"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285; } }
         [hidden] { display: none !important; }
 
-        .app { max-width: 600px; margin: 0 auto; height: 100%; max-height: 100dvh; min-height: 560px; display: flex; flex-direction: column; padding: 0 14px; }
+        .app { max-width: 600px; margin: 0 auto; height: var(--appH, 100%); max-height: var(--appH, 100dvh); min-height: 560px; box-sizing: border-box; padding-bottom: max(6px, env(safe-area-inset-bottom)) !important; display: flex; flex-direction: column; padding: 0 14px; }
 
         /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
         .top { gap: 12px; }
-        .top .ring-btn { width: 58px; height: 58px; position: relative; border: 2px solid #3c4043; background: #0a0b0d; box-shadow: none; color: #e8eaed; }
-        .top .ring-btn::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 3px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
-        .top .ring-btn .rt { position: relative; z-index: 1; }
+        .top .ring-btn { width: 52px; height: 52px; position: relative; border: 2px solid #3c4043; background: #0a0b0d; box-shadow: none; color: #e8eaed; }
+        .top .ring-btn::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
+        .top .ring-btn .rt { position: relative; z-index: 1; display: grid; place-items: center; }
+        #ring-logo { display: block; }
         .top .burger-btn { width: 30px; margin-left: -6px; }
         .top .lang-btn { height: 44px; box-sizing: border-box; padding: 3px; gap: 2px; align-items: center; }
         .top .lang-btn { --acc: #5f6368; --onacc: #fff; }
@@ -65,6 +66,12 @@
         .pwin { margin: 28px -4px 8px; padding: 10px 12px 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
         .pw-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); font-weight: 600; margin-bottom: 8px; }
         .pw-head .scope { letter-spacing: 0; text-transform: none; font-weight: 400; font-size: .64rem; color: var(--muted); }
+        .pw-tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+        .pw-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--sub); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; padding: 4px 10px 8px; cursor: pointer; }
+        .pw-tabs button.on { color: var(--txt); border-bottom-color: var(--acc); }
+        .seg2 { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 8px; }
+        .seg2 button { flex: 1; border: 0; background: none; color: var(--sub); border-radius: 99px; padding: 7px 4px; font-size: .78rem; cursor: pointer; }
+        .seg2 button.on { background: var(--acc); color: var(--onacc); font-weight: 600; }
         .dflt { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .84rem; padding: 2px 0 8px; cursor: pointer; }
         .pw-sl { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px 0; }
         .pwin .slidercard { display: grid; grid-template-columns: 50px 1fr 44px; align-items: center; gap: 6px; padding: 4px 0; margin: 0; background: none; border-radius: 0; border: 0; }
@@ -93,15 +100,16 @@
         #menu-sheet .pg[data-pg=main] .row .mono { font-size: .8rem; color: var(--sub); margin-right: 4px; }
         #menu-sheet .pg[data-pg=main] .row.open .go { transform: rotate(180deg); }
         .quick .rule { height: 6px; }
-        .srow { display: flex; align-items: center; gap: 10px; height: 26px; margin: -6px 0 2px; flex: none; }
+        .srow { position: relative; display: flex; align-items: center; gap: 10px; height: 26px; margin: -6px 0 2px; flex: none; }
         .srow #preload-status { margin-right: 18px; }
-        #preload-status { flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #preload-status.full { position: absolute; left: 0; right: 0; top: 100%; z-index: 30; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; white-space: normal; margin: 4px 0 0; color: var(--txt); box-shadow: 0 6px 18px #0008; }
+        #preload-status { cursor: pointer; flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sdot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin: 0 -2px 0 3px; background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
         .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #0a0b0d; box-sizing: content-box; }
 
         /* Modusleiste */
         .modes { display: flex; gap: 2px; flex: none; margin-bottom: 2px; padding-bottom: 2px; }
-        .mode-pill { flex: 1 1 0; min-width: 0; height: 62px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .72rem; }
+        .mode-pill { flex: 1 1 0; min-width: 0; height: 62px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .85rem; }
         .mode-pill .mi { width: 52px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
         .mode-pill .mi .i { width: 20px; height: 20px; }
         .mode-pill.active { color: var(--txt); font-weight: 600; }
@@ -123,7 +131,7 @@
         /* Chat */
         .cwrap { position: relative; flex: 1; min-height: 120px; display: flex; flex-direction: column; }
         .jump { position: absolute; right: 10px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ol); background: var(--card); color: var(--txt); display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
-        .chat-wrapper { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 18px; padding: 10px 2px 14px; }
+        .chat-wrapper { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 18px; padding: 19px 2px 14px; }
         .msg { position: relative; flex: none; word-break: break-word; }
         .msg-user { align-self: flex-end; max-width: 88%; background: var(--card); border: 1px solid var(--ol); border-radius: 18px 18px 4px 18px; padding: 10px 40px 10px 14px; font-size: .98rem; line-height: 1.45; white-space: pre-wrap; }
         .msg-assistant { align-self: stretch; font-family: var(--serif); font-size: 1.04rem; line-height: 1.6; padding: 0 34px 0 2px; overflow-x: auto; }
@@ -226,6 +234,7 @@
         .st-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: 8px; }
         .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid var(--line); }
         .st-table th:first-child, .st-table td:first-child { text-align: left; }
+        .st-table tr.stc0 td { color: var(--m2); } .st-table tr.stc1 td { color: var(--m4); } .st-table tr.stc2 td { color: var(--m1); } .st-table tr.stc3 td { color: var(--m3); }
         .st-table th { color: var(--sub); font-weight: normal; }
         .st-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         /* Modellauswahl */
@@ -260,13 +269,14 @@
         .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; }
         .saved-item .acts2 .pill { flex: 1; min-height: 34px; padding: 0; }
         .saved-item .acts2 .pill span { display: none; }
+        .saved-item .acts2 .pill.danger { background: var(--card); color: var(--red); border-color: var(--red); }
         .saved-item .acts2 .pill.okc { color: var(--green); border-color: var(--green); }
     </style>
 </head>
 <body>
     <div class="app">
         <div class="top">
-            <a id="status-dot" class="ring-btn status-dot s-red" href="index.html" data-i18n-title="serverStatus" title="Server status"><span class="rt"><span>Heinz</span><br><span>UI</span></span></a>
+            <a id="status-dot" class="ring-btn status-dot s-red" href="index.html" data-i18n-title="serverStatus" title="Server status"><span class="rt"><canvas id="ring-logo" aria-label="Heinz UI"></canvas></span></a>
             <button id="model-chip" class="chip" type="button" onclick="openModels()">
                 <canvas id="chip-led" aria-hidden="true"></canvas>
                 <span class="hid"><small id="chip-engine">Ollama</small><b id="chip-model">–</b></span>
@@ -358,8 +368,10 @@
                     <button class="bigbtn mod" type="button" id="q-model" onclick="openModelsFromPanel()"><small data-i18n="modelsTitle">Model</small><b id="q-model-val"></b></button>
 
                     <div class="pwin">
-                        <div class="pw-head"><span><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden></i></span><span class="scope" data-i18n="scNow">from the next message</span></div>
-                        <label class="dflt"><span data-i18n="defaults">Default values</span><span class="sw"><input type="checkbox" id="use-default" onchange="onDefaultToggle()"><i></i></span></label>
+                        <div class="pw-tabs"><button type="button" class="on" data-pw="params" onclick="pwTab('params')"><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden></i></button><button type="button" data-pw="prompts" onclick="pwTab('prompts')" data-i18n="tPrompts">Prompts</button></div>
+                        <div id="pw-prompts" hidden><p class="help" data-i18n="tPromptsSoon">Your own prompts will live here later: name them, pick them per mode or chat, export and import. Not built yet.</p></div>
+                        <div id="pw-params">
+                        <div class="seg2"><button type="button" id="seg-def" onclick="setDefSeg(true)" data-i18n="segDef">Model default</button><button type="button" id="seg-own" onclick="setDefSeg(false)" data-i18n="segOwn">My values</button></div><input type="checkbox" id="use-default" hidden onchange="onDefaultToggle()">
                         <div class="pw-sl">
                             <div class="slidercard slider-group"><div class="sc-top"><b>Temp</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
                             <div class="slidercard slider-group"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
@@ -373,6 +385,7 @@
                             <button class="pill" type="button" id="q-copy" onclick="copyParams()"><span data-i18n="qCopy">Copy values</span></button>
                         </div>
                         <small class="help" id="q-note"></small>
+                        </div>
                     </div>
 
                     <div class="grpbox">
@@ -418,7 +431,7 @@
                     <div class="st-btns"><button class="pill" type="button" onclick="loadModels()"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
                 </div>
                 <small id="eng-note" class="help"></small>
-                <div id="eng-status" class="status-line"></div>
+                <div id="eng-status" class="status-line" style="cursor:pointer" onclick="if (MODELS.length) openModelsFromPanel()"></div>
                 <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
             </div>
 
@@ -643,7 +656,7 @@
 
         const PROMPTS = {
             en: {
-                respond: 'Respond strictly in English and think in English, even if the user writes in another language.',
+                respond: 'Respond in English.',
                 plain: 'Reply briefly in plain text: no Markdown, no lists, no tables, no bold.',
                 ctxLabel: 'Context / source text:',
                 wilson: "You are Wilson, a friendly and well-read companion. Draw on your general knowledge, explain things in context and answer in a fluent, narrative tone.",
@@ -653,7 +666,7 @@
                 creative: "SYSTEM RULE: Write vividly and diversely. Use creative comparisons and smooth transitions."
             },
             de: {
-                respond: 'Antworte strikt auf Deutsch und denke auf Deutsch, auch wenn der Nutzer in einer anderen Sprache schreibt.',
+                respond: 'Antworte auf Deutsch.',
                 plain: 'Antworte knapp in reinem Text: kein Markdown, keine Listen, keine Tabellen, kein Fettdruck.',
                 ctxLabel: 'Kontext / Rohtext:',
                 wilson: "Du bist Wilson, ein freundlicher und belesener Begleiter. Greife auf dein Allgemeinwissen zu, erkläre Dinge im Kontext und antworte in einem flüssigen, erzählenden Tonfall.",
@@ -834,7 +847,7 @@
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: 'Preparing model …', preReady: 'Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
-                menuTitle: 'Settings', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', pCtxS: 'Context', thS: 'Threads', updBtn: 'UPDATE', rEngine: 'Engine', rInfo: 'Info', chatLbl: 'CHAT', stCloudReady: 'Cloud engine ready (nothing is sent until you send)', stCloudNoKey: 'Cloud engine: API key missing', stCloudOff: 'Cloud engine: "Allow online" is off', stAnswering: 'Answering', stThinking: 'Thinking …', gNow: 'Now', gAnswer: 'Answer', gPerf: 'Performance', gConn: 'Connection', gPrivacy: 'Privacy', scModel: 'this model', scChat: 'this chat', scAll: 'everywhere', scEngine: 'this engine', scNow: 'from the next message', qAllow: 'Allow online', qLocked: 'Online is off, so {n} is locked. Allow online?', qLockedSub: 'locked: needs "Allow online"', qLocalSub: 'on this device', qOnlineSub: 'cloud, needs a key', qNoKey: 'API key missing', qModelHint: 'Tap to choose a model', qReset: 'Reset', qSave: 'Save', qCopy: 'Copy values', qSaved: 'Saved as default for {m}. Threads are saved per model automatically.', qChanged: 'differs from the model default', qHasDefault: 'Model default saved. Reset returns to it.', qNoDefault: 'No model default yet: values follow the mode. Threads are saved per model automatically.', rConn: 'Connection details', pxCheck: 'CHECKING GITHUB', pxRestart: 'RESTARTING SERVER', pxDone: 'UPDATED', pxCurrent: 'UP TO DATE', pxErr: 'ERROR', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
+                menuTitle: 'Settings', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', pCtxS: 'Context', thS: 'Threads', updBtn: 'UPDATE', rEngine: 'Engine', rInfo: 'Info', chatLbl: 'CHAT', stCloudReady: 'Cloud engine ready (nothing is sent until you send)', stCloudNoKey: 'Cloud engine: API key missing', stCloudOff: 'Cloud engine: "Allow online" is off', stAnswering: 'Answering', stThinking: 'Thinking …', gNow: 'Now', gAnswer: 'Answer', gPerf: 'Performance', gConn: 'Connection', gPrivacy: 'Privacy', scModel: 'this model', scChat: 'this chat', scAll: 'everywhere', scEngine: 'this engine', scNow: 'from the next message', qAllow: 'Allow online', qLocked: 'Online is off, so {n} is locked. Allow online?', qLockedSub: 'locked: needs "Allow online"', qLocalSub: 'on this device', qOnlineSub: 'cloud, needs a key', qNoKey: 'API key missing', qModelHint: 'Tap to choose a model', qReset: 'Reset', qSave: 'Save', qCopy: 'Copy values', qSaved: 'Saved as your values for {m}. They load automatically the next time you use this model with “My values”.', segDef: 'Model default', segOwn: 'My values', tPrompts: 'Prompts', tPromptsSoon: 'Your own prompts will live here later: name them, pick them per mode or chat, export and import. Not built yet.', qUsingDefault: 'The model runs with its own built-in settings. The sliders are locked. Tap “My values” to tune them.', qChanged: 'differs from the model default', qHasDefault: 'Your saved values for this model apply automatically. Reset returns to them.', qNoDefault: 'No own values saved yet: sliders follow the mode. Change them and tap Save to keep them for this model.', rConn: 'Connection details', pxCheck: 'CHECKING GITHUB', pxRestart: 'RESTARTING SERVER', pxDone: 'UPDATED', pxCurrent: 'UP TO DATE', pxErr: 'ERROR', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
                 locale: 'en-GB'
             },
             de: {
@@ -878,7 +891,7 @@
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: 'Modell wird vorbereitet …', preReady: 'Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
-                menuTitle: 'Einstellungen', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', pCtxS: 'Kontext', thS: 'Threads', updBtn: 'UPDATE', rEngine: 'Engine', rInfo: 'Info', chatLbl: 'CHAT', stCloudReady: 'Cloud-Engine bereit (nichts wird gesendet, bis du sendest)', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stAnswering: 'Antwortet', stThinking: 'Denkt nach …', gNow: 'Jetzt', gAnswer: 'Antwort', gPerf: 'Leistung', gConn: 'Verbindung', gPrivacy: 'Datenschutz', scModel: 'dieses Modell', scChat: 'dieser Chat', scAll: 'überall', scEngine: 'diese Engine', scNow: 'ab der nächsten Nachricht', qAllow: 'Online erlauben', qLocked: 'Online ist aus, deshalb ist {n} gesperrt. Online erlauben?', qLockedSub: 'gesperrt: braucht „Online erlauben“', qLocalSub: 'auf diesem Gerät', qOnlineSub: 'Cloud, braucht Schlüssel', qNoKey: 'API-Schlüssel fehlt', qModelHint: 'Tippen, um ein Modell zu wählen', qReset: 'Zurück', qSave: 'Speichern', qCopy: 'Werte kopieren', qSaved: 'Als Standard für {m} gespeichert. Threads werden je Modell automatisch gespeichert.', qChanged: 'weicht vom Modell-Standard ab', qHasDefault: 'Modell-Standard gespeichert. „Zurück“ kehrt dahin zurück.', qNoDefault: 'Noch kein Modell-Standard: die Werte folgen dem Modus. Threads werden je Modell automatisch gespeichert.', rConn: 'Verbindungsdaten', pxCheck: 'PRÜFE GITHUB', pxRestart: 'SERVER STARTET NEU', pxDone: 'AKTUALISIERT', pxCurrent: 'AKTUELL', pxErr: 'FEHLER', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
+                menuTitle: 'Einstellungen', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', pCtxS: 'Kontext', thS: 'Threads', updBtn: 'UPDATE', rEngine: 'Engine', rInfo: 'Info', chatLbl: 'CHAT', stCloudReady: 'Cloud-Engine bereit (nichts wird gesendet, bis du sendest)', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stAnswering: 'Antwortet', stThinking: 'Denkt nach …', gNow: 'Jetzt', gAnswer: 'Antwort', gPerf: 'Leistung', gConn: 'Verbindung', gPrivacy: 'Datenschutz', scModel: 'dieses Modell', scChat: 'dieser Chat', scAll: 'überall', scEngine: 'diese Engine', scNow: 'ab der nächsten Nachricht', qAllow: 'Online erlauben', qLocked: 'Online ist aus, deshalb ist {n} gesperrt. Online erlauben?', qLockedSub: 'gesperrt: braucht „Online erlauben“', qLocalSub: 'auf diesem Gerät', qOnlineSub: 'Cloud, braucht Schlüssel', qNoKey: 'API-Schlüssel fehlt', qModelHint: 'Tippen, um ein Modell zu wählen', qReset: 'Zurück', qSave: 'Speichern', qCopy: 'Werte kopieren', qSaved: 'Als deine Werte für {m} gespeichert. Sie werden beim nächsten Mal automatisch geladen, wenn „Meine Werte“ gewählt ist.', segDef: 'Modell-Standard', segOwn: 'Meine Werte', tPrompts: 'Prompts', tPromptsSoon: 'Hier entstehen später deine eigenen Prompts: benennen, je Modus oder Chat wählen, exportieren und importieren. Noch nicht gebaut.', qUsingDefault: 'Das Modell läuft mit seinen eigenen Einstellungen. Die Regler sind gesperrt. Tippe auf „Meine Werte“, um sie einzustellen.', qChanged: 'weicht vom Modell-Standard ab', qHasDefault: 'Deine gespeicherten Werte für dieses Modell gelten automatisch. „Zurück“ kehrt dahin zurück.', qNoDefault: 'Noch keine eigenen Werte gespeichert: die Regler folgen dem Modus. Ändern und Speichern, dann gelten sie für dieses Modell.', rConn: 'Verbindungsdaten', pxCheck: 'PRÜFE GITHUB', pxRestart: 'SERVER STARTET NEU', pxDone: 'AKTUALISIERT', pxCurrent: 'AKTUELL', pxErr: 'FEHLER', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
                 locale: 'de-DE'
             }
         };
@@ -964,6 +977,19 @@
             renderQuick();
         }
 
+        function pwTab(id) {
+            document.querySelectorAll('.pw-tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pw') === id); });
+            $('pw-params').hidden = id !== 'params'; $('pw-prompts').hidden = id !== 'prompts';
+        }
+        function setDefSeg(def) {
+            $('use-default').checked = def; onDefaultToggle();
+            if (!def) { applySavedParams(); schedulePreload(); }
+        }
+        function syncSeg() {
+            const d = !!$('use-default').checked;
+            $('seg-def').classList.toggle('on', d); $('seg-own').classList.toggle('on', !d);
+            document.querySelectorAll('.pw-sl input').forEach(function (i) { if (i.id !== 'param-threads') i.disabled = d; });
+        }
         function onDefaultToggle() {
             settings.useDefault = $('use-default').checked;
             saveSettings();
@@ -1964,8 +1990,8 @@
             const box = $('st-table');
             if (!stRows.length) { box.innerHTML = ''; $('st-copy').style.display = 'none'; return; }
             let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load</th><th>P-Tok</th><th>P s</th><th>P t/s</th><th>Gen</th><th>Tot</th></tr>';
-            stRows.forEach(function (r) {
-                h += '<tr><td>' + r.n + '</td><td>' + r.run + '</td><td>' + stFmt(r.load, 1) + '</td><td>' + r.pTok + '</td><td>' + (r.pS == null ? '–' : stFmt(r.pS, 1)) +
+            stRows.forEach(function (r, ix) {
+                h += '<tr class="stc' + (ix % 4) + '"><td>' + r.n + '</td><td>' + r.run + '</td><td>' + stFmt(r.load, 1) + '</td><td>' + r.pTok + '</td><td>' + (r.pS == null ? '–' : stFmt(r.pS, 1)) +
                     '</td><td>' + (r.run === 1 ? stFmt(r.pTps, 1) : '–') + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
             });
             box.innerHTML = h + '</table>';
@@ -2133,7 +2159,29 @@
             eqPx.fixedCols = Math.max(9, Math.floor((w - 2 - 16) / 3));
             eqPx.resize(); eqPx.redraw();
         }
+        let stFullT = null;
+        document.addEventListener('click', function (e) {
+            const el = $('preload-status');
+            if (e.target === el) { el.classList.toggle('full'); clearTimeout(stFullT); if (el.classList.contains('full')) stFullT = setTimeout(function () { el.classList.remove('full'); }, 8000); }
+            else if (el) el.classList.remove('full');
+        });
+        function fitApp() {
+            const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+            if (h > 300) document.documentElement.style.setProperty('--appH', Math.round(h) + 'px');
+        }
+        fitApp();
+        window.addEventListener('resize', fitApp); window.addEventListener('pageshow', fitApp); window.addEventListener('orientationchange', fitApp);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', fitApp);
+        [150, 500, 1200, 2500].forEach(function (ms) { setTimeout(fitApp, ms); });
+        function initRingLogo() {
+            const cv = $('ring-logo'); if (!cv || !window.Heinz || !Heinz.Pixel) return;
+            const lp = new Heinz.Pixel(cv, { rows: 11, cols: 19, pitch: 1.5 });
+            lp.clear(); lp.textS('HEINZ', 0, 0, '#e8eaed'); lp.textS('UI', 6, 6, '#e8eaed');
+            const c = lp.ctx; c.clearRect(0, 0, lp.cols * lp.pitch, lp.rows * lp.pitch);
+            for (let y = 0; y < lp.rows; y++) for (let x = 0; x < lp.cols; x++) { const col = lp.buf[y * lp.cols + x]; if (col) { c.fillStyle = col; c.fillRect(x * lp.pitch, y * lp.pitch, lp.pitch, lp.pitch); } }
+        }
         function initChip() {
+            initRingLogo();
             if (chipPx || !$('chip-led')) return;
             chipPx = new Heinz.Pixel($('chip-led'), { rows: 22, pitch: 2, dot: 1.1 });
             chipPx.run(drawChip);
@@ -2213,11 +2261,12 @@
             list.querySelectorAll('[data-eng]').forEach(function (b) { b.onclick = function () { pickEngine(b.getAttribute('data-eng')); }; });
             $('q-lock').hidden = !qLockEng;
             if (qLockEng) $('q-lock-txt').textContent = t('qLocked', { n: (PV.get(qLockEng) || {}).name || '' });
+            syncSeg();
             const d = paramsDirty(), sp = savedParams();
             $('q-dirty').hidden = !d; $('q-dirty').title = t('qChanged');
             $('q-reset').disabled = !d;
             $('q-save').disabled = !!sp && !d;
-            if (d || !$('q-note').textContent) $('q-note').textContent = sp ? t('qHasDefault') : t('qNoDefault');
+            if (true) $('q-note').textContent = $('use-default').checked ? t('qUsingDefault') : (sp ? t('qHasDefault') : t('qNoDefault'));
         }
         function updateChip() {
             const p = PV.get(settings.provider) || PV.get('ollama');

@@ -292,3 +292,9 @@ Der Test empfiehlt 2 Threads (8,9 Token/s). Das bestätigt 15.4: Mit Termux im H
 4. **Modelle verwalten** (Strang Modelle), **Tools** im neuen Design (Sheet, Filter, Lab, Vitals noch alter Stil), **Leitbild KI-Werkzeuge** (Abschnitt 16).
 5. **Größe von `chat.html`** (2375 Zeilen in einer Datei): Wartbarkeit im Blick behalten; Aufteilen in `lib/`-Module wäre Fundamentarbeit und braucht Beschluss.
 6. Hub-Chat und Zuschnitt der Bereiche (15.6, Punkt 1), Signal 9, gehostete Fassung, Geräteprofile unverändert.
+
+## Planung (Stand 2026-11-10, Strang AIUIheinz-Design)
+Reihenfolge: (1) Korrekturen, (2) Modellwerte „Modell-Standard / Meine Werte“ (gebaut), (3) App-Sicherung unter App → Info/Sicherung/Update, (4) Prompt-Verwaltung viel später.
+- **Prompt-Verwaltung** (Reiter „Prompts“ im Parameter-Fenster, bisher Platzhalter): benannte Systemprompts, Auswahl je Modus/Chat, Schnellwahl, Modellprofile, Export/Import.
+- **App-Sprache** (nur Oberfläche und Vorlesen, unabhängig von der Chatsprache): zusätzliche Sprache neben EN/DE im Menü Einstellungen; Englisch bleibt Rückfall. Der Sprachschalter oben könnte später diese Sprache tragen.
+- **App-Sicherung**: Chats, Einstellungen, Modellwerte exportieren/importieren; Schlüssel nur auf ausdrücklichen Wunsch.

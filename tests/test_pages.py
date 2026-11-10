@@ -161,7 +161,7 @@ class PageTest(unittest.TestCase):
         self.assertTrue(body["stream"])
         self.assertEqual(body["messages"][0]["role"], "system")
         self.assertEqual(body["messages"][-1], {"role": "user", "content": "Hi there"})
-        self.assertIn("Respond strictly in English", body["messages"][0]["content"])
+        self.assertIn("Respond in English.", body["messages"][0]["content"])
         self.assertEqual(self.errors, [])
 
     def test_language_switch_changes_system_prompt(self):
@@ -169,7 +169,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         page.click("#lang-btn")
         self.send(page, "Hallo")
-        self.assertIn("Antworte strikt auf Deutsch", self.ollama.requests[0]["messages"][0]["content"])
+        self.assertIn("Antworte auf Deutsch.", self.ollama.requests[0]["messages"][0]["content"])
 
     def test_mode_switch_sets_model_and_params(self):
         page = self.new_page()
@@ -257,7 +257,7 @@ class PageTest(unittest.TestCase):
         self.send(page, "Hey")
         msgs = self.ollama.requests[0]["messages"]
         self.assertEqual([m["role"] for m in msgs], ["user"], "no system message so the Modelfile persona stays")
-        self.assertIn("Respond strictly in English", msgs[0]["content"])
+        self.assertIn("Respond in English.", msgs[0]["content"])
         self.assertIn("Some context", msgs[0]["content"])
         self.assertTrue(msgs[0]["content"].startswith("Context / source text:"))
         self.assertIn("Hey", msgs[0]["content"])
@@ -265,7 +265,7 @@ class PageTest(unittest.TestCase):
         self.send(page, "Again")
         users = [m for m in self.ollama.requests[1]["messages"] if m["role"] == "user"]
         self.assertEqual(users[0]["content"], "Hey", "earlier turns are sent as stored, without language line or context")
-        self.assertIn("Respond strictly in English", users[1]["content"], "only the last user message carries it")
+        self.assertIn("Respond in English.", users[1]["content"], "only the last user message carries it")
         stored = page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[0].content")
         self.assertEqual(stored, "Hey")
 
@@ -822,7 +822,7 @@ class PageTest(unittest.TestCase):
             self.assertLessEqual(b["x"] + b["width"], VIEWPORT["width"], "nothing is cut off at the right edge")
         self.assertIn("OLLAMA", page.inner_text("#chip-engine").upper())
         self.assertEqual(page.inner_text("#chip-model"), "gemma2:2b")
-        self.assertIn("Heinz", page.inner_text("#status-dot"))
+        self.assertEqual(page.get_attribute("#ring-logo", "aria-label"), "Heinz UI")
         self.assertEqual(self.errors, [])
 
     def test_model_picker_lists_models_without_emoji_and_selects(self):
@@ -959,10 +959,10 @@ class PageTest(unittest.TestCase):
         page.click("#lang-btn")
         self.assertTrue(page.is_visible("#lang-btn"))
         self.send(page, "Hallo")
-        self.assertIn("Antworte strikt auf Deutsch", self.ollama.requests[-1]["messages"][0]["content"])
+        self.assertIn("Antworte auf Deutsch.", self.ollama.requests[-1]["messages"][0]["content"])
         page.click("#lang-btn")
         self.send(page, "Hallo")
-        self.assertIn("Respond strictly in English", self.ollama.requests[-1]["messages"][0]["content"])
+        self.assertIn("Respond in English.", self.ollama.requests[-1]["messages"][0]["content"])
 
     def test_chat_drawer_opens_from_the_left_filters_and_deletes(self):
         page = self.new_page()

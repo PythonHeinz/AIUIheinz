@@ -331,3 +331,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 10.11.2026 – Konzept: Release Candidate (Chat „AIUIheinz“, nur Dokumente)
 - `docs/KONZEPT.md` Abschnitt 17: Stand des Release Candidate (Commit 036ff46) mit Aufbau, Farblogik, Handy-Messung des Tempo-Tests (qwen2.5:3b, 2 Threads am schnellsten) und offenen Punkten; Hub- und Chat-Beschreibung in 15.1 angepasst.
 - `UEBERGABE.md`: Zeile „Designregeln“ verweist auf `docs/DESIGN.md` (Themes statt „schwarz und Google-Farben“), Designer-Fallstricke ergänzt. `docs/OLLAMA_UND_MODELLE.md`: Messung ergänzt.
+## 2026-11-10 – AIUIheinz-Design: Korrekturen 16:50
+- Eingabezeile: App-Höhe wird per JS aus `visualViewport` gesetzt (`--appH`, bei Laden, resize, pageshow und nach 0,15–2,5 s), unten 6 px Abstand. Ursache vermutet: falsche Viewport-Höhe direkt nach Laden/Update (nur simuliert geprüft, nicht auf dem Gerät).
+- Heinz-UI-Logo im Ring als Pixelschrift (Canvas, 3×5-Schrift); Ring 52 px, Linie 2 px.
+- Parameter-Fenster mit Reitern Parameter | Prompts (Platzhalter). Umschalter „Modell-Standard | Meine Werte“ ersetzt den Haken; bei Modell-Standard sind die Regler gesperrt; Speichern gilt je Modell und wird bei „Meine Werte“ automatisch geladen.
+- Statustext: Tipp zeigt den vollen Text (8 s). „Modellliste geladen“ öffnet die Modellliste. Papierkorb-Pille invertiert. Erste Nachricht mehr Abstand, Modusnamen größer, Speedtest-Zeilen farbig.
+- Antwortsprache wieder wie vorher („Respond in English.“), keine Verschärfung.
