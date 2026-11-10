@@ -298,3 +298,12 @@ Reihenfolge: (1) Korrekturen, (2) Modellwerte „Modell-Standard / Meine Werte�
 - **Prompt-Verwaltung** (Reiter „Prompts“ im Parameter-Fenster, bisher Platzhalter): benannte Systemprompts, Auswahl je Modus/Chat, Schnellwahl, Modellprofile, Export/Import.
 - **App-Sprache** (nur Oberfläche und Vorlesen, unabhängig von der Chatsprache): zusätzliche Sprache neben EN/DE im Menü Einstellungen; Englisch bleibt Rückfall. Der Sprachschalter oben könnte später diese Sprache tragen.
 - **App-Sicherung**: Chats, Einstellungen, Modellwerte exportieren/importieren; Schlüssel nur auf ausdrücklichen Wunsch.
+
+### Änderungswünsche aus dem Test vom 10.11.2026, 19:00 (noch nicht umgesetzt, warten auf Beschluss zu den Parametern)
+1. Chatliste: Öffnet man die Aktionszeile (Symbole) beim letzten Eintrag, muss die Liste mitscrollen, damit nichts abgeschnitten wird.
+2. Chatliste, Reiter „Alle“: Gesamtzahl aller Chats anzeigen (in der Chatleiste steht nur die Zahl des Modus).
+3. Parameter: drei Quellen sauber trennen (Modell-Standard aus dem Modell, Modus-Vorgabe, eigene Werte), Reset/Speichern eindeutig (siehe Beschluss).
+4. Reset-Knopf in Auszeichnungsfarbe, wenn bedienbar, sonst grau (zuerst erledigen).
+5. Logo „HEINZ UI“: echte serifenlose Schrift mit gleichmäßiger Strichstärke und „I“ als Strich (statt gezeichneter Pfade); Zentrierung per Textmessung.
+6. Equalizer antippbar: kleines graues Fenster mit den letzten drei Statusschritten in Kurzform und Statusfarbe (z. B. Server gestartet, Modell wird bereitgestellt, Modell im RAM).
+7. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss).
