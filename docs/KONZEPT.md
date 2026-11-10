@@ -1,6 +1,6 @@
 # Konzept Heinz UI 2.0 (Entwurf zum Gegenlesen)
 
-Stand 09.11.2026, Chat „AIUIheinz“. **Nichts davon ist gebaut.** Grundlage sind der Code im Repo, die Angaben des Entwicklers und Recherchen vom 09.11.2026 (Quellen am Ende). Was nicht auf dem Pixel geprüft wurde, ist als „ungeprüft“ markiert.
+Stand 09.11.2026, Chat „AIUIheinz“; **nachgeführt am 10.11.2026 auf den Stand nach Version 1.0: siehe Abschnitt 15** (was gebaut ist, was sich am Konzept geändert hat, was offen ist). Die Abschnitte 1 bis 13 sind der ursprüngliche Entwurf und stellenweise überholt (Abschnitt 4 und 7 besonders); wo sie Abschnitt 15 widersprechen, gilt Abschnitt 15. Grundlage sind der Code im Repo, die Angaben des Entwicklers und Recherchen vom 09.11.2026 (Quellen am Ende). Was nicht auf dem Pixel geprüft wurde, ist als „ungeprüft“ markiert.
 
 ## 0 Beschlüsse des Entwicklers (09.11.2026)
 1. **Modus bringt den Ton mit.** Es gibt keine eigene Persona-Ebene: Ein Modus bündelt Ton, Regler und Regeln. Audit und Code bleiben neutral und streng; ein Wechsel in einen Kreativton soll dort nicht passieren.
@@ -141,20 +141,22 @@ Gleicher Text für alle, frischer Chat, erster Lauf zählt nicht, jede Messung z
 - Messen: `ollama run <modell> --verbose` (prompt eval rate, eval rate) in Termux, Badges der Seite, in der Gallery die Anzeige der App.
 
 ## 12 Reihenfolge der Umsetzung (jeder Schritt auf dem Handy prüfbar)
-1. Playwright-Tests mit simuliertem Ollama ins Repo (`tests/`) und aus frischem Klon laufen lassen.
-2. `lib/` und gemeinsamen Kern auslagern, Chat darauf umstellen, Verhalten unverändert.
-3. Tool-Liste und Hub über `server.py` (`tool.json`, `apps.json`), ein Port.
-4. Seite „Modelle“ mit Aliasen, `/api/tags`, Löschen, Laden, Tempotest.
-5. Chat-Oberfläche neu (Hauptansicht, Modusleiste, Kopieren je Blase, Einstellungen).
-6. Personas in `data/personas.json`.
-7. Filter aus Lab; Vitals entfernen.
-8. Anbieterschicht mit „Online erlauben“ (Gemini zuerst, openai-kompatibel).
-9. Einrichtungsassistent und Tutorial.
+Stand 10.11.2026 in Klammern: ✔ gebaut (nur simuliert getestet, außer wo „Handy“ steht), ◐ teilweise, ○ offen.
+1. Playwright-Tests mit simuliertem Ollama ins Repo (`tests/`) und aus frischem Klon laufen lassen. ✔ (20 Server- und 36 Seitentests grün)
+2. `lib/` und gemeinsamen Kern auslagern, Chat darauf umstellen, Verhalten unverändert. ◐ `lib/core.js`, `lib/core.css`, `lib/providers.js` stehen; `chat.html` (1761 Zeilen) nutzt `providers.js`, aber noch nicht `core.js`, eigene Kopfzeile und eigene Übersetzungstabelle bleiben
+3. Tool-Liste und Hub über `server.py` (`tool.json`, `apps.json`), ein Port. ✔ Handy: Hub, Kacheln, Installation als App
+4. Seite „Modelle“ mit Aliasen, `/api/tags`, Löschen, Laden, Tempotest. ◐ Seite „Modelle“ ist nur eine Liste (Platzhalter); Tempotest, Modellwahl und Vorladen leben in `chat.html` (siehe 15.3, Bereich A)
+5. Chat-Oberfläche neu (Hauptansicht, Modusleiste, Kopieren je Blase, Einstellungen). ◐ Modusleiste, Kopieren (Blase und ganzer Chat), Parameter-Leiste, Engine-Menü gebaut; Gestaltung nach dem Manifest und Bereich B (schlanker Chat) offen
+6. Personas in `data/personas.json`. ◐ Modi sind in `chat.html` als Daten (`MODE_PRESETS`, mit Modell, Ersatzmodell, Stoppwörtern), noch nicht in einer Datei
+7. Filter aus Lab; Vitals entfernen. ○ Filter ist Platzhalter, Lab und Vitals stehen unter „Alte Versionen“
+8. Anbieterschicht mit „Online erlauben“ (Gemini zuerst, openai-kompatibel). ◐ `lib/providers.js` mit Ollama, LiteRT-LM, OpenRouter, Groq, Mistral, Custom und Sperre; Gemini und Claude fehlen noch, LiteRT-LM auf dem Handy ungetestet
+9. Einrichtungsassistent und Tutorial. ○
 
 Schritte 1 und 2 und die Termux-Stabilität (Abschnitt 9) können parallel zu den Messungen laufen.
 
 ## 13 Offene Entscheidungen
 Erledigt am 09.11.2026: Modi und Persönlichkeiten (Beschluss 1), gemeinsamer Browser-Speicher (Beschluss 3), Inhalt des Starterkits (Beschluss 2).
+Stand 10.11.2026: Punkt 3 (LiteRT-LM in Termux) ist für die Kommandozeile geklärt (Abschnitt 10), Punkt 5 (ADB) durch den Tempobefund in Abschnitt 14 überholt, Punkt 2 (Umzug in `hub/`) erledigt anders (Hub bleibt `index.html`, siehe 15.2). Neue offene Fragen stehen in 15.6.
 1. Creative: in Heinz aufgehen lassen oder behalten (später).
 2. Umzug der Dateien in `hub/`, `tools/`: ändert Pfade auf dem Handy (`start.sh` wird angepasst, `git pull` genügt).
 3. LiteRT-LM: läuft die CLI oder die Python-Schnittstelle in Termux, und welches Modell? (Abschnitt 10)
@@ -176,3 +178,55 @@ Erledigt am 09.11.2026: Modi und Persönlichkeiten (Beschluss 1), gemeinsamer Br
 - **Abliteriertes Qwen 2.5 3B** lehnte die Testfrage (Salzsäure) fast so fest ab wie das normale. Eine Stichprobe; Vergleichstest mit Zählung offen.
 - **Installierbarkeit:** Vom Hub (`localhost:3000/`) bot Chrome auf dem Pixel „App installieren“ an. Die App läuft weiter aus dem lokalen Server; Updates per `git pull`. Eine gehostete Fassung (GitHub Pages, Update-Hinweis mit Knopf) ist später möglich: relative Pfade, Ersatz für `data/`, CORS für Ollama und LiteRT-LM.
 - **Wischen zum Aktualisieren** abschalten (`overscroll-behavior-y: none`), sonst droht Datenverlust im Chat.
+
+## 15 Stand 10.11.2026: Version 1.0 und danach
+Nachgeführt im Root-Chat aus `ENTWICKLUNGSVERLAUF.md`, `STAND.md`, `docs/GEPLANT.md` und dem Code (Commit `1c265ce`). Alles, was nur „gebaut“ heißt, lief in simulierten Tests (20 Server-, 36 Seitentests grün); auf dem Pixel bestätigt ist nur, was ausdrücklich „Handy“ heißt.
+
+### 15.1 Was es jetzt gibt
+- **Hub** (`index.html`) mit Kopfzeile (Ring mit Gehirn, AIUIheinz), Kacheln aus `/api/tools`, Statuszeile Ollama und LiteRT-LM; als App installierbar (Handy). Platzhalter „Modelle“ (nur Liste) und „Filter“. Lab und Vitals unter „Alte Versionen“.
+- **Chat** (`chat.html`, weiterhin eine große Datei): Modusleiste mit Pillen, Chats je Modus mit Umschalter auf alle Modi, Kopieren je Blase und ganzer Chat, Parameter-Leiste (auch `num_thread`), Tempo-Test mit Threadvergleich und Übernahme der besten Werte, Vorladen des Modells, `keep_alive` 30 min, Schnellmodus, Ampel (rot/orange/grün nach `/api/ps`), nur ein Modell im Speicher, Modellliste aus Ollama, Haken „Eigenen Systemprompt des Modells nutzen“.
+- **Anbieterschicht** `lib/providers.js` (Freigabe des Entwicklers, Fundament): Ollama, LiteRT-LM (Backend CPU/GPU über das Modellfeld), OpenRouter, Groq, Mistral, Custom. „Online erlauben“ aus = kein externer Aufruf (Test). Gemini und Claude fehlen noch. LiteRT-LM aus der Seite ist auf dem Handy noch nicht probiert.
+- **Server** (`server.py`): `/api/tools`, `POST /api/update` (`git pull --ff-only`, Selbstneustart bei Änderung von `server.py`), `/api/ping` mit Version. **Version 1.0** (`VERSION.txt`), Update-Pille im ☰-Menü der Chat-Seite (Handy bestätigt: Update ohne PC).
+- **Doku:** `docs/DESIGN.md` (Manifest, Strang „AIUIheinz-Design“ liest es gerade), `docs/MODELLQUELLEN.md` (Recherche zu Modellquellen, Strang „AIUIheinz-Modelle“), `docs/GEPLANT.md`.
+
+### 15.2 Abweichungen vom Entwurf
+- Der Hub bleibt `index.html` im Wurzelordner, nicht `hub/`; Tool-Seiten liegen über `tool.json` (`entry`) weiter im Wurzelordner, bis ein Strang sie verschiebt.
+- Modi und Personas stehen als Daten im Code von `chat.html`, nicht in `data/personas.json`.
+- Anbieter stehen in `lib/providers.js`, nicht in einer Datei `providers.json`; Gemini kam nicht „zuerst“, sondern OpenAI-kompatible Anbieter und LiteRT-LM.
+- Seite „Modelle“ ist (noch) kein Manager: Modellwahl, Tempotest und Threads gehören nach Beschluss des Entwicklers in Bereich A (15.3), nicht in eine eigene Seite.
+- Abschnitt 4 („Bedienkonzept Chat“) beschreibt einen einzigen Chat. Er wird durch 15.3 ersetzt.
+
+### 15.3 Zwei Bereiche (Richtung des Entwicklers, 10.11.2026; Namen und Zuschnitt offen)
+Aus `docs/GEPLANT.md`, dort ausführlicher.
+- **Bereich A, Ausprobieren und Modelle** (Arbeitsname „Research“ oder „Model Manager“): die heutige Chat-Seite als Testfeld mit Modi, Parametern, Tempotest und Threads, dazu Erstinstallation, Installation und Verwaltung lokaler Modelle (Ollama), Cloud-Anbieter, LiteRT-LM. Zweck: Auf dem eigenen Handy herausfinden, welches Modell und welche Prozessoreinstellung passt. Chats werden **je Modus** gespeichert (gleicher Prompt, mehrere Modelle vergleichbar). Der Chat soll sein Startmodell zeigen; Vorschlag: Modellwechsel mitten im Chat an der Antwort vermerken.
+- **Bereich B, schlanker Chat:** Oberfläche wie Claude oder Gemini, maximale Chatfläche, kleine Eingabezeile (wächst), Menüs von links (Chats) und rechts (wesentliche Einstellungen), keine Temperatur und keine Testläufe. Entspricht dem Bedienkonzept in Abschnitt 4, nur ohne Entwicklerwerkzeuge.
+- **Testfeld für andere Tools:** `lib/providers.js` ist ein gemeinsamer Baustein, damit zum Beispiel convert2 Fragen kurzzeitig an ein lokales oder Cloud-Modell auslagern kann.
+- **Offen:** Welche Modi und Funktionen mit „Online erlauben“ zusätzlich erscheinen und wie die Modusleiste nicht überquillt. Abstimmung läuft mit dem Strang „AIUIheinz-Design“ (Bereichsumschalter, untere Leiste, „Mehr“-Sheet, siehe `docs/DESIGN.md`).
+
+### 15.4 Befunde seit Abschnitt 14 (Handy, Einzelmessungen)
+- **Tempo:** `num_thread` ist der größte Hebel; der Ollama-Standard (8) ist am langsamsten (Hintergrund bis 0,2–0,3 Token/s). Je nach Modell sind 2 bis 4 Threads am besten (2 Threads am stabilsten, 3 und 4 Messreihen teils gegenläufig); deshalb der Tempo-Test mit Übernahme der besten Werte. Termux im Vordergrund (Splitscreen) hilft zusätzlich. Daten: `docs/OLLAMA_UND_MODELLE.md`.
+- **Erste Antwort lang:** Ursache sind Laden (4–14 s) und die Verarbeitung des Modelfile-Prompts von `heinz-fakt` (rund 340 Token, 12–20 s). Gegenmaßnahmen gebaut: konstanter Systemprompt, Vorladen, `keep_alive`. Wirkung auf dem Handy offen.
+- **Absturz beim Moduswechsel (Handy):** Mit Vorladen und 30 Minuten `keep_alive` blieben mehrere Modelle im Speicher; Android beendete Termux. Gegenmaßnahme: nur ein Modell im Speicher, dazu `OLLAMA_MAX_LOADED_MODELS=1` empfohlen. Die Zahl 1 gilt als wahrscheinlich, nicht bewiesen.
+- **Systemprompt:** Eine Systemnachricht der Seite ersetzt den `SYSTEM` des Modelfiles (mit `curl` gezeigt); mit dem Haken „Eigenen Systemprompt nutzen“ antwortet `heinz-fakt` mit „Digger, …“ (Handy).
+- **Audit-Modus:** Der Kontext im Nutzertext (statt im Systemprompt) führte bei `qwen2.5:3b` zu „Information not in context“; Pflicht-Kontext-Modi bekamen den Kontext zurück in den Systemprompt. Das kostet Zwischenspeicher-Treffer; Abwägung offen.
+- **Ablehnung:** Das abliterierte Qwen lehnte die Testfrage fast so fest ab wie das normale (Einzelstichprobe); Vergleichstest mit Zählung steht aus.
+
+### 15.5 Strangstand
+| Strang | Stand |
+|---|---|
+| Grundgerüst | fertig |
+| Chat („AIUIheinz-Chat“) | läuft; Anbieterschicht gepusht, Bereiche A/B als Planung übergeben |
+| Design („AIUIheinz-Design“) | liest das Manifest und erarbeitet ein Konzept |
+| Modelle („AIUIheinz-Modelle“) | Recherche fertig, Bau nach dem Fundament |
+| Filter, Sheet | offen, Edge-Modelle erst erproben |
+| Stabilität (Root) | Entwickleroption gesetzt, Dauertest und Signal-9-Auswertung offen |
+
+### 15.6 Offen (Entscheidungen und Tests)
+1. **Bereiche A und B:** Namen, Zuschnitt, Trennung von `chat.html` (1761 Zeilen) in zwei Seiten oder ein Muster; Ablauf mit dem Design-Strang abstimmen (er ändert `chat.html` erst nach dem Chat-Strang).
+2. **LiteRT-LM auf dem Handy:** Serve starten, Modellliste, Antwort, GPU über das Modellfeld, wirken Systemnachricht und Parameter? Tempo-Test dafür fehlt (er läuft nur mit Ollama).
+3. **Zwei Systemprompt-Wege** (Seite ersetzt Modelfile oder Modelfile bleibt): welcher Standard je Modus? Spielt in die Persona-Frage (Abschnitt 5) hinein.
+4. **Modelle verwalten** (Installieren, Löschen, Aliase) im Bereich A, mit der Quellenliste aus `docs/MODELLQUELLEN.md`; „Funktionsplätze“ (Chat, Sheet, Filter, Prüfung, Bild, Sprache) und Datenschutzfeld je Anbieter brauchen den Beschluss des Entwicklers.
+5. **Geräteprofile** (Threads, Kontext, Modellvorschlag je Prozessor) für eine veröffentlichte Fassung, `docs/GEPLANT.md`.
+6. **Gehostete Fassung** (GitHub Pages) bleibt Option für später: relative Pfade, Ersatz für `data/`, CORS für Ollama und LiteRT-LM (Abschnitt 14). Der Update-Knopf deckt den Alltag ab.
+7. **Signal 9:** Dauertest mit Vitals und `litert-lm serve`; Speicherfrage (ein Modell, Kontextgröße) weiter beobachten.
+8. **Kamera und Dokumente** (Abschnitt 10a), **Refusal-Vergleich** (15.4) und **Sheet mit echtem 3B-Modell** auf der Rohstoffliste.
