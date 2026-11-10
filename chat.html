@@ -29,10 +29,12 @@
         .chip small.online { color: var(--orange); }
         .chip b { display: block; font-size: .98rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
         .chip .i { color: var(--sub); }
-        #preload-status { font-size: 11px; color: var(--sub); margin: -4px 2px 4px; flex: none; }
+        .srow { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 26px; margin: -6px 4px 2px; flex: none; }
+        #preload-status { flex: 1; min-width: 0; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .srow canvas { display: block; flex: none; }
 
         /* Modusleiste */
-        .modes { display: flex; gap: 2px; flex: none; margin-bottom: 4px; }
+        .modes { display: flex; gap: 2px; flex: none; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid color-mix(in srgb, var(--acc) 60%, transparent); }
         .mode-pill { flex: 1 1 0; min-width: 0; height: 62px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .72rem; }
         .mode-pill .mi { width: 52px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
         .mode-pill .mi .i { width: 20px; height: 20px; }
@@ -41,7 +43,7 @@
         .mode-pill:disabled { opacity: .5; }
 
         /* Chat-Leiste */
-        .bar { display: flex; align-items: center; gap: 2px; height: 44px; flex: none; border-top: 1px solid var(--line); }
+        .bar { display: flex; align-items: center; gap: 2px; height: 44px; flex: none; background: var(--card); border-radius: 22px; padding: 0 4px; }
         .bar .ttl { flex: 1; min-width: 0; text-align: center; font-size: .86rem; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
         #chats-open { position: relative; }
         .cnt { position: absolute; top: 3px; right: 1px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--acc); color: var(--onacc); font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; }
@@ -113,7 +115,7 @@
         .prompt.full .pbtns { align-self: flex-end; }
         .pbtns { display: flex; gap: 6px; flex: none; align-items: flex-end; }
         /* Tastatur offen: Chat bekommt den Platz */
-        body.kbd .modes, body.kbd .metrics, body.kbd .acts, body.kbd .ctx, body.kbd #preload-status { display: none; }
+        body.kbd .modes, body.kbd .metrics, body.kbd .acts, body.kbd .ctx, body.kbd .srow { display: none; }
         body.kbd-ctx .modes, body.kbd-ctx .metrics, body.kbd-ctx .acts { display: none; }
         body.kbd .app, body.kbd-ctx .app { min-height: 0; }
 
@@ -179,7 +181,7 @@
             <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
             <button class="ibtn burger-btn" type="button" onclick="openMenu()" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
         </div>
-        <div id="preload-status" style="display:none"></div>
+        <div class="srow"><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas></div>
         <select id="model-select" onchange="onModelChange()" aria-hidden="true" tabindex="-1"></select>
 
         <div class="modes" id="mode-bar" role="tablist">
@@ -569,7 +571,7 @@
         // Modus = Daten: model (bevorzugt), alt (Ersatz, falls nicht installiert), stop (Stoppsequenzen).
         // Modell ist in jedem Modus frei wählbar (Modus und Modell sind getrennte Angaben).
         const MODE_PRESETS = {
-            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#4285f4', on: '#fff' },
+            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#00acc1', on: '#fff' },
             heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63', on: '#fff' },
             audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#fbbc05', on: '#202124' },
             code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#6b8ba4', on: '#fff' },
@@ -731,7 +733,7 @@
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: '⏳ Preparing model…', preReady: '✓ Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
-                menuTitle: 'Menu', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', stAnswering: 'Answering', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
+                menuTitle: 'Menu', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', stAnswering: 'Answering', stThinking: 'Thinking …', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
                 locale: 'en-GB'
             },
             de: {
@@ -775,7 +777,7 @@
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: '⏳ Modell wird vorbereitet…', preReady: '✓ Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
-                menuTitle: 'Menü', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', stAnswering: 'Antwortet', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
+                menuTitle: 'Menü', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', stAnswering: 'Antwortet', stThinking: 'Denkt nach …', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
                 locale: 'de-DE'
             }
         };
@@ -907,14 +909,12 @@
             return [settings.provider, $('model-select').value, settings.mode, !!settings.ownSystem, settings.lang, !!settings.fast,
                 !!settings.useDefault, parseInt($('param-ctx').value, 10), parseInt($('param-threads').value, 10)].join('|');
         }
+        let preloadReady = false;
         function setPreloadStatus(kind) {
-            const el = $('preload-status');
             clearTimeout(preloadHideTimer);
-            if (!kind) { el.style.display = 'none'; renderRing(); return; }
-            el.textContent = t(kind === 'loading' ? 'preLoading' : 'preReady');
-            el.style.display = 'block';
+            preloadReady = kind === 'ready';
+            if (preloadReady) preloadHideTimer = setTimeout(function () { preloadReady = false; renderRing(); }, 4000);
             renderRing();
-            if (kind === 'ready') preloadHideTimer = setTimeout(function () { el.style.display = 'none'; }, 4000);
         }
         function abortPreload() {
             clearTimeout(preloadTimer);
@@ -1065,11 +1065,11 @@
         function renderRing() {
             const el = $('status-dot');
             let cls = ringBase.cls, color = ringBase.color, title = ringBase.title;
-            if (generating) { cls = 'status-active'; color = 'green'; title = t('stAnswering'); }
+            if (generating) { cls = 'status-active'; color = 'green'; title = t(gotToken ? 'stAnswering' : 'stThinking'); }
             else if (preloadAbort) { cls = 'status-loading'; color = 'orange'; title = t('preLoading'); }
             el.className = 'ring-btn status-dot ' + (cls ? cls + ' ' : '') + 's-' + color;
             el.title = title;
-            chipWake();
+            renderStatusRow(title, color);
         }
         async function checkServer() {
             const prov = settings.provider;
@@ -1448,7 +1448,7 @@
 
         // ===== Senden / Abbrechen =====
         function setGenerating(on) {
-            generating = on;
+            generating = on; gotToken = false;
             $('send-btn').disabled = on;
             $('stop-btn').style.display = on ? 'inline-flex' : 'none';
             renderRing();
@@ -1578,7 +1578,7 @@
                 const result = await PV.chat(prov, {
                     model: selectedModel, messages: apiMessages, options: opts, keepAlive: KEEP_ALIVE, backend: settings.backend,
                     signal: currentAbortController.signal,
-                    onDelta: function (d) { outputBuffer += d; scheduleRender(); pulse.e = Math.min(1, pulse.e + 0.3); chipWake(); }
+                    onDelta: function (d) { outputBuffer += d; scheduleRender(); pulse.e = Math.min(1, pulse.e + 0.3); if (!gotToken) { gotToken = true; renderRing(); } if (eqPx) eqPx.wake(); }
                 });
                 finalStats = result.stats;
             } catch (err) {
@@ -1819,36 +1819,54 @@
             setSheetTitle();
         }
         function setTheme(v) { Heinz.setTheme(v); settings.theme = Heinz.theme; updateMenuInfo(); }
-        // ===== Pixeldisplays: Modellchip mit Token-Puls, Tempo-Test, Update =====
+        // ===== Pixeldisplays: Modellchip (Engine, Modell) und Equalizer in der Statuszeile =====
         const pulse = { e: 0 };
-        let chipPx = null;
-        const PX_DIM = '#3c4043', PX_TXT = '#e8eaed', PX_SUB = '#9aa0a6';
+        let chipPx = null, eqPx = null, gotToken = false;
+        const PX_DIM = '#3c4043', PX_SUB = '#9aa0a6';
+        const STATUS_COLORS = { red: '#ea4335', orange: '#fb8c00', blue: '#4285f4', green: '#34a853' };
         function drawChip(p) {
             const preset = MODE_PRESETS[settings.mode] || MODE_PRESETS.wilson;
             const pv = PV.get(settings.provider) || PV.get('ollama');
             const online = !pv.local && !pv.custom;
             const eng = (pv.name + (online ? ' · ' + t('chipOnline') : '')).toUpperCase();
-            const x1 = p.cols - 28;
-            p.ticker('c1', 4, 4, [[settings.mode.toUpperCase(), preset.color], [' · ', PX_DIM], [eng, online ? '#fb8c00' : PX_SUB]], PX_SUB, { x1: x1 });
-            p.ticker('c2', 13, 4, settings.model || '–', PX_TXT, { x1: x1 });
-            // Token-Puls: lebt das Modell? (Antwort = grün, Laden = orange, sonst nur Grundlinie)
-            const x = p.cols - 25, f = p.frameNo;
-            pulse.e *= 0.86;
-            for (let i = 0; i < 6; i++) {
-                let h = 1, c = PX_DIM;
-                if (generating) { c = '#34a853'; h = Math.round(1 + Math.abs(Math.sin(f / 4 + i * 1.3)) * 3 + pulse.e * 13 * (0.5 + 0.5 * Math.abs(Math.sin(f / 2 + i * 2.1)))); }
-                else if (preloadAbort) { c = '#fb8c00'; h = 1 + (Math.floor(f / 3) % 6 === i ? 8 : 0); }
-                h = Math.min(16, h);
-                p.rect(x + i * 3, 21 - h, 2, h, c);
-            }
-            p.sprite(['#...#', '.#.#.', '..#..'], p.cols - 7, 10, PX_SUB);
+            const x1 = p.cols - 11;
+            p.ticker('c1', 4, 4, eng, online ? '#fb8c00' : PX_SUB, { x1: x1, small: true });
+            p.ticker('c2', 12, 4, settings.model || '–', preset.color, { x1: x1 });
+            p.sprite(['#...#', '.#.#.', '..#..'], p.cols - 8, 10, PX_SUB);
         }
-        function chipLive() { return generating || !!preloadAbort || pulse.e > 0.03; }
+        // Equalizer: Pegel schlagen bei jedem Token aus; Denken = ruhige Welle, Laden = Lichtlauf, sonst Grundlinie
+        function drawEq(p) {
+            const f = p.frameNo, col = STATUS_COLORS[eqState.color] || PX_DIM;
+            pulse.e *= 0.88;
+            for (let i = 0; i < 8; i++) {
+                let h = 1, c = PX_DIM;
+                if (generating && gotToken) { c = STATUS_COLORS.green; h = Math.round(1 + Math.abs(Math.sin(f / 4 + i * 1.3)) * 1.5 + pulse.e * 5 * (0.5 + 0.5 * Math.abs(Math.sin(f / 2 + i * 2.1)))); }
+                else if (generating) { c = STATUS_COLORS.green; h = Math.round(1 + (Math.sin(f / 6 + i * 0.8) + 1) * 1.2); }
+                else if (preloadAbort) { c = STATUS_COLORS.orange; h = 1 + (Math.floor(f / 3) % 8 === i ? 5 : 0); }
+                else if (eqState.color === 'red') { c = STATUS_COLORS.red; }
+                h = Math.min(7, h);
+                p.rect(i * 3, 7 - h, 2, h, c);
+            }
+        }
+        const eqState = { color: 'red' };
+        function eqLive() { return generating || !!preloadAbort || pulse.e > 0.03; }
+        function renderStatusRow(title, color) {
+            const el = $('preload-status');
+            let txt = title;
+            if (!generating && preloadAbort) txt = t('preLoading');
+            else if (!generating && preloadReady) txt = t('preReady');
+            el.textContent = txt;
+            el.style.color = color === 'red' ? 'var(--red)' : color === 'orange' ? 'var(--orange)' : color === 'green' ? 'var(--green)' : '';
+            eqState.color = color;
+            if (eqPx) eqPx.wake();
+        }
         function chipWake() { if (chipPx) chipPx.wake(); }
         function initChip() {
             if (chipPx || !$('chip-led')) return;
             chipPx = new Heinz.Pixel($('chip-led'), { rows: 24, pitch: 2, dot: 1.5 });
-            chipPx.run(drawChip, { live: chipLive });
+            chipPx.run(drawChip);
+            eqPx = new Heinz.Pixel($('eq-led'), { rows: 7, cols: 24, pitch: 3 });
+            eqPx.run(drawEq, { live: eqLive });
             window.addEventListener('resize', function () { chipPx.resize(); chipPx.redraw(); });
         }
         function updateChip() {

@@ -850,7 +850,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         acc = lambda: page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()")
-        self.assertEqual(acc(), "#4285f4")
+        self.assertEqual(acc(), "#00acc1")
         page.click("#mode-bar [data-mode=creative]")
         self.assertEqual(acc(), "#a142f4")
         self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('send-btn')).backgroundColor"), "rgb(161, 66, 244)")

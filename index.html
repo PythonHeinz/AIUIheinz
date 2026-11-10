@@ -19,6 +19,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 .top .ttl b { font-size: 1.25rem; font-weight: 500; letter-spacing: .01em; display: block; }
 .top .ttl small { display: block; margin-top: 2px; color: var(--sub); font-family: var(--serif); font-style: italic; font-size: .85rem; }
 a.ring-btn { text-decoration: none; color: var(--txt); }
+#ring { --s: var(--edge); }
 .areas { display: flex; gap: 22px; margin: 18px 0 6px; border-bottom: 1px solid var(--line); }
 .areas button { background: none; border: 0; padding: 8px 0 11px; font: inherit; font-size: .95rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .areas button.on { color: var(--txt); border-bottom-color: var(--acc, var(--pri)); }
@@ -39,7 +40,7 @@ a.row .tile { color: var(--pri); }
 <body>
 <div class="wrap">
 <div class="top">
-    <a class="ring-btn s-red" id="ring" href="/" aria-label="Heinz UI"><svg class="i"><use href="/lib/icons.svg#i-heinz"/></svg></a>
+    <a class="ring-btn" id="ring" href="/" aria-label="Heinz UI"><svg class="i"><use href="/lib/icons.svg#i-heinz"/></svg></a>
     <div class="ttl"><b>AIUI<span style="color:var(--pri)">heinz</span></b><small id="sub"></small></div>
     <button class="ibtn" id="theme" type="button" aria-label="Theme"><svg class="i"><use href="/lib/icons.svg#i-contrast"/></svg></button>
     <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
@@ -97,7 +98,6 @@ a.row .tile { color: var(--pri); }
         var ot = document.getElementById('t-ollama');
         if (ollama) {
             ot.textContent = 'Ollama ' + (ollama.up ? (ollama.loaded.length ? t('loaded', { m: ollama.loaded.join(', ') }) : t('up') + ' · ' + t('models', { n: ollama.models.length })) : t('ollamaOff'));
-            document.getElementById('ring').className = 'ring-btn ' + (ollama.up ? (ollama.loaded.length ? 's-green' : 's-blue') : 's-red');
         }
         if (litert) document.getElementById('t-litert').textContent = 'LiteRT-LM ' + (litert.up ? t('up') : t('litertOff'));
         document.getElementById('foot').textContent = t('foot');
