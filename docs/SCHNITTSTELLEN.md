@@ -234,3 +234,9 @@ Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Reg
 - **Tief (`high`), Primzahlfrage:** In 77, Out 112, `reasoningTokens` 0 (also nicht gemeldet), 10 s Wartezeit bis zum Text, danach kam die Antwort fast auf einmal (313 T/s sind kein echter Wert). Das lange Warten zeigt, dass gedacht wurde; die kompatible Route meldet die Denk-Token aber nicht (oder in einem Feld, das wir nicht lesen). Die rohe Antwort-Nutzung steht ab jetzt im Export („Last response: usage …“).
 - **Gemini 3.x flash:** „Schnell“ nutzt für alle Versionen `low` (Beschluss des Entwicklers, `minimal` nur bei 3.8 widerlegt); `flash-lite` unverändert.
 - **Verhalten Online aus/an (gewollt, Beschluss 11.11.2026):** Online aus fällt auf die lokale Engine zurück; Online wieder an kehrt **nicht** zur Cloud-Engine zurück (Standard ist offline).
+
+### 8.4 Dritter Handytest (11.11.2026): Temperatur, Denk-Token, Zeiten (gemini-3.8-flash, Tief, Temperatur 0,3, Primzahlfrage)
+- **Gesendeter Body:** `temperature 0.3`, `top_p 0.3`, `stop ["As an AI","Als KI"]`, `reasoning_effort high`, kein `top_k`, kein `num_ctx`. Die Anfrage lief mit HTTP 200: die Temperatur 0,3 wird akzeptiert (Auffälligkeiten bei der Antwortqualität sind bei dieser Frage nicht dokumentiert).
+- **`usage`:** `{"completion_tokens":165,"prompt_tokens":78,"total_tokens":5563}`: **keine** `completion_tokens_details`. Prompt plus Ausgabe sind 243, die Gesamtsumme ist 5563. Die Differenz von 5320 sind Denk-Token, die nur in der Summe stecken. Die Seite leitet sie daraus ab und markiert sie.
+- **Zeiten:** erster Text nach 30 135 ms, gesamt 30 951 ms, 8 Chunks: Denken dauert, der Text kommt dann fast auf einmal. T/s (201) ist daher kein Maß für die Erzeugungsgeschwindigkeit.
+- **Folge für `outputIncludesReasoning`:** In diesem Lauf enthält `completion_tokens` die Denk-Token nicht. Ein Lauf; weitere Läufe stehen aus.

@@ -66,12 +66,12 @@ class FakeOllama:
 class FakeOpenAI:
     """OpenAI-style engine (LiteRT-LM on 127.0.0.1:9379, or an online provider): /models and streamed /chat/completions."""
 
-    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True, finish="stop", reasoning=0, native=None):
+    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True, finish="stop", reasoning=0, native=None, total=0):
         self.requests = []    # (headers, body) of /chat/completions
         self.native, self.native_calls = native, []    # Google: native list (/v1beta/models) as dicts; calls = (url, headers)
         self.model_calls = 0
         self.models, self.chunks, self.status, self.usage = models, chunks, status, usage
-        self.finish, self.reasoning = finish, reasoning
+        self.finish, self.reasoning, self.total = finish, reasoning, total
         page.route(pattern, self.handle)
 
     def handle(self, route):
@@ -98,6 +98,8 @@ class FakeOpenAI:
             lines.append("data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": self.finish}]}))
             if self.usage:
                 use = {"prompt_tokens": 21, "completion_tokens": 7}
+                if self.total:
+                    use["total_tokens"] = self.total
                 if self.reasoning:
                     use["completion_tokens_details"] = {"reasoning_tokens": self.reasoning}
                 lines.append("data: " + json.dumps({"choices": [], "usage": use}))
@@ -1034,6 +1036,19 @@ class PageTest(unittest.TestCase):
         page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change'))")
         page.wait_for_timeout(200)
         self.assertEqual(page.evaluate("settings.provider"), "ollama")
+
+    def test_thinking_tokens_are_derived_from_total_when_not_reported_separately(self):
+        # Handytest 11.11.2026: Google meldet total_tokens 5563 bei Prompt 78 und Ausgabe 165, aber keine reasoning_tokens
+        page, g = self.google_page("gemini-3-flash", total=5000)
+        self.send(page, "Hi")
+        self.assertFalse(page.is_hidden("#m-think"))
+        self.assertEqual(page.inner_text("#dash-think"), "~" + str(5000 - 21 - 7))
+        self.assertEqual(page.inner_text("#dash-a-tok"), "7", "output stays as reported")
+        self.assertIn("derived", page.evaluate("paramsText()"))
+        # counter test: total equals prompt + output, so no thinking tokens appear
+        page2, _ = self.google_page("gemini-3-flash", total=28)
+        self.send(page2, "Hi")
+        self.assertTrue(page2.is_hidden("#m-think"))
 
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
