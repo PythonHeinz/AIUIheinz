@@ -429,6 +429,23 @@ class PageTest(unittest.TestCase):
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; togglePin(1004); togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
 
+    def test_backup_roundtrip_leaves_keys_out_unless_asked(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("lsSet('heinz_keys', {custom: 'SECRET'}); lsSet('heinz_chats', [{id: 1, title: 'Backed up', mode: 'wilson', messages: [], ts: '', model: 'm'}])")
+        self.menu(page, "update")
+        page.evaluate("window._dl = null; URL.createObjectURL = function (b) { window._blob = b; return 'blob:x'; }; HTMLAnchorElement.prototype.click = function () {}")
+        page.evaluate("exportBackup()")
+        txt = page.evaluate("window._blob.text()")
+        self.assertIn("Backed up", txt)
+        self.assertNotIn("SECRET", txt, "API keys stay out by default")
+        page.check("#bk-keys")
+        page.evaluate("exportBackup()")
+        self.assertIn("SECRET", page.evaluate("window._blob.text()"))
+        page.evaluate("localStorage.removeItem('heinz_chats'); window.confirm = function () { return true; }; window.location.reload = function () {}")
+        page.evaluate("var r = JSON.parse(%s); Object.keys(r.data).forEach(function (k) { localStorage.setItem(k, r.data[k]); })" % json.dumps(txt))
+        self.assertIn("Backed up", page.evaluate("localStorage.getItem('heinz_chats')"))
+
     def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")

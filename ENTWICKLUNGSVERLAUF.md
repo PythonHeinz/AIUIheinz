@@ -344,3 +344,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - „Modellliste laden“ nur, bis eine Liste da ist; danach ist die Statuszeile (unterstrichen) der Zugang. Statustext oben klappt per Tipp mehrzeilig auf, ohne den Equalizer zu verschieben.
 - Tempo-Test: Termux-Haken statt Auswahl (Standard im Hintergrund), bei Cloud-Engines komplett ausgegraut; Zeilenfarbe je Thread-Zahl (beide Läufe gleich).
 - Sprachschalter kleiner, Modus-Zeile 6 px tiefer. Nicht auf dem Gerät getestet.
+
+## 2026-11-10 – AIUIheinz-Design: Korrekturen 18:00 + Sicherung
+- Zoom-Fehler (Seite sprang nach Doppeltipp auf den Statustext stark vergrößert): `touch-action: manipulation`, `--appH` rechnet `visualViewport.scale` ein.
+- Logo: Strichschrift mit abgeflachten Ecken (bevel/butt), „I“ nur ein Strich, mehr Abstand, per SVG exakt mittig. Ring-Fassung zweifarbig (dunkel außen, hell innen wie die LED-Pille), Abstand zum Leuchtring kleiner.
+- Equalizer pulsiert nur bei sichtbarer App. Reiter-Punkt nur vor dem aktiven Reiter (orange Punkt entfernt), Knopf „Reset“. Engine-Liste: „Schlüssel vorhanden“. Sprachschalter 34 px hoch.
+- Neu: App-Sicherung (Export/Import als JSON, Schlüssel nur auf Wunsch) unter Menü → Info, Sicherung, Update. Test: Rundlauf.
+- Geplant: mehrere eigene OpenAI-kompatible Engines (Server + Schlüssel je Eintrag) – heute gibt es nur einen „custom“-Platz.
+- Nicht auf dem Gerät getestet.
