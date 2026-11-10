@@ -1,64 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#121212">
+<meta name="color-scheme" content="dark light">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>AIUIheinz</title>
 <link rel="stylesheet" href="/lib/core.css">
+<script src="/lib/core.js"></script>
+<style>
+body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
+.top { display: flex; align-items: center; gap: 12px; padding: 12px 14px 8px; max-width: 600px; margin: 0 auto; }
+.top .ttl { flex: 1; min-width: 0; line-height: 1.15; }
+.top .ttl b { font-size: 1.2rem; font-weight: 500; display: block; }
+.top .ttl small { color: var(--sub); font-size: .78rem; }
+a.ring-btn { text-decoration: none; color: var(--txt); }
+.hub { max-width: 600px; margin: 0 auto; padding: 4px 16px 60px; }
+.areas { display: flex; gap: 8px; margin: 8px 0 14px; }
+.areas .pill { flex: 1; justify-content: center; min-height: 44px; }
+a.row { text-decoration: none; }
+.row .tag { font-size: .68rem; color: var(--sub); border: 1px solid var(--edge); border-radius: 99px; padding: 2px 8px; flex: none; }
+.eng { display: flex; flex-direction: column; gap: 4px; margin: 18px 0 4px; font-size: .85rem; color: var(--sub); }
+.eng div { display: flex; align-items: center; gap: 8px; } .eng b { color: var(--txt); font-weight: 500; }
+.foot { margin-top: 22px; }
+</style>
 </head>
 <body>
-<div id="app-header"></div>
-<main class="page">
-    <div class="status" id="status">
-        <div class="row"><span class="dot" id="dot-ollama"></span><span><b>Ollama</b> <span id="t-ollama">…</span></span></div>
-        <div class="row"><span class="dot" id="dot-litert"></span><span><b>LiteRT-LM</b> <span id="t-litert">…</span></span></div>
+<div class="top">
+    <a class="ring-btn s-red" id="ring" href="/" aria-label="Heinz UI"><svg class="i"><use href="/lib/icons.svg#i-heinz"/></svg></a>
+    <div class="ttl"><b>AIUI<span style="color:var(--pri)">heinz</span></b><small id="sub"></small></div>
+    <button class="ibtn" id="theme" type="button" aria-label="Theme"><svg class="i"><use href="/lib/icons.svg#i-contrast"/></svg></button>
+    <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+</div>
+<main class="hub">
+    <div class="areas" id="areas"></div>
+    <div id="tools"></div>
+    <div class="caps" id="legacy-h" hidden style="margin-top:22px"></div>
+    <div id="legacy"></div>
+    <div class="eng" id="status">
+        <div><span class="dot" id="dot-ollama"></span><span><b>Ollama</b> <span id="t-ollama">…</span></span></div>
+        <div><span class="dot" id="dot-litert"></span><span><b>LiteRT-LM</b> <span id="t-litert">…</span></span></div>
     </div>
-    <div class="grid" id="tools"></div>
-    <div class="sect" id="legacy-h" hidden></div>
-    <div class="grid" id="legacy"></div>
     <div class="foot" id="foot"></div>
 </main>
-<script src="/lib/core.js"></script>
 <script>
 (function () {
     var D = {
-        en: { sub: 'offline AI', ollamaOff: 'not reachable', litertOff: 'not reachable (optional)', up: 'running', loaded: 'loaded: {m}', models: '{n} models', soon: 'placeholder', old: 'old', legacy: 'Old versions', foot: 'Viewport reference: Pixel 9 Pro about 426 × 803 px', noTools: 'No tools found (server too old?)' },
-        de: { sub: 'offline KI', ollamaOff: 'nicht erreichbar', litertOff: 'nicht erreichbar (optional)', up: 'läuft', loaded: 'geladen: {m}', models: '{n} Modelle', soon: 'Platzhalter', old: 'alt', legacy: 'Alte Versionen', foot: 'Referenz-Viewport: Pixel 9 Pro rund 426 × 803 px', noTools: 'Keine Tools gefunden (Server zu alt?)' }
+        en: { sub: 'offline AI', ollamaOff: 'not reachable', litertOff: 'not reachable (optional)', up: 'running', loaded: 'loaded: {m}', models: '{n} models', soon: 'placeholder', legacy: 'Old versions', foot: 'Viewport reference: Pixel 9 Pro about 426 × 803 px', noTools: 'No tools found (server too old?)', aChat: 'Chat & models', aTools: 'Tools', empty: 'Nothing here yet.' },
+        de: { sub: 'offline KI', ollamaOff: 'nicht erreichbar', litertOff: 'nicht erreichbar (optional)', up: 'läuft', loaded: 'geladen: {m}', models: '{n} Modelle', soon: 'Platzhalter', legacy: 'Alte Versionen', foot: 'Referenz-Viewport: Pixel 9 Pro rund 426 × 803 px', noTools: 'Keine Tools gefunden (Server zu alt?)', aChat: 'Chat & Modelle', aTools: 'Tools', empty: 'Hier ist noch nichts.' }
     };
-    var tools = null, ollama = null, litert = null;
+    var AREAS = [{ id: 'chat', k: 'aChat' }, { id: 'tools', k: 'aTools' }];
+    var tools = null, ollama = null, litert = null, area = 'chat';
+    try { var sv = Heinz.lsGet('heinz_hub', {}).area; if (sv === 'chat' || sv === 'tools') area = sv; } catch (e) {}
     function t(k, v) { return Heinz.t(D, k, v); }
-    function card(x) {
-        var c = x.legacy ? 'c-gray' : 'c-' + (x.color || 'blue');
-        var tag = x.status === 'placeholder' ? t('soon') : (x.legacy ? t('old') : '');
-        return '<a class="card ' + c + '" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '">' +
-            (tag ? '<span class="tag">' + tag + '</span>' : '') +
-            '<span class="ico">' + Heinz.esc(x.icon || '🧩') + '</span><h2>' + Heinz.esc(Heinz.pick(x.name)) + '</h2><p>' + Heinz.esc(Heinz.pick(x.desc)) + '</p></a>';
+    function row(x) {
+        var sym = /^i-[a-z-]+$/.test(x.symbol || '') ? x.symbol : 'i-sparkle';
+        return '<a class="row" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '">' +
+            '<span class="tile"><svg class="i"><use href="/lib/icons.svg#' + sym + '"/></svg></span>' +
+            '<span class="tx"><b>' + Heinz.esc(Heinz.pick(x.name)) + '</b><small>' + Heinz.esc(Heinz.pick(x.desc)) + '</small></span>' +
+            (x.status === 'placeholder' ? '<span class="tag">' + t('soon') + '</span>' : '') +
+            '<svg class="i sm go"><use href="/lib/icons.svg#i-chev-r"/></svg></a>';
     }
     function render() {
+        document.getElementById('sub').textContent = t('sub');
+        document.getElementById('areas').innerHTML = AREAS.map(function (a) {
+            return '<button type="button" class="pill' + (a.id === area ? ' acc' : '') + '" data-area="' + a.id + '">' + t(a.k) + '</button>';
+        }).join('');
         var tl = document.getElementById('tools'), lg = document.getElementById('legacy'), lh = document.getElementById('legacy-h');
         if (tools) {
-            var main = tools.filter(function (x) { return !x.legacy; }), old = tools.filter(function (x) { return x.legacy; });
-            tl.innerHTML = main.length ? main.map(card).join('') : '<div class="panel">' + t('noTools') + '</div>';
-            lg.innerHTML = old.map(card).join('');
+            var mine = tools.filter(function (x) { return (x.area || 'tools') === area; });
+            var main = mine.filter(function (x) { return !x.legacy; }), old = mine.filter(function (x) { return x.legacy; });
+            tl.innerHTML = main.length ? main.map(row).join('') : '<p style="color:var(--sub)">' + (tools.length ? t('empty') : t('noTools')) + '</p>';
+            lg.innerHTML = old.map(row).join('');
             lh.hidden = !old.length; lh.textContent = t('legacy');
         }
         var o = document.getElementById('dot-ollama'), ot = document.getElementById('t-ollama');
         if (ollama) {
             o.className = 'dot ' + (ollama.up ? (ollama.loaded.length ? 'run' : 'on') : '');
             ot.textContent = ollama.up ? (ollama.loaded.length ? t('loaded', { m: ollama.loaded.join(', ') }) : t('up') + ' · ' + t('models', { n: ollama.models.length })) : t('ollamaOff');
+            document.getElementById('ring').className = 'ring-btn ' + (ollama.up ? (ollama.loaded.length ? 's-green' : 's-blue') : 's-red');
         }
         var l = document.getElementById('dot-litert'), lt = document.getElementById('t-litert');
         if (litert) { l.className = 'dot ' + (litert.up ? 'on' : ''); lt.textContent = litert.up ? t('up') : t('litertOff'); }
         document.getElementById('foot').textContent = t('foot');
         document.title = 'AIUIheinz';
     }
-    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub } });
-    Heinz.onLang(render);
-    render();
+    document.getElementById('areas').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-area]'); if (!b) return;
+        area = b.dataset.area;
+        try { var s = Heinz.lsGet('heinz_hub', {}); s.area = area; Heinz.lsSet('heinz_hub', s); } catch (er) {}
+        render();
+    });
+    document.getElementById('theme').onclick = function () { Heinz.setTheme(Heinz.theme === 'auto' ? 'dk' : Heinz.theme === 'dk' ? 'lt' : 'auto'); };
+    var lb = document.getElementById('lang-btn');
+    lb.onclick = Heinz.toggleLang;
+    function lbPaint() { Array.prototype.forEach.call(lb.querySelectorAll('span'), function (s) { s.classList.toggle('active', s.getAttribute('data-l') === Heinz.lang); }); document.documentElement.lang = Heinz.lang; }
+    Heinz.onLang(function () { lbPaint(); render(); });
+    lbPaint(); render();
     fetch('/api/tools').then(function (r) { return r.json(); }).then(function (j) { tools = j.tools || []; render(); }).catch(function () { tools = []; render(); });
     function poll() {
         Heinz.pingOllama().then(function (r) { ollama = r; render(); });

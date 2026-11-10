@@ -12,5 +12,7 @@
   "entry": "tools/models/index.html",
   "color": "green",
   "status": "placeholder",
-  "order": 20
+  "order": 20,
+  "area": "chat",
+  "symbol": "i-cpu"
 }

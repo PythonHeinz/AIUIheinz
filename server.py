@@ -105,7 +105,7 @@ def _restart_self():
 
 
 TOOL_ID_RE = re.compile(r"^[a-z][a-z0-9\-]{0,31}$")
-TOOL_KEYS = ("id", "name", "desc", "icon", "entry", "color", "status", "order", "legacy")
+TOOL_KEYS = ("id", "name", "desc", "icon", "entry", "color", "status", "order", "legacy", "area", "symbol")
 
 
 def load_tools():

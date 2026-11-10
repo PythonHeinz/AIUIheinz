@@ -12,5 +12,7 @@
   "entry": "chat.html",
   "color": "blue",
   "status": "ready",
-  "order": 10
+  "order": 10,
+  "area": "chat",
+  "symbol": "i-chats"
 }

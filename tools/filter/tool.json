@@ -12,5 +12,7 @@
   "entry": "tools/filter/index.html",
   "color": "yellow",
   "status": "placeholder",
-  "order": 30
+  "order": 30,
+  "area": "tools",
+  "symbol": "i-layers"
 }

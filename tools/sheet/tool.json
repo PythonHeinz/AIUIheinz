@@ -12,5 +12,7 @@
   "entry": "sheet.html",
   "color": "red",
   "status": "ready",
-  "order": 40
+  "order": 40,
+  "area": "tools",
+  "symbol": "i-doc"
 }

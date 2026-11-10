@@ -13,5 +13,7 @@
   "color": "gray",
   "status": "ready",
   "order": 90,
-  "legacy": true
+  "legacy": true,
+  "area": "chat",
+  "symbol": "i-bolt"
 }

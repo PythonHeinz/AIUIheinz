@@ -220,3 +220,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Test `test_design_page_blocks_symbols_theme_and_language`, Seite in `PAGES` (kein Fehler, keine externe Anfrage). 50 Seitentests grün (simuliert, nicht auf dem Handy).
 - Konzept 15.3 (zwei Bereiche) und DESIGN.md (drei Bereiche) widersprechen sich; Abgleich mit dem Entwickler offen.
 
+## 10.11.2026 – Hub im neuen Muster (Strang AIUIheinz-Design)
+- `index.html` neu: Kopfzeile mit Statusring (rot/blau/grün nach Ollama), Titel, Theme-Knopf (Auto→Dunkel→Hell), EN/DE; zwei Bereichspillen **Chat & Modelle** und **Tools**; Werkzeuge als Zeilen mit Symbol statt Emoji-Kacheln; „Alte Versionen“ im Bereich Chat; Engine-Status unten. Auswahl in `heinz_hub.area`.
+- `tool.json` bekommt `area` und `symbol`; `server.py` reicht beide Schlüssel in `/api/tools` durch (TOOL_KEYS). Alle sechs `tool.json` ergänzt.
+- Tests: `test_hub_areas_switch_and_persist`, `test_hub_theme_button_cycles`; 51 Seiten- und 20 Servertests grün (simuliert, nicht auf dem Handy).
+
