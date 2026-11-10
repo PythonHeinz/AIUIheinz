@@ -20,9 +20,9 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 .top .ttl b { font-size: 1.25rem; font-weight: 500; letter-spacing: .01em; display: block; }
 .top .ttl small { display: block; margin-top: 2px; color: var(--sub); font-family: var(--serif); font-style: italic; font-size: .85rem; }
 a.ring-btn { text-decoration: none; color: var(--txt); }
-.led { border-radius: 12px; overflow: hidden; background: #0a0b0d; border: 1px solid var(--line); line-height: 0; }
+.led { margin-top: 16px; border-radius: 12px; overflow: hidden; background: #0a0b0d; border: 1px solid var(--line); line-height: 0; }
 .led canvas { display: block; width: 100%; }
-.areas { display: flex; gap: 22px; margin: 22px 0 6px; border-bottom: 1px solid var(--line); }
+.areas { display: flex; gap: 22px; margin: 18px 0 0; border-bottom: 1px solid var(--line); }
 .areas button { background: none; border: 0; padding: 8px 0 11px; font: inherit; font-size: .95rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .areas button.on { color: var(--txt); border-bottom-color: var(--acc, var(--pri)); }
 a.row { text-decoration: none; }
@@ -47,10 +47,10 @@ a.row .tile { color: var(--pri); }
     <button class="ibtn" id="theme" type="button" aria-label="Theme"><svg class="i"><use href="/lib/icons.svg#i-contrast"/></svg></button>
     <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
 </div>
-<div class="led" id="led-box"><canvas id="led" aria-hidden="true"></canvas></div>
 <div class="sr" id="status" role="status"><span id="t-ollama">…</span> <span id="t-litert">…</span></div>
 <nav class="areas" id="areas"></nav>
 <main>
+    <div class="led" id="led-box"><canvas id="led" aria-hidden="true"></canvas></div>
     <div id="tools"></div>
     <div class="caps" id="legacy-h" hidden style="margin-top:26px"></div>
     <div id="legacy"></div>
@@ -85,28 +85,35 @@ a.row .tile { color: var(--pri); }
             '<span class="ic">' + (img ? '<img src="/' + Heinz.esc(img) + '" alt="">' : '<svg class="i" style="color:' + c + '"><use href="/lib/icons.svg#' + sym(x) + '"/></svg>') + '</span>' +
             '<span>' + Heinz.esc(Heinz.pick(x.name)) + '</span></a>';
     }
-    function state(r, label) {
-        if (!r) return { c: '#5f6368', s: label + ' ' + t('ledWait') };
-        return null;
+    // Anzeige vor der Rubrik: Ampelmännchen + Lauftext mit dem Wichtigsten des gewählten Bereichs.
+    // Weitere Meldungen (z. B. wichtige Mails mit Betreff) kommen als Segmente [[Text, Farbe], ...] in tickerItems().
+    function tickerItems() {
+        var it = [], SEP = ['  ·  ', '#5f6368'];
+        function add(txt, c) { if (it.length) it.push(SEP); it.push([txt, c]); }
+        if (area === 'chat') {
+            if (!ollama) add('OLLAMA ' + t('ledWait'), '#9aa0a6');
+            else if (!ollama.up) add('OLLAMA ' + t('ledOff'), COL.red);
+            else if (ollama.loaded.length) add('OLLAMA ' + ollama.loaded[0], COL.green);
+            else add('OLLAMA ' + ollama.models.length + ' ' + t('ledModels'), COL.blue);
+            if (litert) add('LITERT ' + (litert.up ? t('ledReady') : t('ledOff')), litert.up ? COL.blue : COL.red);
+        } else {
+            var mine = (tools || []).filter(function (x) { return x.area === 'tools'; });
+            var ready = mine.filter(function (x) { return x.status !== 'placeholder'; });
+            add(mine.length + ' TOOLS', COL.blue);
+            ready.forEach(function (x) { add(Heinz.pick(x.name) + ' ' + t('ledReady'), COL.green); });
+            mine.filter(function (x) { return x.status === 'placeholder'; }).forEach(function (x) { add(Heinz.pick(x.name) + ' ' + t('soon'), COL.yellow); });
+        }
+        return it;
     }
     function drawLed(p) {
-        var s1 = state(ollama, 'OLLAMA'), s2 = state(litert, 'LITERT');
-        if (!s1) {
-            if (!ollama.up) s1 = { c: COL.red, s: 'OLLAMA ' + t('ledOff') };
-            else if (ollama.loaded.length) s1 = { c: COL.green, s: 'OLLAMA ' + ollama.loaded[0] };
-            else s1 = { c: COL.blue, s: 'OLLAMA ' + ollama.models.length + ' ' + t('ledModels') };
-        }
-        if (!s2) s2 = litert.up ? { c: COL.blue, s: 'LITERT ' + t('ledReady') } : { c: COL.red, s: 'LITERT ' + t('ledOff') };
-        [[s1, 3], [s2, 11]].forEach(function (r) {
-            p.lamp(3, r[1] + 1, r[0].c);
-            p.ticker('l' + r[1], r[1], 12, r[0].s, r[0].c);
-        });
+        var S = Heinz.Pixel.SPRITES, up = !!(ollama && ollama.up);
+        if (up) p.sprite(S.walk[Math.floor(p.frameNo / 5) % 2], 3, 1, COL.green);
+        else p.sprite(S.stop, 3, 1, ollama ? COL.red : '#5f6368');
+        p.ticker('hub', 2, 15, tickerItems(), '#fff', { loop: true, gap: 24 });
     }
     function paintLed() {
-        var cv = document.getElementById('led');
-        if (!led) led = new Heinz.Pixel(cv, { rows: 19, pitch: 3 });
-        led.tickers = led.tickers || {};
-        led.run(drawLed);
+        if (!led) led = new Heinz.Pixel(document.getElementById('led'), { rows: 11, pitch: 3 });
+        led.run(drawLed, { live: function () { return !!(ollama && ollama.up); } });
     }
     function render() {
         document.getElementById('sub').textContent = t('sub');
@@ -144,7 +151,7 @@ a.row .tile { color: var(--pri); }
     lb.onclick = Heinz.toggleLang;
     function lbPaint() { Array.prototype.forEach.call(lb.querySelectorAll('span'), function (s) { s.classList.toggle('active', s.getAttribute('data-l') === Heinz.lang); }); document.documentElement.lang = Heinz.lang; }
     Heinz.onLang(function () { lbPaint(); render(); });
-    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (led) { led.resize(); led.tickers = {}; paintLed(); } }, 150); });
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (led) { led.resize(); led.redraw(); } }, 150); });
     lbPaint(); render();
     fetch('/api/tools').then(function (r) { return r.json(); }).then(function (j) { tools = j.tools || []; render(); }).catch(function () { tools = []; render(); });
     function poll() {

@@ -239,3 +239,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 10.11.2026 – Konzept: Begründung A/B, Hub-Chat, KI-Werkzeuge (Chat „AIUIheinz“, nur Dokumente)
 - `docs/KONZEPT.md` 15.3: A und B sind in `chat.html` mit Absicht in einer Seite (Parameter und Modell beim Chatten ändern); Trennung keine Pflicht. Ob ein schlanker Chat im Hub zusätzlich nötig ist, ist ein Designthema und entfällt, wenn der vorhandene Chat aufgeräumt genug wird. Zweck des Testfelds (Modelle und Schnittstellen kennenlernen) ergänzt.
 - Neuer Abschnitt 16: Leitbild „Werkzeuge, bei denen KI die Bedienung leichter macht“ mit dem INCIheinz-Beispiel (Notizzettel einlesen, Rezept mit Phasen, Ausgabe in Formaten), Merkmalen eines guten Kandidaten und der Liste der bisher genannten Kandidaten. Keine Änderung an der Umsetzungsreihenfolge.
+
+## 10.11.2026 – Pixeldisplays im Chat, Hub-Lauftext mit Ampelmännchen (Strang AIUIheinz-Design)
+- `lib/pixel.js`: Endlos-Lauftext (`loop`), Segmente mit Farben, `sprite`, `bar`, `run(draw,{live})` mit `wake()` (Schleife läuft nur bei Bewegung, pausiert bei verstecktem Tab), Sprites `SPRITES.stop/walk`.
+- Hub: Anzeige vor der Rubrik mit Ampelmännchen + Lauftext je Bereich (ersetzt die zwei Zeilen unter der Kopfzeile).
+- Chat: Modellchip als Pixeldisplay (Modus · Engine, Modell) mit Token-Puls (`pulse.e` wird in `onDelta` angehoben), Tempo-Test mit Balken je Lauf und Fortschritt, Update-Seite mit Lichtlauf/Balken. Fallstrick: die Klasse `.sr` ist in `chat.html` schon der Modus-Punkt der Chatliste, der unsichtbare Chip-Text heißt deshalb `.chip .hid`.
+- Tests: 52 Seiten-, 20 Servertests grün (simuliert; Aussehen und Laufschrift auf dem Handy offen).
+
