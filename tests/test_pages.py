@@ -515,6 +515,19 @@ class PageTest(unittest.TestCase):
         self.assertEqual(before, after, "the header does not move or get covered")
         self.assertTrue(page.is_visible("#query"), "the page stays usable")
 
+    def test_mode_presets_only_ignores_my_values_prompt_and_model_but_keeps_threads(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("settings.ownPrompt = 'MY PROMPT'; setSysSrc('own'); settings.modelParams = {}; settings.modelParams[modelKey()] = {temp: 0.2, topp: 0.5, topk: 11, ctx: 4096}; setParamSrc('own'); var th = document.getElementById('param-threads'); th.value = 3; onThreads()")
+        page.evaluate("var c=document.getElementById('modes-only'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        self.send(page, "Hi")
+        req = self.ollama.requests[-1]
+        self.assertIn("Wilson", req["messages"][0]["content"])
+        self.assertNotIn("MY PROMPT", json.dumps(req))
+        self.assertEqual(req["options"]["temperature"], 0.75)
+        self.assertEqual(req["options"]["num_thread"], 3, "threads stay a model setting")
+
     def test_backup_roundtrip_leaves_keys_out_unless_asked(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
@@ -1043,7 +1056,7 @@ class PageTest(unittest.TestCase):
         page.click(".burger-btn")
         self.assertEqual(page.inner_text("#sh-title"), "Settings")
         self.assertFalse(page.is_visible("#sh-back"))
-        for sw in ("online-on", "own-system", "fast-mode", "preload-on"):
+        for sw in ("online-on", "modes-only", "fast-mode", "preload-on"):
             self.assertTrue(page.locator("#%s" % sw).count() == 1, sw)
         page.click("#menu-sheet [data-go=look]")
         self.assertFalse(page.is_visible("#online-on"), "sub page replaces the content of the sheet")

@@ -366,3 +366,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tempo-Test: Thread-Auswahl als Kacheln mit Glow (violett = schneller Kern, blau = mittlere, grün = langsame), Kernkarte „Pixel 9 Pro: 1+3+4“. Gerätelisten später.
 - Logo-Fassung dünner (1+1 px), Chatliste fährt Aktionen weiter ins Bild.
 - Nicht auf dem Gerät getestet.
+
+## 2026-11-10 – AIUIheinz-Design: Nur Modus-Vorgaben, Threads je Modell (20:30)
+- Schalter „Eigener Systemprompt“ entfernt (der Reiter Prompts → Quelle „Modell“ deckt es ab). Neu: Schalter „Nur Modus-Vorgaben“ (`settings.modesOnly`): Prompt und Werte kommen allein aus dem Modus; eigene Werte, eigener Prompt und Modell-Einstellungen werden ignoriert, Auswahl-Knöpfe gesperrt. Threads bleiben Modell-Einstellung und gelten immer.
+- Threads als eigener Block „Threads · Modell“ unter den Parametern (je Modell gespeichert, in jedem Modus, auch bei „Nur Modus-Vorgaben“).
+- Tempo-Test-Kacheln im Knicklicht-Look (hellgrün, hellblau, hellviolett). Die Farben sind nur Hinweis auf die Kern-Cluster: der Test setzt nur die Thread-Zahl, der Android-Scheduler wählt die Kerne. Idee für später: Test auf bestimmte Kerne festnageln (z. B. `taskset` beim Start des Ollama-Servers durch `server.py`).
+- Statuspunkt unter dem Ring zentriert, Logo-Text tiefer, Chatliste fährt Aktionen weiter ins Bild.
+- Nicht auf dem Gerät getestet.
