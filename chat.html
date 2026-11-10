@@ -21,6 +21,8 @@
         /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
+        .top { gap: 12px; }
+        .top .burger-btn { width: 30px; margin-left: -6px; }
         .top .lang-btn { height: 44px; box-sizing: border-box; padding: 3px; gap: 2px; align-items: center; }
         .top .lang-btn span { width: 34px; height: 36px; min-width: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; }
         .chip { flex: 1; min-width: 0; height: 44px; border-radius: 14px; background: #0a0b0d; border: 1px solid var(--line); padding: 0; display: block; overflow: hidden; cursor: pointer; line-height: 0; color: var(--txt); }
@@ -40,7 +42,7 @@
         #model-sheet { z-index: 43; }
         .caps.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
         .caps .scope { font-size: .62rem; letter-spacing: .04em; text-transform: none; font-weight: 400; color: var(--muted); }
-        .quick { padding-bottom: 6px; }
+        .quick { padding: 4px 0 6px; }
         .quick .slidercard { padding: 8px 12px 6px; margin-bottom: 6px; border-radius: 14px; }
         .quick .slidercard .sc-top output { font-size: 1rem; }
         .quick .slidercard small { display: none; }
@@ -48,14 +50,14 @@
         .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
         #menu-sheet .sh-head h3 { text-align: center; padding-left: 0; }
         #menu-sheet #sh-back:not([hidden]) + h3, #menu-sheet #q-reload[hidden] + #sh-back + h3 { }
-        .upd-pill { display: flex; width: 78%; height: 46px; margin: 10px auto 0; justify-content: center; align-items: center; border-radius: 16px; font-size: .8rem; letter-spacing: .14em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; }
+        .upd-pill { display: flex; width: 78%; height: 46px; margin: 10px auto 0; justify-content: center; align-items: center; border-radius: 16px; font-size: .8rem; letter-spacing: .14em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; box-shadow: 0 0 12px color-mix(in srgb, var(--acc) 22%, transparent); }
         .led.updled { width: 78%; margin: 12px auto 4px; }
-        .bigbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 78%; height: 56px; margin: 14px auto 0; padding: 0 14px; border-radius: 999px; border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 8%, var(--card)); color: var(--txt); font-family: inherit; text-align: center; cursor: pointer; --bc: var(--ol); }
+        .bigbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 74%; height: 50px; margin: 26px auto 0; padding: 0 14px; border-radius: 999px; box-shadow: 0 0 12px color-mix(in srgb, var(--bc) 22%, transparent); border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 8%, var(--card)); color: var(--txt); font-family: inherit; text-align: center; cursor: pointer; --bc: var(--ol); }
         .bigbtn small { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--bc); font-weight: 600; line-height: 1; }
         .bigbtn b { font-size: .88rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--bc); line-height: 1.2; }
         .bigbtn.eng { --bc: var(--m2); } .bigbtn.mod { --bc: var(--m4); }
         .bigbtn:active { background: color-mix(in srgb, var(--bc) 20%, var(--card)); }
-        .pwin { margin: 16px -4px 8px; padding: 10px 12px 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
+        .pwin { margin: 28px -4px 8px; padding: 10px 12px 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
         .pw-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); font-weight: 600; margin-bottom: 8px; }
         .pw-head .scope { letter-spacing: 0; text-transform: none; font-weight: 400; font-size: .64rem; color: var(--muted); }
         .dflt { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .84rem; padding: 2px 0 8px; cursor: pointer; }
@@ -87,7 +89,9 @@
         #menu-sheet .pg[data-pg=main] .row.open .go { transform: rotate(180deg); }
         .quick .rule { height: 6px; }
         .srow { display: flex; align-items: center; gap: 10px; height: 26px; margin: -6px 0 2px; flex: none; }
+        .srow #preload-status { margin-right: 18px; }
         #preload-status { flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sdot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin: 0 -2px 0 3px; background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
         .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #0a0b0d; box-sizing: content-box; }
 
         /* Modusleiste */
@@ -155,7 +159,7 @@
         .prompt { flex: none; display: flex; align-items: flex-end; gap: 6px; min-height: 60px; padding: 8px 8px 8px 8px; border-radius: 28px; background: var(--surf); border: 1.5px solid var(--edge); }
         .prompt:focus-within { border-color: var(--acc); }
         :root[data-theme="lt"] .prompt { background: var(--surf); border-color: var(--edge); }
-        .prompt textarea { flex: 1; min-width: 0; align-self: stretch; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: 1rem; line-height: 1.4; padding: 8px 6px 8px 8px; max-height: 40dvh; overflow-y: auto; }
+        .prompt textarea { flex: 1; min-width: 0; align-self: stretch; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: 1.1rem; line-height: 1.4; padding: 8px 6px 8px 8px; max-height: 40dvh; overflow-y: auto; }
         .prompt textarea::placeholder { color: var(--muted); }
         .prompt { position: relative; }
         .prompt.multi { flex-wrap: wrap; }
@@ -240,7 +244,8 @@
         .saved-item .load small { display: block; color: var(--sub); font-size: .72rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
         .saved-item .more { width: 38px; height: 38px; }
         .saved-item .acts2 { display: none; padding: 0 0 10px 17px; gap: 8px; flex-wrap: wrap; }
-        .saved-item .pinned { color: var(--acc); margin-right: 5px; vertical-align: -2px; }
+        .saved-item .pinned { color: var(--acc); margin-right: 6px; flex: none; order: -1; }
+        .pin-sep { height: 0; border-top: 1px solid var(--edge); margin: 6px 0 4px; }
         .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
         .saved-item.open .acts2 { display: flex; }
@@ -258,7 +263,7 @@
             <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
             <button class="ibtn burger-btn" type="button" onclick="openMenu()" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
         </div>
-        <div class="srow"><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas></div>
+        <div class="srow"><i class="sdot" id="st-dot"></i><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas></div>
         <select id="model-select" onchange="onModelChange()" aria-hidden="true" tabindex="-1"></select>
 
         <div class="modes" id="mode-bar" role="tablist">
@@ -790,7 +795,7 @@
                 ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
                 ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
                 queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
-                newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', renameTitle: 'Rename chat', renameChat: 'Rename', pinChat: 'Pin', unpinChat: 'Unpin', exportChat: 'Export', pinMax: 'You can pin up to 5 chats.', shareTitle: 'Share', downloadTitle: 'Download as Markdown', copyMsgTitle: 'Copy this message (as Markdown text)',
+                newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', renameTitle: 'Rename chat', renameChat: 'Rename', pinChat: 'Pin', unpinChat: 'Unpin', exportChat: 'Export', copyChatList: 'Copy chat', pinMax: 'You can pin up to 5 chats.', shareTitle: 'Share', downloadTitle: 'Download as Markdown', copyMsgTitle: 'Copy this message (as Markdown text)',
                 read: 'Read aloud', stop: 'Stop', params: 'Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
                 chats: 'Chats', saveChat: 'Save current chat', discardChat: 'Discard current chat',
@@ -834,7 +839,7 @@
                 ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
                 ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
                 queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
-                newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', renameTitle: 'Chat umbenennen', renameChat: 'Umbenennen', pinChat: 'Anpinnen', unpinChat: 'Lösen', exportChat: 'Exportieren', pinMax: 'Es können bis zu 5 Chats angepinnt werden.', shareTitle: 'Teilen', downloadTitle: 'Als Markdown herunterladen', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
+                newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', renameTitle: 'Chat umbenennen', renameChat: 'Umbenennen', pinChat: 'Anpinnen', unpinChat: 'Lösen', exportChat: 'Exportieren', copyChatList: 'Chat kopieren', pinMax: 'Es können bis zu 5 Chats angepinnt werden.', shareTitle: 'Teilen', downloadTitle: 'Als Markdown herunterladen', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
                 read: 'Vorlesen', stop: 'Stopp', params: 'Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
                 chats: 'Chats', saveChat: 'Aktuellen Chat speichern', discardChat: 'Aktuellen Chat verwerfen',
@@ -1596,7 +1601,8 @@
                 box.appendChild(s);
                 return;
             }
-            list.forEach(c => {
+            const lastPin = list.reduce(function (a, c, i) { return c.pinned ? i : a; }, -1);
+            list.forEach((c, ci) => {
                 const row = document.createElement('div');
                 row.className = 'saved-item';
                 row.setAttribute('data-mode', c.mode || 'wilson');
@@ -1606,7 +1612,6 @@
                 const load = document.createElement('button');
                 load.className = 'load';
                 const ttl = document.createElement('span'); ttl.className = 'ttl-in';
-                if (c.pinned) ttl.insertAdjacentHTML('beforeend', ICON('pin', 'sm pinned'));
                 ttl.appendChild(document.createTextNode(c.title));
                 load.appendChild(ttl);
                 const sm = document.createElement('small');
@@ -1640,11 +1645,21 @@
                 exp.className = 'pill'; exp.type = 'button';
                 exp.innerHTML = ICON('download') + '<span>' + esc(t('exportChat')) + '</span>';
                 exp.onclick = function () { exportChat(c.id); };
-                acts.appendChild(ren); acts.appendChild(pin); acts.appendChild(exp);
+                const cp = document.createElement('button');
+                cp.className = 'pill'; cp.type = 'button';
+                cp.innerHTML = ICON('copy') + '<span>' + esc(t('copyChatList')) + '</span>';
+                cp.onclick = function () {
+                    const txt = (c.messages || []).map(function (m) { return (m.role === 'user' ? t('roleUser') : t('roleBot')) + '\n' + m.content; }).join('\n\n');
+                    const sp = cp.querySelector('span'), old = sp.textContent;
+                    copyText(txt).then(function () { sp.textContent = '✓'; }).catch(function () { sp.textContent = '✕'; }).then(function () { setTimeout(function () { sp.textContent = old; }, 1500); });
+                };
+                acts.appendChild(ren); acts.appendChild(pin); acts.appendChild(cp); acts.appendChild(exp);
                 acts.appendChild(del);
+                if (c.pinned) sr.insertAdjacentHTML('afterbegin', ICON('pin', 'sm pinned'));
                 sr.appendChild(load); sr.appendChild(more);
                 row.appendChild(sr); row.appendChild(acts);
                 box.appendChild(row);
+                if (ci === lastPin && lastPin < list.length - 1) { const sp = document.createElement('div'); sp.className = 'pin-sep'; box.appendChild(sp); }
             });
         }
 
@@ -2065,11 +2080,11 @@
                 p.rect(1, 4, p.cols - 2, 1, PX_DIM);
                 return;
             }
-            if (preloadAbort) {                        // Verbindung / Laden: Wählpunkte laufen (orange)
+            if (preloadAbort) {                        // Verbindung / Laden: Wählpunkte laufen (blau)
                 const n = Math.max(3, Math.floor(p.cols / 5)), ph = Math.floor(f / 3);
                 for (let d = 0; d < n; d++) {
                     const q = ((ph - d) % (n + 3) + (n + 3)) % (n + 3);
-                    p.rect(1 + d * 5, 2, 2, 2, q < 2 ? STATUS_COLORS.orange : q === 2 ? '#7a4a00' : PX_DIM);
+                    p.rect(1 + d * 5, 2, 2, 2, q < 2 ? STATUS_COLORS.blue : q === 2 ? '#1c3c75' : PX_DIM);
                 }
                 return;
             }
@@ -2089,6 +2104,7 @@
             if (!generating && preloadAbort) txt = t('preLoading');
             else if (!generating && preloadReady) txt = t('preReady');
             el.textContent = txt;
+            const dot = $('st-dot'); if (dot) { dot.style.background = STATUS_COLORS[color] || 'var(--sub)'; dot.style.color = STATUS_COLORS[color] || 'var(--sub)'; }
             el.style.color = color === 'red' ? 'var(--red)' : color === 'orange' ? 'var(--orange)' : color === 'green' ? 'var(--green)' : '';
             eqState.color = color;
             if (eqPx) eqPx.wake();
@@ -2244,7 +2260,9 @@
             if (ta.closest('.full')) return;
             const box = ta.closest('.prompt'), was = box.classList.contains('multi'), v = ta.value;
             ta.style.height = 'auto';
-            const multi = !!v && (v.indexOf('\n') >= 0 || ta.scrollHeight > 52 || (was && v.length > 28));
+            const cs = getComputedStyle(ta), lh = parseFloat(cs.lineHeight) || 24, pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+            const wraps = ta.scrollHeight - pad > lh * 1.4;      // zweite Zeile
+            const multi = !!v && (v.indexOf('\n') >= 0 || wraps || (was && v.length > 22));
             box.classList.toggle('multi', multi);
             ta.style.height = 'auto';
             ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.4) + 'px';

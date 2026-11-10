@@ -303,3 +303,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Engine-/Modell-Buttons als Pillen mit gleichen Abständen; Update-LED-Zeile mittig in Buttonbreite (`.led.updled`).
 - Überschriften und Tabellen der Modellantwort in Serifen.
 - Test für Umbenennen und Pin-Limit; Tests 56 + 20 (simuliert).
+
+## 2026-11-10 · AIUIheinz-Design · Feinschliff 15:10
+- Chat-Liste: Pin-Symbol vorangestellt, dünne Trennlinie unter dem Pin-Bereich; neue Option "Chat kopieren" im Drei-Punkte-Menü.
+- Eingabe: Schrift 1.1 rem; Fenster expandiert, sobald die zweite Zeile umbricht (Zeilenhöhe aus Computed Style), bleibt dann expandiert.
+- Equalizer: Laden/Verbindung = blaue Wählpunkte, Arbeiten = orangefarbener Balken, Antwort = grüner Pegel.
+- Statuszeile: kleine LED in Statusfarbe vor dem Text (Variante A), Text mit Abstand zum Equalizer.
+- Engine-/Modell-Pillen schlanker (50 px, 74 %) mit viel Schwarzraum und dezentem Glow; UPDATE-Pille gleicher Glow.
+- Kopfzeile: Abstände um Sprachschalter angeglichen (Menü-Taste schmaler, rückt näher).
