@@ -205,7 +205,9 @@ Aus `docs/GEPLANT.md` (dort „zwei Bereiche“, überholt) und `docs/DESIGN.md`
 - **Bereich A, Ausprobieren und Modelle** (Arbeitsname „Research“ oder „Model Manager“): Testfeld für lokale Modelle mit Modi, Parametern, Tempotest und Threads, dazu Erstinstallation, Installation und Verwaltung von Modellen (Ollama), Cloud-Anbieter, LiteRT-LM. Zweck: Auf dem eigenen Handy herausfinden, welches Modell und welche Prozessoreinstellung passt. Chats werden **je Modus** gespeichert (gleicher Prompt, mehrere Modelle vergleichbar); der Chat soll sein Startmodell zeigen, Modellwechsel mitten im Chat an der Antwort vermerken (Vorschlag).
 - **Bereich B, schlanker Chat** („Heinz UI“ als Markenname): Oberfläche wie Claude oder Gemini, maximale Chatfläche, wachsende Eingabezeile, Menüs von links (Chats) und rechts (wesentliche Einstellungen), keine Temperatur und keine Testläufe. Das Menü „Einstellungen“ gilt in allen Bereichen gleich.
 - **Bereich C, Tools** (Widgets, Rechner, Converter, alles, was von KI profitiert; im Hub als App-Drawer): Sheet, Filter, später convert2, Kamera- und Dokumentwerkzeuge (Abschnitt 10a) und Tools anderer Projekte wie INCIheinz (`appicon`). Welche Tools ohne „Online erlauben“ grau werden, ist offen.
-- **Im Hub** gibt es derzeit zwei Reiter: **Chats & Modelle** (A und B, Chat „Heinz UI“, Modelle, Alte Versionen) und **Tools** (C). Die heutige `chat.html` vereint A und B: Sie zeigt Parameter, Tempo-Test und Engine-Wahl neben dem normalen Chat. Die Trennung (zwei Seiten oder zwei Ansichten derselben Seite) steht aus.
+- **Im Hub** gibt es derzeit zwei Reiter: **Chats & Modelle** (A und B, Chat „Heinz UI“, Modelle, Alte Versionen) und **Tools** (C). Die heutige `chat.html` vereint A und B **mit Absicht**: Wer mit der App lokale und Cloud-Modelle ausprobiert, will beim Chatten Modell und Parameter ändern, ohne die Seite zu wechseln. Die Testfunktionen liegen im Menü „Einstellungen“ (Bottom-Sheet), der Chat selbst hat Modusleiste und viel Platz. Eine Trennung ist deshalb **keine Pflicht**.
+- **Schlanker Chat im Hub (offen, Designthema):** Eine Möglichkeit wäre ein zusätzlicher Eintrag im Hub mit einem Chat ohne Parameter und Testwerkzeuge. Er war gedacht, als die Testfunktionen noch nicht im Menü lagen. Gelingt der vorhandene Chat so aufgeräumt wie die Chats der großen Anbieter, entfällt der Zusatzeintrag. Der Design-Strang entscheidet das, mit dem Entwickler.
+- **Wozu das Testfeld dient:** Der Entwickler will Modelle aus dem Netz herunterladen, in Ollama installieren oder über eine Cloud-Schnittstelle anbinden, vergleichen und herausfinden, was sich für eigene Anwendungen eignet. Dabei lernt er, wie Schnittstellen und lokale Modelle arbeiten, was für Apps zählt, die früher nur aus Tabellen bestanden und mit Wissen in Tabellenform und Taxonomien erst richtig leistungsfähig werden.
 - **Testfeld für andere Tools:** `lib/providers.js` ist ein gemeinsamer Baustein, damit zum Beispiel convert2 Fragen an ein lokales oder Cloud-Modell auslagern kann.
 - **Online:** Mit „Online erlauben“ erscheinen zusätzliche Menügruppen und ein Chip „· ONLINE“; ohne den Haken kein Online-Eintrag und keine Anfrage nach außen. Welche Modi und Werkzeuge online zusätzlich erscheinen, ist offen.
 
@@ -228,7 +230,7 @@ Aus `docs/GEPLANT.md` (dort „zwei Bereiche“, überholt) und `docs/DESIGN.md`
 | Stabilität (Root) | Entwickleroption gesetzt, Dauertest und Signal-9-Auswertung offen |
 
 ### 15.6 Offen (Entscheidungen und Tests)
-1. **Drei Bereiche:** Namen und Zuschnitt (A Ausprobieren und Modelle, B schlanker Chat, C Tools), Trennung der heutigen `chat.html` (1948 Zeilen) in zwei Seiten oder Ansichten, Zuordnung von Modelle, Sheet, Filter, Lab und Vitals zu den Reitern im Hub. Entscheiden Entwickler und Design-Strang gemeinsam.
+1. **Drei Bereiche:** Namen und Zuschnitt (A Ausprobieren und Modelle, B schlanker Chat, C Tools), ob ein zusätzlicher schlanker Chat im Hub nötig ist oder die heutige `chat.html` (1948 Zeilen, A und B bewusst in einem) aufgeräumt genug wird, Zuordnung von Modelle, Sheet, Filter, Lab und Vitals zu den Reitern im Hub. Entscheiden Entwickler und Design-Strang gemeinsam.
 2. **LiteRT-LM auf dem Handy:** Serve starten, Modellliste, Antwort, GPU über das Modellfeld, wirken Systemnachricht und Parameter? Tempo-Test dafür fehlt (er läuft nur mit Ollama).
 3. **Zwei Systemprompt-Wege** (Seite ersetzt Modelfile oder Modelfile bleibt): welcher Standard je Modus? Spielt in die Persona-Frage (Abschnitt 5) hinein.
 4. **Modelle verwalten** (Installieren, Löschen, Aliase) im Bereich A, mit der Quellenliste aus `docs/MODELLQUELLEN.md`; „Funktionsplätze“ (Chat, Sheet, Filter, Prüfung, Bild, Sprache) und Datenschutzfeld je Anbieter brauchen den Beschluss des Entwicklers.
@@ -238,3 +240,20 @@ Aus `docs/GEPLANT.md` (dort „zwei Bereiche“, überholt) und `docs/DESIGN.md`
 8. **Handytest der Design-Umbauten:** neuer Hub und neuer Chat (Eingabe mit Tastatur, Mikrofon, Vorlesen, Chat-Drawer, Splitscreen, Themes, Pixeldisplay); Tests sind nur simuliert.
 9. **Tools im Hub:** Werkzeuge mit Online-Sperre (grau ohne Haken), Sheet und Filter ins neue Design, Lesemodus in warmer Serife, `appicon` für Tools anderer Projekte.
 10. **Kamera und Dokumente** (Abschnitt 10a), **Refusal-Vergleich** (15.4) und **Sheet mit echtem 3B-Modell** auf der Rohstoffliste.
+
+## 16 Leitbild: Werkzeuge, bei denen KI die Bedienung leichter macht
+Gespräch mit dem Entwickler am 10.11.2026. Das ändert noch nichts an der Reihenfolge der Umsetzung, gehört aber zum Konzept: Für den Bereich Tools (15.3, C) wird gezielt nach Anwendungen gesucht, bei denen der Einsatz von KI die Benutzerfreundlichkeit sprunghaft erhöht, am liebsten komplett offline.
+
+**Das Muster aus der Erfahrung des Entwicklers (Beispiel INCIheinz, Lager- und Rezeptbuch-Tool):** Ohne KI und Texterkennung müsste der Nutzer alle Artikeldaten selbst eintippen oder Texte mühsam zuschneiden und die richtigen Wörter herauskopieren. Mit KI beim Einlesen ist das für ihn ein Wendepunkt: Ein fotografierter Notizzettel ergibt ein Rezept mit Zutatenliste und modular aufgebauten Phasen und Herstellungsschritten, die sich danach mit verschiedenen Formatierungsregeln für Satz und Layout ausgeben lassen. Seine Erfahrung: Ehemalige Tabellen-Apps profitieren stark von KI, und das meiste davon geht offline.
+
+**Ein guter Kandidat für Bereich C hat meist diese Merkmale** (abgeleitet aus dem Beispiel und der Projektbeschreibung, noch nicht abgestimmt):
+- Die Eingabe von Hand ist mühsam: Fotos, Notizen, kopierte Webseiten, Rechnungen, Tabellen, die beim Einfügen nur als Müll ankommen.
+- Die Ausgabe ist strukturiert und lässt sich prüfen (Tabelle, Liste, Rezeptmodule, Schema), das Modell übersetzt oder klassifiziert, der Code rechnet und prüft (Beschluss aus Abschnitt 1).
+- Kleine lokale Modelle reichen, oder nur ein kleines Datenpaket geht bei „Online erlauben“ an die Cloud, nie die ganze Datenbank oder alle Chats.
+- Das Ergebnis lässt sich exportieren (Zwischenablage, Tabelle, Text- und Layoutformate).
+- Ein Mensch kontrolliert das Ergebnis, bevor es gespeichert wird.
+
+**Kandidaten, die schon im Konzept stehen oder genannt wurden** (keine Reihenfolge, keine Zusage): Sheet (Tabelle ansprechen), Filter (Listen und Texte nach Regel bewerten), convert2 (Markdown und andere Formate, Aufbereitung von Texten), Kamera und Dokumente (Abschnitt 10a: Rezept, Rechnung, Brief fotografieren und auswerten), Einlesen und Auswerten von Texten mit lokalem Wissen (Wikipedia offline). INCIheinz ist dabei ein Beispiel für ein Tool eines anderen Projekts, das im Hub als Kachel erscheinen kann (`appicon`).
+
+**Offen:** Welche Kandidaten zuerst; welches Modell dafür reicht (Edge-Modelle, Texterkennung offline); wie ein Werkzeug sagt, dass es online geht und was dabei verlassen wird (Online-Sperre, Abschnitt 15.6, Punkt 9). Die Modellsuche im Bereich A dient auch dazu, solche Fragen zu beantworten.
+

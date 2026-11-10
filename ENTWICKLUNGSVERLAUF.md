@@ -235,3 +235,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `docs/KONZEPT.md`: Abschnitt 15 neu gefasst. 15.1 (was es gibt: Design-Fundament, neuer Hub mit Reitern und Pixeldisplay, neuer Chat, Anbieterschicht, Server), 15.2 (Abweichungen: Themes statt Einheitsschwarz, Symbolsatz, keine untere Leiste), 15.3 (drei Bereiche A, B, C; im Hub zwei Reiter), 15.5 (Strangstand), 15.6 (offene Punkte, neu: Handytest der Design-Umbauten, Tools im Hub). Abschnitt 12 mit aktuellem Stand je Schritt.
 - Zuschnitt der drei Bereiche ist meine Ableitung aus `docs/DESIGN.md` und `docs/GEPLANT.md`; Namen und Zuordnung sind laut Design-Strang offen und gehören dem Entwickler.
 - Grundlage: Commit `a86ff2e`; selbst gelaufen: 20 Server- und 51 Seitentests grün (simuliert).
+
+## 10.11.2026 – Konzept: Begründung A/B, Hub-Chat, KI-Werkzeuge (Chat „AIUIheinz“, nur Dokumente)
+- `docs/KONZEPT.md` 15.3: A und B sind in `chat.html` mit Absicht in einer Seite (Parameter und Modell beim Chatten ändern); Trennung keine Pflicht. Ob ein schlanker Chat im Hub zusätzlich nötig ist, ist ein Designthema und entfällt, wenn der vorhandene Chat aufgeräumt genug wird. Zweck des Testfelds (Modelle und Schnittstellen kennenlernen) ergänzt.
+- Neuer Abschnitt 16: Leitbild „Werkzeuge, bei denen KI die Bedienung leichter macht“ mit dem INCIheinz-Beispiel (Notizzettel einlesen, Rezept mit Phasen, Ausgabe in Formaten), Merkmalen eines guten Kandidaten und der Liste der bisher genannten Kandidaten. Keine Änderung an der Umsetzungsreihenfolge.
