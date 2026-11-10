@@ -359,3 +359,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Reset/Speichern leuchten in der Auszeichnungsfarbe, wenn bedienbar. Hinweistext nennt Ziel (Modell · Modus).
 - Aktionszeile unter der Antwort erst nach Ende der Ausgabe. Chatliste scrollt beim Öffnen der Symbolzeile; „Alle · N“ zeigt die Gesamtzahl. Logo als serifenlose Schrift. Equalizer antippbar: letzte drei Statusschritte.
 - Nicht auf dem Gerät getestet.
+
+## 2026-11-10 – AIUIheinz-Design: Prompts, Tiles, Korrekturen (19:50)
+- Fehler: Die Klasse `full` des Statustexts kollidierte mit der Vollbild-Klasse `.full` (position: fixed, inset 0) – deshalb schwarze Seite beim Antippen. Umbenannt in `st-open`; Test sichert, dass Kopfzeile und Eingabe unverändert bleiben.
+- Reiter „Prompts“: Quelle Modus | Modell | Meine (`settings.sysSrc`; „Modell“ = kein Systemprompt, wie das frühere „eigener Systemprompt des Modells“). Ein eigener Prompt (`ownPrompt`) wird wörtlich gesendet (im Schnellmodus plus Kurzantwort-Hinweis), ist kopierbar; „Kopie bearbeiten“ übernimmt den Modus-Prompt. Der Schalter „Eigener Systemprompt“ im Menü wählt „Meine“, öffnet bei leerem Prompt den Editor. Eingaben des Nutzers lassen sich weiter pro Nachricht kopieren.
+- Tempo-Test: Thread-Auswahl als Kacheln mit Glow (violett = schneller Kern, blau = mittlere, grün = langsame), Kernkarte „Pixel 9 Pro: 1+3+4“. Gerätelisten später.
+- Logo-Fassung dünner (1+1 px), Chatliste fährt Aktionen weiter ins Bild.
+- Nicht auf dem Gerät getestet.
