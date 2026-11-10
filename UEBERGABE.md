@@ -49,6 +49,8 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 - **Neue Seiten (Regeln aus dem Handytest 09.11.2026):** relative Pfade verwenden und den Server nur über `/api/...` ansprechen (spätere gehostete Fassung); `overscroll-behavior-y: none` setzen (Wischen zum Aktualisieren kann den Chat löschen); Ollama-Anfragen mit `options.num_thread` (Startwert 3–4, einstellbar, siehe `docs/OLLAMA_UND_MODELLE.md`); Modus und Modell sind getrennte Angaben (Modus Heinz soll `heinz-fakt` nutzen können).
 - **Tempo:** Termux im Splitscreen sichtbar halten, solange `num_thread` nicht gesetzt ist; ohne Sicht läuft Ollama in `cpuset:/foreground` und mit 8 Threads bis zu zehnmal langsamer.
 
+- Denk-Modelle (Gemini 2.5/3 über den OpenAI-Endpunkt): Denk-Token zählen zur Token-Grenze, abgeschnittene Antworten zeigen `finish_reason: length` (Hinweis unter der Antwort). Gemini 3 will Temperatur 1.0; bei Verdacht „Standardwerte“ in den Parametern einschalten (sendet kein Sampling). Mehrere Modelllisten-Abrufe können sich überholen: nur der jüngste gilt (`modelsSeq`).
+
 ## Wichtige Strukturen
 - **chat.html:** `MODE_PRESETS`, `MODELS`, `I18N`/`t()`/`applyI18n()`, `onSlider`, `onDefaultToggle`, `normalizeMode`; Streaming über `fetch` und `ReadableStream`.
 - **lab.html:** drei Schritte (Daten, Regel, Ausführen), Spaltenwahl als Chips, Kontrollspalte mit Trefferquote (`takeLabels`, `normCat`, `mkResult`), Presets mood/urgency/spam/topic/material/custom, Export CSV und JSON.

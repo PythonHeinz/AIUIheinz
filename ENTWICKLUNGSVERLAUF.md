@@ -251,3 +251,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu `docs/ANALYSE_MENUE.md`: Menüstruktur aus Sicht des Anwenders (Engine vor Modell, Online-Schalter, Parameter-Schnellzugriff, Farblogik, Chat-Titelzeile). Nur Analyse, nichts umgebaut.
 - Tests: 52 Seiten-, 20 Servertests grün (simuliert).
 
+
+## 10.11.2026 – Korrektur: Cloud-Antworten brachen ab, Modellliste uneinheitlich (Chat „AIUIheinz-Fix-Cloud“)
+- Handytest (Google AI Studio über eigenen Endpunkt): Antworten wurden von Frage zu Frage kürzer und endeten mitten im Wort; die Modellliste war mal 5, mal 15 Einträge lang.
+- Ursache Abbruch: nicht auf dem Gerät belegt. Wahrscheinlichster Grund laut Googles Dokumentation und Forum: Gemini-Modelle denken, und die Denk-Token zählen zur Token-Grenze (`max_tokens`). Die Seite sendet die Grenze nur im Schnellmodus (Standard 150), dort frisst das Denken die Antwort auf. Zweiter Verdächtiger: Gemini 3 empfiehlt Temperatur 1.0; die Modi senden 0.15 und top_p 0.30 (Google warnt vor Schleifen und schwächeren Antworten).
+- Geändert (`lib/providers.js`): `chatOpenAI` liefert `stats.finishReason` (`stop`/`length`) und `stats.reasoningTokens`. (`chat.html`): bei `length` steht unter der Antwort ein Hinweis (EN/DE), nicht im Verlauf gespeichert; bei leerer Antwort und `length` statt „Keine Antwort“.
+- Ursache Modellliste: mehrere Abrufe liefen gleichzeitig (Engine-Wechsel, Schlüssel-Feld, Knopf), der langsamere, ältere überschrieb den neueren. `loadModels` zählt jetzt Abrufe, bricht den alten ab, nur der jüngste gilt; Status „Modellliste wird geladen…“ und „geladen: n Einträge“.
+- Tests: 2 neue (Abbruchhinweis, jüngster Abruf gewinnt), beide ohne Korrektur rot (Mutationsprüfung). 54 Seiten-, 20 Servertests grün (simuliert, nicht auf dem Handy; echtes Gemini nicht erreichbar).
+

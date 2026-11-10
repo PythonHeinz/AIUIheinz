@@ -63,10 +63,11 @@ class FakeOllama:
 class FakeOpenAI:
     """OpenAI-style engine (LiteRT-LM on 127.0.0.1:9379, or an online provider): /models and streamed /chat/completions."""
 
-    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True):
+    def __init__(self, page, pattern, models=("gemma4-e2b",), chunks=("Hi", " there"), status=200, usage=True, finish="stop", reasoning=0):
         self.requests = []    # (headers, body) of /chat/completions
         self.model_calls = 0
         self.models, self.chunks, self.status, self.usage = models, chunks, status, usage
+        self.finish, self.reasoning = finish, reasoning
         page.route(pattern, self.handle)
 
     def handle(self, route):
@@ -85,8 +86,12 @@ class FakeOpenAI:
             if self.status != 200:
                 return route.fulfill(status=self.status, headers=cors, body="nope")
             lines = ["data: " + json.dumps({"choices": [{"delta": {"content": c}}]}) for c in self.chunks]
+            lines.append("data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": self.finish}]}))
             if self.usage:
-                lines.append("data: " + json.dumps({"choices": [], "usage": {"prompt_tokens": 21, "completion_tokens": 7}}))
+                use = {"prompt_tokens": 21, "completion_tokens": 7}
+                if self.reasoning:
+                    use["completion_tokens_details"] = {"reasoning_tokens": self.reasoning}
+                lines.append("data: " + json.dumps({"choices": [], "usage": use}))
             lines.append("data: [DONE]")
             return route.fulfill(status=200, content_type="text/event-stream", headers=cors, body="\n\n".join(lines) + "\n\n")
         return route.fulfill(status=404, body="")
@@ -571,6 +576,40 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         r = page.evaluate("""async () => { const x = await HeinzProviders.chat('litert', {model:'m', messages:[{role:'user',content:'hi'}]}); return [x.text, x.stats.outputTokens, x.stats.approx]; }""")
         self.assertEqual(r, ["abc", 3, True])
+
+    def test_cloud_answer_cut_by_token_limit_is_explained(self):
+        # Handytest 10.11.2026 (Google AI Studio): Antworten wurden immer kürzer und endeten mitten im Wort.
+        # Denk-Modelle zählen Denk-Token zur Grenze; die Seite muss den Abbruchgrund (finish_reason) zeigen.
+        page = self.new_page()
+        FakeOpenAI(page, "**/127.0.0.1:9379/**", chunks=("Ye",), finish="length", reasoning=90)
+        page.goto(self.srv.base + "/chat.html")
+        r = page.evaluate("""async () => { const x = await HeinzProviders.chat('litert', {model:'m', messages:[{role:'user',content:'hi'}]}); return [x.stats.finishReason, x.stats.reasoningTokens]; }""")
+        self.assertEqual(r, ["length", 90])
+        self.pick_engine(page, "litert")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length === 1")
+        page.fill("#query", "Hi")
+        page.click("#send-btn")
+        page.wait_for_function("document.querySelector('.msg-assistant') && document.querySelector('.msg-assistant').innerText.includes('cut off')")
+        self.assertIn("Ye", page.inner_text(".msg-assistant"))
+        self.assertEqual(page.evaluate("chatHistory[chatHistory.length-1].content"), "Ye", "the note is not stored in the history")
+
+    def test_model_list_only_newest_request_counts_and_shows_progress(self):
+        # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("""() => {
+            window.__res = [];
+            HeinzProviders.models = () => new Promise(r => window.__res.push(r));
+            settings.provider = 'litert';
+            window.__a = loadModels();
+            window.__b = loadModels();
+        }""")
+        self.assertIn("Loading", page.text_content("#eng-status"))
+        page.evaluate("window.__res[1](['n1','n2','n3'])")      # newer request answers first
+        page.evaluate("window.__res[0](['old'])")               # older, slower request answers last
+        page.evaluate("Promise.all([window.__a, window.__b])")
+        self.assertEqual(page.evaluate("MODELS"), ["n1", "n2", "n3"])
+        self.assertIn("3", page.text_content("#eng-status"))
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()

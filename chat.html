@@ -597,19 +597,27 @@
             updateChip(); renderModelSheet();
         }
         function setEngStatus(msg) { $('eng-status').textContent = msg || ''; }
+        let modelsSeq = 0, modelsAbort = null;
         async function loadModels() {
             const prov = settings.provider;
             const p = PV.get(prov);
-            setEngStatus('');
+            // Nur der jüngste Abruf zählt: ein älterer, langsamerer Abruf darf die Liste nicht überschreiben
+            const seq = ++modelsSeq;
+            if (modelsAbort) modelsAbort.abort();
+            modelsAbort = new AbortController();
+            setEngStatus(prov === 'ollama' ? '' : t('modelsLoading'));
             try {
-                const names = await PV.models(prov);
+                const names = await PV.models(prov, modelsAbort.signal);
+                if (seq !== modelsSeq) return;
                 if (prov !== settings.provider) return;   // Engine wurde inzwischen gewechselt
                 if (names.length) {
                     MODELS = names;
                     if (prov !== 'ollama' && names.indexOf(settings.model) < 0) settings.model = (settings.modelByProvider[prov] && names.indexOf(settings.modelByProvider[prov]) >= 0) ? settings.modelByProvider[prov] : names[0];
                     fillModelSelect(); saveSettings(); loadThreads();
+                    if (prov !== 'ollama') setEngStatus(t('modelsDone', { n: names.length }));
                 } else if (prov !== 'ollama') { MODELS = []; fillModelSelect(); setEngStatus(t('noModels')); }
             } catch (e) {
+                if (e.name === 'AbortError' || seq !== modelsSeq) return;   // von einem neueren Abruf abgelöst
                 if (prov === 'ollama') return;   /* Ollama nicht erreichbar: Fallback-Liste bleibt */
                 MODELS = []; fillModelSelect();
                 if (e.code === 'ONLINE_BLOCKED') setEngStatus(t('onlineBlocked'));
@@ -706,7 +714,7 @@
                 onlineBlocked: 'Online is switched off. Tick "Allow online" in the menu to use this engine.', needKey: 'This engine needs an API key (menu → Engine).',
                 hintKey: ' (API key rejected or missing rights)', hintLimit: ' (rate limit reached, try again later)', hintNoModel: ' (model name unknown to this engine?)',
                 connFailGeneric: 'Connection to {n} failed ({m}). The engine may be offline, the address wrong, or the provider blocks browser access (CORS).',
-                modelsFail: 'Could not load the model list: {m}', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
+                modelsFail: 'Could not load the model list: {m}', modelsLoading: 'Loading model list…', modelsDone: 'Model list loaded: {n} entries.', cutLength: '(Answer cut off: the engine stopped at its token limit. Thinking models such as Gemini count their thinking tokens too. Turn off fast mode or raise the limit.)', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
                 engLocalNote: 'Runs on this device.',
                 nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: 'Context: {n} characters',
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
@@ -750,7 +758,7 @@
                 onlineBlocked: 'Online ist ausgeschaltet. Im Menü „Online erlauben“ anhaken, um diese Engine zu nutzen.', needKey: 'Diese Engine braucht einen API-Schlüssel (Menü → Engine).',
                 hintKey: ' (API-Schlüssel abgelehnt oder ohne Rechte)', hintLimit: ' (Limit erreicht, später erneut versuchen)', hintNoModel: ' (Modellname dieser Engine unbekannt?)',
                 connFailGeneric: 'Verbindung zu {n} fehlgeschlagen ({m}). Die Engine ist vielleicht aus, die Adresse falsch oder der Anbieter sperrt Browserzugriff (CORS).',
-                modelsFail: 'Modellliste nicht ladbar: {m}', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
+                modelsFail: 'Modellliste nicht ladbar: {m}', modelsLoading: 'Modellliste wird geladen…', modelsDone: 'Modellliste geladen: {n} Einträge.', cutLength: '(Antwort abgeschnitten: Die Engine hat an ihrer Token-Grenze gestoppt. Denk-Modelle wie Gemini zählen ihre Denk-Token mit. Schnellmodus ausschalten oder Grenze erhöhen.)', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
                 engLocalNote: 'Läuft auf diesem Gerät.',
                 nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: 'Kontext: {n} Zeichen',
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
@@ -1587,6 +1595,7 @@
                 let shown = outputBuffer;
                 if (aborted) shown += fastUsed ? '\n\n' + t('aborted') : '\n\n*' + t('aborted') + '*';
                 if (errorMsg) shown += fastUsed ? '\n\n' + t('error') + ' ' + errorMsg : '\n\n**' + t('error') + '** ' + errorMsg;
+                if (finalStats && finalStats.finishReason === 'length' && !aborted) shown += fastUsed ? '\n\n' + t('cutLength') : '\n\n*' + t('cutLength') + '*';
                 updateAssistantMessage(msgId, shown, fastUsed);
                 chatHistory.push(fastUsed ? { role: 'assistant', content: outputBuffer, plain: true } : { role: 'assistant', content: outputBuffer });
                 if (finalStats && !aborted && !errorMsg) preloadKey = warmKey;
@@ -1595,7 +1604,7 @@
                 chatHistory.pop();  // keine Antwort: Frage nicht im Verlauf behalten
                 updateAssistantMessage(msgId, aborted
                     ? '*' + t('aborted') + '*'
-                    : '**' + t('error') + '** ' + (errorMsg || t('noAnswer')));
+                    : '**' + t('error') + '** ' + (errorMsg || (finalStats && finalStats.finishReason === 'length' ? t('cutLength') : t('noAnswer'))));
             }
 
             if (finalStats) {
