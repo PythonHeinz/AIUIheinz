@@ -295,3 +295,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Update-Seite: Pille UPDATE und LED-Zeile mittig, 78 % Breite; LED-Text links, vertikal mittig.
 - API-Schlüssel-Feld: `type=text` mit `-webkit-text-security` und Autofill-Sperrattributen, damit Android den Passwort-Manager nicht anbietet (nicht auf dem Gerät bestätigt).
 - Neuer Test für Scrollverhalten und Aktionsleiste; Tests 55 + 20 grün (simuliert).
+
+## 2026-11-10 · AIUIheinz-Design · Chat umbenennen, Pins, Equalizer-Modi, Typografie
+- Chat-Titelzeile: Bearbeiten-Symbol, Umbenennen direkt in der Zeile (`currentName`, im gespeicherten Chat als `name`/`title`). Zeile jetzt fast schwarz mit dezent leuchtender Outline (Modusfarbe); die Linie unter der Modusleiste entfällt.
+- Chat-Liste, Drei-Punkte-Menü: Umbenennen (inline), Anpinnen/Lösen (max. 5, Pins stehen oben, Pin-Symbol), Exportieren (.md), Löschen.
+- Equalizer-Modi: Antwort/Vorlesen = Pegel (grün); Warten auf erstes Token = zuckender horizontaler Balken (orange); Laden/Verbindung = laufende Wählpunkte (orange); sonst Grundlinie in Statusfarbe.
+- Engine-/Modell-Buttons als Pillen mit gleichen Abständen; Update-LED-Zeile mittig in Buttonbreite (`.led.updled`).
+- Überschriften und Tabellen der Modellantwort in Serifen.
+- Test für Umbenennen und Pin-Limit; Tests 56 + 20 (simuliert).

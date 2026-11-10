@@ -408,6 +408,27 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
 
+    def test_rename_chat_in_the_title_bar_and_pin_in_the_list(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.send(page, "Hi there")
+        page.click(".chat-edit")
+        page.fill(".bar .inline-edit", "Projekt A / Notizen")
+        page.press(".bar .inline-edit", "Enter")
+        self.assertEqual(page.inner_text("#chat-title"), "Projekt A / Notizen")
+        page.evaluate("saveChatNow()")
+        saved = page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))")
+        self.assertEqual(saved[0]["title"], "Projekt A / Notizen")
+        page.reload()
+        self.assertEqual(page.inner_text("#chat-title"), "Projekt A / Notizen", "name survives a reload")
+        page.click("#chats-open")
+        page.click("#saved-list .saved-item .more")
+        page.click("#saved-list .acts2 button:has-text('Pin')")
+        self.assertEqual(page.locator("#saved-list .pinned").count(), 1)
+        page.evaluate("var l=getSaved(); for (let i=0;i<6;i++){ l.push({id:1000+i,title:'x'+i,mode:'wilson',messages:[],pinned:i<4,ts:'',model:'m'}); } lsSet('heinz_chats', l)")
+        page.evaluate("var n=0; window.alert=function(){window._alerted=true}; togglePin(1004); togglePin(1005)")
+        self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
+
     def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
