@@ -626,7 +626,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text("#dash-start"), "0.0")
         self.assertEqual(page.inner_text("#chats-count"), "1", "counter on the chats button")
 
-    def test_model_chip_is_a_pixel_display_with_token_pulse_and_update_bar(self):
+    def test_model_chip_is_a_pixel_display_with_token_pulse(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
@@ -635,11 +635,6 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text("#chip-model"), "gemma2:2b")
         self.send(page, "Hi there")
         self.assertGreater(page.evaluate("pulse.e"), -1)
-        self.menu(page, "update")
-        self.assertGreater(page.evaluate("document.querySelector('#upd-led').width"), 200)
-        page.evaluate("setUpd('err')")
-        page.wait_for_timeout(200)
-        self.assertGreater(page.evaluate("updPx.buf.filter(Boolean).length"), 100, "update bar is drawn")
         self.assertEqual(self.errors, [])
 
     def test_speed_test_runs_threads_cold_and_warm_and_copies_table(self):
@@ -661,7 +656,6 @@ class PageTest(unittest.TestCase):
         self.assertEqual(rows[1][6], "5.0", "2 threads = 5 tokens/s in the simulation")
         self.assertEqual(rows[3][6], "10.0")
         self.assertEqual(page.inner_text("#st-best"), "Best: 4 threads (10.0 tokens/s)")
-        self.assertGreater(page.evaluate("stPx.buf.filter(Boolean).length"), 150, "pixel display shows the result bars")
         self.assertEqual(len(self.ollama.unloads), 2, "model unloaded before each thread value")
         self.assertTrue(all(u["keep_alive"] == 0 for u in self.ollama.unloads))
         reqs = [r for r in self.ollama.requests if r.get("stream") is False]
@@ -962,8 +956,6 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/")
         page.wait_for_selector("a.row[data-tool]")
         self.assertEqual(page.locator("#ring svg").count(), 1)
-        self.assertEqual(page.locator("#led").count(), 1)
-        self.assertGreater(page.evaluate("document.querySelector('#led').width"), 300)
         self.assertIn("AIUI", page.inner_text(".top .ttl b"))
         ids = page.eval_on_selector_all("#tools a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(ids, ["chat", "models"])

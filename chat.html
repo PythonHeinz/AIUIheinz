@@ -345,7 +345,6 @@
                     <button class="pill acc" id="st-start" type="button" onclick="startSpeedTest()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
                     <button class="pill danger" id="st-stop" type="button" onclick="stopSpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
                 </div>
-                <div class="led"><canvas id="st-led" aria-hidden="true"></canvas></div>
                 <div id="st-status" class="help" style="min-height:16px"></div>
                 <div id="st-table"></div>
                 <div id="st-best" class="help" style="color:var(--pri)"></div>
@@ -363,7 +362,6 @@
 
             <div class="pg" data-pg="update">
                 <button class="pill ver-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span id="upd-ver"></span></button>
-                <div class="led"><canvas id="upd-led" aria-hidden="true"></canvas></div>
                 <div id="upd-status" class="help" style="min-height:16px"></div>
                 <button class="row" type="button" onclick="location.reload()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></span><span class="tx"><b data-i18n="rReload">Reload page</b><small data-i18n="reloadTitle">Reload page (chat and settings are kept)</small></span></button>
             </div>
@@ -714,7 +712,7 @@
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
-                updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.', pxCheck: 'CHECKING GITHUB', pxRestart: 'RESTARTING SERVER', pxDone: 'UPDATED', pxCurrent: 'UP TO DATE', pxErr: 'ERROR',
+                updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
                 speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
@@ -758,7 +756,7 @@
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
-                updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.', pxCheck: 'PRÜFE GITHUB', pxRestart: 'SERVER STARTET NEU', pxDone: 'AKTUALISIERT', pxCurrent: 'AKTUELL', pxErr: 'FEHLER',
+                updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
                 speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
@@ -1631,21 +1629,19 @@
         async function doUpdate() {
             const st = $('upd-status'), btn = $('upd-btn');
             if (generating || speedTesting) { st.textContent = t('updBusy'); return; }
-            btn.disabled = true; st.textContent = t('updRunning'); setUpd('check');
+            btn.disabled = true; st.textContent = t('updRunning'); 
             try {
                 const res = await fetch('api/update', { method: 'POST', headers: { 'X-Heinz': '1' } });
                 const j = await res.json();
                 if (!res.ok || !j.ok) {
                     st.textContent = t('updErr', { m: (j.error || ('HTTP ' + res.status)) + (j.output ? ' - ' + j.output : '') });
-                    setUpd('err'); btn.disabled = false; return;
+                    btn.disabled = false; return;
                 }
-                if (!j.changed) { st.textContent = t('updCurrent', { v: j.to || '' }); setUpd('current'); btn.disabled = false; return; }
+                if (!j.changed) { st.textContent = t('updCurrent', { v: j.to || '' }); btn.disabled = false; return; }
                 st.textContent = t('updDone', { a: j.from || '?', b: j.to || '?', n: j.files.length });
-                setUpd('done');
                 if (j.restarting) {   // server.py changed: the server restarts itself, wait until it answers again
                     await sleep(1500);
                     for (let i = 0; i < 25; i++) {
-                        setUpd('restart', i / 25);
                         try { const r = await fetch('api/ping', { cache: 'no-store' }); if (r.ok) break; } catch (e) { /* noch nicht da */ }
                         await sleep(1000);
                     }
@@ -1653,7 +1649,7 @@
                 location.reload();
             } catch (e) {
                 st.textContent = t('updErr', { m: e.message });
-                setUpd('err'); btn.disabled = false;
+                btn.disabled = false;
             }
         }
 
@@ -1751,12 +1747,11 @@
             const cold = $('st-cold').checked;
             stRows = []; renderSpeedTest();
             stMeta = { date: new Date().toISOString().slice(0, 16).replace('T', ' '), model: model, ctx: ctx, prompt: promptKey, termux: $('st-termux').value, cold: cold };
-            stPlan = []; list.forEach(function (n) { stPlan.push({ n: n, run: 1 }, { n: n, run: 2 }); });
-            speedTesting = true; stAbort = new AbortController(); chipWake(); if (stPx) stPx.wake();
+            speedTesting = true; stAbort = new AbortController();
             $('st-start').style.display = 'none'; $('st-stop').style.display = 'inline-flex';
             let status = '', timer = null, t0 = 0;
             const setStatus = function (n, r) {
-                t0 = Date.now(); stCur = { n: n, r: r }; stT0 = t0;
+                t0 = Date.now();
                 if (timer) clearInterval(timer);
                 const upd = function () { $('st-status').textContent = t('stRunning', { n: n, r: r, s: Math.round((Date.now() - t0) / 1000) }); };
                 upd(); timer = setInterval(upd, 1000);
@@ -1780,7 +1775,7 @@
                 status = (e.name === 'AbortError') ? t('stStopped') : t('stErr', { m: e.message });
             } finally {
                 if (timer) clearInterval(timer);
-                speedTesting = false; stAbort = null; stCur = null; if (stPx) stPx.wake();
+                speedTesting = false; stAbort = null;
                 $('st-start').style.display = 'inline-flex'; $('st-stop').style.display = 'none';
                 $('st-status').textContent = status;
                 if (stRows.length) lsSet('heinz_speedtest', { rows: stRows, meta: stMeta });
@@ -1804,7 +1799,6 @@
             $('sh-back').hidden = id === 'main';
             setSheetTitle();
             document.querySelector('#menu-sheet .sh-body').scrollTop = 0;
-            pxPage(id);
         }
         function updateMenuInfo() {
             const p = PV.get(settings.provider) || PV.get('ollama');
@@ -1818,7 +1812,7 @@
         function setTheme(v) { Heinz.setTheme(v); settings.theme = Heinz.theme; updateMenuInfo(); }
         // ===== Pixeldisplays: Modellchip mit Token-Puls, Tempo-Test, Update =====
         const pulse = { e: 0 };
-        let chipPx = null, stPx = null, updPx = null;
+        let chipPx = null;
         const PX_DIM = '#3c4043', PX_TXT = '#e8eaed', PX_SUB = '#9aa0a6';
         function drawChip(p) {
             const preset = MODE_PRESETS[settings.mode] || MODE_PRESETS.wilson;
@@ -1847,59 +1841,6 @@
             chipPx = new Heinz.Pixel($('chip-led'), { rows: 24, pitch: 2, dot: 1.5 });
             chipPx.run(drawChip, { live: chipLive });
             window.addEventListener('resize', function () { chipPx.resize(); chipPx.redraw(); });
-        }
-        // Tempo-Test: ein Balken je Messlauf (Generier-t/s), Fortschrittsbalken unten, laufender Lauf pulsiert
-        const ST_COLORS = ['#4285f4', '#34a853', '#fbbc05', '#e91e63', '#a142f4', '#fb8c00'];
-        let stPlan = [], stCur = null, stT0 = 0;
-        function stPlanNow() { return stPlan.length ? stPlan : stRows.map(function (r) { return { n: r.n, run: r.run }; }); }
-        function drawSpeed(p) {
-            const plan = stPlanNow(), ns = [];
-            plan.forEach(function (q) { if (ns.indexOf(q.n) < 0) ns.push(q.n); });
-            const col = function (n) { return ST_COLORS[ns.indexOf(n) % ST_COLORS.length]; };
-            const done = stRows.length, total = plan.length || 1, f = p.frameNo;
-            const sec = stCur ? Math.round((Date.now() - stT0) / 1000) : 0;
-            let head;
-            if (speedTesting && stCur) head = [[stCur.n + ' THR', col(stCur.n)], ['  RUN ' + stCur.r + '/2  ', PX_SUB], [sec + ' S', PX_TXT]];
-            else if (stRows.length) { const b = stBest(); head = b ? [['BEST ' + b.n + ' THR  ', col(b.n)], [stFmt(b.v, 1) + ' T/S', PX_TXT]] : [['DONE', PX_SUB]]; }
-            else head = [['TEMPO TEST', PX_SUB]];
-            p.ticker('h', 1, 3, head, PX_SUB);
-            const mx = Math.max.apply(null, stRows.map(function (r) { return r.gTps; }).concat([0.0001]));
-            let x = 3;
-            plan.forEach(function (q, i) {
-                const r = stRows.find(function (r) { return r.n === q.n && r.run === q.run; });
-                if (r) { const h = Math.max(1, Math.round(r.gTps / mx * 12)); p.rect(x, 22 - h, 6, h, col(q.n)); }
-                else if (speedTesting && stCur && stCur.n === q.n && stCur.r === q.run) { const h = 2 + Math.floor((f / 2) % 9); p.rect(x, 22 - h, 6, h, col(q.n)); }
-                else p.rect(x, 21, 6, 1, PX_DIM);
-                x += 8 + (q.run === 2 ? 4 : 0);
-            });
-            let frac = done / total;
-            if (speedTesting && stCur) {
-                const fin = stRows.map(function (r) { return r.total; }), avg = fin.length ? fin.reduce(function (a, b) { return a + b; }, 0) / fin.length : 30;
-                frac = (done + Math.min(0.95, sec / avg)) / total;
-            }
-            p.bar(3, 24, p.cols - 6, 2, frac, speedTesting ? '#4285f4' : '#34a853');
-        }
-        // Update: Prüfen = Lichtlauf, Neustart des Servers = Balken nach Wartezeit, fertig = voll
-        const upd = { mode: 'idle', f: 0, text: '' };
-        function drawUpd(p) {
-            const m = upd.mode, W = p.cols - 6;
-            const colr = m === 'err' ? '#ea4335' : (m === 'done' || m === 'current') ? '#34a853' : '#4285f4';
-            const txt = { idle: ($('upd-ver').textContent || '').toUpperCase(), check: t('pxCheck'), restart: t('pxRestart'), done: t('pxDone'), current: t('pxCurrent'), err: t('pxErr') }[m];
-            p.ticker('u', 1, 3, txt || '', m === 'idle' ? PX_SUB : colr);
-            if (m === 'check') { const x = (p.frameNo * 2) % (W + 20) - 20; for (let i = 0; i < 20; i++) if (x + i >= 0 && x + i < W) p.rect(3 + x + i, 10, 1, 3, colr); }
-            else if (m === 'restart') p.bar(3, 10, W, 3, upd.f, colr);
-            else if (m === 'done' || m === 'current' || m === 'err') p.bar(3, 10, W, 3, 1, colr);
-            else p.rect(3, 12, W, 1, PX_DIM);
-        }
-        function setUpd(mode, f) { upd.mode = mode; upd.f = f || 0; if (updPx) updPx.wake(); }
-        function pxPage(id) {
-            if (id === 'speed') {
-                if (!stPx) { stPx = new Heinz.Pixel($('st-led'), { rows: 27, pitch: 3 }); stPx.run(drawSpeed, { live: function () { return speedTesting; } }); }
-                else { stPx.resize(); stPx.redraw(); }
-            } else if (id === 'update') {
-                if (!updPx) { updPx = new Heinz.Pixel($('upd-led'), { rows: 14, pitch: 3 }); updPx.run(drawUpd, { live: function () { return upd.mode === 'check'; } }); }
-                else { updPx.resize(); updPx.redraw(); }
-            }
         }
         function updateChip() {
             const p = PV.get(settings.provider) || PV.get('ollama');

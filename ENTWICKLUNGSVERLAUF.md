@@ -246,3 +246,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Chat: Modellchip als Pixeldisplay (Modus · Engine, Modell) mit Token-Puls (`pulse.e` wird in `onDelta` angehoben), Tempo-Test mit Balken je Lauf und Fortschritt, Update-Seite mit Lichtlauf/Balken. Fallstrick: die Klasse `.sr` ist in `chat.html` schon der Modus-Punkt der Chatliste, der unsichtbare Chip-Text heißt deshalb `.chip .hid`.
 - Tests: 52 Seiten-, 20 Servertests grün (simuliert; Aussehen und Laufschrift auf dem Handy offen).
 
+## 10.11.2026 – Rückbau von Pixeldisplays, Menüanalyse (Strang AIUIheinz-Design)
+- Nach dem Handytest entfernt: Pixeldisplay im Hub (Lauftext, Ampelmännchen), im Tempo-Test und auf der Update-Seite. Der Modellchip im Chat mit Token-Puls bleibt. `lib/pixel.js` und der Katalog bleiben.
+- Neu `docs/ANALYSE_MENUE.md`: Menüstruktur aus Sicht des Anwenders (Engine vor Modell, Online-Schalter, Parameter-Schnellzugriff, Farblogik, Chat-Titelzeile). Nur Analyse, nichts umgebaut.
+- Tests: 52 Seiten-, 20 Servertests grün (simuliert).
+
