@@ -1,66 +1,64 @@
 # Design-Manifest Heinz UI
 
-Stand: 09.11.2026. Quelle: Wünsche des Entwicklers und seine Screenshots (Heinz UI, INCIheinz, Convert2), dazu die Farbvariablen und Schriften aus dem Code von INCIheinz. Das ist eine Leitlinie, noch nichts davon ist umgesetzt (außer der Kopfzeile und `lib/core.css`). Maßgeblich ist dieses Dokument im Repo; die Kopie im Claude-Projekt kann älter sein.
+Stand: 10.11.2026 (Strang „AIUIheinz-Design“, Schritt 1–3 umgesetzt: Variablen und Themes, Symbolsatz, `chat.html` neu). Quellen: Wünsche des Entwicklers und seine Screenshots (Heinz UI, INCIheinz, Convert2), Farben und Schriften aus INCIheinz. Was hier steht, ist gebaut oder als „Zielbild“ markiert.
 
 ## 1 Grundsätze
-- **Reines HTML, CSS und JavaScript, ohne Build, ohne Bibliotheken.** Alles läuft offline.
-- **Klare Farben auf Schwarz, keine Transparenz.** Keine Verläufe, keine Weichzeichner-Schatten, keine halbdurchsichtigen Flächen. Jede Fläche ist deckend.
-- **Pillen und Bubbles** statt eckiger Kästen: runde Ecken, großzügige Abstände, eine Form pro Funktion (Schaltfläche, Chip, Blase, Karte).
-- **Listen statt Tabellen und statt umbrechender Fließtexte.** Eine Zeile hat Symbol, Titel, grauen Untertitel und rechts eine Zahl oder einen Pfeil. Tabellen nur dort, wo echte Spalten gebraucht werden (Sheet, Auswertung).
-- **Symbole statt Wörter**, wo sie eindeutig sind (Linien-Symbole, siehe 4).
-- **Nüchtern, aber typografisch schön.** Gliederung durch Schrift (Versalien, Wechsel Serife/serifenlos), nicht durch Rahmen.
-- **Ein Daumen-Bedienkonzept** für den Pixel 9 Pro (rund 426 × 803 px): wichtige Aktionen unten, Bereiche oben wechselbar.
+- **Reines HTML, CSS und JavaScript, ohne Build, ohne Bibliotheken.** Alles läuft offline. Gemeinsam: `lib/core.css`, `lib/core.js`, `lib/icons.svg`.
+- **Wenige Linien.** Hell: Flächen werden durch Füllung getrennt, Bedienelemente haben keinen Rand (`--ol: transparent`), nur dünne Haarlinien (`--line`) trennen Bereiche („Google-clean“). Dunkel: dieselbe Gliederung, aber Pillen, Chips und Felder bekommen einen dünnen grauen Umriss (`--ol: #3c4043`). Neue Elemente bekommen Rand nur über `var(--ol)`, nie fest.
+- **Deckende Flächen.** Keine Verläufe, keine Weichzeichner-Schatten. Der Statusring hat einen flachen Hof (3 px, gleiche Farbe, kein Blur).
+- **Pillen und Bubbles** statt eckiger Kästen: Pillen 99 px, Karten 14–18 px, Sheets 26 px oben. Eine Form pro Funktion.
+- **Listen statt Tabellen.** Menüzeile = Symbolkachel, Titel, grauer Untertitel, rechts Schalter oder Pfeil. Tabellen nur für echte Spalten.
+- **Symbole statt Emojis** (eigener Satz, siehe 4). Emojis nur noch in Alt-Seiten, die noch nicht umgebaut sind (Hub, Lab, Sheet, Vitals).
+- **Ein Daumen-Bedienkonzept** für den Pixel 9 Pro (rund 426 × 803 px): Eingabe unten, Menü als Bottom-Sheet, Chatliste von links (nur Antippen, kein Randwischen).
 
-## 2 Farben
-Heinz UI (dunkel), aus `lib/core.css`:
+## 2 Farben und Themes
+Hell, Dunkel, Auto (folgt dem System): `<html data-theme="auto|lt|dk">`, gesetzt von `lib/core.js` (`Heinz.setTheme`, Schlüssel `heinz_settings.theme`) schon im `<head>`, damit nichts flackert. Auswahl im Menü „Darstellung“.
 
-| Zweck | Wert |
-|---|---|
-| Hintergrund | `#000` (Flächen `#121212`, Karten `#202124`) |
-| Linien | `#3c4043` (Kopfzeile `#2a2a2a`) |
-| Text | `#e8eaed`, Nebentext `#9aa0a6` |
-| Blau / Grün / Gelb / Rot | `#4285f4` / `#34a853` / `#fbbc05` / `#ea4335` |
+| Variable | Dunkel | Hell |
+|---|---|---|
+| `--bg` Seite | `#000` | `#f4f6f8` |
+| `--surf` Flächen, Sheets | `#121212` | `#fff` |
+| `--card` Kacheln, Pillen | `#202124` | `#eceff3` |
+| `--line` Haarlinie / `--edge` Umriss | `#2a2a2a` / `#3c4043` | `#e1e4e8` / `#dadce0` |
+| `--ol` Rand an Bedienelementen | `#3c4043` | transparent |
+| `--txt` / `--sub` / `--muted` | `#e8eaed` / `#9aa0a6` / `#6f757b` | `#202124` / `#5f6368` / `#80868b` |
+| `--pri` Links, Häkchen | `#8ab4f8` | `#1a73e8` |
+| Status | `--blue #4285f4 --green #34a853 --yellow #fbbc05 --orange #fb8c00 --red #ea4335` | gleich |
 
-- **Jeder große Bereich bekommt eine Akzentfarbe** (Chat blau, Modelle grün, Filter gelb, Sheet rot). Modusfarben im Chat bleiben wie in `chat.html`.
-- **Vorbild INCIheinz:** zwei Bereiche mit eigener Stimmung bei gleicher Form, ein kühles (Lager: Grün `#2D5A43` auf `#F6F8F5`) und ein warmes (Rezeptbuch: Braun `#8B4A2B` auf `#FAF4E8`). Variablen dort: `--bg --surf --line --pri --sub --txt --muted --onpri --amb --err`. Heinz UI nutzt dieselben Variablennamen, damit ein Bereich seine Stimmung allein über die Werte ändert.
-- Auf gelben Flächen dunkle Schrift (`#202124`), sonst weiße.
+- **Eine Akzentfarbe je Modus:** `--acc` (und `--onacc` für Schrift darauf) setzt `applyModeStyling()`. Sie färbt Sendepfeil, Schalter, Eingabefeld-Rand, Zähler, Anzeige des aktiven Modus. Wilson `#4285f4`, Heinz `#e91e63`, Audit `#fbbc05` (dunkle Schrift), Code `#6b8ba4`, Creative `#a142f4`. Gelb nie als Textfarbe auf Hell.
+- **Statusring** (Kopfzeile): Rot = Engine nicht erreichbar, Orange = Modell lädt, Blau = bereit, Grün = antwortet. Klassen `s-red/s-orange/s-blue/s-green`.
+- Hub und Platzhalterseiten nutzen die Variablen schon (laufen in beiden Themes), sind aber noch nicht im neuen Stil gebaut.
 
 ## 3 Schrift
-- **Fließtext und Oberfläche:** Inter, mit Rückfall auf `system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` (so in INCIheinz). Es werden keine Webfonts aus dem Netz geladen. Soll Inter garantiert sein, liegt die Datei (`woff2`, Lizenz OFL) im Repo unter `lib/fonts/`.
-- **Serife:** Georgia (`Georgia, 'Times New Roman', serif`) als Gegenstück für ausgewählte Überschriften und Kennzahlen. Der Wechsel Serife/serifenlos ist ein Gliederungsmittel. Genaue Einsatzorte legt der Entwickler anhand von INCIheinz-Beispielen fest; im Code von INCIheinz kommt Georgia nur an wenigen Stellen vor.
-- **Monospace:** `ui-monospace, Menlo, Consolas, monospace` für Code, Zahlen in Tabellen (`font-variant-numeric: tabular-nums`), Messwerte (Token, T/s).
-- **Versalien und Kapitälchen für Gliederung:** kleine Abschnittsüberschriften in Großbuchstaben, 0,62–0,75 rem, Sperrung 0,12–0,2 em, Nebenfarbe (Beispiele: „KATEGORIEN“, „DRUCKEN & GESTALTEN“, Untertitel in der Kopfzeile). Keine Versalien in Fließtext.
-- Abstufung: Titel 1,15–1,3 rem Gewicht 600, Listentitel 1 rem, Untertitel 0,85 rem in Nebenfarbe, Messwerte 0,8 rem.
+- **Oberfläche:** `Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` (`--font`). Nur Systemschriften, nichts aus dem Netz. Käme eine besondere Schrift dazu, liegt sie lokal im Repo.
+- **Antworttext im Chat und späterer Lesemodus:** Georgia (`--serif`), ohne Kasten. Kühl (serifenlos) = Werkzeuge und Entwickler-Test, warm (Serife) = Assistent und Lesen.
+- **Monospace** (`--mono`) für Code und Zahlen (Metrik-Chips, Slider-Werte).
+- **Versalien-Überschriften** (`.caps`): 0,69 rem, Sperrung 0,16 em, Nebenfarbe (Menügruppen, „KONTEXT · OPTIONAL“, Modellname des Chips klein darüber).
 
-## 4 Formen und Bedienelemente
-- **Radien:** 12 px (Karten, Eingaben), 14 px (große Karten), 99 px (Pillen, Chips, Umschalter). Ring in der Kopfzeile 32 px, Rand 1,8 px.
-- **Höhen:** Schaltflächen 40–46 px, Antippfläche mindestens 44 px, Chips 26–36 px.
-- **Listenzeile:** links ein Symbol in einer kleinen abgerundeten Kachel, dann Titel und darunter ein grauer Untertitel, rechts Zahl oder Pfeil (Vorbild: Menü „Mehr“ in INCIheinz). Gruppen mit Versalien-Überschrift darüber, Linie als Trenner statt Kasten.
-- **Symbole:** einheitliche Linien-Symbole, Strichstärke 1,8, abgerundete Enden, Farbe der Akzentfarbe (so das Gehirn im Ring). Emojis nur als Notlösung und nicht in neuen Menüs. Zu prüfen: der Ordner `INCI-App-Projekt/symbole` des Entwicklers als Quelle.
-- **Eingabe:** abgerundetes Feld, Mikrofon als eigene runde Schaltfläche in der Akzentfarbe, Senden als breite Pille.
-- **Kopieren:** kleines rundes Symbol (32–36 px) oben rechts in der Blase, Rahmen dünn, ohne Füllung, Bestätigung durch ein Häkchen für etwa 1,2 s. Heute zu klobig. Zwei Ebenen: je Blase und für den ganzen Chat (Schaltfläche am Kopf des Chatfensters).
-- **Blasen im Chat:** wie in `chat.html` (Eigene Nachricht und Antwort mit eigener Fläche, Code mit Syntaxfarben). Beibehalten.
+## 4 Bausteine (`lib/core.css`) und Symbolsatz
+- **Symbole `lib/icons.svg`:** eigener Satz, 24 × 24, Linien 1,8, runde Enden, `currentColor`. Einbinden: `<svg class="i"><use href="lib/icons.svg#i-menu"/></svg>` (`.i`, Größen `.sm` 18 px, `.lg` 26 px). Enthalten: Menü, Kopieren, Plus, Chats, Senden, Mikro, Lautsprecher, Stopp, Pfeile, X, Häkchen, Suche, Punkte, Vollbild, Dokument, CPU, Wolke (auch durchgestrichen), Terminal, Blitz, Rakete, Regler, Tacho, Stoppuhr, Schlüssel, Kontrast, Download, Aktualisieren, Papierkorb, Merken, Stift, Globus, Info, Schloss, Ebenen, Sprache, Funke, die fünf Modi (`i-m-wilson/heinz/audit/code/creative`) und das Heinz-Zeichen. Neues Symbol = neues `<symbol id="i-…">` in der Datei, Test `test_every_symbol_used_exists_in_the_sprite` prüft, dass jedes benutzte vorhanden ist.
+- **Bausteine:** `.pill` (`.acc`, `.danger`), `.round`, `.ibtn`, `.ring-btn`, `.lang-btn` (EN/DE-Umschalter), `.sw` (Schalter 46 × 28), `.row` mit `.tile`, `.caps`, `.scrim` + `.sheet` (Bottom-Sheet, Seiten mit Zurückpfeil), `.slidercard` (große Regler-Karte).
+- **Chat-Seite (`chat.html`):** Kopfzeile 76 px (Ring 52 px mit „Heinz UI“ und Link zum Hub, zweizeiliger Modellchip Engine/Modell, EN/DE, Burger); Modusleiste (Symbol zentriert in 52 × 30-Pille mit Modusfarbe, Name darunter); Chatleiste 44 px (Chatliste mit Zähler links, Titel, Gesamten Chat kopieren, Neuer Chat); Antworten ohne Kasten in Georgia; vier Metrik-Chips in einer Zeile (`P`, `A`, `T/s`, `Start`); Prompt = wachsendes Textfeld bis 40 % der Höhe mit Vollbild-Editor, rundem Mikrofon und rundem Pfeil-nach-oben; darunter Vorlesen (wird zu „Vorlesen stoppen“) und der rote Stopp nur während der Antwort; Kontext als gestrichelte Karte **unter** dem Prompt, nur in Modi mit Kontext („KONTEXT · OPTIONAL/PFLICHT“), mit eigenem Vollbild.
+- **Menü (Bottom-Sheet):** oben Schnellschalter (Engine, Online erlauben, eigener Systemprompt, Schnellmodus, Modell vorladen), dann Gruppen in Versalien (Gespräche, Modell und Leistung, Online nur bei „Online erlauben“, App). Untermenüs ersetzen den Inhalt im selben Sheet mit Zurückpfeil: Engine, Parameter (große Regler-Karten), Tempo-Test, Darstellung, Update und Info.
+- **Modellwahl:** eigenes Sheet statt Auswahlliste, Name groß, Variante darunter, „im Speicher“ mit grünem Punkt, Häkchen am gewählten, Filterfeld ab 8 Modellen, kein Emoji. Das versteckte `<select id="model-select">` bleibt der Zustandsträger.
+- **Online ändert die Oberfläche:** mit „Online erlauben“ erscheint die Gruppe „Online“ im Menü, und eine Online-Engine zeigt am Chip „… · ONLINE“ in Orange. Ohne den Haken kein Online-Eintrag. Welche Werkzeuge ohne Online grau werden, ist offen (kommt mit dem Werkzeug-Bereich).
 
-## 5 Navigation (Zielbild)
-1. **Kopfzeile:** links Zurück, Mitte Ring mit Gehirn, Schriftzug AIUI+heinz und kleine Versalien-Beschriftung des Bereichs, rechts EN/DE.
-2. **Bereichsumschalter** direkt unter der Kopfzeile: zwei große Pillen nebeneinander (wie Lager | Rezeptbuch in INCIheinz). Für Heinz UI zum Beispiel Chat | Werkzeuge. Genauer Zuschnitt offen.
-3. **Untere Leiste** mit vier Einträgen und einer **runden Schaltfläche in der Mitte** (Daumen-Knopf, größer, ragt über die Leiste, Beispiel „Neu“ = neuer Chat) und rechts „Mehr“ mit Burger-Symbol.
-4. **„Mehr“ öffnet ein Bottom-Sheet** mit gruppierten Listen unter Versalien-Überschriften („Daten“, „Einstellungen“, „KI“, „Für die ganze App“).
-5. **Kein Wischen zwischen Bereichen** (kollidiert mit Code und Tabellen). **Kein Wischen zum Aktualisieren** (`overscroll-behavior-y: none`), weil sonst der Chat verloren gehen kann.
+## 5 Navigation (Zielbild und Stand)
+- **Drei Bereiche** mit teils eigenen Menüeinträgen (wie in INCIheinz) plus eine Rubrik „Einstellungen“, die in allen Bereichen an derselben Stelle im Menü steht und nur Einstellungen enthält, die überall gelten (Darstellung, Update und Info, Sprache der Oberfläche, Online erlauben). Zuschnitt und Namen der drei Bereiche sind noch offen; gebaut ist bisher nur der Bereich Chat.
+- **EN/DE bleibt in der Chat-Kopfzeile sichtbar** (schnell dieselbe Frage in der anderen Sprache prüfen, Sprachtest), nicht im Menü versteckt.
+- Kein Wischen zwischen Bereichen und kein Wischen zum Aktualisieren (`overscroll-behavior-y: none`).
+- Zielbild später: untere Leiste mit runder Mitteltaste, Bereichsumschalter unter der Kopfzeile.
 
-## 6 Splitscreen mit der Konsole
-Der Entwickler arbeitet oft mit Termux im geteilten Bildschirm; die Konsole läuft unten bis zum Bildschirmrand, die Android-Tasten liegen darüber. Das gefällt ihm und soll bleiben.
-- Inhalt scrollt unter dem Seitenrand weiter; unten bleibt Abstand (`padding-bottom: max(90px, 45vh)`), damit nichts verdeckt wird.
-- **Feste Leisten dünn halten** (höchstens etwa 56 px), weil im Splitscreen nur etwa die halbe Höhe bleibt. Jede neue Seite wird bei 426 × 400 px geprüft.
-- Die Seite darf keinen Hintergrund durchscheinen lassen, damit sie neben der schwarzen Konsole sauber wirkt.
+## 6 Splitscreen mit der Konsole und Tastatur
+- Die Seite füllt `100dvh` (mindestens 560 px, darunter scrollt sie). Feste Leisten bleiben dünn (Kopfzeile 76, Chatleiste 44, Modusleiste 62).
+- **Wenig Platz** (Tastatur offen oder Splitscreen, Höhe unter 560 px) **und Fokus im Prompt:** Modusleiste, Metrik-Chips, Aktionszeile und Kontext werden ausgeblendet, der Chat bekommt den Platz (`body.kbd`). Fokus im Kontext blendet nur Modusleiste, Chips und Aktionen aus (`body.kbd-ctx`). Viewport-Meta mit `interactive-widget=resizes-content`.
+- Jede neue Seite bei 426 × 803 und 426 × 400 prüfen.
 
 ## 7 Regeln für neue Seiten
-- `lib/core.css` und `lib/core.js` einbinden, `<div id="app-header">` anlegen.
-- Farben nur über die Variablen, Texte immer EN und DE.
+- `lib/core.css`, `lib/core.js` (im `<head>`, wegen des Themes) und bei Symbolen `lib/icons.svg` einbinden.
+- Farben nur über Variablen, Ränder nur über `var(--ol)`, Texte immer EN und DE, Symbole aus `lib/icons.svg`.
 - Relative Pfade, Server nur über `/api/...`.
 - Vor dem Umbau einer bestehenden Seite kurz fragen; Hub, Kopfzeile und `lib/` gehören zum Fundament (ein Chat zur Zeit).
 
 ## 8 Umsetzung
-Vorgeschlagen als eigener Strang „AIUIheinz-Design“, weil Hub, Kopfzeile und `lib/core.css` zum Fundament zählen und nur ein Chat zur Zeit daran ändert. Reihenfolge: (1) Variablen und Schriften in `lib/core.css`, (2) Bausteine (Listenzeile, Pille, Kopierknopf, Bottom-Sheet, untere Leiste mit Mittelknopf) als kleine Beispielseite, (3) Hub, dann Chat-Seite. Die Chat-Seite (Strang „AIUIheinz-Chat“) übernimmt bis dahin nur die zwei Kopierebenen.
-
-Offen: Einsatzorte der Serife, Zuschnitt der zwei Hauptbereiche, Symbolsatz, ob Inter lokal mitgeliefert wird.
+Strang „AIUIheinz-Design“: (1) Manifest geschärft ✔, (2) Variablen, Themes und Symbolsatz in `lib/` ✔, (3) Bausteine als Beispielseite `tools/design/index.html` ○, (4) Hub im neuen Stil ○, (5) Chat-Seite ✔ (vorgezogen auf ausdrücklichen Wunsch, der Chat-Strang hatte schon gepusht). Offen: Zuschnitt der drei Bereiche, Lesemodus in warmer Serife, Werkzeuge mit Online-Sperre, Sprache der Oberfläche im Menü „Einstellungen“, ob Inter lokal mitgeliefert wird.

@@ -1,322 +1,369 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Heinz Ollama UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="dark light">
+    <title>Heinz UI</title>
+    <link rel="stylesheet" href="lib/core.css">
+    <script src="lib/core.js"></script>
     <style>
-        * { box-sizing: border-box; }
         html, body { overscroll-behavior-y: none; }
-        body { font-family: sans-serif; background: #121212; color: #e0e0e0; padding: 15px; margin: 0; width: 100%; overflow-x: hidden; padding-bottom: max(90px, 45vh); }
-        .container { max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; height: 95vh; height: 95dvh; min-height: 600px; }
+        body { overflow-x: hidden; }
+        :root { --m1:#34a853; --m2:#8ab4f8; --m3:#c58af9; --m4:#fdd663; --code:#121212; --code-t:#d4d4d4; --tk-c:#7f8c8d; --tk-s:#98c379; --tk-d:#e5c07b; --tk-n:#d19a66; --tk-k:#c678dd; --tk-b:#61afef; --tk-f:#56b6c2; }
+        :root[data-theme="lt"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285; }
+        @media (prefers-color-scheme: light) { :root[data-theme="auto"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285; } }
+        [hidden] { display: none !important; }
 
-        /* Header */
-        .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; flex-wrap: nowrap; flex-shrink: 0; }
-        .header-left { display: flex; align-items: center; gap: 8px; }
-        .header h2 { margin: 0; font-size: 18px; white-space: nowrap; }
-        .status-dot { height: 12px; width: 12px; border-radius: 50%; background-color: #ff5252; display: inline-block; flex-shrink: 0; transition: background-color 0.3s; }
-        .status-online { background-color: #ff9800; box-shadow: 0 0 8px #ff9800; }
-        #engine-box input[type=text], #engine-box input[type=password] { background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        .status-cloud { background-color: #4285f4; box-shadow: 0 0 8px #4285f4; }
-        .status-active { background-color: #4caf50; box-shadow: 0 0 8px #4caf50; }
+        .app { max-width: 600px; margin: 0 auto; height: 100vh; height: 100dvh; min-height: 560px; display: flex; flex-direction: column; padding: 0 14px; }
 
-        select { background: #1e1e1e; color: #fff; border: 1px solid #333; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; }
-        .hub-link { background: #2a2a2a; border: 1px solid #444; color: #fff; text-decoration: none; border-radius: 8px; padding: 4px 8px; font-size: 17px; line-height: 1.3; flex-shrink: 0; }
-        .model-select { flex: 1; min-width: 0; }
-        .burger-btn, .lang-btn { background: #2a2a2a; border: 1px solid #444; color: #fff; font-size: 18px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-        .lang-btn { font-size: 13px; font-weight: bold; padding: 4px 5px; display: flex; gap: 3px; align-items: center; }
-        .lang-btn span { padding: 5px 7px; border-radius: 5px; color: #777; }
-        .lang-btn span.active { background: #4caf50; color: #fff; }
+        /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
+        .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
+        .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
+        .chip { flex: 1; min-width: 0; height: 48px; border-radius: 24px; background: var(--card); border: 1px solid var(--ol); padding: 0 10px 0 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; color: var(--txt); }
+        .chip .ct { flex: 1; min-width: 0; }
+        .chip small { display: block; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); font-weight: 600; line-height: 1.1; }
+        .chip small.online { color: var(--orange); }
+        .chip b { display: block; font-size: .98rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .chip .i { color: var(--sub); }
+        #preload-status { font-size: 11px; color: var(--sub); margin: -4px 2px 4px; flex: none; }
 
-        /* Modus-Auswahl */
-        .mode-container { margin-bottom: 12px; display: flex; flex-direction: row; gap: 4px; width: 100%; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
-        .mode-container::-webkit-scrollbar { display: none; }
-        .mode-pill { flex: 0 0 auto; min-height: 40px; padding: 0 8px; border-radius: 99px; border: 1px solid #444; background: #1e1e1e; color: #ccc; font-size: 13px; cursor: pointer; white-space: nowrap; }
-        .mode-pill.active { color: #fff; font-weight: bold; border-color: transparent; }
-        .mode-pill:disabled { opacity: 0.5; }
+        /* Modusleiste */
+        .modes { display: flex; gap: 2px; flex: none; margin-bottom: 4px; }
+        .mode-pill { flex: 1 1 0; min-width: 0; height: 62px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .72rem; }
+        .mode-pill .mi { width: 52px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
+        .mode-pill .mi .i { width: 20px; height: 20px; }
+        .mode-pill.active { color: var(--txt); font-weight: 600; }
+        .mode-pill.active .mi { background: var(--mc); color: var(--mo); }
+        .mode-pill:disabled { opacity: .5; }
 
-        /* Eingabefelder */
-        .controls-wrapper { flex-shrink: 0; }
-        textarea, input[type=text] { width: 100%; background: #1e1e1e; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; font-size: 15px; font-family: inherit; }
-        textarea { height: 80px; resize: none; margin-bottom: 5px; }
+        /* Chat-Leiste */
+        .bar { display: flex; align-items: center; gap: 2px; height: 44px; flex: none; border-top: 1px solid var(--line); }
+        .bar .ttl { flex: 1; min-width: 0; text-align: center; font-size: .86rem; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+        #chats-open { position: relative; }
+        .cnt { position: absolute; top: 3px; right: 1px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--acc); color: var(--onacc); font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; }
+        .cnt:empty { display: none; }
 
-        /* Token Dashboard */
-        .token-dashboard { display: flex; gap: 8px; margin-bottom: 15px; font-family: monospace; font-size: 12px; flex-shrink: 0; flex-wrap: wrap; }
-        .badge { padding: 4px 8px; border-radius: 6px; background: #1a1a1a; border: 1px solid #333; font-weight: bold; }
-        .badge-prompt { color: #00e676; border-color: #00e676; }
-        .badge-eval { color: #29b6f6; border-color: #29b6f6; }
-        .badge-speed { color: #ab47bc; border-color: #ab47bc; }
-        .badge-start { color: #fbbc05; border-color: #fbbc05; }
-        .chat-frame { flex: 1; min-height: 220px; position: relative; display: flex; flex-direction: column; margin-bottom: 15px; }
-        .chat-frame .chat-wrapper { flex: 1; min-height: 0; margin-bottom: 0; padding-top: 46px; }
-        .chat-copy { position: absolute; top: 8px; left: 8px; z-index: 2; width: 34px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 8px; cursor: pointer; }
-        .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-        .ver-pill { display: block; width: 100%; background: #202124; border: 1px solid #4285f4; color: #8ab4f8; border-radius: 99px; padding: 10px 14px; font-family: monospace; font-size: 13px; cursor: pointer; margin-bottom: 6px; }
-        .ver-pill:disabled { opacity: 0.6; }
-        .st-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-        .st-chips label { display: flex; align-items: center; gap: 4px; background: #222; border: 1px solid #444; border-radius: 99px; padding: 5px 10px; font-size: 13px; color: #ddd; cursor: pointer; }
-        .st-chips input { margin: 0; width: auto; }
-        #sidebar select { width: 100%; margin-bottom: 8px; }
-        .st-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 10.5px; margin-top: 8px; }
-        .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid #2a2a2a; }
-        .st-table th:first-child, .st-table td:first-child { text-align: left; }
-        .st-table th { color: #888; font-weight: normal; }
-
-        .input-row { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
-        .input-row input { margin-bottom: 0; flex: 1; min-width: 0; }
-        .voice-btn { background: #ff9800; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-
-        /* Buttons */
-        .action-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        button.action-btn { flex: 1; background: #4caf50; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        button.stop-btn { flex: 1; background: #f44336; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; display: none; }
-        button.new-btn { background: #333; border: 1px solid #444; color: white; padding: 0 16px; border-radius: 8px; cursor: pointer; font-size: 18px; flex-shrink: 0; }
-        .audio-row { display: flex; gap: 10px; margin-bottom: 5px; }
-        .audio-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; }
-
-        /* Chat-Ausgabe */
-        .chat-wrapper { flex: 1; min-height: 220px; position: relative; width: 100%; overflow-y: auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
-        .msg { flex-shrink: 0; padding: 10px 15px; border-radius: 8px; max-width: 90%; word-break: break-word; line-height: 1.5; font-size: 15px; }
-        .msg { position: relative; }
-        .msg-copy { position: absolute; top: 4px; right: 4px; width: 30px; height: 28px; padding: 0; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 6px; font-size: 14px; line-height: 1; cursor: pointer; opacity: 0.85; }
-        .msg-assistant, .msg-user { padding-right: 42px; }
-        .msg-user { background: #2a2a2a; align-self: flex-end; border-bottom-right-radius: 2px; white-space: pre-wrap; }
-        .msg-note { display: block; margin-top: 6px; font-size: 11px; color: #888; font-weight: normal; }
+        /* Chat */
+        .chat-wrapper { flex: 1; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 18px; padding: 10px 2px 14px; }
+        .msg { position: relative; flex: none; word-break: break-word; }
+        .msg-user { align-self: flex-end; max-width: 88%; background: var(--card); border: 1px solid var(--ol); border-radius: 18px 18px 4px 18px; padding: 10px 40px 10px 14px; font-size: .98rem; line-height: 1.45; white-space: pre-wrap; }
+        .msg-assistant { align-self: stretch; font-family: var(--serif); font-size: 1.04rem; line-height: 1.6; padding: 0 34px 0 2px; overflow-x: auto; }
         .msg-assistant.plain-text { white-space: pre-wrap; }
-        .msg-assistant { background: #181818; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 2px; width: 100%; overflow-x: auto; }
-        .placeholder { text-align: center; color: #666; margin-top: auto; margin-bottom: auto; }
-
-        /* Integriertes Markdown Styling */
-        .msg-assistant h1, .msg-assistant h2, .msg-assistant h3, .msg-assistant h4 { margin-top: 10px; margin-bottom: 5px; }
+        .msg-note { display: block; margin-top: 6px; font-size: 11px; color: var(--sub); font-family: var(--font); }
+        .msg-copy { position: absolute; top: 2px; right: 2px; width: 30px; height: 30px; padding: 0; background: none; border: 0; color: var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .msg-copy:active { background: var(--card); }
+        .placeholder { text-align: center; color: var(--muted); margin: auto 0; font-size: .92rem; }
+        .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--edge); border-top-color: var(--acc); border-radius: 50%; animation: rotate 1s linear infinite; vertical-align: -2px; margin-left: 6px; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        .msg-assistant h1, .msg-assistant h2, .msg-assistant h3, .msg-assistant h4 { margin: 12px 0 5px; font-family: var(--font); }
         .msg-assistant p { margin: 6px 0; }
         .msg-assistant ul, .msg-assistant ol { margin: 6px 0; padding-left: 22px; }
-        .msg-assistant blockquote { margin: 8px 0; padding: 4px 10px; border-left: 3px solid #555; color: #bbb; }
-        .msg-assistant hr { border: none; border-top: 1px solid #444; margin: 10px 0; }
-        .msg-assistant code { font-family: monospace; background: #000; padding: 2px 4px; border-radius: 3px; }
-        .code-wrap { position: relative; margin: 8px 0; }
-        .code-wrap pre { background: #000; padding: 28px 10px 10px; border-radius: 5px; overflow-x: auto; margin: 0; }
-        .code-wrap pre code { background: none; padding: 0; color: #d4d4d4; white-space: pre; }
-        .code-lang { position: absolute; top: 6px; left: 10px; font-size: 11px; color: #777; font-family: monospace; }
-        .code-copy { position: absolute; top: 4px; right: 4px; background: #2a2a2a; border: 1px solid #444; color: #ddd; border-radius: 5px; font-size: 11px; padding: 3px 8px; cursor: pointer; }
-        .md-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; margin-top: 10px; }
-        .md-table th, .md-table td { border: 1px solid #444; padding: 8px; text-align: left; }
-        .md-table th { background: #2a2a2a; }
+        .msg-assistant blockquote { margin: 8px 0; padding: 4px 10px; border-left: 3px solid var(--edge); color: var(--sub); }
+        .msg-assistant hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+        .msg-assistant code { font-family: var(--mono); font-size: .88em; background: var(--code); padding: 2px 5px; border-radius: 4px; }
+        .code-wrap { position: relative; margin: 8px 0; font-family: var(--mono); }
+        .code-wrap pre { background: var(--code); padding: 28px 12px 12px; border-radius: 12px; overflow-x: auto; margin: 0; }
+        .code-wrap pre code { background: none; padding: 0; color: var(--code-t); white-space: pre; font-size: .84rem; }
+        .code-lang { position: absolute; top: 7px; left: 12px; font-size: 11px; color: var(--muted); }
+        .code-copy { position: absolute; top: 4px; right: 6px; background: var(--card); border: 1px solid var(--ol); color: var(--sub); border-radius: 99px; font-size: 11px; padding: 3px 10px; cursor: pointer; font-family: var(--font); }
+        .md-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-family: var(--font); font-size: .92rem; }
+        .md-table th, .md-table td { border: 1px solid var(--edge); padding: 7px 9px; text-align: left; }
+        .md-table th { background: var(--card); }
+        .tok-c { color: var(--tk-c); font-style: italic; } .tok-s { color: var(--tk-s); } .tok-d { color: var(--tk-d); } .tok-n { color: var(--tk-n); }
+        .tok-k { color: var(--tk-k); font-weight: bold; } .tok-b { color: var(--tk-b); } .tok-f { color: var(--tk-f); }
 
-        /* Syntax-Farben */
-        .tok-c { color: #7f8c8d; font-style: italic; }  /* Kommentar */
-        .tok-s { color: #98c379; }                      /* String */
-        .tok-d { color: #e5c07b; }                      /* Decorator / Präprozessor */
-        .tok-n { color: #d19a66; }                      /* Zahl */
-        .tok-k { color: #c678dd; font-weight: bold; }   /* Schlüsselwort / Tag */
-        .tok-b { color: #61afef; }                      /* Builtin / Attribut */
-        .tok-f { color: #56b6c2; }                      /* Funktionsaufruf */
+        /* Metrik-Chips: eine Zeile, kein Umbruch */
+        .metrics { display: flex; gap: 6px; flex: none; margin: 4px 0 8px; }
+        .m { flex: 1 1 0; min-width: 0; height: 28px; border-radius: 99px; background: var(--card); border: 1px solid var(--ol); display: flex; align-items: center; justify-content: center; gap: 4px; font: 600 11px var(--mono); white-space: nowrap; color: var(--sub); }
+        .m b { font-weight: 700; } .m i { font-style: normal; }
+        .m1 b { color: var(--m1); } .m2 b { color: var(--m2); } .m3 b { color: var(--m3); } .m4 b { color: var(--m4); }
 
-        .disabled-box { opacity: 0.4; pointer-events: none; }
-        .spinner { display: inline-block; animation: rotate 2s linear infinite; font-size: 16px; margin-left: 8px; vertical-align: middle; }
-        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        /* Prompt */
+        .prompt { flex: none; display: flex; align-items: flex-end; gap: 6px; min-height: 60px; padding: 8px 8px 8px 8px; border-radius: 28px; background: var(--surf); border: 1.5px solid var(--edge); }
+        .prompt:focus-within { border-color: var(--acc); }
+        :root[data-theme="lt"] .prompt { background: var(--surf); border-color: var(--edge); }
+        .prompt textarea { flex: 1; min-width: 0; align-self: stretch; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: 1rem; line-height: 1.4; padding: 8px 6px 8px 8px; max-height: 40dvh; overflow-y: auto; }
+        .prompt textarea::placeholder { color: var(--muted); }
+        .prompt .xp { width: 34px; height: 34px; align-self: flex-start; }
+        .prompt .round { width: 44px; height: 44px; }
+        .voice-btn.rec { background: var(--red); border-color: var(--red); color: #fff; }
+        .acts { display: flex; gap: 8px; flex: none; margin: 8px 0 0; min-height: 36px; }
+        .acts .pill { min-height: 36px; padding: 0 14px; font-size: .82rem; }
+        #stop-btn { display: none; }
+        .ctx { flex: none; margin: 10px 0 12px; border: 1.5px dashed var(--edge); border-radius: 14px; padding: 8px 12px 6px; }
+        .ctx.req { border-color: var(--orange); }
+        .ctx-h { display: flex; align-items: center; gap: 8px; }
+        .ctx-h .caps { flex: 1; font-size: .62rem; }
+        .ctx-h small { color: var(--muted); font-size: .7rem; font-family: var(--mono); }
+        .ctx .ibtn { width: 32px; height: 32px; }
+        .ctx textarea { display: block; width: 100%; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: .9rem; line-height: 1.4; padding: 2px 0 4px; height: 44px; max-height: 20dvh; }
+        .ctx textarea::placeholder { color: var(--muted); }
+        #context.req-warn::placeholder { color: var(--red); }
+        .disabled-box { opacity: .4; pointer-events: none; }
+        /* Vollbild-Editor (Prompt und Kontext) */
+        .full { position: fixed !important; inset: 0; z-index: 60; margin: 0 !important; border-radius: 0 !important; background: var(--bg) !important; border: 0 !important; padding: 12px 16px max(16px, env(safe-area-inset-bottom)) !important; display: flex; flex-direction: column; align-items: stretch; }
+        .full textarea { flex: 1; height: auto !important; max-height: none !important; font-size: 1.05rem; }
+        .full .round { align-self: flex-end; }
+        .prompt.full { flex-direction: column; }
+        .prompt.full .xp { align-self: flex-end; order: -1; }
+        .prompt.full .pbtns { align-self: flex-end; }
+        .pbtns { display: flex; gap: 6px; flex: none; align-items: flex-end; }
+        /* Tastatur offen: Chat bekommt den Platz */
+        body.kbd .modes, body.kbd .metrics, body.kbd .acts, body.kbd .ctx, body.kbd #preload-status { display: none; }
+        body.kbd-ctx .modes, body.kbd-ctx .metrics, body.kbd-ctx .acts { display: none; }
+        body.kbd .app, body.kbd-ctx .app { min-height: 0; }
 
-        /* Slide-over Parameter Sidebar */
-        .sidebar { position: fixed; top: 0; right: -100%; width: 290px; height: 100%; background: #181818; border-left: 1px solid #333; box-shadow: -5px 0 15px rgba(0,0,0,0.7); transition: right 0.3s ease; padding: 20px; z-index: 1000; overflow-y: auto; }
-        .sidebar.open { right: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .sidebar-header h3 { margin: 0; font-size: 18px; }
-        .close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
-        .param-group { margin-bottom: 18px; }
-        .param-group label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: #bbb; }
-        .param-group input[type=range] { width: 100%; accent-color: #4caf50; }
-        .slider-group { transition: opacity 0.3s; }
-        .slider-group.off { opacity: 0.3; }
-        .req-warn { border-color: #f44336 !important; }
-        .side-btn { width: 100%; background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; font-size: 13px; }
-        .side-title { font-size: 13px; color: #aaa; font-weight: bold; margin: 18px 0 8px; border-top: 1px solid #333; padding-top: 14px; }
-        .saved-item { display: flex; gap: 6px; margin-bottom: 6px; }
-        .saved-item .load { flex: 1; min-width: 0; text-align: left; background: #222; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; overflow: hidden; }
-        .saved-item .load small { display: block; color: #888; font-size: 10px; margin-top: 2px; }
-        .saved-item .del { background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 6px; cursor: pointer; padding: 0 10px; }
+        /* Menue-Sheet, Seiten, Zeilen */
+        .pg { display: none; } .pg.on { display: block; }
+        .grp { margin: 20px 4px 6px; }
+        .pg > .grp:first-child { margin-top: 8px; }
+        .sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: var(--card); border: 1px solid var(--ol); color: var(--txt); padding: 0 12px; font: inherit; font-size: .92rem; outline: none; margin-top: 6px; }
+        .inp:focus, .sel:focus { border-color: var(--acc); }
+        .fld { display: block; margin: 12px 0 0; font-size: .78rem; color: var(--sub); }
+        .help { display: block; font-size: .74rem; color: var(--sub); line-height: 1.4; margin-top: 6px; }
+        .status-line { font-size: .78rem; color: var(--orange); min-height: 16px; margin-top: 6px; }
+        .param-group.off, .slider-group.off { opacity: .4; }
+        .row.sel-on .tile { background: var(--acc); color: var(--onacc); }
+        .row .ck { color: var(--pri); visibility: hidden; } .row.sel-on .ck { visibility: visible; }
+        .ver-pill { width: 100%; justify-content: flex-start; font-family: var(--mono); font-size: .82rem; }
+        .st-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+        .st-chips label { display: flex; align-items: center; gap: 5px; background: var(--card); border: 1px solid var(--ol); border-radius: 99px; padding: 7px 12px; font-size: .86rem; cursor: pointer; }
+        .st-chips input { margin: 0; accent-color: var(--acc); }
+        .chk { display: flex; align-items: center; gap: 10px; font-size: .88rem; margin: 10px 0; cursor: pointer; }
+        .chk input { accent-color: var(--acc); width: 18px; height: 18px; margin: 0; }
+        .st-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: 8px; }
+        .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid var(--line); }
+        .st-table th:first-child, .st-table td:first-child { text-align: left; }
+        .st-table th { color: var(--sub); font-weight: normal; }
+        .st-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        /* Modellauswahl */
+        .mrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 6px 4px; background: none; border: 0; border-top: 1px solid var(--line); text-align: left; color: var(--txt); cursor: pointer; font-size: 1rem; }
+        .mrow:first-child { border-top: 0; }
+        .mrow .mt { flex: 1; min-width: 0; } .mrow .mt b { display: block; font-weight: 500; overflow-wrap: anywhere; }
+        .mrow .mt small { display: block; color: var(--sub); font-size: .76rem; margin-top: 1px; }
+        .mrow .ld { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
+        .mrow.on b { font-weight: 700; } .mrow .ck { color: var(--pri); }
+        #model-select, #mode-select { display: none; }
+        /* Chatliste von links */
+        .drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 41; width: min(88vw, 350px); background: var(--surf); border-right: 1px solid var(--ol); transform: translateX(-105%); transition: transform .2s ease; display: flex; flex-direction: column; visibility: hidden; }
+        .drawer.open { transform: none; visibility: visible; }
+        .drawer .dh { display: flex; align-items: center; gap: 6px; height: 56px; padding: 0 8px 0 18px; flex: none; }
+        .drawer .dh h3 { flex: 1; margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .drawer .dtools { padding: 0 14px 8px; display: flex; flex-direction: column; gap: 8px; flex: none; }
+        .drawer .dtools .lang-btn { width: 100%; } .drawer .dtools .lang-btn span { flex: 1; }
+        #saved-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 14px 20px; }
+        #saved-list > small { display: block; color: var(--muted); padding: 14px 4px; font-size: .86rem; }
+        .saved-item { border-top: 1px solid var(--line); }
+        .saved-item .sr { display: flex; align-items: center; gap: 2px; }
+        .saved-item .sr::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--mc, var(--sub)); flex: none; margin-right: 8px; }
+        .saved-item .load { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: var(--txt); padding: 11px 0; font-size: .95rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .saved-item .load small { display: block; color: var(--sub); font-size: .72rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+        .saved-item .more { width: 38px; height: 38px; }
+        .saved-item .acts2 { display: none; padding: 0 0 10px 17px; gap: 8px; }
+        .saved-item.open .acts2 { display: flex; }
+        .saved-item .acts2 .pill { min-height: 34px; font-size: .8rem; padding: 0 14px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <a href="index.html" class="hub-link" title="Hub">⌂</a>
-                <h2>🤖 Heinz UI</h2>
-                <span id="status-dot" class="status-dot" data-i18n-title="serverStatus" title="Server status"></span>
-            </div>
-            <select id="model-select" class="model-select" onchange="onModelChange()"></select>
+    <div class="app">
+        <div class="top">
+            <a id="status-dot" class="ring-btn status-dot s-red" href="index.html" data-i18n-title="serverStatus" title="Server status"><span class="rt"><span>Heinz</span><br><span>UI</span></span></a>
+            <button id="model-chip" class="chip" type="button" onclick="openModels()">
+                <span class="ct"><small id="chip-engine">Ollama</small><b id="chip-model">–</b></span>
+                <svg class="i sm"><use href="lib/icons.svg#i-chev-d"/></svg>
+            </button>
             <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
-            <button class="burger-btn" onclick="toggleSidebar()">☰</button>
+            <button class="ibtn burger-btn" type="button" onclick="openMenu()" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
         </div>
-        <div id="preload-status" class="preload-status" style="display:none; font-size:11px; color:#888; margin:-4px 0 6px 2px;"></div>
+        <div id="preload-status" style="display:none"></div>
+        <select id="model-select" onchange="onModelChange()" aria-hidden="true" tabindex="-1"></select>
 
-        <div class="mode-container" id="mode-bar" role="tablist">
-            <select id="mode-select" onchange="updateModeUI()" style="display:none" aria-hidden="true">
-                <option value="wilson" data-i18n="m_wilson">🏕️ Wilson (Companion)</option>
-                <option value="heinz" data-i18n="m_heinz">🕵️ Heinz (Facts &amp; Slang)</option>
-                <option value="audit" data-i18n="m_audit">📄 Audit &amp; Text Tool</option>
-                <option value="code" data-i18n="m_code">👨‍💻 Code &amp; Syntax</option>
-                <option value="creative" data-i18n="m_creative">🎨 Creative &amp; Story</option>
+        <div class="modes" id="mode-bar" role="tablist">
+            <select id="mode-select" onchange="updateModeUI()" aria-hidden="true" tabindex="-1">
+                <option value="wilson" data-i18n="m_wilson">Wilson (Companion)</option>
+                <option value="heinz" data-i18n="m_heinz">Heinz (Facts &amp; Slang)</option>
+                <option value="audit" data-i18n="m_audit">Audit &amp; Text Tool</option>
+                <option value="code" data-i18n="m_code">Code &amp; Syntax</option>
+                <option value="creative" data-i18n="m_creative">Creative &amp; Story</option>
             </select>
         </div>
 
-        <div class="chat-frame">
-            <button class="chat-copy" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button>
-            <div class="chat-wrapper" id="chat-container"></div>
+        <div class="bar">
+            <button id="chats-open" class="ibtn" type="button" onclick="openDrawer()" data-i18n-title="chatsTitle" title="Chats"><svg class="i"><use href="lib/icons.svg#i-chats"/></svg><span id="chats-count" class="cnt"></span></button>
+            <div id="chat-title" class="ttl"></div>
+            <button class="ibtn chat-copy" type="button" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="i"><use href="lib/icons.svg#i-copy"/></svg></button>
+            <button class="ibtn new-btn" type="button" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="i"><use href="lib/icons.svg#i-plus"/></svg></button>
+        </div>
+        <div class="chat-wrapper" id="chat-container"></div>
+
+        <div class="metrics" id="dashboard">
+            <span class="m m1"><i>P</i> <b id="dash-p-tok">0</b></span>
+            <span class="m m2"><i>A</i> <b id="dash-a-tok">0</b></span>
+            <span class="m m3"><b id="dash-speed">0.0</b> <i>T/s</i></span>
+            <span class="m m4" data-i18n-title="startTitle" title="Time until the first word: model load + prompt processing"><i data-i18n="mStart">Start</i> <b id="dash-start">0.0</b> <i>s</i></span>
         </div>
 
-        <div class="controls-wrapper">
-            <div id="context-wrapper">
-                <textarea id="context" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn')"></textarea>
+        <div class="prompt" id="prompt-wrap">
+            <textarea id="query" rows="1" data-i18n-ph="queryPh" placeholder="What should Heinz do?"></textarea>
+            <button class="ibtn xp" type="button" onclick="toggleFull('prompt-wrap')" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button>
+            <span class="pbtns">
+                <button class="round voice-btn" type="button" onclick="startListening()" data-i18n-title="micTitle" title="Speech input"><svg class="i"><use href="lib/icons.svg#i-mic"/></svg></button>
+                <button class="round acc" id="send-btn" type="button" onclick="askGemma()" data-i18n-title="send" title="Send"><svg class="i"><use href="lib/icons.svg#i-send"/></svg></button>
+            </span>
+        </div>
+        <div class="acts">
+            <button class="pill" id="read-btn" type="button" onclick="toggleRead()"><svg class="i sm"><use href="lib/icons.svg#i-volume"/></svg><span id="read-lbl" data-i18n="readAloud">Read aloud</span></button>
+            <button class="pill danger" id="stop-btn" type="button" onclick="abortGeneration()"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stopGen">Stop</span></button>
+        </div>
+        <div class="ctx" id="context-wrapper">
+            <div class="ctx-h"><span class="caps" id="ctx-label">Context · optional</span><small id="ctx-count"></small>
+                <button class="ibtn" type="button" onclick="toggleFull('context-wrapper')" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button></div>
+            <textarea id="context" rows="2" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn'); updateCtxCount()"></textarea>
+        </div>
+    </div>
 
-                <div class="token-dashboard">
-                    <span class="badge badge-prompt">P-Tok: <span id="dash-p-tok">0</span></span>
-                    <span class="badge badge-eval">A-Tok: <span id="dash-a-tok">0</span></span>
-                    <span class="badge badge-speed">Speed: <span id="dash-speed">0.0</span> T/s</span>
-                    <span class="badge badge-start" data-i18n-title="startTitle" title="Time until the first word: model load + prompt processing">Start: <span id="dash-start">0.0</span> s</span>
+    <div id="scrim" class="scrim" onclick="closeAll()"></div>
+
+    <!-- Chatliste (von links) -->
+    <aside id="drawer" class="drawer" aria-label="Chats">
+        <div class="dh"><h3 data-i18n="chatsTitle">Chats</h3><button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
+        <div class="dtools">
+            <button id="chats-scope" class="lang-btn" type="button" onclick="toggleChatScope()"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" data-i18n="scopeAllS">All</span></button>
+            <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" oninput="renderSavedList()">
+        </div>
+        <div id="saved-list"></div>
+    </aside>
+
+    <!-- Modellwahl -->
+    <section id="model-sheet" class="sheet" aria-label="Model">
+        <div class="grab"></div>
+        <div class="sh-head"><h3 id="ms-title" data-i18n="modelsTitle">Model</h3><button class="ibtn" type="button" onclick="loadModels()" data-i18n-title="modelsReload" title="Reload list"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button><button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
+        <div class="sh-body">
+            <input id="model-search" class="inp" type="search" style="margin:0 0 6px" data-i18n-ph="modelSearchPh" placeholder="Filter models" oninput="renderModelSheet()" hidden>
+            <div id="model-list"></div>
+            <div id="model-empty" class="help" style="padding:10px 4px"></div>
+        </div>
+    </section>
+
+    <!-- Menue -->
+    <section id="menu-sheet" class="sheet" aria-label="Menu">
+        <div class="grab"></div>
+        <div class="sh-head">
+            <button id="sh-back" class="ibtn" type="button" onclick="showPage('main')" data-i18n-title="back" title="Back" hidden><svg class="i"><use href="lib/icons.svg#i-arrow-l"/></svg></button>
+            <h3 id="sh-title">Menu</h3>
+            <button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button>
+        </div>
+        <div class="sh-body">
+
+            <div class="pg on" data-pg="main">
+                <button class="row" type="button" data-go="engine" onclick="showPage('engine')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cpu"/></svg></span><span class="tx"><b data-i18n="engine">Engine</b><small id="menu-engine"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" onchange="onOnlineToggle()"><i></i></span></label>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-terminal"/></svg></span><span class="tx"><b data-i18n="swOwn">Own system prompt</b><small data-i18n="swOwnSub">Model brings its own persona</small></span><span class="sw"><input type="checkbox" id="own-system" onchange="onOwnSystem()"><i></i></span></label>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" onchange="onFast()"><i></i></span></label>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" onchange="onPreloadToggle()"><i></i></span></label>
+
+                <div class="caps grp" data-i18n="gChats">Chats</div>
+                <button class="row" type="button" onclick="openDrawer()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-chats"/></svg></span><span class="tx"><b data-i18n="rChats">Chat list</b><small id="menu-chats"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" onclick="saveChatNow()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-save"/></svg></span><span class="tx"><b data-i18n="rSave">Save current chat</b></span></button>
+                <button class="row" type="button" onclick="discardChat()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-trash"/></svg></span><span class="tx"><b data-i18n="rDiscard">Discard current chat</b></span></button>
+
+                <div class="caps grp" data-i18n="gModel">Model &amp; performance</div>
+                <button class="row" type="button" data-go="params" onclick="showPage('params')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i18n="rParams">Parameters</b><small data-i18n="rParamsSub">Temperature, Top-P, Top-K, context, threads</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="speed" onclick="showPage('speed')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i18n="rSpeed">Speed test</b><small data-i18n="rSpeedSub">Find the best thread count</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+
+                <div id="grp-online" hidden>
+                    <div class="caps grp" data-i18n="gOnline">Online</div>
+                    <button class="row" type="button" onclick="showPage('engine')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-key"/></svg></span><span class="tx"><b data-i18n="rKeys">Keys &amp; online services</b><small data-i18n="rKeysSub">API key stays in this browser</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                </div>
+
+                <div class="caps grp" data-i18n="gApp">App</div>
+                <button class="row" type="button" data-go="look" onclick="showPage('look')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="rLook">Appearance</b><small id="menu-theme"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="update" onclick="showPage('update')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="rUpdate">Update &amp; info</b><small id="menu-ver"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+            </div>
+
+            <div class="pg" data-pg="engine" id="engine-box">
+                <div class="caps grp" data-i18n="engine">Engine</div>
+                <select id="provider-select" class="sel" onchange="onProvider()" style="margin-top:0"></select>
+                <div id="eng-backend" hidden>
+                    <label class="fld" data-i18n="backend">Backend (LiteRT-LM)</label>
+                    <select id="backend-select" class="sel" onchange="onBackend()" style="margin-top:4px"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
+                </div>
+                <div id="eng-url" hidden>
+                    <label class="fld" data-i18n="engineUrl">Endpoint address (…/v1)</label>
+                    <input type="text" id="prov-url" class="inp" onchange="onProviderUrl()" placeholder="http://127.0.0.1:8080/v1" style="margin-top:4px">
+                </div>
+                <div id="eng-key" hidden>
+                    <label class="fld" data-i18n="apiKey">API key (stays in this browser)</label>
+                    <input type="password" id="prov-key" class="inp" onchange="onProviderKey()" autocomplete="off" style="margin-top:4px">
+                    <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" class="help" style="color:var(--pri)" data-i18n="getKey">Get a key</a>
+                </div>
+                <div id="eng-model" hidden>
+                    <label class="fld" data-i18n="modelId">Model name (if the list stays empty)</label>
+                    <input type="text" id="model-free" class="inp" onchange="onModelFree()" style="margin-top:4px">
+                    <div class="st-btns"><button class="pill" type="button" onclick="loadModels()"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
+                </div>
+                <small id="eng-note" class="help"></small>
+                <div id="eng-status" class="status-line"></div>
+                <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
+            </div>
+
+            <div class="pg" data-pg="params">
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i18n="defaults">Default values</b><small data-i18n="defaultsHelp">Ignores the sliders and uses the model's internal Ollama defaults.</small></span><span class="sw"><input type="checkbox" id="use-default" onchange="onDefaultToggle()"><i></i></span></label>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Temperature</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b data-i18n="pCtx">Context window</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
+                <div class="slidercard param-group"><div class="sc-top"><b data-i18n="threads">CPU threads (0 = Ollama default)</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"><small data-i18n="threadsHelp">Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).</small></div>
+                <div class="slidercard"><div class="sc-top"><b data-i18n="fastN">Max. answer tokens</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="150" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
+            </div>
+
+            <div class="pg" data-pg="speed">
+                <small class="help" style="margin-top:0" data-i18n="stNote">Fixed prompt, temperature 0, 32 tokens, model and context as set above.</small>
+                <div class="caps grp">Threads</div>
+                <div class="st-chips" id="st-threads">
+                    <label><input type="checkbox" value="1">1</label>
+                    <label><input type="checkbox" value="2" checked>2</label>
+                    <label><input type="checkbox" value="3" checked>3</label>
+                    <label><input type="checkbox" value="4" checked>4</label>
+                    <label><input type="checkbox" value="6">6</label>
+                    <label><input type="checkbox" value="8" checked>8</label>
+                </div>
+                <select id="st-prompt" class="sel">
+                    <option value="short" data-i18n="stShort">Short prompt (~20 tokens)</option>
+                    <option value="long" data-i18n="stLong">Long prompt (~300 tokens)</option>
+                </select>
+                <select id="st-termux" class="sel">
+                    <option value="hidden" data-i18n="stTermuxHidden">Termux in the background</option>
+                    <option value="visible" data-i18n="stTermuxVisible">Termux visible (split screen)</option>
+                </select>
+                <label class="chk"><input type="checkbox" id="st-cold" checked><span data-i18n="stCold">Unload model first (measures real load time)</span></label>
+                <div class="st-btns">
+                    <button class="pill acc" id="st-start" type="button" onclick="startSpeedTest()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
+                    <button class="pill danger" id="st-stop" type="button" onclick="stopSpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
+                </div>
+                <div id="st-status" class="help" style="min-height:16px"></div>
+                <div id="st-table"></div>
+                <div id="st-best" class="help" style="color:var(--pri)"></div>
+                <div class="st-btns">
+                    <button class="pill" id="st-apply" type="button" onclick="applyBestThreads()" style="display:none"></button>
+                    <button class="pill" id="st-copy" type="button" onclick="copySpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span data-i18n="stCopy">Copy results</span></button>
                 </div>
             </div>
 
-            <div class="input-row">
-                <input type="text" id="query" data-i18n-ph="queryPh" placeholder="What should Heinz do?" onkeydown="if(event.key === 'Enter') askGemma()">
-                <button class="voice-btn" onclick="startListening()">🎤</button>
+            <div class="pg" data-pg="look">
+                <button class="row" type="button" id="th-auto" onclick="setTheme('auto')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="thAuto">Automatic (system)</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
+                <button class="row" type="button" id="th-lt" onclick="setTheme('lt')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i18n="thLt">Light</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
+                <button class="row" type="button" id="th-dk" onclick="setTheme('dk')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="thDk">Dark</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
             </div>
 
-            <div class="action-row">
-                <button class="action-btn" id="send-btn" onclick="askGemma()" data-i18n="send">Send</button>
-                <button class="stop-btn" id="stop-btn" onclick="abortGeneration()" data-i18n="cancel">Cancel</button>
-                <button class="new-btn" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2 2 0 0 1 2.8 2.8L12 14.6 8 16l1.4-4z"/></svg></button>
-            </div>
-
-            <div class="audio-row">
-                <button class="audio-btn" style="background: #9c27b0;" onclick="speakResponse()" data-i18n="read">🔊 Read aloud</button>
-                <button class="audio-btn" style="background: #f44336;" onclick="stopSpeaking()" data-i18n="stop">🛑 Stop</button>
+            <div class="pg" data-pg="update">
+                <button class="pill ver-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span id="upd-ver"></span></button>
+                <div id="upd-status" class="help" style="min-height:16px"></div>
+                <button class="row" type="button" onclick="location.reload()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></span><span class="tx"><b data-i18n="rReload">Reload page</b><small data-i18n="reloadTitle">Reload page (chat and settings are kept)</small></span></button>
             </div>
         </div>
-    </div>
-
-    <!-- Parameter Sidebar -->
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3 data-i18n="params">⚙️ Parameters</h3>
-            <span>
-                <button class="close-btn" onclick="location.reload()" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)">↻</button>
-                <button class="close-btn" onclick="toggleSidebar()">✕</button>
-            </span>
-        </div>
-        <button class="ver-pill" id="upd-btn" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates"><span id="upd-ver">⬇</span></button>
-        <div id="upd-status" style="font-size:12px; color:#aaa; margin:-2px 0 12px; min-height:14px;"></div>
-        <div class="param-group" id="engine-box">
-            <label><span data-i18n="engine">Engine</span></label>
-            <select id="provider-select" onchange="onProvider()" style="width:100%;"></select>
-            <div id="eng-backend" style="display:none; margin-top:8px;">
-                <label><span data-i18n="backend">Backend (LiteRT-LM)</span></label>
-                <select id="backend-select" onchange="onBackend()" style="width:100%;"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
-            </div>
-            <div id="eng-url" style="display:none; margin-top:8px;">
-                <label><span data-i18n="engineUrl">Endpoint address (…/v1)</span></label>
-                <input type="text" id="prov-url" onchange="onProviderUrl()" placeholder="http://127.0.0.1:8080/v1" style="width:100%;">
-            </div>
-            <div id="eng-key" style="display:none; margin-top:8px;">
-                <label><span data-i18n="apiKey">API key (stays in this browser)</span></label>
-                <input type="password" id="prov-key" onchange="onProviderKey()" autocomplete="off" style="width:100%;">
-                <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#8ab4f8;" data-i18n="getKey">Get a key</a>
-            </div>
-            <div id="eng-model" style="display:none; margin-top:8px;">
-                <label><span data-i18n="modelId">Model name (if the list stays empty)</span></label>
-                <input type="text" id="model-free" onchange="onModelFree()" style="width:100%;">
-                <button class="side-btn" type="button" onclick="loadModels()" style="margin-top:6px;" data-i18n="reloadModels">↻ Load model list</button>
-            </div>
-            <small id="eng-note" style="color:#888; font-size:11px; display:block; margin-top:6px;"></small>
-            <div id="eng-status" style="font-size:12px; color:#f9a825; margin-top:4px; min-height:14px;"></div>
-            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer; margin-top:10px;">
-                <input type="checkbox" id="online-on" onchange="onOnlineToggle()" style="width:auto; margin:0;"> <span data-i18n="onlineAllow">Allow online (default off)</span>
-            </label>
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
-        </div>
-        <div class="param-group default-toggle">
-            <label style="justify-content:flex-start; gap:8px; color:#fff; font-weight:bold; cursor:pointer;">
-                <input type="checkbox" id="use-default" onchange="onDefaultToggle()" style="width:auto; margin:0;"> <span data-i18n="defaults">Default values</span>
-            </label>
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="defaultsHelp">Ignores the sliders and uses the model's internal Ollama defaults.</small>
-        </div>
-        <div class="param-group slider-group">
-            <label>Temperature: <span id="val-temp">0.7</span></label>
-            <input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()">
-        </div>
-        <div class="param-group slider-group">
-            <label>Top-P: <span id="val-topp">0.9</span></label>
-            <input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()">
-        </div>
-        <div class="param-group slider-group">
-            <label>Top-K: <span id="val-topk">40</span></label>
-            <input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()">
-        </div>
-        <div class="param-group slider-group">
-            <label>Context Window: <span id="val-ctx">8192</span></label>
-            <input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()">
-        </div>
-
-        <div class="param-group">
-            <label><span data-i18n="threads">CPU threads (0 = Ollama default)</span><span id="val-threads">4</span></label>
-            <input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()">
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="threadsHelp">Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).</small>
-        </div>
-        <div class="param-group">
-            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
-                <input type="checkbox" id="own-system" onchange="onOwnSystem()" style="width:auto; margin:0;"> <span data-i18n="ownSystem">Use the model's own system prompt</span>
-            </label>
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="ownSystemHelp">Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.</small>
-        </div>
-
-        <div class="param-group">
-            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
-                <input type="checkbox" id="fast-mode" onchange="onFast()" style="width:auto; margin:0;"> <span data-i18n="fastMode">Fast mode (short plain-text answer)</span>
-            </label>
-            <label style="margin-top:6px;"><span data-i18n="fastN">Max. answer tokens</span><input type="number" id="param-fastn" min="16" max="1024" step="16" value="150" onchange="onFast()" style="width:80px;"></label>
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small>
-        </div>
-        <div class="param-group">
-            <label style="justify-content:flex-start; gap:8px; color:#fff; cursor:pointer;">
-                <input type="checkbox" id="preload-on" onchange="onPreloadToggle()" style="width:auto; margin:0;"> <span data-i18n="preloadOpt">Preload model</span>
-            </label>
-            <small style="color:#888; font-size:11px; display:block; margin-top:5px;" data-i18n="preloadHelp">Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.</small>
-        </div>
-
-        <div class="side-title" data-i18n="speedTitle">⏱ Speed test</div>
-        <small style="color:#888; font-size:11px; display:block; margin-bottom:8px;" data-i18n="stNote">Fixed prompt, temperature 0, 32 tokens, model and context as set above.</small>
-        <div class="st-chips" id="st-threads">
-            <label><input type="checkbox" value="1">1</label>
-            <label><input type="checkbox" value="2" checked>2</label>
-            <label><input type="checkbox" value="3" checked>3</label>
-            <label><input type="checkbox" value="4" checked>4</label>
-            <label><input type="checkbox" value="6">6</label>
-            <label><input type="checkbox" value="8" checked>8</label>
-        </div>
-        <select id="st-prompt">
-            <option value="short" data-i18n="stShort">Short prompt (~20 tokens)</option>
-            <option value="long" data-i18n="stLong">Long prompt (~300 tokens)</option>
-        </select>
-        <select id="st-termux">
-            <option value="hidden" data-i18n="stTermuxHidden">Termux in the background</option>
-            <option value="visible" data-i18n="stTermuxVisible">Termux visible (split screen)</option>
-        </select>
-        <label style="display:flex; gap:8px; align-items:center; font-size:13px; color:#ddd; margin-bottom:8px; cursor:pointer;">
-            <input type="checkbox" id="st-cold" checked style="width:auto; margin:0;"> <span data-i18n="stCold">Unload model first (measures real load time)</span>
-        </label>
-        <button class="side-btn" id="st-start" onclick="startSpeedTest()" data-i18n="stStart">▶ Start test</button>
-        <button class="side-btn" id="st-stop" onclick="stopSpeedTest()" style="display:none;" data-i18n="stStop">■ Stop</button>
-        <div id="st-status" style="font-size:12px; color:#aaa; min-height:16px;"></div>
-        <div id="st-table"></div>
-        <div id="st-best" style="font-size:13px; color:#8ab4f8; margin-top:8px;"></div>
-        <button class="side-btn" id="st-apply" onclick="applyBestThreads()" style="display:none; margin-top:6px;"></button>
-        <button class="side-btn" id="st-copy" onclick="copySpeedTest()" style="display:none; margin-top:8px;" data-i18n="stCopy">📋 Copy results</button>
-
-        <div class="side-title" data-i18n="chats">💬 Chats</div>
-        <button class="side-btn" onclick="saveChatNow()" data-i18n="saveChat">💾 Save current chat</button>
-        <button class="side-btn" onclick="discardChat()" data-i18n="discardChat">🗑️ Discard current chat</button>
-        <button class="side-btn" id="chats-scope" onclick="toggleChatScope()" style="margin-top:6px;"></button>
-        <div id="saved-list"></div>
-    </div>
+    </section>
 
     <script src="lib/providers.js"></script>
     <script>
@@ -519,11 +566,11 @@
         // Modus = Daten: model (bevorzugt), alt (Ersatz, falls nicht installiert), stop (Stoppsequenzen).
         // Modell ist in jedem Modus frei wählbar (Modus und Modell sind getrennte Angaben).
         const MODE_PRESETS = {
-            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#2196F3' },
-            heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63' },
-            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#ff9800' },
-            code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#607d8b' },
-            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#9c27b0' }
+            wilson:   { temp: 0.75, top_p: 0.90, top_k: 40, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'none',     color: '#4285f4', on: '#fff' },
+            heinz:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'heinz-fakt:latest',  alt: ['qwen2.5:3b'],  stop: ['As an AI', 'Als KI'], ctx: 'optional', color: '#e91e63', on: '#fff' },
+            audit:    { temp: 0.15, top_p: 0.30, top_k: 20, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'required', ctxInSystem: true, color: '#fbbc05', on: '#202124' },
+            code:     { temp: 0.15, top_p: 0.10, top_k: 10, model: 'qwen2.5:3b',         alt: [],              stop: [], ctx: 'optional', color: '#6b8ba4', on: '#fff' },
+            creative: { temp: 0.75, top_p: 0.92, top_k: 60, model: 'gemma2:2b',          alt: [],              stop: [], ctx: 'optional', color: '#a142f4', on: '#fff' }
         };
         // bevorzugtes Modell des Modus, sonst Ersatz, sonst erstes installiertes
         function resolveModel(preset) {
@@ -538,12 +585,13 @@
             if (settings.provider !== 'ollama' && settings.model && names.indexOf(settings.model) < 0) names.unshift(settings.model);
             names.forEach(function (m) {
                 const o = document.createElement('option');
-                o.value = m; o.textContent = '🧠 ' + m;
+                o.value = m; o.textContent = m;
                 sel.appendChild(o);
             });
             if (settings.provider === 'ollama' && MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
             if (settings.provider !== 'ollama' && !settings.model) settings.model = names[0] || '';
             sel.value = settings.model;
+            updateChip(); renderModelSheet();
         }
         function setEngStatus(msg) { $('eng-status').textContent = msg || ''; }
         async function loadModels() {
@@ -573,7 +621,7 @@
             PV.list().forEach(function (p) {
                 if (!p.local && !p.custom && !PV.onlineAllowed()) return;   // Online-Engines erscheinen erst mit „Online erlauben“
                 const o = document.createElement('option');
-                o.value = p.id; o.textContent = (p.custom || p.local ? '' : '☁ ') + p.name;
+                o.value = p.id; o.textContent = p.name + (p.custom || p.local ? '' : ' · online');
                 sel.appendChild(o);
             });
             if (!sel.querySelector('option[value="' + settings.provider + '"]')) settings.provider = 'ollama';
@@ -583,20 +631,21 @@
             const p = PV.get(settings.provider) || PV.get('ollama');
             const isOllama = settings.provider === 'ollama';
             $('online-on').checked = PV.onlineAllowed();
-            $('eng-backend').style.display = p.backends ? 'block' : 'none';
+            $('eng-backend').hidden = !p.backends;
             $('backend-select').value = settings.backend;
-            $('eng-url').style.display = p.custom ? 'block' : 'none';
+            $('eng-url').hidden = !p.custom;
             $('prov-url').value = p.custom ? PV.getCustomUrl() : '';
-            $('eng-key').style.display = (p.needsKey || (p.custom && !p.local)) ? 'block' : 'none';
+            $('eng-key').hidden = !(p.needsKey || (p.custom && !p.local));
             $('prov-key').value = PV.getKey(p.id);
             const link = $('prov-keylink'); link.style.display = p.keyUrl ? 'inline' : 'none'; if (p.keyUrl) link.href = p.keyUrl;
-            $('eng-model').style.display = isOllama ? 'none' : 'block';
+            $('eng-model').hidden = isOllama;
             $('model-free').value = isOllama ? '' : (settings.model || '');
             $('eng-note').textContent = p.note ? (p.note[settings.lang] || p.note.en) : t('engLocalNote');
             // Threads, Eigener Systemprompt und Vorladen gibt es nur bei Ollama
             [$('param-threads'), $('own-system'), $('preload-on')].forEach(function (el) {
                 const g = el.closest('.param-group'); if (g) g.classList.toggle('off', !isOllama); el.disabled = !isOllama;
             });
+            updateChip(); updateMenuInfo();
         }
         function switchProvider(id) {
             if (settings.model) settings.modelByProvider[settings.provider] = settings.model;
@@ -634,86 +683,88 @@
                 serverStatus: 'Server status', langTitle: 'Switch language: prompts, answer language, speech input and read-aloud',
                 chooseMode: 'Choose working mode:',
                 mb_wilson: 'Wilson', mb_heinz: 'Heinz', mb_audit: 'Audit', mb_code: 'Code', mb_creative: 'Creative',
-                m_wilson: '🏕️ Wilson (Companion)', m_heinz: '🕵️ Heinz (Facts & Slang)', m_audit: '📄 Audit & Text Tool',
-                m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
+                m_wilson: 'Wilson (Companion)', m_heinz: 'Heinz (Facts & Slang)', m_audit: 'Audit & Text Tool',
+                m_code: 'Code & Syntax', m_creative: 'Creative & Story',
                 ctxOptional: 'Optional context / raw text (included with every request)...',
                 ctxRequired: 'REQUIRED: paste text for audit / analysis here...',
                 ctxRequiredWarn: 'REQUIRED: audit mode needs text here!',
                 queryPh: 'What should Heinz do?', send: 'Send', cancel: 'Cancel',
                 newChatTitle: 'New chat (the current chat is saved in the list)', copyChatTitle: 'Copy whole chat', copyMsgTitle: 'Copy this message (as Markdown text)',
-                read: '🔊 Read aloud', stop: '🛑 Stop', params: '⚙️ Parameters', defaults: 'Default values',
+                read: 'Read aloud', stop: 'Stop', params: 'Parameters', defaults: 'Default values',
                 defaultsHelp: "Ignores the sliders and uses the model's internal Ollama defaults.",
-                chats: '💬 Chats', saveChat: '💾 Save current chat', discardChat: '🗑️ Discard current chat',
+                chats: 'Chats', saveChat: 'Save current chat', discardChat: 'Discard current chat',
                 stCloud: 'Online engine (not checked, nothing is sent until you ask)', stEngineUp: 'Engine reachable', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stOffline: 'Ollama server offline',
                 micUnsupported: 'Speech recognition is not supported by this browser.',
                 ready: 'Ready for input...', readyNew: 'Ready for input... (new chat)', working: 'working...',
                 noChatToSave: 'No chat to save.', confirmDiscard: 'Discard current chat (do not save)?',
                 engine: 'Engine', backend: 'Backend (LiteRT-LM)', engineUrl: 'Endpoint address (…/v1)', apiKey: 'API key (stays in this browser)', getKey: 'Get a key',
-                modelId: 'Model name (if the list stays empty)', reloadModels: '↻ Load model list', onlineAllow: 'Allow online (default off)',
+                modelId: 'Model name (if the list stays empty)', reloadModels: 'Load model list', onlineAllow: 'Allow online (default off)',
                 onlineHelp: 'Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.',
                 onlineBlocked: 'Online is switched off. Tick "Allow online" in the menu to use this engine.', needKey: 'This engine needs an API key (menu → Engine).',
                 hintKey: ' (API key rejected or missing rights)', hintLimit: ' (rate limit reached, try again later)', hintNoModel: ' (model name unknown to this engine?)',
                 connFailGeneric: 'Connection to {n} failed ({m}). The engine may be offline, the address wrong, or the provider blocks browser access (CORS).',
                 modelsFail: 'Could not load the model list: {m}', noModels: 'No models found. Type the model name below.', stOnlyOllama: 'The speed test works with Ollama only.',
                 engLocalNote: 'Runs on this device.',
-                nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: '📎 Context: {n} characters',
+                nothingSaved: 'Nothing saved yet.', nothingInMode: 'Nothing saved in this mode yet.', scopeMode: 'Showing: this mode only (tap for all)', scopeAll: 'Showing: all modes (tap for this mode only)', ctxNote: 'Context: {n} characters',
                 hint404: ' (model not installed? Check with: ollama list)', hintCors: ' (check OLLAMA_ORIGINS)',
                 connFail: 'Connection to Ollama failed. Is the server running? ({m})',
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
                 updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
-                speedTitle: '⏱ Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
+                speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
-                stCold: 'Unload model first (measures real load time)', stStart: '▶ Start test', stStop: '■ Stop', stCopy: '📋 Copy results',
+                stCold: 'Unload model first (measures real load time)', stStart: 'Start test', stStop: 'Stop', stCopy: 'Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
-                stBusy: 'Wait until the answer is finished.', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: '✔ Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
+                stBusy: 'Wait until the answer is finished.', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: 'Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: '⏳ Preparing model…', preReady: '✓ Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
+                menuTitle: 'Menu', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', stAnswering: 'Answering', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
                 locale: 'en-GB'
             },
             de: {
                 serverStatus: 'Server-Status', langTitle: 'Sprache umschalten: Prompts, Antwortsprache, Spracheingabe und Vorlesen',
                 chooseMode: 'Arbeitsmodus wählen:',
                 mb_wilson: 'Wilson', mb_heinz: 'Heinz', mb_audit: 'Audit', mb_code: 'Code', mb_creative: 'Kreativ',
-                m_wilson: '🏕️ Wilson (Plaudertasche)', m_heinz: '🕵️ Heinz (Fakten & Slang)', m_audit: '📄 Audit & Text-Werkzeug',
-                m_code: '👨‍💻 Code & Syntax', m_creative: '🎨 Creative & Story',
+                m_wilson: 'Wilson (Plaudertasche)', m_heinz: 'Heinz (Fakten & Slang)', m_audit: 'Audit & Text-Werkzeug',
+                m_code: 'Code & Syntax', m_creative: 'Creative & Story',
                 ctxOptional: 'Optionaler Kontext / Rohtext (wird bei jeder Anfrage berücksichtigt)...',
                 ctxRequired: 'PFLICHTFELD: Text für Audit / Analyse hier einfügen...',
                 ctxRequiredWarn: 'PFLICHTFELD: Im Audit-Modus muss hier Text stehen!',
                 queryPh: 'Was soll Heinz tun?', send: 'Abschicken', cancel: 'Abbrechen',
                 newChatTitle: 'Neuer Chat (der aktuelle wird in der Chatliste gespeichert)', copyChatTitle: 'Gesamten Chat kopieren', copyMsgTitle: 'Diese Nachricht kopieren (als Markdown-Text)',
-                read: '🔊 Vorlesen', stop: '🛑 Stopp', params: '⚙️ Parameter', defaults: 'Standardwerte',
+                read: 'Vorlesen', stop: 'Stopp', params: 'Parameter', defaults: 'Standardwerte',
                 defaultsHelp: 'Ignoriert die Regler und nutzt die internen Ollama-Standardwerte des Modells.',
-                chats: '💬 Chats', saveChat: '💾 Aktuellen Chat speichern', discardChat: '🗑️ Aktuellen Chat verwerfen',
+                chats: 'Chats', saveChat: 'Aktuellen Chat speichern', discardChat: 'Aktuellen Chat verwerfen',
                 stCloud: 'Online-Engine (nicht geprüft, nichts wird gesendet, bis du fragst)', stEngineUp: 'Engine erreichbar', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stOffline: 'Ollama Server offline',
                 micUnsupported: 'Spracherkennung wird vom Browser nicht unterstützt.',
                 ready: 'Bereit für Eingaben...', readyNew: 'Bereit für Eingaben... (neuer Chat)', working: 'arbeitet...',
                 noChatToSave: 'Kein Chat zum Speichern.', confirmDiscard: 'Aktuellen Chat verwerfen (nicht speichern)?',
                 engine: 'Engine', backend: 'Backend (LiteRT-LM)', engineUrl: 'Adresse des Endpunkts (…/v1)', apiKey: 'API-Schlüssel (bleibt in diesem Browser)', getKey: 'Schlüssel holen',
-                modelId: 'Modellname (falls die Liste leer bleibt)', reloadModels: '↻ Modellliste laden', onlineAllow: 'Online erlauben (Standard aus)',
+                modelId: 'Modellname (falls die Liste leer bleibt)', reloadModels: 'Modellliste laden', onlineAllow: 'Online erlauben (Standard aus)',
                 onlineHelp: 'Aus: nichts verlässt dieses Gerät. An: Online-Engines erscheinen; nur die Nachrichten des aktuellen Chats gehen an die gewählte Engine, nie andere Chats oder Daten.',
                 onlineBlocked: 'Online ist ausgeschaltet. Im Menü „Online erlauben“ anhaken, um diese Engine zu nutzen.', needKey: 'Diese Engine braucht einen API-Schlüssel (Menü → Engine).',
                 hintKey: ' (API-Schlüssel abgelehnt oder ohne Rechte)', hintLimit: ' (Limit erreicht, später erneut versuchen)', hintNoModel: ' (Modellname dieser Engine unbekannt?)',
                 connFailGeneric: 'Verbindung zu {n} fehlgeschlagen ({m}). Die Engine ist vielleicht aus, die Adresse falsch oder der Anbieter sperrt Browserzugriff (CORS).',
                 modelsFail: 'Modellliste nicht ladbar: {m}', noModels: 'Keine Modelle gefunden. Modellnamen unten eintippen.', stOnlyOllama: 'Der Tempo-Test geht nur mit Ollama.',
                 engLocalNote: 'Läuft auf diesem Gerät.',
-                nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: '📎 Kontext: {n} Zeichen',
+                nothingSaved: 'Noch nichts gespeichert.', nothingInMode: 'In diesem Modus ist noch nichts gespeichert.', scopeMode: 'Zeigt: nur dieser Modus (Tippen: alle)', scopeAll: 'Zeigt: alle Modi (Tippen: nur dieser Modus)', ctxNote: 'Kontext: {n} Zeichen',
                 hint404: ' (Modell nicht installiert? Prüfe mit: ollama list)', hintCors: ' (prüfe OLLAMA_ORIGINS)',
                 connFail: 'Verbindung zu Ollama fehlgeschlagen. Läuft der Server? ({m})',
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
                 updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
-                speedTitle: '⏱ Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
+                speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
-                stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: '▶ Test starten', stStop: '■ Stopp', stCopy: '📋 Ergebnis kopieren',
+                stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: 'Test starten', stStop: 'Stopp', stCopy: 'Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
-                stBusy: 'Warte, bis die Antwort fertig ist.', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '✔ {n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
+                stBusy: 'Warte, bis die Antwort fertig ist.', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '{n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: '⏳ Modell wird vorbereitet…', preReady: '✓ Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
+                menuTitle: 'Menü', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', stAnswering: 'Antwortet', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
                 locale: 'de-DE'
             }
         };
@@ -732,6 +783,7 @@
             applyModeStyling();
             renderSavedList();
             renderEngineUI();
+            setSheetTitle(); updateCtxCount();
         }
 
         // ===== Zustand =====
@@ -753,6 +805,7 @@
         function saveSettings() { lsSet('heinz_settings', settings); }
 
         function persistCurrent() {
+            updateChatBar();
             if (!chatHistory.length) { lsRemove('heinz_current'); return; }
             lsSet('heinz_current', {
                 model: settings.model,
@@ -765,15 +818,6 @@
         }
 
         // ===== UI Setup =====
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        // Tipp außerhalb der Leiste (zum Beispiel in den Chat) schließt sie; Werte gelten schon beim Verstellen.
-        // Kein preventDefault: Der Tipp in das Eingabefeld setzt den Cursor trotzdem.
-        document.addEventListener('pointerdown', function (e) {
-            const sb = document.getElementById('sidebar');
-            if (!sb.classList.contains('open')) return;
-            if (sb.contains(e.target) || e.target.closest('.burger-btn')) return;
-            sb.classList.remove('open');
-        }, true);
 
         const $ = id => document.getElementById(id);
 
@@ -855,9 +899,10 @@
         function setPreloadStatus(kind) {
             const el = $('preload-status');
             clearTimeout(preloadHideTimer);
-            if (!kind) { el.style.display = 'none'; return; }
+            if (!kind) { el.style.display = 'none'; renderRing(); return; }
             el.textContent = t(kind === 'loading' ? 'preLoading' : 'preReady');
             el.style.display = 'block';
+            renderRing();
             if (kind === 'ready') preloadHideTimer = setTimeout(function () { el.style.display = 'none'; }, 4000);
         }
         function abortPreload() {
@@ -902,6 +947,7 @@
                 if (e.name !== 'AbortError' && preloadAbort === ac) setPreloadStatus('');
             } finally {
                 if (preloadAbort === ac) preloadAbort = null;
+                renderRing();
             }
         }
 
@@ -911,17 +957,16 @@
             bar.setAttribute('aria-label', t('chooseMode'));
             bar.querySelectorAll('.mode-pill').forEach(function (b) { b.remove(); });
             Object.keys(MODE_PRESETS).forEach(function (m) {
-                const full = t('m_' + m);
-                const emoji = (full.split(' ')[0] || '');
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'mode-pill' + (m === settings.mode ? ' active' : '');
                 b.setAttribute('data-mode', m);
                 b.setAttribute('role', 'tab');
                 b.setAttribute('aria-selected', m === settings.mode ? 'true' : 'false');
-                b.title = full;
-                b.textContent = emoji + ' ' + t('mb_' + m);
-                if (m === settings.mode) b.style.background = MODE_PRESETS[m].color;
+                b.title = t('m_' + m);
+                b.style.setProperty('--mc', MODE_PRESETS[m].color);
+                b.style.setProperty('--mo', MODE_PRESETS[m].on || '#fff');
+                b.innerHTML = '<span class="mi">' + ICON('m-' + m, '') + '</span><span class="mn">' + esc(t('mb_' + m)) + '</span>';
                 b.onclick = function () { pickMode(m); };
                 bar.appendChild(b);
             });
@@ -938,16 +983,14 @@
             const preset = MODE_PRESETS[settings.mode];
             const ctxBox = $('context');
             const modelSel = $('model-select');
-            $('context-wrapper').classList.toggle('disabled-box', preset.ctx === 'none');
-            $('send-btn').style.background = preset.color;
+            $('context-wrapper').hidden = preset.ctx === 'none';
+            const rs = document.documentElement.style;
+            rs.setProperty('--acc', preset.color); rs.setProperty('--onacc', preset.on || '#fff');   // one accent per mode
             ctxBox.classList.remove('req-warn');
-            if (preset.ctx === 'required') {
-                ctxBox.placeholder = t('ctxRequired');
-                ctxBox.style.borderColor = '#ff9800';
-            } else {
-                ctxBox.placeholder = t('ctxOptional');
-                ctxBox.style.borderColor = '';
-            }
+            $('context-wrapper').classList.toggle('req', preset.ctx === 'required');
+            ctxBox.placeholder = t(preset.ctx === 'required' ? 'ctxRequired' : 'ctxOptional');
+            $('ctx-label').textContent = t(preset.ctx === 'required' ? 'ctxLabelReq' : 'ctxLabelOpt');
+            updateCtxCount(); updateChatBar(); updateMenuInfo();
             $('use-default').checked = !!settings.useDefault;
             $('own-system').checked = !!settings.ownSystem;
             $('fast-mode').checked = !!settings.fast;
@@ -981,6 +1024,7 @@
 
         function onModelChange() {
             settings.model = $('model-select').value;
+            updateChip();
             settings.modelByProvider[settings.provider] = settings.model;
             $('model-free').value = settings.provider === 'ollama' ? '' : settings.model;
             loadThreads();
@@ -1001,43 +1045,48 @@
             saveSettings();
             updateLangBtn();
             applyI18n();
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); updateReadBtn(false);
             schedulePreload();
         }
 
-        // ===== Server Status =====
+        // ===== Server Status: Ring rot = Engine nicht erreichbar, orange = Modell laedt, blau = bereit, gruen = antwortet =====
+        let ringBase = { cls: '', color: 'red', title: '' }, loadedNames = [];
+        function renderRing() {
+            const el = $('status-dot');
+            let cls = ringBase.cls, color = ringBase.color, title = ringBase.title;
+            if (generating) { cls = 'status-active'; color = 'green'; title = t('stAnswering'); }
+            else if (preloadAbort) { cls = 'status-loading'; color = 'orange'; title = t('preLoading'); }
+            el.className = 'ring-btn status-dot ' + (cls ? cls + ' ' : '') + 's-' + color;
+            el.title = title;
+        }
         async function checkServer() {
-            const statusDot = document.getElementById('status-dot');
             const prov = settings.provider;
             const p = PV.get(prov);
             if (p && !p.local) {   // Online-Engines werden nie von selbst angefragt
-                statusDot.className = 'status-dot status-cloud';
-                statusDot.title = t('stCloud');
+                ringBase = { cls: 'status-cloud', color: 'blue', title: t('stCloud') };
+                renderRing();
                 return;
             }
             if (prov !== 'ollama') {
                 const up = await PV.ping(prov);
                 if (prov !== settings.provider) return;
-                statusDot.className = up ? 'status-dot status-active' : 'status-dot';
-                statusDot.title = up ? t('stEngineUp') : t('stOffline');
+                ringBase = up ? { cls: 'status-online', color: 'blue', title: t('stEngineUp') } : { cls: '', color: 'red', title: t('stOffline') };
+                renderRing();
                 return;
             }
-            const selectedModel = document.getElementById('model-select').value;
+            const selectedModel = $('model-select').value;
             try {
                 const names = await PV.loaded('ollama');
                 if (prov !== settings.provider) return;
+                loadedNames = names;
                 const isLoaded = names.some(n => n.startsWith(selectedModel));
-                if (isLoaded) {
-                    statusDot.className = 'status-dot status-active';
-                    statusDot.title = t('stDefault');
-                } else {
-                    statusDot.className = 'status-dot status-online';
-                    statusDot.title = t('stOnline');
-                }
+                ringBase = { cls: 'status-online', color: 'blue', title: t(isLoaded ? 'stDefault' : 'stOnline') };
             } catch (e) {
-                statusDot.className = 'status-dot';
-                statusDot.title = t('stOffline');
+                loadedNames = [];
+                ringBase = { cls: '', color: 'red', title: t('stOffline') };
             }
+            renderRing();
+            if ($('model-sheet').classList.contains('open')) renderModelSheet();
         }
         setInterval(checkServer, 3000);
 
@@ -1048,11 +1097,10 @@
             const recognition = new Recognition();
             recognition.lang = SPEECH_LANG[settings.lang];
             const micBtn = document.querySelector('.voice-btn');
-            micBtn.style.background = '#f44336';
-            micBtn.innerText = '🔴';
-            recognition.onresult = (e) => { document.getElementById('query').value = e.results[0][0].transcript; };
-            recognition.onend = () => { micBtn.style.background = '#ff9800'; micBtn.innerText = '🎤'; };
-            recognition.onerror = () => { micBtn.style.background = '#ff9800'; micBtn.innerText = '🎤'; };
+            micBtn.classList.add('rec');
+            recognition.onresult = (e) => { setQuery(e.results[0][0].transcript); };
+            recognition.onend = () => { micBtn.classList.remove('rec'); };
+            recognition.onerror = () => { micBtn.classList.remove('rec'); };
             recognition.start();
         }
 
@@ -1093,10 +1141,19 @@
             utter.lang = tag;
             const voice = pickVoice(tag);
             if (voice) utter.voice = voice;
+            utter.onstart = function () { updateReadBtn(true); };
+            utter.onend = utter.onerror = function () { updateReadBtn(false); };
             window.speechSynthesis.speak(utter);
         }
 
-        function stopSpeaking() { window.speechSynthesis.cancel(); }
+        let speaking = false;
+        function updateReadBtn(on) {
+            speaking = on;
+            $('read-lbl').textContent = t(on ? 'readStop' : 'readAloud');
+            $('read-btn').querySelector('use').setAttribute('href', 'lib/icons.svg#i-' + (on ? 'stop' : 'volume'));
+        }
+        function toggleRead() { if (speaking) stopSpeaking(); else speakResponse(); }
+        function stopSpeaking() { window.speechSynthesis.cancel(); updateReadBtn(false); }
 
         // ===== Nachrichten-Rendering =====
         const chatBox = document.getElementById('chat-container');
@@ -1120,7 +1177,7 @@
             let b = div.querySelector(':scope > .msg-copy');
             if (!b) {
                 b = document.createElement('button');
-                b.type = 'button'; b.className = 'msg-copy'; b.textContent = '📋';
+                b.type = 'button'; b.className = 'msg-copy'; b.innerHTML = ICON('copy');
                 b.title = t('copyMsgTitle');
                 div.appendChild(b);
             }
@@ -1140,6 +1197,7 @@
             attachCopy(div, text);
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
+            updateChatBar();
         }
 
         // Schnellmodus: reiner Text ohne Markdown-Verarbeitung (spart Rechenzeit und zeigt die Rohausgabe)
@@ -1164,7 +1222,7 @@
             const div = document.createElement('div');
             div.className = 'msg msg-assistant';
             div.id = id;
-            div.innerHTML = '<i>' + t('working') + ' <span class="wait-s"></span> <span class="spinner">⚙️</span></i>';
+            div.innerHTML = '<i>' + t('working') + ' <span class="wait-s"></span> <span class="spinner"></span></i>';
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
             return div;
@@ -1185,6 +1243,7 @@
                 else appendAssistantMessage(m.content, null, m.plain);
             });
             chatBox.scrollTop = chatBox.scrollHeight;
+            updateChatBar();
         }
 
         function resetDashboard() {
@@ -1210,8 +1269,8 @@
             if (mb) {
                 const raw = mb.parentElement._raw || '';
                 if (!raw) return;
-                copyText(raw).then(function () { mb.textContent = '✅'; }).catch(function () { mb.textContent = '✖'; })
-                    .then(function () { setTimeout(function () { mb.textContent = '📋'; }, 1500); });
+                copyText(raw).then(function () { mb.innerHTML = ICON('check'); }).catch(function () { mb.innerHTML = ICON('x'); })
+                    .then(function () { setTimeout(function () { mb.innerHTML = ICON('copy'); }, 1500); });
                 return;
             }
             const btn = e.target.closest('.code-copy');
@@ -1219,10 +1278,10 @@
             const code = btn.parentElement.querySelector('code');
             if (!code) return;
             copyText(code.textContent).then(function () {
-                btn.textContent = '✅';
+                btn.textContent = '✓';
                 setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
             }).catch(function () {
-                btn.textContent = '✖';
+                btn.textContent = '✕';
                 setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
             });
         });
@@ -1235,9 +1294,9 @@
             }).join('\n\n');
             const old = btn.innerHTML;
             copyText(text).then(function () {
-                btn.textContent = '✅';
+                btn.innerHTML = ICON('check');
             }).catch(function () {
-                btn.textContent = '✖';
+                btn.innerHTML = ICON('x');
             }).then(function () {
                 setTimeout(function () { btn.innerHTML = old; }, 1500);
             });
@@ -1282,6 +1341,7 @@
             lsRemove('heinz_current');
             showPlaceholder(t('readyNew'), true);
             resetDashboard();
+            updateChatBar();
         }
 
         function discardChat() {
@@ -1313,7 +1373,7 @@
             renderChatFromHistory();
             persistCurrent();
             renderSavedList();
-            toggleSidebar();
+            closeAll();
         }
 
         function deleteChat(id) {
@@ -1326,35 +1386,50 @@
         function toggleChatScope() { chatScopeAll = !chatScopeAll; renderSavedList(); }
 
         function renderSavedList() {
-            const box = document.getElementById('saved-list');
+            const box = $('saved-list');
             box.innerHTML = '';
             const all = getSaved();
-            // Chats werden je Modus geführt; „alle Modi“ zeigt die ganze Liste (Laden springt dann in den Modus des Chats)
-            const list = chatScopeAll ? all : all.filter(c => (c.mode || 'wilson') === settings.mode);
-            $('chats-scope').textContent = t(chatScopeAll ? 'scopeAll' : 'scopeMode');
+            const q = (($('chat-search') || {}).value || '').trim().toLowerCase();
+            // Chats werden je Modus gefuehrt; "Alle" zeigt die ganze Liste (Laden springt dann in den Modus des Chats)
+            let list = chatScopeAll ? all : all.filter(c => (c.mode || 'wilson') === settings.mode);
+            if (q) list = list.filter(c => (c.title || '').toLowerCase().indexOf(q) >= 0);
+            document.querySelectorAll('#chats-scope span').forEach(function (s) { s.classList.toggle('active', (s.getAttribute('data-s') === 'all') === chatScopeAll); });
+            updateChatBar(); updateMenuInfo();
             if (!list.length) {
                 const s = document.createElement('small');
-                s.style.color = '#666';
-                s.textContent = t(all.length ? 'nothingInMode' : 'nothingSaved');
+                s.textContent = q ? t('nothingFound') : t(all.length ? 'nothingInMode' : 'nothingSaved');
                 box.appendChild(s);
                 return;
             }
             list.forEach(c => {
                 const row = document.createElement('div');
                 row.className = 'saved-item';
+                row.setAttribute('data-mode', c.mode || 'wilson');
+                row.style.setProperty('--mc', (MODE_PRESETS[c.mode] || MODE_PRESETS.wilson).color);
+                const sr = document.createElement('div');
+                sr.className = 'sr';
                 const load = document.createElement('button');
                 load.className = 'load';
                 load.appendChild(document.createTextNode(c.title));
                 const sm = document.createElement('small');
-                sm.textContent = (c.provider && c.provider !== 'ollama' ? c.provider + ' · ' : '') + c.model + ' · ' + c.mode + ' · ' + c.ts;
+                sm.textContent = (c.provider && c.provider !== 'ollama' ? c.provider + ' · ' : '') + c.model + ' · ' + c.ts;
                 load.appendChild(sm);
                 load.onclick = () => loadChat(c.id);
+                const more = document.createElement('button');
+                more.className = 'ibtn more';
+                more.type = 'button';
+                more.innerHTML = ICON('dots');
+                more.onclick = () => row.classList.toggle('open');
+                const acts = document.createElement('div');
+                acts.className = 'acts2';
                 const del = document.createElement('button');
-                del.className = 'del';
-                del.textContent = '🗑️';
+                del.className = 'pill danger del';
+                del.type = 'button';
+                del.innerHTML = ICON('trash') + '<span>' + esc(t('delChat')) + '</span>';
                 del.onclick = () => deleteChat(c.id);
-                row.appendChild(load);
-                row.appendChild(del);
+                acts.appendChild(del);
+                sr.appendChild(load); sr.appendChild(more);
+                row.appendChild(sr); row.appendChild(acts);
                 box.appendChild(row);
             });
         }
@@ -1362,8 +1437,9 @@
         // ===== Senden / Abbrechen =====
         function setGenerating(on) {
             generating = on;
-            document.getElementById('send-btn').style.display = on ? 'none' : 'block';
-            document.getElementById('stop-btn').style.display = on ? 'block' : 'none';
+            $('send-btn').disabled = on;
+            $('stop-btn').style.display = on ? 'inline-flex' : 'none';
+            renderRing();
         }
 
         function abortGeneration() {
@@ -1450,7 +1526,7 @@
 
             chatHistory.push({ role: 'user', content: queryText, note: note });
             appendUserMessage(queryText, note);
-            queryInput.value = '';
+            setQuery(''); exitFull(); queryInput.blur();
 
             abortPreload();
             const warmKey = preloadKeyNow();
@@ -1532,7 +1608,7 @@
         const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
         async function showVersion() {
             // Pille: Stand des Repos auf diesem Handy (Commit und Datum), Tippen sucht nach Updates
-            let label = '⬇ Update';
+            let label = 'Update';
             try {
                 const r = await fetch('api/ping', { cache: 'no-store' });
                 const j = await r.json();
@@ -1541,10 +1617,10 @@
                     if (j.app.version) parts.push('v' + j.app.version);
                     if (j.app.commit) parts.push(j.app.commit);
                     if (j.app.date) parts.push(j.app.date);
-                    if (parts.length) label = '⬇ ' + parts.join(' · ');
+                    if (parts.length) label = parts.join(' · ');
                 }
             } catch (e) { /* ohne Server keine Version */ }
-            $('upd-ver').textContent = label;
+            $('upd-ver').textContent = label; $('menu-ver').textContent = label;
         }
         async function doUpdate() {
             const st = $('upd-status'), btn = $('upd-btn');
@@ -1632,9 +1708,9 @@
             box.innerHTML = h + '</table>';
             const best = stBest();
             $('st-best').textContent = best ? t('stBest', { n: best.n, v: stFmt(best.v, 1) }) : '';
-            $('st-apply').style.display = best ? 'block' : 'none';
+            $('st-apply').style.display = best ? 'inline-flex' : 'none';
             if (best) $('st-apply').textContent = t('stApply', { n: best.n });
-            $('st-copy').style.display = 'block';
+            $('st-copy').style.display = 'inline-flex';
         }
         function speedTestText() {
             const m = stMeta || {};
@@ -1650,9 +1726,9 @@
             return head + '\n' + lines.join('\n') + '\n' + notes.join('\n');
         }
         function copySpeedTest() {
-            const b = $('st-copy'); const old = b.textContent;
-            copyText(speedTestText()).then(function () { b.textContent = '✅'; }).catch(function () { b.textContent = '✖'; })
-                .then(function () { setTimeout(function () { b.textContent = old; }, 1500); });
+            const s = $('st-copy').querySelector('span'); const old = s.textContent;
+            copyText(speedTestText()).then(function () { s.textContent = '✓'; }).catch(function () { s.textContent = '✕'; })
+                .then(function () { setTimeout(function () { s.textContent = old; }, 1500); });
         }
         function stopSpeedTest() { if (stAbort) stAbort.abort(); }
         async function startSpeedTest() {
@@ -1668,7 +1744,7 @@
             stRows = []; renderSpeedTest();
             stMeta = { date: new Date().toISOString().slice(0, 16).replace('T', ' '), model: model, ctx: ctx, prompt: promptKey, termux: $('st-termux').value, cold: cold };
             speedTesting = true; stAbort = new AbortController();
-            $('st-start').style.display = 'none'; $('st-stop').style.display = 'block';
+            $('st-start').style.display = 'none'; $('st-stop').style.display = 'inline-flex';
             let status = '', timer = null, t0 = 0;
             const setStatus = function (n, r) {
                 t0 = Date.now();
@@ -1696,11 +1772,120 @@
             } finally {
                 if (timer) clearInterval(timer);
                 speedTesting = false; stAbort = null;
-                $('st-start').style.display = 'block'; $('st-stop').style.display = 'none';
+                $('st-start').style.display = 'inline-flex'; $('st-stop').style.display = 'none';
                 $('st-status').textContent = status;
                 if (stRows.length) lsSet('heinz_speedtest', { rows: stRows, meta: stMeta });
             }
         }
+
+
+        // ===== Menue, Chatliste, Modellwahl, Vollbild-Editor =====
+        const ICON = function (n, cls) { return '<svg class="i' + (cls === undefined ? ' sm' : (cls ? ' ' + cls : '')) + '"><use href="lib/icons.svg#i-' + n + '"/></svg>'; };
+        function closeAll() { ['menu-sheet', 'model-sheet', 'drawer'].forEach(function (id) { $(id).classList.remove('open'); }); $('scrim').classList.remove('open'); }
+        function openLayer(id) { closeAll(); $(id).classList.add('open'); $('scrim').classList.add('open'); }
+        function openMenu() { showPage('main'); openLayer('menu-sheet'); }
+        function openDrawer() { renderSavedList(); openLayer('drawer'); }
+        function openModels() { $('model-search').value = ''; renderModelSheet(); openLayer('model-sheet'); }
+        const PAGE_TITLES = { main: 'menuTitle', engine: 'engine', params: 'rParams', speed: 'rSpeed', look: 'rLook', update: 'rUpdate' };
+        let curPage = 'main';
+        function setSheetTitle() { $('sh-title').textContent = t(PAGE_TITLES[curPage]); }
+        function showPage(id) {
+            curPage = id;
+            document.querySelectorAll('#menu-sheet .pg').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-pg') === id); });
+            $('sh-back').hidden = id === 'main';
+            setSheetTitle();
+            document.querySelector('#menu-sheet .sh-body').scrollTop = 0;
+        }
+        function updateMenuInfo() {
+            const p = PV.get(settings.provider) || PV.get('ollama');
+            $('menu-engine').textContent = p.name + (settings.model ? ' · ' + settings.model : '');
+            $('grp-online').hidden = !PV.onlineAllowed();
+            $('menu-chats').textContent = t('nChats', { n: getSaved().length });
+            ['auto', 'lt', 'dk'].forEach(function (k) { $('th-' + k).classList.toggle('sel-on', (settings.theme || 'auto') === k); });
+            $('menu-theme').textContent = t({ auto: 'thAuto', lt: 'thLt', dk: 'thDk' }[settings.theme || 'auto']);
+            setSheetTitle();
+        }
+        function setTheme(v) { Heinz.setTheme(v); settings.theme = Heinz.theme; updateMenuInfo(); }
+        function updateChip() {
+            const p = PV.get(settings.provider) || PV.get('ollama');
+            const online = !p.local && !p.custom;
+            const e = $('chip-engine');
+            e.textContent = p.name + (online ? ' · ' + t('chipOnline') : '');
+            e.classList.toggle('online', online);
+            $('chip-model').textContent = settings.model || '–';
+        }
+        function updateChatBar() {
+            const first = chatHistory.find(function (m) { return m.role === 'user'; });
+            $('chat-title').textContent = first ? first.content.replace(/\s+/g, ' ').slice(0, 40) : t('chatNew');
+            const n = getSaved().filter(function (c) { return (c.mode || 'wilson') === settings.mode; }).length;
+            $('chats-count').textContent = n ? String(n) : '';
+        }
+        function updateCtxCount() { const n = $('context').value.length; $('ctx-count').textContent = n ? n + ' ' + t('chars') : ''; }
+        function renderModelSheet() {
+            const p = PV.get(settings.provider) || PV.get('ollama');
+            $('ms-title').textContent = p.name;
+            const all = Array.prototype.map.call($('model-select').options, function (o) { return o.value; });
+            $('model-search').hidden = all.length <= 8;
+            const q = $('model-search').value.trim().toLowerCase();
+            const list = q ? all.filter(function (n) { return n.toLowerCase().indexOf(q) >= 0; }) : all;
+            const box = $('model-list');
+            box.innerHTML = '';
+            list.forEach(function (n) {
+                const i = n.indexOf(':');
+                const name = i < 0 ? n : n.slice(0, i), tag = i < 0 ? '' : n.slice(i + 1);
+                const loaded = settings.provider === 'ollama' && loadedNames.some(function (x) { return x === n || x.indexOf(n) === 0; });
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'mrow' + (n === settings.model ? ' on' : '');
+                b.setAttribute('data-model', n);
+                b.innerHTML = '<span class="mt"><b>' + esc(name) + '</b><small>' + esc(tag + (loaded ? (tag ? ' · ' : '') + t('modelLoaded') : '')) + '</small></span>' +
+                    (loaded ? '<span class="ld"></span>' : '') + (n === settings.model ? ICON('check', 'ck') : '');
+                b.onclick = function () { pickModel(n); };
+                box.appendChild(b);
+            });
+            $('model-empty').textContent = list.length ? '' : t(all.length ? 'nothingFound' : 'noModels');
+        }
+        function pickModel(n) { $('model-select').value = n; onModelChange(); closeAll(); }
+        function setQuery(v) { $('query').value = v; autosize(); }
+        function autosize() {
+            const ta = $('query');
+            if (ta.closest('.full')) return;
+            ta.style.height = 'auto';
+            ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.4) + 'px';
+        }
+        function exitFull() {
+            document.querySelectorAll('.full').forEach(function (el) {
+                el.classList.remove('full');
+                const u = el.querySelector('button[onclick^="toggleFull"] use'); if (u) u.setAttribute('href', 'lib/icons.svg#i-expand');
+            });
+            autosize();
+        }
+        function toggleFull(id) {
+            const el = $(id), on = !el.classList.contains('full');
+            exitFull();
+            if (!on) return;
+            el.classList.add('full');
+            const u = el.querySelector('button[onclick^="toggleFull"] use'); if (u) u.setAttribute('href', 'lib/icons.svg#i-shrink');
+            el.querySelector('textarea').focus();
+        }
+        $('query').addEventListener('input', autosize);
+        // Handy: Enter = neue Zeile (Senden mit dem Pfeil); Tastatur am Rechner: Enter sendet, Umschalt+Enter = neue Zeile
+        $('query').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !window.matchMedia('(pointer: coarse)').matches) { e.preventDefault(); askGemma(); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            if (document.querySelector('.full')) exitFull(); else closeAll();
+        });
+        // Tastatur oder Splitscreen: ist wenig Platz, geben Modusleiste, Zaehler, Aktionen und Kontext ihn an den Chat ab
+        function setKbd() {
+            const a = document.activeElement;
+            const small = (window.visualViewport ? window.visualViewport.height : window.innerHeight) < 560;
+            document.body.classList.toggle('kbd', small && a === $('query'));
+            document.body.classList.toggle('kbd-ctx', small && a === $('context'));
+        }
+        ['focusin', 'focusout'].forEach(function (ev) { document.addEventListener(ev, function () { setTimeout(setKbd, 0); }); });
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', setKbd);
 
         // ===== Start =====
         function applyUIFromSettings() {
@@ -1719,6 +1904,7 @@
             if (s.model) settings.model = s.model;
             if (s.mode) settings.mode = normalizeMode(s.mode);
             if (s.lang === 'de' || s.lang === 'en') settings.lang = s.lang;
+            settings.theme = Heinz.theme;
             settings.useDefault = !!s.useDefault;
             settings.ownSystem = !!s.ownSystem;
             settings.preload = s.preload !== false;
@@ -1749,6 +1935,7 @@
             applyUIFromSettings();
             renderChatFromHistory();
             renderSavedList();
+            autosize(); updateCtxCount();
             checkServer();
             loadModels().then(schedulePreload);
             setInterval(function () { if (!document.hidden) checkServer(); }, 10000);   // Ampel folgt dem echten Zustand (z. B. Modell geht nach keep_alive schlafen)
