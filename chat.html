@@ -22,11 +22,13 @@
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
         .top { gap: 12px; }
-        .top .ring-btn { width: 58px; height: 58px; position: relative; border: 1px solid var(--line); background: #0a0b0d; box-shadow: none; color: #e8eaed; }
-        .top .ring-btn::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 3px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
+        .top .ring-btn { width: 58px; height: 58px; position: relative; border: 2px solid #3c4043; background: #0a0b0d; box-shadow: none; color: #e8eaed; }
+        .top .ring-btn::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 3px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
         .top .ring-btn .rt { position: relative; z-index: 1; }
         .top .burger-btn { width: 30px; margin-left: -6px; }
         .top .lang-btn { height: 44px; box-sizing: border-box; padding: 3px; gap: 2px; align-items: center; }
+        .top .lang-btn { --acc: #5f6368; --onacc: #fff; }
+        .top .lang-btn span.active { background: #5f6368; color: #fff; }
         .top .lang-btn span { width: 34px; height: 36px; min-width: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; }
         .chip { flex: 1; min-width: 0; height: 44px; border-radius: 14px; background: #0a0b0d; border: 1px solid var(--line); padding: 0; display: block; overflow: hidden; cursor: pointer; line-height: 0; color: var(--txt); }
         .chip canvas { display: block; width: 100%; height: 100%; }
@@ -53,11 +55,11 @@
         .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
         #menu-sheet .sh-head h3 { text-align: center; padding-left: 0; }
         #menu-sheet #sh-back:not([hidden]) + h3, #menu-sheet #q-reload[hidden] + #sh-back + h3 { }
-        .upd-pill { display: flex; width: 78%; height: 46px; margin: 10px auto 0; justify-content: center; align-items: center; border-radius: 16px; font-size: .8rem; letter-spacing: .14em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; box-shadow: 0 0 12px color-mix(in srgb, var(--acc) 22%, transparent); }
+        .upd-pill { display: flex; width: 62%; height: 50px; margin: 26px auto 0; justify-content: center; align-items: center; border-radius: 999px; font-size: .78rem; letter-spacing: .16em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; box-shadow: 0 0 22px color-mix(in srgb, var(--acc) 26%, transparent); }
         .led.updled { width: 100%; margin: 14px 0 4px; }
-        .bigbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 74%; height: 50px; margin: 26px auto 0; padding: 0 14px; border-radius: 999px; box-shadow: 0 0 12px color-mix(in srgb, var(--bc) 22%, transparent); border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 8%, var(--card)); color: var(--txt); font-family: inherit; text-align: center; cursor: pointer; --bc: var(--ol); }
-        .bigbtn small { font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--bc); font-weight: 600; line-height: 1; }
-        .bigbtn b { font-size: .88rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--bc); line-height: 1.2; }
+        .bigbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 62%; height: 50px; margin: 26px auto 0; padding: 0 14px; border-radius: 999px; box-shadow: 0 0 22px color-mix(in srgb, var(--bc) 26%, transparent); border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 8%, var(--card)); color: var(--txt); font-family: inherit; text-align: center; cursor: pointer; --bc: var(--ol); }
+        .bigbtn small { font-size: .56rem; letter-spacing: .16em; text-transform: uppercase; color: var(--bc); font-weight: 600; line-height: 1; }
+        .bigbtn b { font-size: .78rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--bc); line-height: 1.2; }
         .bigbtn.eng { --bc: var(--m2); } .bigbtn.mod { --bc: var(--m4); }
         .bigbtn:active { background: color-mix(in srgb, var(--bc) 20%, var(--card)); }
         .pwin { margin: 28px -4px 8px; padding: 10px 12px 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
@@ -255,7 +257,10 @@
         .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
         .saved-item.open .acts2 { display: flex; }
-        .saved-item .acts2 .pill { min-height: 34px; font-size: .8rem; padding: 0 14px; }
+        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; }
+        .saved-item .acts2 .pill { flex: 1; min-height: 34px; padding: 0; }
+        .saved-item .acts2 .pill span { display: none; }
+        .saved-item .acts2 .pill.okc { color: var(--green); border-color: var(--green); }
     </style>
 </head>
 <body>
@@ -638,7 +643,7 @@
 
         const PROMPTS = {
             en: {
-                respond: 'Respond in English.',
+                respond: 'Respond strictly in English and think in English, even if the user writes in another language.',
                 plain: 'Reply briefly in plain text: no Markdown, no lists, no tables, no bold.',
                 ctxLabel: 'Context / source text:',
                 wilson: "You are Wilson, a friendly and well-read companion. Draw on your general knowledge, explain things in context and answer in a fluent, narrative tone.",
@@ -648,7 +653,7 @@
                 creative: "SYSTEM RULE: Write vividly and diversely. Use creative comparisons and smooth transitions."
             },
             de: {
-                respond: 'Antworte auf Deutsch.',
+                respond: 'Antworte strikt auf Deutsch und denke auf Deutsch, auch wenn der Nutzer in einer anderen Sprache schreibt.',
                 plain: 'Antworte knapp in reinem Text: kein Markdown, keine Listen, keine Tabellen, kein Fettdruck.',
                 ctxLabel: 'Kontext / Rohtext:',
                 wilson: "Du bist Wilson, ein freundlicher und belesener Begleiter. Greife auf dein Allgemeinwissen zu, erkläre Dinge im Kontext und antworte in einem flüssigen, erzählenden Tonfall.",
@@ -1656,8 +1661,9 @@
                 cp.onclick = function () {
                     const txt = (c.messages || []).map(function (m) { return (m.role === 'user' ? t('roleUser') : t('roleBot')) + '\n' + m.content; }).join('\n\n');
                     const sp = cp.querySelector('span'), old = sp.textContent;
-                    copyText(txt).then(function () { sp.textContent = '✓'; }).catch(function () { sp.textContent = '✕'; }).then(function () { setTimeout(function () { sp.textContent = old; }, 1500); });
+                    copyText(txt).then(function () { cp.classList.add('okc'); }).catch(function () { }).then(function () { setTimeout(function () { cp.classList.remove('okc'); }, 1500); });
                 };
+                [ren, pin, cp, exp, del].forEach(function (b) { b.title = b.querySelector('span').textContent; });
                 acts.appendChild(ren); acts.appendChild(pin); acts.appendChild(cp); acts.appendChild(exp);
                 acts.appendChild(del);
                 if (c.pinned) sr.insertAdjacentHTML('afterbegin', ICON('pin', 'sm pinned'));
@@ -1866,11 +1872,11 @@
             const W = g.cols;
             const m = updState.mode, ver = ($('upd-ver').textContent || '').toUpperCase();
             const txt = { idle: ver, check: t('pxCheck'), restart: t('pxRestart'), done: t('pxDone'), current: t('pxCurrent'), err: t('pxErr') }[m] || '';
-            g.ticker('upd-t', 3, 4, txt, m === 'err' ? '#ea4335' : m === 'done' || m === 'current' ? '#34a853' : '#8ab4f8', { small: true, loop: false });
-            if (m === 'check') g.rect(4 + (g.frameNo * 2) % Math.max(1, W - 24), 9, 14, 1, '#fbbc04');
-            else if (m === 'restart') g.rect(4, 9, Math.round((W - 8) * Math.min(1, updState.f / 25)), 1, '#fbbc04');
-            else if (m === 'done' || m === 'current') g.rect(4, 9, W - 8, 1, '#34a853');
-            else if (m === 'err') g.rect(4, 9, W - 8, 1, '#ea4335');
+            g.ticker('upd-t', 2, 4, txt, m === 'err' ? '#ea4335' : m === 'done' || m === 'current' ? '#34a853' : '#8ab4f8', { loop: false });
+            if (m === 'check') g.rect(4 + (g.frameNo * 2) % Math.max(1, W - 24), 10, 14, 1, '#fbbc04');
+            else if (m === 'restart') g.rect(4, 10, Math.round((W - 8) * Math.min(1, updState.f / 25)), 1, '#fbbc04');
+            else if (m === 'done' || m === 'current') g.rect(4, 10, W - 8, 1, '#34a853');
+            else if (m === 'err') g.rect(4, 10, W - 8, 1, '#ea4335');
         }
         function setUpd(mode, f) {
             updState = { mode: mode, f: f || 0 };

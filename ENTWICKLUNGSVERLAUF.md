@@ -320,3 +320,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Fehler behoben: Modellliste zeigte bei fremder Engine Ollama-Modelle (`modelsFor` merkt die Engine der Liste).
 - Nicht auf dem Gerät getestet (nur Playwright, simulierter Server).
 - Geplant (nicht gebaut): Modell-Standard vs. eigene Werte, App-Sicherung unter App → Info/Sicherung/Update, Prompt-Verwaltung (Prompt-Bibliothek: benannte Systemprompts, Auswahl je Modus/Chat, Schnellwahl, Export/Import) erst viel später.
+
+## 2026-11-10 – AIUIheinz-Design: Kosmetik 16:15
+- Sprachschalter oben grau (keine Modusfarbe). Chatmenü: fünf Symbol-Pillen in einer Zeile (Titel als Tooltip).
+- Engine-/Modell-/Update-Pille identisch: 62 % Breite, kleinere Schrift, weicherer Glow. Ring-Fassung grauer (2 px #3c4043).
+- Update-LED mit 5×7-Schrift (2 Pixel Rand oben/unten bei 11 Zeilen).
+- Antwortsprache strikt: Systemprompt „strikt Englisch/Deutsch, auch bei fremdsprachiger Eingabe“. Sprachwechsel lädt das Modell neu (Preload, Prompt ändert sich) – bewusst.
+- Nicht auf dem Gerät getestet.
