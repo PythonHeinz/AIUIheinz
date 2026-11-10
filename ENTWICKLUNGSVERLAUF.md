@@ -385,3 +385,4 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tastatur: Kopfzeile gleitet weg; Kontextfeld einzeilig bis Fokus; Telemetrie In/Out mit Leistungsfarben (vorlaeufige Schwellen); eigene Modusfarben (Audit Sandgold, Creative Violett, getrennt vom Statusgelb).
 - Tempo-Test: Balkenkarten, Tabelle klappbar, Uebernehmen-Button angeheftet.
 - Neuer Auftrag fuer Folge-Chat: docs/AUFTRAG_Modi.md. Aufgeschobenes in docs/DESIGN.md. Nur simuliert getestet (67 Seitentests, 20 Servertests).
+- Tempo-Test live: Balkenkarten stehen ab Start, laufender Balken bewegt sich mit Sekundenzaehler, Gesamtfortschritt oben; Pillen der Chat-Liste 20 px Abstand. DR1 abgeschlossen, DR2-Planung in docs/DESIGN.md.

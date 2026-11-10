@@ -255,6 +255,11 @@
         .st-bar span.l { width: 38px; flex: none; } .st-bar span.v { width: 40px; text-align: right; color: var(--txt); flex: none; }
         .st-bar .tr { flex: 1; height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--bc) 14%, #0a0b0d); overflow: hidden; }
         .st-bar .tr i { display: block; height: 100%; border-radius: 99px; background: var(--bc); box-shadow: 0 0 8px var(--bc); }
+        .st-prog { height: 4px; border-radius: 99px; background: var(--card); overflow: hidden; margin-bottom: 2px; } .st-prog i { display: block; height: 100%; width: 0; background: var(--m2); box-shadow: 0 0 8px var(--m2); transition: width .4s ease; }
+        .st-bar .tr { position: relative; } .st-bar .tr i { transition: width .6s ease; }
+        .st-bar.wait { opacity: .45; } .st-bar.act .v { color: var(--bc); }
+        .st-bar.act .tr i { position: absolute; left: 0; width: 28%; animation: stslide 1s ease-in-out infinite alternate; }
+        @keyframes stslide { from { transform: translateX(0); } to { transform: translateX(257%); } }
         .st-det { margin-top: 6px; } .st-det summary { color: var(--sub); font-size: .78rem; cursor: pointer; padding: 4px 0; }
         .st-core { display: flex; gap: 5px; margin: 6px 0 2px; } .st-core i { width: 18px; height: 18px; border-radius: 6px; background: color-mix(in srgb, var(--tc) 28%, #0a0b0d); border: 1px solid var(--tc); box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 40%, transparent); }
         .st-core small { align-self: center; margin-left: 6px; color: var(--sub); font-size: .7rem; }
@@ -302,7 +307,7 @@
         .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
         .saved-item.open .acts2 { display: flex; }
-        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; padding-top: 10px; }
+        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; padding-top: 20px; }
         .saved-item .acts2 .pill { flex: 1; min-height: 34px; padding: 0; }
         .saved-item .acts2 .pill span { display: none; }
         .saved-item .acts2 .pill.danger { background: var(--card); color: var(--red); border-color: var(--red); }
@@ -2062,9 +2067,42 @@
             if ($('model-select').value === stMeta.model) loadThreads();
             $('st-status').textContent = t('stApplied', { n: best.n, m: stMeta.model });
         }
+        // Live bars of the speed test: one card per planned thread count, two bar slots (run 1, run 2). Slots wait, run (moving bar + seconds) or fill with the result.
+        let stPlan = [], stActive = null;
+        function renderStBars(ordN) {
+            const box = $('st-bars'), ns = stPlan.length ? stPlan : ordN;
+            if (!ns.length) { box.innerHTML = ''; return; }
+            const key = ns.join(',');
+            if (box.dataset.key !== key) {
+                let h = '<div class="st-prog"><i id="st-prog-i"></i></div>';
+                ns.forEach(function (n, k) {
+                    h += '<div class="st-card stc' + (k % 4) + '" data-n="' + n + '"><h4><span>' + n + ' Threads</span><small class="tt">…</small></h4>';
+                    for (let run = 1; run <= 2; run++) h += '<div class="st-bar wait" data-run="' + run + '"><span class="l">' + t('stRun') + ' ' + run + '</span><span class="tr"><i></i></span><span class="v">–</span></div>';
+                    h += '</div>';
+                });
+                box.className = 'st-bars'; box.innerHTML = h; box.dataset.key = key;
+            }
+            const maxG = Math.max.apply(null, stRows.map(function (r) { return r.gTps || 0; }).concat([0.001]));
+            const best = stBest();
+            box.querySelectorAll('.st-card').forEach(function (card) {
+                const n = parseInt(card.dataset.n, 10), rows = stRows.filter(function (r) { return r.n === n; });
+                card.classList.toggle('best', !!best && best.n === n && !speedTesting);
+                const tt = card.querySelector('.tt'); const last = rows[rows.length - 1];
+                tt.textContent = rows.length === 2 ? stFmt(last.total, 1) + ' s' : (stActive && stActive.n === n ? '…' : '');
+                card.querySelectorAll('.st-bar').forEach(function (bar) {
+                    const run = parseInt(bar.dataset.run, 10), r = rows.filter(function (x) { return x.run === run; })[0];
+                    const fill = bar.querySelector('i'), v = bar.querySelector('.v');
+                    if (r) { bar.className = 'st-bar done'; fill.style.width = Math.max(2, Math.round((r.gTps || 0) / maxG * 100)) + '%'; v.textContent = stFmt(r.gTps, 1); }
+                    else if (stActive && stActive.n === n && stActive.run === run) { bar.className = 'st-bar act'; fill.style.width = ''; v.textContent = Math.round((Date.now() - stActive.t0) / 1000) + ' s'; }
+                    else { bar.className = 'st-bar wait'; fill.style.width = '0'; v.textContent = '–'; }
+                });
+            });
+            const total = ns.length * 2, done = stRows.length, pi = $('st-prog-i');
+            if (pi) pi.style.width = Math.round(done / total * 100) + '%';
+        }
         function renderSpeedTest() {
             const box = $('st-table');
-            if (!stRows.length) { box.innerHTML = ''; $('st-bars').innerHTML = ''; $('st-copy').style.display = 'none'; return; }
+            if (!stRows.length) { box.innerHTML = ''; if (stPlan.length) renderStBars([]); else $('st-bars').innerHTML = ''; $('st-copy').style.display = 'none'; return; }
             let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load</th><th>P-Tok</th><th>P s</th><th>P t/s</th><th>Gen</th><th>Tot</th></tr>';
             const ordN = []; stRows.forEach(function (r) { if (ordN.indexOf(r.n) < 0) ordN.push(r.n); });
             stRows.forEach(function (r) {
@@ -2072,19 +2110,7 @@
                     '</td><td>' + (r.run === 1 ? stFmt(r.pTps, 1) : '–') + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
             });
             box.innerHTML = h + '</table>';
-            // bars: one card per thread count, one bar per run (generation tokens/s, same scale for all)
-            const maxG = Math.max.apply(null, stRows.map(function (r) { return r.gTps || 0; })) || 1;
-            const bestNow = stBest();
-            let bh = '';
-            ordN.forEach(function (n, k) {
-                const rows = stRows.filter(function (r) { return r.n === n; });
-                bh += '<div class="st-card stc' + (k % 4) + (bestNow && bestNow.n === n ? ' best' : '') + '"><h4><span>' + n + ' Threads</span><small>' + stFmt(rows[rows.length - 1].total, 1) + ' s</small></h4>';
-                rows.forEach(function (r) {
-                    bh += '<div class="st-bar"><span class="l">' + t('stRun') + ' ' + r.run + '</span><span class="tr"><i style="width:' + Math.max(2, Math.round((r.gTps || 0) / maxG * 100)) + '%"></i></span><span class="v">' + stFmt(r.gTps, 1) + '</span></div>';
-                });
-                bh += '</div>';
-            });
-            $('st-bars').className = 'st-bars'; $('st-bars').innerHTML = bh;
+            renderStBars(ordN);
             const best = stBest();
             $('st-best').textContent = best ? t('stBest', { n: best.n, v: stFmt(best.v, 1) }) : '';
             $('st-apply').style.display = best ? 'inline-flex' : 'none';
@@ -2120,15 +2146,15 @@
             const ctx = parseInt($('param-ctx').value, 10);
             const promptKey = $('st-prompt').value;
             const cold = $('st-cold').checked;
-            stRows = []; renderSpeedTest();
+            stRows = []; stPlan = list.slice(); stActive = null; $('st-bars').dataset.key = ''; renderSpeedTest();
             stMeta = { date: new Date().toISOString().slice(0, 16).replace('T', ' '), model: model, ctx: ctx, prompt: promptKey, termux: $('st-termux').checked ? 'visible' : 'hidden', cold: cold };
             speedTesting = true; stAbort = new AbortController();
             $('st-start').style.display = 'none'; $('st-stop').style.display = 'inline-flex';
             let status = '', timer = null, t0 = 0;
             const setStatus = function (n, r) {
-                t0 = Date.now();
+                t0 = Date.now(); stActive = { n: n, run: r, t0: t0 };
                 if (timer) clearInterval(timer);
-                const upd = function () { $('st-status').textContent = t('stRunning', { n: n, r: r, s: Math.round((Date.now() - t0) / 1000) }); };
+                const upd = function () { $('st-status').textContent = t('stRunning', { n: n, r: r, s: Math.round((Date.now() - t0) / 1000) }); renderStBars([]); };
                 upd(); timer = setInterval(upd, 1000);
             };
             try {
@@ -2150,7 +2176,7 @@
                 status = (e.name === 'AbortError') ? t('stStopped') : t('stErr', { m: e.message });
             } finally {
                 if (timer) clearInterval(timer);
-                speedTesting = false; stAbort = null;
+                speedTesting = false; stAbort = null; stActive = null; renderSpeedTest(); renderStBars([]);
                 $('st-start').style.display = 'inline-flex'; $('st-stop').style.display = 'none';
                 $('st-status').textContent = status;
                 if (stRows.length) lsSet('heinz_speedtest', { rows: stRows, meta: stMeta });
