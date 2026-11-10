@@ -856,7 +856,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("thinking_config", json.dumps(b1))
         page.click("#think-fast")
         self.send(page, "fast")
-        self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "minimal", "fast = the rule's fast stage")
+        self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "low", "fast = the rule's fast stage")
         # state is saved per model and survives a reload
         page.reload()
         page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
