@@ -86,8 +86,10 @@ Belegt (ai.google.dev/gemini-api/docs/openai und …/gemini-3):
 Quelle: ai.google.dev/edge/litert-lm (CLI, OpenAI-Compatible Server, CLI Configuration; belegt, sofern nicht anders vermerkt). Die Dokumentation zum Server ist **sehr knapp**.
 
 ### 2.1 Server
-- Start: `litert-lm serve`. Lädt alle importierten Modelle der lokalen Registry dynamisch. Optionen laut Doku: `--host` (Standard `0.0.0.0`, also **alle Netzwerke**; unsere `start.sh` und die Projektregeln nehmen `127.0.0.1`), `--port` (Standard `9379`), `--verbose`.
-- **`--cors-origin`** (im Projekt benutzt, `litert-lm serve --cors-origin http://localhost:3000`) steht **nicht** in der Doku-Seite; vermutlich neuere Version. Die Doku listet keinerlei CORS- oder Authentifizierungseinstellungen. **Unbekannt, Sonde** (`litert-lm serve --help` auf dem Handy).
+- Start: `litert-lm serve`. Lädt alle importierten Modelle der lokalen Registry dynamisch.
+- **Optionen laut `litert-lm serve --help` auf dem Handy (Ausgabe des Entwicklers, 10.11.2026, gemessen):** `--config FILE` (eigene `config.json` statt `~/.litert-lm/config.json`), `--host` (Standard **127.0.0.1**), `--port` (Standard 9379), `--cors-origin TEXT` (erlaubte CORS-Ursprünge, mehrfach angebbar; Standard: keine, CORS aus), `--verbose`. Die Doku-Seite nennt dagegen `--host 0.0.0.0` als Standard und kennt weder `--config` noch `--cors-origin`: **die Doku ist älter als die installierte Version, die Messung auf dem Gerät gilt.**
+- `--cors-origin` liefert keine Werte, sondern erlaubt dem Browser den Zugriff: Die Seite auf `http://localhost:3000` darf `serve` nur aufrufen, wenn dieser Ursprung angegeben ist. Mit der Thread-Verteilung hat das nichts zu tun (Threads: `cpu_thread_count` in der Konfiguration).
+- `--config FILE` erlaubt mehrere getrennte Konfigurationsdateien (Profile), ohne `~/.litert-lm/config.json` anzufassen: nützlich für `server.py` (siehe 2.3).
 - Endpunkte: `GET /v1/models`, `POST /v1/chat/completions` (Streaming unterstützt; wie man es einschaltet, zeigt die Seite nicht), **`POST /v1/embeddings`** (nur wenn ein Einbettungsmodell geladen wird; Eingabe Text, Bild, Audio oder gemischt; Beispiel `embedding-gemma-v2.litertlm,gpu`).
 - Modellname im Request: Beispiel `gemma4-12b` (Alias beim Import). In Beispielen steht auch `gemma4-12b,gpu` bzw. `embedding-gemma-v2.litertlm,gpu`: ein **Suffix nach dem Komma wählt offenbar das Backend**; die Syntax ist nirgends beschrieben (**vermutet**, Sonde).
 
@@ -159,3 +161,17 @@ Ziel: Der Entwickler prüft mit eigenem Schlüssel auf dem Handy, was die Schnit
 - Forum `stream_options`: discuss.ai.google.dev („Gemini OpenAI compatibility … stream_options“)
 - LiteRT-LM: ai.google.dev/edge/litert-lm (CLI, OpenAI-Compatible Server, CLI Configuration, Usage), developers.google.cn Spiegelseiten, linuxcommandlibrary.com/man/litert-lm (Drittquelle, CLI-Optionen)
 - Gallery: github.com/google-ai-edge/gallery, App-Store-Beschreibung, Drittberichte (pasqualepillitteri.it, taxheal.com)
+
+---
+
+## 6 Beschlüsse und Klarstellungen des Entwicklers (10.11.2026 abends)
+
+1. **Anbindung heute:** Die App spricht Google AI Studio bisher **über die OpenAI-kompatible Schnittstelle** (Engine „Custom“, nur `POST …/chat/completions`, `lib/providers.js`), nicht nativ über `generateContent`. Der Schlüssel aus AI Studio gilt nach Vorwissen (nicht in dieser Sitzung geprüft) für das ganze Google-Cloud-Projekt und damit für beide Wege; ein zweiter Schlüssel ist nicht nötig.
+2. **Parameter je Schnittstelle:** Der Chat bleibt in seinen Parameternamen und ist darüber kompatibel. Was die Schnittstelle des gewählten Modells zulässt, ist regelbar; alles andere ist **ausgegraut** (mit Grund).
+3. **Modellwissen vorab:** Erkenntnisse wie die zu Gemini 3 (Temperatur 1,0 empfohlen, Penalties führen zu Fehler 400, Denken nicht abschaltbar) werden als **Vorgaben je Modell in der App hinterlegt**, auch wenn die Modellliste sie nicht liefert (Daten, z. B. `lib/capabilities.json`, Erkennung über Modellnamen-Muster plus Felder der Modellliste).
+4. **Denken als eigener Schalter:** `thinking_level`, `thinking_budget` und `reasoning_effort` werden als **ein** Schalter „Denken“ gedacht, dessen Stufen vom Modell abhängen. In der Chatzeile entspricht **Schnell** einer niedrigen und **Tief** der hohen Stufe (Strang „AIUIheinz-Modi“, Auftrag Punkt 3; Abstimmung zwischen Modi und Modelle nötig, beide berühren `lib/providers.js`). Über die kompatible Schnittstelle genügt `reasoning_effort`.
+5. **Token-Zählung vereinheitlichen:** Die Anbieterschicht liefert schon Eingabe-, Ausgabe- und Denk-Token und ein Zeichen „geschätzt“ (`lib/providers.js`, `include_usage` wird gesendet). Offen ist, ob die Ausgabe-Token die Denk-Token enthalten (bei OpenAI ja, bei Gemini kompatibel unbekannt). Die Dashboards brauchen eine feste Definition: Eingabe, sichtbare Ausgabe, Denken, Gesamt, Quelle (Anbieter oder Schätzung), Tempo getrennt für sichtbare Ausgabe und für Ausgabe plus Denken. Die Sonde klärt je Anbieter die Lage.
+6. **LiteRT-LM:** Backend `cpu` und `gpu` sind in der App schon einstellbar, `npu` soll als weiterer Wert dazukommen (in der Konfiguration belegt; ob die NPU des Pixel in Termux nutzbar ist, ist **unbekannt**, nur durch Ausprobieren). Konfiguration der Engine über `server.py` ist **beschlossen als Richtung** (Beschluss und Abstimmung mit den anderen Strängen vor dem Bau, weil Fundament).
+7. **Einbettungsmodelle** werden gesondert erfasst, nicht in der Chat-Modellliste, sondern im geplanten Bereich für Wissensquellen (offline Wikipedia, andere Wikis wie ein VW-T4-Wiki). Recherche dazu (Kiwix/ZIM, Wiki-Auszüge, Einbettung und Suche auf dem Handy) steht noch aus.
+8. **Ausprobieren:** Ob Bild, Audio oder Funktionsaufrufe über `litert-lm serve` ansprechbar sind, wird später per Versuch geklärt (Teil der Sonde, Abschnitt 4).
+9. **Noch nicht testbar:** Eine weitere Google-Schnittstelle (nativ `generateContent`, neue Interactions-API in Beta, Live-API) hat der Entwickler noch nicht angebunden; die Recherche zu `generateContent` bleibt als Grundlage für eine native Anbindung stehen.
