@@ -265,3 +265,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Rubriken: Gespräche, Antwort, Leistung, Verbindung, Datenschutz, App, je mit Geltungsbereich. Seite "Parameter" entfällt.
 - Update-Seite: kleine LED-Zeile (Raster 2 px, 3x5-Schrift, dünner Balken) mit Zuständen prüfen/neu starten/fertig/aktuell/Fehler.
 - Tests angepasst (54 + 20 grün, simuliert; nicht auf dem Handy geprüft).
+
+## 2026-11-10 · AIUIheinz-Design · Ampel, Chat-Name, Equalizer (nach Handytest)
+- Ring bei Cloud-Engines: rot (Online aus oder Schlüssel fehlt), grün (bereit, nichts wird vor dem Senden übertragen); beim Warten auf das erste Token orange, beim Antworten grün.
+- Chat-Name in der Infozeile: Label "CHAT" in Modusfarbe, Titel fett, Haarlinien links/rechts als Abgrenzung.
+- Equalizer (6 Balken) sitzt links unter dem Heinz-UI-Ring, der Statustext läuft rechtsbündig bis zum Rand.
+- Tests angepasst (54 + 20 grün, simuliert).
