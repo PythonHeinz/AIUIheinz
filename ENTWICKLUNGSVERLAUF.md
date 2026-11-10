@@ -379,3 +379,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Einstellungen: "Nur Modus-Vorgaben" eigene Kachel; Schnellmodus + Max.-Antwort-Token (nur Schnellmodus, Standard 300) zusammen in einer Kachel.
 - Speedtest-Kachel gruen: hellere, mildere Tuerkis-Mint-Toene (#b9f7d2).
 - Logo/Metallring nach `lib/core.css` (`.ring-btn.metal`) und `lib/core.js` (`Heinz.ringLogo`), Werte in docs/DESIGN.md. Nur simuliert getestet (62+1 Seitentests, 20 Servertests), nicht auf dem Geraet.
+
+## 2026-11-10 spaet (AIUIheinz-Design) – Design-Ueberarbeitung abgeschlossen
+- Eigenes Auswahl-Popup statt Android-Liste (`Heinz.enhanceSelects`), Pillen der Chat-Liste 10 px tiefer.
+- Tastatur: Kopfzeile gleitet weg; Kontextfeld einzeilig bis Fokus; Telemetrie In/Out mit Leistungsfarben (vorlaeufige Schwellen); eigene Modusfarben (Audit Sandgold, Creative Violett, getrennt vom Statusgelb).
+- Tempo-Test: Balkenkarten, Tabelle klappbar, Uebernehmen-Button angeheftet.
+- Neuer Auftrag fuer Folge-Chat: docs/AUFTRAG_Modi.md. Aufgeschobenes in docs/DESIGN.md. Nur simuliert getestet (67 Seitentests, 20 Servertests).

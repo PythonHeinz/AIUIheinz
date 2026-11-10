@@ -74,3 +74,19 @@ Nicht mehr aendern ohne Absprache. Code: `lib/core.css` (`.ring-btn.metal`), `li
 - Ring: 52 px, 1 px Rand #26292e, innen `inset 0 0 0 1px #4b5058` (Metallrahmen); `::before` 2 px eingerueckt, 2 px Rand in Statusfarbe `--s`, Fuellung `--s` 16 % auf #0a0b0d, Glow 9 px.
 - Logo: zwei SVG-Textzeilen "HEINZ" (x 17,25 / y 11,1) und "UI" (y 20,1); Schrift system-ui/Roboto/Helvetica Neue/Arial, Gewicht 700, Groesse 8, Buchstabenabstand .5, mittig, Farbe #e8eaed.
 - Chat-Entscheidung 2026-11-10: Max.-Antwort-Token gilt nur im Schnellmodus (Standard 300); Schnellmodus + Token teilen eine Kachel, "Nur Modus-Vorgaben" hat eine eigene.
+
+## Design-Überarbeitung v1.0 (Stand 2026-11-10)
+Umgesetzt:
+- **Auswahllisten:** `Heinz.enhanceSelects('select.sel')` (lib/core.js, Stil `.hz-pop` in lib/core.css) ersetzt die Android-Liste durch ein eigenes Popup in der Breite des Feldes (Farben, Schrift, Modusfarbe für die Auswahl). Ausnahme bleibt die Modellliste (volle Breite, viel Information). Neue Auswahlfelder: Klasse `sel` verwenden, dann greift es automatisch; andere Seiten (lab, sheet, vitals) rufen es noch nicht auf.
+- **Tastatur:** Bei geöffneter Tastatur (`body.kbd`, `body.kbd-ctx`) gleitet die Kopfzeile weg, Modusleiste, Telemetrie und Aktionen sind ausgeblendet; beim Schließen oder Senden kommen sie zurück.
+- **Kontextfeld:** Im Ruhezustand eine Zeile (24 px, ohne Kopf); bei Fokus oder Vollbild die volle Höhe mit Kopfzeile.
+- **Telemetrie:** Labels „In" und „Out" statt P und A (ohne Icons). Farben: T/s grün ab 15, warm (orange) unter 6; Start grün bis 2 s, warm über 8 s (`PERF` in chat.html). **Vorläufige Schwellen, mit Handy-Messwerten abgleichen.**
+- **Modus-Palette:** eigene Modusfarben (`MODE_PRESETS.color`), Audit Sandgold `#d2b56a`, Creative sanftes Violett `#b184ec`; Statusgelb `#fbbc04` bleibt dem Status vorbehalten (Ring, Equalizer, Statuszeile), damit Modus und Status nicht verwechselt werden.
+- **Tempo-Test:** Karten mit Balken je Thread-Zahl (Gen t/s, gemeinsamer Maßstab, beste Karte leuchtet), Tabelle klappbar darunter, Button „Threads übernehmen" unten angeheftet (`.st-sticky`).
+- **Chat-Liste:** scrollt wieder (kaputte Regel repariert), fünf Pillen mit 10 px Abstand nach oben.
+
+Aufgeschoben (nicht vergessen, bewusst nicht v1.0):
+- **Modus-Schieberegler:** Halbkreis-Kragen am linken Rand in der Mitte; Tippen öffnet eine senkrechte schwarze Leiste mit farbigen Kreisen und Namen der fünf Modi; Riegel von oben nach unten ziehen, der Modus im Kragen gilt sofort, Chat- und Auszeichnungsfarben wechseln mit. Zweck: mehr Platz nach oben, Modus ständig sichtbar. Wischen auf der Eingabeleiste (vor/zurück durch die Modi) ist eine Alternative. Die bisherige Modusleiste bleibt vorerst.
+- **Wichtigste Einstellungen im Daumenbereich** (Auditor-Anregung): hängt an einer neuen Gliederung des Einstellungsmenüs, Thema des zweiten Design-Reviews.
+- Parameter-Schnellöffner (schmales Overlay) an der Eingabeleiste: erst nach der Gliederung des Menüs prüfen; überschneidet sich mit dem Schnellbereich im Einstellungspanel.
+- Verworfen: Drawer bis 85 % Breite, Umbau auf Bottom Sheet.

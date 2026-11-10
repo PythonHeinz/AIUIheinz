@@ -245,6 +245,17 @@
         .ver-pill { width: 100%; justify-content: flex-start; font-family: var(--mono); font-size: .82rem; }
         .st-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
         .st-sticky { position: sticky; bottom: 0; z-index: 2; padding: 14px 0 8px; margin-top: 6px; background: linear-gradient(to bottom, transparent, var(--surf) 30%); }
+        .st-bars { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; }
+        .st-card { border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 8px 10px; --bc: var(--m2); }
+        .st-card.stc0 { --bc: var(--m2); } .st-card.stc1 { --bc: var(--m4); } .st-card.stc2 { --bc: var(--m1); } .st-card.stc3 { --bc: var(--m3); }
+        .st-card.best { border-color: var(--bc); box-shadow: 0 0 12px color-mix(in srgb, var(--bc) 40%, transparent); }
+        .st-card h4 { margin: 0 0 6px; font: 700 .8rem var(--mono); color: var(--bc); display: flex; justify-content: space-between; }
+        .st-card h4 small { color: var(--sub); font-weight: 400; }
+        .st-bar { display: flex; align-items: center; gap: 8px; font: 11px var(--mono); color: var(--sub); margin: 3px 0; }
+        .st-bar span.l { width: 38px; flex: none; } .st-bar span.v { width: 40px; text-align: right; color: var(--txt); flex: none; }
+        .st-bar .tr { flex: 1; height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--bc) 14%, #0a0b0d); overflow: hidden; }
+        .st-bar .tr i { display: block; height: 100%; border-radius: 99px; background: var(--bc); box-shadow: 0 0 8px var(--bc); }
+        .st-det { margin-top: 6px; } .st-det summary { color: var(--sub); font-size: .78rem; cursor: pointer; padding: 4px 0; }
         .st-core { display: flex; gap: 5px; margin: 6px 0 2px; } .st-core i { width: 18px; height: 18px; border-radius: 6px; background: color-mix(in srgb, var(--tc) 28%, #0a0b0d); border: 1px solid var(--tc); box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 40%, transparent); }
         .st-core small { align-self: center; margin-left: 6px; color: var(--sub); font-size: .7rem; }
         .st-chips label.tile { --tc: #b9f7d2; flex: 1 0 28%; justify-content: center; border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); background: #0a0b0d; border-radius: 14px; padding: 12px 0; font-family: var(--mono); font-size: 1rem; color: var(--sub); box-shadow: 0 0 10px color-mix(in srgb, var(--tc) 14%, transparent); }
@@ -494,7 +505,8 @@
                     <button class="pill danger" id="st-stop" type="button" onclick="stopSpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
                 </div>
                 <div id="st-status" class="help" style="min-height:16px"></div>
-                <div id="st-table"></div>
+                <div id="st-bars"></div>
+                <details class="st-det"><summary data-i18n="stTable">Table</summary><div id="st-table"></div></details>
                 <div id="st-best" class="help" style="color:var(--pri)"></div>
                 <div class="st-btns st-sticky">
                     <button class="pill" id="st-apply" type="button" onclick="applyBestThreads()" style="display:none"></button>
@@ -883,7 +895,7 @@
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
                 stCold: 'Unload model first (measures real load time)', stStart: 'Start test', stStop: 'Stop', stCopy: 'Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
-                stBusy: 'Wait until the answer is finished.', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: 'Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
+                stBusy: 'Wait until the answer is finished.', stTable: 'Table', stRun: 'Run', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: 'Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens (fast mode only)', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: 'Preparing model …', preReady: 'Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
@@ -927,7 +939,7 @@
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
                 stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: 'Test starten', stStop: 'Stopp', stCopy: 'Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
-                stBusy: 'Warte, bis die Antwort fertig ist.', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '{n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
+                stBusy: 'Warte, bis die Antwort fertig ist.', stTable: 'Tabelle', stRun: 'Lauf', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '{n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token (nur Schnellmodus)', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: 'Modell wird vorbereitet …', preReady: 'Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
@@ -2052,7 +2064,7 @@
         }
         function renderSpeedTest() {
             const box = $('st-table');
-            if (!stRows.length) { box.innerHTML = ''; $('st-copy').style.display = 'none'; return; }
+            if (!stRows.length) { box.innerHTML = ''; $('st-bars').innerHTML = ''; $('st-copy').style.display = 'none'; return; }
             let h = '<table class="st-table"><tr><th>Thr</th><th>Run</th><th>Load</th><th>P-Tok</th><th>P s</th><th>P t/s</th><th>Gen</th><th>Tot</th></tr>';
             const ordN = []; stRows.forEach(function (r) { if (ordN.indexOf(r.n) < 0) ordN.push(r.n); });
             stRows.forEach(function (r) {
@@ -2060,6 +2072,19 @@
                     '</td><td>' + (r.run === 1 ? stFmt(r.pTps, 1) : '–') + '</td><td>' + stFmt(r.gTps, 1) + '</td><td>' + stFmt(r.total, 1) + '</td></tr>';
             });
             box.innerHTML = h + '</table>';
+            // bars: one card per thread count, one bar per run (generation tokens/s, same scale for all)
+            const maxG = Math.max.apply(null, stRows.map(function (r) { return r.gTps || 0; })) || 1;
+            const bestNow = stBest();
+            let bh = '';
+            ordN.forEach(function (n, k) {
+                const rows = stRows.filter(function (r) { return r.n === n; });
+                bh += '<div class="st-card stc' + (k % 4) + (bestNow && bestNow.n === n ? ' best' : '') + '"><h4><span>' + n + ' Threads</span><small>' + stFmt(rows[rows.length - 1].total, 1) + ' s</small></h4>';
+                rows.forEach(function (r) {
+                    bh += '<div class="st-bar"><span class="l">' + t('stRun') + ' ' + r.run + '</span><span class="tr"><i style="width:' + Math.max(2, Math.round((r.gTps || 0) / maxG * 100)) + '%"></i></span><span class="v">' + stFmt(r.gTps, 1) + '</span></div>';
+                });
+                bh += '</div>';
+            });
+            $('st-bars').className = 'st-bars'; $('st-bars').innerHTML = bh;
             const best = stBest();
             $('st-best').textContent = best ? t('stBest', { n: best.n, v: stFmt(best.v, 1) }) : '';
             $('st-apply').style.display = best ? 'inline-flex' : 'none';

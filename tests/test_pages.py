@@ -910,6 +910,8 @@ class PageTest(unittest.TestCase):
         # last result is restored after a reload
         page.reload()
         self.assertEqual(page.locator("#st-table tr").count(), 5)
+        self.assertGreaterEqual(page.locator("#st-bars .st-card").count(), 1)
+        self.assertGreaterEqual(page.locator("#st-bars .st-bar").count(), 2)
         self.assertEqual(self.errors, [])
 
     def test_speed_test_needs_a_thread_value_and_can_be_stopped(self):

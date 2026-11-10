@@ -1,0 +1,19 @@
+# AUFTRAG Modi (Strang AIUIheinz-Modi)
+
+Für einen neuen Chat. Vorher lesen: `STAND.md`, `UEBERGABE.md`, `docs/KONZEPT.md`, `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`. Fundament (lib/, server.py, gemeinsame localStorage-Schlüssel, Engine-Aufrufe) nur nach Rückfrage ändern.
+
+## Stand der Modi
+Fünf Modi in `chat.html` (`MODE_PRESETS`, Prompts in den i18n-Blöcken `sys`): Wilson (Begleiter, freier Ton, kein Kontext), Heinz (Fakten & Slang, kalte Parameter, Stoppsequenzen), Audit (Texte prüfen, Kontext Pflicht, `ctxInSystem`), Code, Creative (warm, hoher top_k). Je Modus: temp, top_p, top_k, bevorzugtes Modell, Ersatzmodelle, Stoppsequenzen, Kontextregel, eigene Farbe (`color`/`on`, eigene Palette, bewusst nicht Statusgelb).
+Bedienung heute: Parameter in drei Ansichten (Modell | Modus | Meine, je Modell und Modus gespeichert), Prompts-Tab (Modus | Modell | Meine), Schalter „Nur Modus-Vorgaben" (ignoriert alle Nutzerwerte, Threads bleiben Modellsache), Schnellmodus (kurze reine Textantwort, `fastN` Standard 300, nur im Schnellmodus), Tempo-Test (Threads je Modell), Export/Sicherung unter Info.
+
+## Zielbild
+Nutzer testen mit der App viele Reihen: Welche Vorgaben holen aus einem kleinen lokalen Modell am meisten heraus? Ergebnisse (Modell, Parameter, System-Prompt, Messwerte) werden exportiert und woanders eingesetzt. Die Modi sind deshalb **klar getrennte Prüfwerkzeuge in der Hand des Nutzers**, nicht Chat-Charaktere.
+
+## Aufgaben
+1. **Modi überarbeiten:** Pro Modus festlegen, für welchen Test oder welche Anwendung er gedacht ist (z. B. Faktentreue, Textprüfung, Code, Ton/Persona, Kreativität). Mit den neuen Einstellungs- und Testmöglichkeiten (Drei-Ansichten-Parameter, eigener Prompt, Tempo-Test, Nur-Modus-Vorgaben) Parameter, Prompts, Stoppsequenzen und Standardmodelle verbessern. Unterschiede müssen für Nutzer ohne Tiefenwissen sichtbar sein (Persona vs. Ton vs. Strenge). Kurze Modusbeschreibung (EN und DE) im Modus-Menü vorschlagen. Vorschläge zuerst mit dem Nutzer abstimmen, dann bauen.
+2. **Zwei Stufen als Pille an der Eingabe (Prüfen):** Ist es über System-Prompt und Parameter machbar, an der Chat-Eingabe eine kleine Umschaltung anzubieten wie bei großen Modellen („schnell" und „tief")? Ergebnis als Konzept mit Messungen (Antwortqualität, Länge, Tempo) in `docs/KONZEPT.md`; bauen erst nach Freigabe. Zu klären: kollidiert mit Schnellmodus (der ist bereits „kurz, ohne Markdown, begrenzte Token"), sollte der Schnellmodus dort aufgehen?
+3. **Reasoning bei Cloud-Modellen (Prüfen):** Online-Anbieter (Gemini, OpenAI-kompatibel, eigene Server) können Denkaufwand/Reasoning einstellen. Prüfen, welche Parameter die angebundenen API-Formate dafür kennen (z. B. Denkbudget, reasoning-Stufe) und ob sie in `lib/providers.js` pro Modell mitgesendet werden können. Der Schalter soll bei lokalen Ollama-Modellen deaktiviert bleiben und nur bei Cloud-Modellen erscheinen; die Einstellung wird in der API-Anfrage mitgegeben. Vorsicht: Denk-Token zählen zum Limit (siehe Meldung `cutLength`).
+4. Neue Texte immer EN und DE, Tests ergänzen, ENTWICKLUNGSVERLAUF.md und STAND.md pflegen. Messwerte vom Handy in `docs/OLLAMA_UND_MODELLE.md` oder `docs/KONZEPT.md`.
+
+## Nicht Teil dieses Auftrags
+Layout der Einstellungen (zweites Design-Review, später), Modus-Schieberegler am Bildschirmrand (Idee, siehe `docs/DESIGN.md` Abschnitt „Aufgeschoben"), mehrere eigene OpenAI-Engines (eigener Strang).
