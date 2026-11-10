@@ -41,3 +41,52 @@ Die Modusfarbe färbt heute Sendepfeil, Schalter, Eingabefeld, Zähler, Modus-Pi
 - Die Chat-Titelzeile grenzt sich nicht vom Chat ab und wiederholt meist den ersten Prompt. Abgrenzen (Haarlinie, ruhiger) oder erst anzeigen, wenn der Chat gespeichert oder benannt ist.
 - Die Chatliste braucht einen Anker: die linke Spalte des Chats (Einzug) als Platz, in dem sich die Chatübersicht aufklappt; Tippen daneben oder X schließt sie.
 - Der Modellchip als Pixeldisplay gefällt als Zeile, die Schrift ist zu groß, und bewegter Text mindert die Lesbarkeit. Ziel: nichts muss laufen (kleinere Schrift, weniger Text, Engine nicht in der Zeile).
+
+## 7 Vorschlag nach Rückmeldung des Entwicklers (10.11.2026, Baumstruktur; noch nicht umgesetzt)
+
+### 7.1 Grundidee
+Einstellungen öffnen sich als Panel von rechts über **zwei Drittel** der Breite; das linke Drittel zeigt den Chat, Tippen darauf schließt das Panel (man dreht an einem Wert, tippt in den Chat, sendet, sieht die Wirkung). Oben im Panel steht der **Schnellbereich** („Jetzt“, etwa Passfoto-Format), darunter die Rubriken. Der Schnellbereich richtet sich nach der Seite: im Chat Engine, Modell, Parameter und Threads; auf „Modelle“ und „Tools“ die dort wichtigen Regler und Optionen. Im Menü selbst keine Pixelanimation, nur klar lesbare Einträge.
+
+### 7.2 Baum
+```
+Einstellungen (Panel rechts, 2/3 Breite)
+├─ JETZT (Schnellbereich, im Chat)
+│  ├─ Engine          Ollama · LiteRT-LM · Online-Engines (grau mit Schloss, solange „Online erlauben“ aus ist)
+│  │                  Statuspunkt + Klartext, warum es nicht geht (nicht erreichbar / Schlüssel fehlt / Online gesperrt)
+│  ├─ Modell          Name, Tippen öffnet die Modellliste dieser Engine
+│  ├─ Parameter       Temperatur · Top-P · Top-K · Kontext · max. Tokens · Threads   (wirken sofort auf die nächste Nachricht)
+│  │                  Markierung „geändert“ gegenüber dem Standard des Modells
+│  │                  [Zurück] [Als Standard für dieses Modell speichern] [Werte kopieren]
+│  └─ Online-Sperre   erscheint direkt am gesperrten Eintrag: „Online erlauben?“ (die Einstellung selbst liegt unter Datenschutz)
+├─ GESPRÄCHE
+│  ├─ Chatliste · Aktuellen Chat speichern · Aktuellen Chat verwerfen
+├─ ANTWORT
+│  ├─ Eigener Systemprompt des Modells
+│  └─ Schnellmodus (kurz, reiner Text)
+├─ LEISTUNG
+│  ├─ Modell vorladen
+│  └─ Tempo-Test
+├─ VERBINDUNG
+│  ├─ Engine-Daten (Adresse, Backend)
+│  └─ Schlüssel und Online-Dienste
+├─ DATENSCHUTZ
+│  └─ Online erlauben (aus = es wird nichts gesendet, Online-Engines gesperrt)
+└─ APP
+   ├─ Darstellung (Hell/Dunkel/Auto)
+   ├─ Update und Info
+   └─ Seite neu laden
+```
+EN/DE bleibt in der Kopfzeile.
+
+### 7.3 „Online erlauben“ (geprüft)
+Der Schalter ist mehr als ein Ausblenden: `lib/providers.js` blockiert jede Anfrage an eine Online-Engine mit `ONLINE_BLOCKED`, solange er aus ist. Das deckt sich mit dem Eindruck aus dem Test (ohne Schalter lädt kein Online-Modell). Er gehört deshalb unter **Datenschutz**, und im Schnellbereich wird die Sperre dort sichtbar, wo sie wirkt (an der gesperrten Engine).
+
+### 7.4 Wirkungsbereich sichtbar machen
+Jede Einstellung trägt eine von drei Marken: **Dieser Chat** (Modus, Kontext), **Dieses Modell** (Parameter, Threads, als Standard gespeichert), **Überall** (Darstellung, Online, Sprache). Im Schnellbereich zeigt ein Punkt, welche Werte gerade vom gespeicherten Standard des Modells abweichen.
+
+### 7.5 Farbe und Chat-Seite (Entscheidungen des Entwicklers)
+- Modusfarbe als **dünne Linie direkt unter der Modus-Leiste** (wechselt mit dem Modus), Umrandung der Prompt-Pille und Modellname im Chip; dauerhaft sichtbar, nicht nur bei Berührung. Aktive Fenster und Eingaben leuchten stärker (höhere Sättigung/Helligkeit).
+- Wilson bekommt eine eigene Farbe (kein Blau), damit sie nicht mit „bereit“ (Blau) kollidiert.
+- Der Ring um „Heinz UI“ zeigt den Status nur im Chat; im Hub ist er neutral.
+- Informationszeile des Chats (Liste, Titel, Kopieren, Neu) bleibt zusammen, wird typografisch/grafisch klarer vom Chattext abgesetzt (Haarlinie oder als Bubble).
+- Modellchip: Modus entfällt (steht in der Leiste), stattdessen Engine (Ollama, LiteRT-LM, Cloud); kleinere Schrift, Laufschrift nur bei langen Modellnamen.
