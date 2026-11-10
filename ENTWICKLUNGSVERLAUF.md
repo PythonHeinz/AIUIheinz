@@ -390,3 +390,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 10.11.2026 – Konzeptphase 2, Auftrag Modelle (Chat „AIUIheinz“, nur Dokumente)
 - `docs/KONZEPT.md` Abschnitt 18: zwei Hub-Einträge (Heinz UI als Testumgebung, neuer schlanker Chat), Schnittstellenlücke bei Cloud-Anbietern, Grobplanung des Einrichtungsassistenten mit offenen Fragen; 15.3 verweist darauf.
 - Neu `docs/AUFTRAG_Modelle.md` für den Strang „AIUIheinz-Modelle“ (Modellmanager). `docs/AUFTRAG_Modi.md` Punkt 3 mit Hinweis auf Abstimmung ergänzt.
+
+## 10.11.2026 – Schnittstellen Google und LiteRT-LM (Chat „AIUIheinz-Modelle“, Phase 1, nur Dokumente)
+- Neu `docs/SCHNITTSTELLEN.md`: Parameter-Matrix für Google AI Studio (kompatibel und nativ), Modellliste (`models.list` liefert `thinking`, `maxTemperature`, `topK`, Token-Grenzen), Denkstufen, LiteRT-LM serve (Endpunkte, Konfigurationsdatei, Einbettung), Gallery-Funktionen und ihre Erreichbarkeit, Sonden-Konzept. Jede Aussage mit Status belegt, Drittquelle, vermutet oder unbekannt.
+- Wichtige Funde: Gemini 3.x: Temperatur bei 1,0 lassen, `frequency_`/`presencePenalty` ergeben laut Firebase-Referenz Fehler 400, Denken nicht abschaltbar, `thinking_level` und `thinking_budget` nicht zusammen. LiteRT-LM serve dokumentiert keinen einzigen Anfrageparameter; Sampling, Threads, Backend und Denken kommen aus `~/.litert-lm/config.json` je Modell-ID; `/v1/embeddings` existiert.
+- `docs/MODELLQUELLEN.md`: Beschlüsse des Entwicklers (Datenschutzstufe als Hauptfilter, AI Horde zurückgestellt, Haltung) ergänzt.
+- Nichts davon ist auf dem Gerät geprüft; die Sonde (Abschnitt 4) ist nur geplant. `lib/providers.js` blieb unberührt.

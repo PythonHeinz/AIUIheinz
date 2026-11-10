@@ -4,6 +4,13 @@ Stand: 09.11.2026. Strang „AIUIheinz-Modelle“. Reine Recherche und Planungsg
 
 **Für andere Chats:** Diese Liste zeigt, welche Modelle und Anbieter später in der App wählbar sein könnten. Wer Funktionen auf Modelle abbildet (Chat, Sheet, Filter, Prüfung, Bild, Sprache), plant gegen die **Funktionsplätze** in Abschnitt I und nennt dort keinen festen Anbieter. Welche Quellen am Ende in die Auswahl kommen, entscheidet der Entwickler.
 
+**Beschlüsse des Entwicklers (10.11.2026):**
+- Haltung: freie Zugänge und bezahlte Zugänge werden gleich behandelt und verfügbar gemacht. Es gibt keine Überredungstricks und keine Werbung für einen Anbieter. Aufgabe der App ist, die Quellen **filterbar** zu machen, statt 300 Modelle hinzuwerfen.
+- Wichtigster Filter: die **Datenschutzstufe** (wohin gehen meine Daten, wie vertraulich). Höchste Stufe ist das Offline-Modell. Vorschlag zur Abstufung (noch nicht beschlossen): 0 offline auf dem Gerät; 1 EU/Schweiz gehostet, nach Anbieterangabe keine Speicherung; 2 Anbieter außerhalb der EU oder Speicherung, aber kein Training mit Eingaben; 3 Eingaben dürfen zum Training dienen (zum Beispiel Gratisstufen von Google und Mistral); 4 fremde Rechner oder weitergeleitet über Dritte, nur Unkritisches.
+- Unsinnige oder unzuverlässige Quellen werden ausgeschlossen.
+- **AI Horde: zurückgestellt (nicht aufnehmen).** Pollinations bleibt Kandidat für Stufe 4 (Gratiszugang ohne Konto zum Ausprobieren, auch für Nutzer, die erst einmal nichts einrichten wollen); die Eingabe wird vorab gewarnt.
+- Vorrang der Recherche: Google AI Studio (einzige API, die der Entwickler zurzeit testen kann), dann LiteRT-LM. Parameter und Fähigkeiten stehen in `docs/SCHNITTSTELLEN.md`.
+
 **Wie belastbar ist das?** Fast alle Zahlen stammen aus Drittquellen (Vergleichsseiten, Blogs, Foren) von August bis Oktober 2026, nur wenige direkt aus Anbieterdokus. Gratisstufen ändern sich oft (siehe Abschnitt G). Vor dem Einbau jeden Eintrag auf der Anbieterseite gegenprüfen. CORS (ob der Browser den Anbieter direkt aufrufen darf) ist bei keinem Anbieter geprüft; dafür ist der optionale Proxy in `server.py` (KONZEPT Abschnitt 7) vorgesehen.
 
 ## A Lokal und offline (Kern der App)
