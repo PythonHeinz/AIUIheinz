@@ -271,3 +271,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Chat-Name in der Infozeile: Label "CHAT" in Modusfarbe, Titel fett, Haarlinien links/rechts als Abgrenzung.
 - Equalizer (6 Balken) sitzt links unter dem Heinz-UI-Ring, der Statustext läuft rechtsbündig bis zum Rand.
 - Tests angepasst (54 + 20 grün, simuliert).
+
+## 2026-11-10 · AIUIheinz-Design · Statuszeile und Panel-Reihenfolge (nach Handytest)
+- Statustext linksbündig unter dem Ring (gehört zum Ring), Equalizer rechts als kleines Rechteck (5 Balken, Rahmen, etwa Breite der Menü-Taste).
+- Einstellungs-Panel: keine Symbole vor den Einträgen, Beschreibungen der Schalter ausgeblendet (kompakter). Reihenfolge: Engine, Modell, Parameter, Standardwerte, eigener Systemprompt, Schnellmodus, "Max. Antwort-Token" (ausklappbar), darunter Gespräche, Leistung, Verbindung, Datenschutz, App.
+- Tests grün (54 + 20, simuliert).
