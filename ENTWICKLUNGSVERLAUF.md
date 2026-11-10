@@ -276,3 +276,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Statustext linksbündig unter dem Ring (gehört zum Ring), Equalizer rechts als kleines Rechteck (5 Balken, Rahmen, etwa Breite der Menü-Taste).
 - Einstellungs-Panel: keine Symbole vor den Einträgen, Beschreibungen der Schalter ausgeblendet (kompakter). Reihenfolge: Engine, Modell, Parameter, Standardwerte, eigener Systemprompt, Schnellmodus, "Max. Antwort-Token" (ausklappbar), darunter Gespräche, Leistung, Verbindung, Datenschutz, App.
 - Tests grün (54 + 20, simuliert).
+
+## 2026-11-10 · AIUIheinz-Design · Einstellungen nach Skizze
+- Kopf: Reload-Kreis links, Titel mittig, X rechts; auf der Update-Seite sitzt dort eine kleine Pille "UPDATE" (kein Symbol), die LED-Zeile zeigt die Version zentriert.
+- Hauptseite: große Buttons "Engine" und "Modell" mit kleiner Info darunter. Engine öffnet eine eigene Seite mit Engine-Liste (Hinweise bleiben, Schloss = nicht verfügbar) und Verbindungsdetails darunter. Modell öffnet die Modellliste.
+- Parameter-Fenster (abgesetzt): Standardwerte, kompakte Ein-Zeilen-Regler (Temp, Top-P, Top-K, Kontext, Threads), Reset/Speichern/Werte kopieren. Danach Gruppe Eigener Systemprompt, Schnellmodus, Max. Antwort-Token (ausklappbar). Danach Leistung, Datenschutz, App.
+- Rubrik "Chats" aus den Einstellungen entfernt (Verwaltung über die Chat-Liste links).
+- Equalizer: Pillenform (4 Balken) etwa unter der Menü-Taste; feste Farben: grün = Antwort (Pegel), orange = Denken (Welle) / Laden (Lichtlauf), rot = offline.
+- App-Höhe: `height:100%` mit `max-height:100dvh` statt `100dvh` (Eingabezeile war auf dem Handy nach unten verrutscht, vermutlich dvh-Abweichung; nicht auf dem Gerät bestätigt).
