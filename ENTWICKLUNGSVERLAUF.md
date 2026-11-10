@@ -259,3 +259,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Ursache Modellliste: mehrere Abrufe liefen gleichzeitig (Engine-Wechsel, Schlüssel-Feld, Knopf), der langsamere, ältere überschrieb den neueren. `loadModels` zählt jetzt Abrufe, bricht den alten ab, nur der jüngste gilt; Status „Modellliste wird geladen…“ und „geladen: n Einträge“.
 - Tests: 2 neue (Abbruchhinweis, jüngster Abruf gewinnt), beide ohne Korrektur rot (Mutationsprüfung). 54 Seiten-, 20 Servertests grün (simuliert, nicht auf dem Handy; echtes Gemini nicht erreichbar).
 
+
+## 2026-11-10 · AIUIheinz-Design · Einstellungen als Panel (Stufe 2)
+- `chat.html`: Einstellungen als Panel von rechts (ca. 2/3 Breite, Tippen links schließt). Oben Schnellbereich "Jetzt": Reload-Kreis (aus dem Update-Menü hierher verschoben), Engine (gesperrte Online-Engines mit Schloss, Tippen → "Online erlauben?"), Modell, Parameter inkl. Threads mit "geändert"-Punkt, Zurück / Als Modell-Standard speichern / Werte kopieren (`settings.modelParams[provider|model]`).
+- Rubriken: Gespräche, Antwort, Leistung, Verbindung, Datenschutz, App, je mit Geltungsbereich. Seite "Parameter" entfällt.
+- Update-Seite: kleine LED-Zeile (Raster 2 px, 3x5-Schrift, dünner Balken) mit Zuständen prüfen/neu starten/fertig/aktuell/Fehler.
+- Tests angepasst (54 + 20 grün, simuliert; nicht auf dem Handy geprüft).

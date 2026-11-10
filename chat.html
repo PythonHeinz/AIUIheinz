@@ -29,6 +29,30 @@
         .chip small.online { color: var(--orange); }
         .chip b { display: block; font-size: .98rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
         .chip .i { color: var(--sub); }
+        /* Einstellungen: Panel von rechts (2/3 Breite), Schnellbereich oben */
+        #menu-sheet { left: auto; right: 0; top: 0; bottom: 0; width: min(68vw, 420px); max-width: none; max-height: none; margin: 0; border-radius: 26px 0 0 26px; border-bottom: 1px solid var(--ol); transform: translateX(105%); }
+        #menu-sheet.open { transform: none; }
+        #menu-sheet .grab { display: none; }
+        #menu-sheet .sh-head { padding-top: max(8px, env(safe-area-inset-top)); }
+        #menu-sheet .sh-body { padding-left: 14px; padding-right: 14px; }
+        #model-sheet { z-index: 43; }
+        .caps.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .caps .scope { font-size: .62rem; letter-spacing: .04em; text-transform: none; font-weight: 400; color: var(--muted); }
+        .quick { padding-bottom: 6px; }
+        .quick .slidercard { padding: 8px 12px 6px; margin-bottom: 6px; border-radius: 14px; }
+        .quick .slidercard .sc-top output { font-size: 1rem; }
+        .quick .slidercard small { display: none; }
+        .quick .row { min-height: 52px; }
+        .rl-wrap { display: flex; justify-content: center; padding: 2px 0 6px; }
+        .rl-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--ol); background: var(--card); color: var(--pri); display: grid; place-items: center; cursor: pointer; }
+        .rl-btn:active { background: var(--hover, var(--card)); }
+        .qdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); margin-left: 8px; vertical-align: middle; }
+        .q-btns .pill { min-height: 36px; font-size: .78rem; padding: 0 12px; }
+        .lockbox { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--orange); font-size: .8rem; margin: 4px 0 8px; }
+        .row.eng { min-height: 46px; padding-left: 14px; }
+        .row.eng.locked { opacity: .55; }
+        .row.eng .ck { color: var(--pri); visibility: hidden; } .row.eng.sel-on .ck { visibility: visible; }
+        .led { margin: 8px 0 4px; }
         .srow { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 26px; margin: -6px 4px 2px; flex: none; }
         #preload-status { flex: 1; min-width: 0; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .srow canvas { display: block; flex: none; }
@@ -262,27 +286,49 @@
         <div class="sh-body">
 
             <div class="pg on" data-pg="main">
-                <button class="row" type="button" data-go="engine" onclick="showPage('engine')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cpu"/></svg></span><span class="tx"><b data-i18n="engine">Engine</b><small id="menu-engine"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
-                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" onchange="onOnlineToggle()"><i></i></span></label>
-                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-terminal"/></svg></span><span class="tx"><b data-i18n="swOwn">Own system prompt</b><small data-i18n="swOwnSub">Model brings its own persona</small></span><span class="sw"><input type="checkbox" id="own-system" onchange="onOwnSystem()"><i></i></span></label>
-                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" onchange="onFast()"><i></i></span></label>
-                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" onchange="onPreloadToggle()"><i></i></span></label>
+                <div class="quick" id="quick">
+                    <div class="rl-wrap"><button class="rl-btn" id="q-reload" type="button" onclick="location.reload()" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)" aria-label="Reload page"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button></div>
+                    <div class="caps grp"><span data-i18n="gNow">Now</span><span class="scope" data-i18n="scModel">this model</span></div>
+                    <button class="row" type="button" id="q-engine" onclick="toggleEngineList()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cpu"/></svg></span><span class="tx"><b id="q-engine-name">Ollama</b><small id="q-engine-sub"></small></span><svg class="i sm go" id="q-eng-chev"><use href="lib/icons.svg#i-chev-d"/></svg></button>
+                    <div id="q-eng-list" hidden></div>
+                    <div id="q-lock" class="lockbox" hidden><span id="q-lock-txt"></span><button class="pill acc" type="button" onclick="unlockOnline()" data-i18n="qAllow">Allow online</button></div>
+                    <button class="row" type="button" id="q-model" onclick="openModelsFromPanel()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b id="q-model-name">–</b><small id="q-model-sub" data-i18n="qModelHint">Tap to choose a model</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                    <div class="caps grp"><span><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden></i></span><span class="scope" data-i18n="scNow">from the next message</span></div>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i18n="defaults">Default values</b><small data-i18n="defaultsHelp">Ignores the sliders and uses the model's internal Ollama defaults.</small></span><span class="sw"><input type="checkbox" id="use-default" onchange="onDefaultToggle()"><i></i></span></label>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Temperature</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
+                <div class="slidercard slider-group"><div class="sc-top"><b data-i18n="pCtx">Context window</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
+                <div class="slidercard param-group"><div class="sc-top"><b data-i18n="threads">CPU threads (0 = Ollama default)</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"><small data-i18n="threadsHelp">Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).</small></div>
+                    <div class="st-btns q-btns">
+                        <button class="pill" type="button" id="q-reset" onclick="resetParams()"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="qReset">Reset</span></button>
+                        <button class="pill" type="button" id="q-save" onclick="saveModelDefault()"><svg class="i sm"><use href="lib/icons.svg#i-save"/></svg><span data-i18n="qSave">Save as model default</span></button>
+                        <button class="pill" type="button" id="q-copy" onclick="copyParams()"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span data-i18n="qCopy">Copy values</span></button>
+                    </div>
+                    <small class="help" id="q-note"></small>
+                </div>
 
-                <div class="caps grp" data-i18n="gChats">Chats</div>
+                <div class="caps grp"><span data-i18n="gChats">Chats</span><span class="scope" data-i18n="scChat">this chat</span></div>
                 <button class="row" type="button" onclick="openDrawer()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-chats"/></svg></span><span class="tx"><b data-i18n="rChats">Chat list</b><small id="menu-chats"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
                 <button class="row" type="button" onclick="saveChatNow()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-save"/></svg></span><span class="tx"><b data-i18n="rSave">Save current chat</b></span></button>
                 <button class="row" type="button" onclick="discardChat()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-trash"/></svg></span><span class="tx"><b data-i18n="rDiscard">Discard current chat</b></span></button>
 
-                <div class="caps grp" data-i18n="gModel">Model &amp; performance</div>
-                <button class="row" type="button" data-go="params" onclick="showPage('params')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i18n="rParams">Parameters</b><small data-i18n="rParamsSub">Temperature, Top-P, Top-K, context, threads</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <div class="caps grp"><span data-i18n="gAnswer">Answer</span><span class="scope" data-i18n="scAll">everywhere</span></div>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-terminal"/></svg></span><span class="tx"><b data-i18n="swOwn">Own system prompt</b><small data-i18n="swOwnSub">Model brings its own persona</small></span><span class="sw"><input type="checkbox" id="own-system" onchange="onOwnSystem()"><i></i></span></label>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" onchange="onFast()"><i></i></span></label>
+                <div class="slidercard"><div class="sc-top"><b data-i18n="fastN">Max. answer tokens</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="150" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
+
+                <div class="caps grp"><span data-i18n="gPerf">Performance</span><span class="scope" data-i18n="scModel">this model</span></div>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" onchange="onPreloadToggle()"><i></i></span></label>
                 <button class="row" type="button" data-go="speed" onclick="showPage('speed')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i18n="rSpeed">Speed test</b><small data-i18n="rSpeedSub">Find the best thread count</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
 
-                <div id="grp-online" hidden>
-                    <div class="caps grp" data-i18n="gOnline">Online</div>
-                    <button class="row" type="button" onclick="showPage('engine')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-key"/></svg></span><span class="tx"><b data-i18n="rKeys">Keys &amp; online services</b><small data-i18n="rKeysSub">API key stays in this browser</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
-                </div>
+                <div class="caps grp"><span data-i18n="gConn">Connection</span><span class="scope" data-i18n="scEngine">this engine</span></div>
+                <button class="row" type="button" data-go="engine" onclick="showPage('engine')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-key"/></svg></span><span class="tx"><b data-i18n="rConn">Connection details</b><small id="menu-engine"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
 
-                <div class="caps grp" data-i18n="gApp">App</div>
+                <div class="caps grp"><span data-i18n="gPrivacy">Privacy</span><span class="scope" data-i18n="scAll">everywhere</span></div>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" onchange="onOnlineToggle()"><i></i></span></label>
+
+                <div class="caps grp"><span data-i18n="gApp">App</span><span class="scope" data-i18n="scAll">everywhere</span></div>
                 <button class="row" type="button" data-go="look" onclick="showPage('look')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="rLook">Appearance</b><small id="menu-theme"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
                 <button class="row" type="button" data-go="update" onclick="showPage('update')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="rUpdate">Update &amp; info</b><small id="menu-ver"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
             </div>
@@ -311,16 +357,6 @@
                 <small id="eng-note" class="help"></small>
                 <div id="eng-status" class="status-line"></div>
                 <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
-            </div>
-
-            <div class="pg" data-pg="params">
-                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i18n="defaults">Default values</b><small data-i18n="defaultsHelp">Ignores the sliders and uses the model's internal Ollama defaults.</small></span><span class="sw"><input type="checkbox" id="use-default" onchange="onDefaultToggle()"><i></i></span></label>
-                <div class="slidercard slider-group"><div class="sc-top"><b>Temperature</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
-                <div class="slidercard slider-group"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
-                <div class="slidercard slider-group"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
-                <div class="slidercard slider-group"><div class="sc-top"><b data-i18n="pCtx">Context window</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
-                <div class="slidercard param-group"><div class="sc-top"><b data-i18n="threads">CPU threads (0 = Ollama default)</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"><small data-i18n="threadsHelp">Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).</small></div>
-                <div class="slidercard"><div class="sc-top"><b data-i18n="fastN">Max. answer tokens</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="150" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
             </div>
 
             <div class="pg" data-pg="speed">
@@ -364,8 +400,8 @@
 
             <div class="pg" data-pg="update">
                 <button class="pill ver-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span id="upd-ver"></span></button>
+                <div class="led" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
                 <div id="upd-status" class="help" style="min-height:16px"></div>
-                <button class="row" type="button" onclick="location.reload()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></span><span class="tx"><b data-i18n="rReload">Reload page</b><small data-i18n="reloadTitle">Reload page (chat and settings are kept)</small></span></button>
             </div>
         </div>
     </section>
@@ -665,7 +701,7 @@
             settings.provider = id;
             settings.model = settings.modelByProvider[id] || (id === 'ollama' ? resolveModel(MODE_PRESETS[settings.mode]) : '');
             MODELS = id === 'ollama' ? FALLBACK_MODELS.slice() : [];
-            fillProviderSelect(); renderEngineUI(); fillModelSelect(); saveSettings(); loadThreads();
+            fillProviderSelect(); renderEngineUI(); fillModelSelect(); saveSettings(); loadThreads(); applySavedParams();
             loadModels(); checkServer(); schedulePreload();
         }
         function onProvider() { switchProvider($('provider-select').value); }
@@ -733,7 +769,7 @@
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: '⏳ Preparing model…', preReady: '✓ Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
                 roleUser: 'You:', roleBot: 'Heinz:',
-                menuTitle: 'Menu', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', stAnswering: 'Answering', stThinking: 'Thinking …', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
+                menuTitle: 'Settings', back: 'Back', close: 'Close', chatsTitle: 'Chats', chatNew: 'New chat', micTitle: 'Speech input', expandTitle: 'Full screen editor', mStart: 'Start', readAloud: 'Read aloud', readStop: 'Stop reading', stopGen: 'Stop', ctxLabelOpt: 'Context · optional', ctxLabelReq: 'Context · required', chars: 'chars', chipOnline: 'online', stAnswering: 'Answering', stThinking: 'Thinking …', gNow: 'Now', gAnswer: 'Answer', gPerf: 'Performance', gConn: 'Connection', gPrivacy: 'Privacy', scModel: 'this model', scChat: 'this chat', scAll: 'everywhere', scEngine: 'this engine', scNow: 'from the next message', qAllow: 'Allow online', qLocked: 'Online is off, so {n} is locked. Allow online?', qLockedSub: 'locked: needs "Allow online"', qLocalSub: 'on this device', qOnlineSub: 'cloud, needs a key', qNoKey: 'API key missing', qModelHint: 'Tap to choose a model', qReset: 'Reset', qSave: 'Save as model default', qCopy: 'Copy values', qSaved: 'Saved as default for {m}. Threads are saved per model automatically.', qChanged: 'differs from the model default', qHasDefault: 'Model default saved. Reset returns to it.', qNoDefault: 'No model default yet: values follow the mode. Threads are saved per model automatically.', rConn: 'Connection details', pxCheck: 'CHECKING GITHUB', pxRestart: 'RESTARTING SERVER', pxDone: 'UPDATED', pxCurrent: 'UP TO DATE', pxErr: 'ERROR', modelsTitle: 'Model', modelsReload: 'Reload list', modelSearchPh: 'Filter models', modelLoaded: 'in memory', nothingFound: 'Nothing found.', searchPh: 'Search chats', scopeModeS: 'This mode', scopeAllS: 'All', delChat: 'Delete', swOnline: 'Allow online', swOnlineSub: 'Off: nothing leaves this device', swOwn: 'Own system prompt', swOwnSub: 'Model brings its own persona', swFast: 'Fast mode', swFastSub: 'Short answer, plain text', swPre: 'Preload model', swPreSub: 'Loads in the background', gChats: 'Chats', gModel: 'Model & performance', gOnline: 'Online', gApp: 'App', rChats: 'Chat list', rSave: 'Save current chat', rDiscard: 'Discard current chat', rParams: 'Parameters', rParamsSub: 'Temperature, Top-P, Top-K, context, threads', rSpeed: 'Speed test', rSpeedSub: 'Find the best thread count', rKeys: 'Keys & online services', rKeysSub: 'API key stays in this browser', rLook: 'Appearance', rUpdate: 'Update & info', rReload: 'Reload page', thAuto: 'Automatic (system)', thLt: 'Light', thDk: 'Dark', nChats: '{n} saved', pCtx: 'Context window',
                 locale: 'en-GB'
             },
             de: {
@@ -777,7 +813,7 @@
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: '⏳ Modell wird vorbereitet…', preReady: '✓ Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',
                 roleUser: 'Du:', roleBot: 'Heinz:',
-                menuTitle: 'Menü', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', stAnswering: 'Antwortet', stThinking: 'Denkt nach …', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
+                menuTitle: 'Einstellungen', back: 'Zurück', close: 'Schließen', chatsTitle: 'Chats', chatNew: 'Neuer Chat', micTitle: 'Spracheingabe', expandTitle: 'Vollbild-Editor', mStart: 'Start', readAloud: 'Vorlesen', readStop: 'Vorlesen stoppen', stopGen: 'Stopp', ctxLabelOpt: 'Kontext · optional', ctxLabelReq: 'Kontext · Pflicht', chars: 'Zeichen', chipOnline: 'online', stAnswering: 'Antwortet', stThinking: 'Denkt nach …', gNow: 'Jetzt', gAnswer: 'Antwort', gPerf: 'Leistung', gConn: 'Verbindung', gPrivacy: 'Datenschutz', scModel: 'dieses Modell', scChat: 'dieser Chat', scAll: 'überall', scEngine: 'diese Engine', scNow: 'ab der nächsten Nachricht', qAllow: 'Online erlauben', qLocked: 'Online ist aus, deshalb ist {n} gesperrt. Online erlauben?', qLockedSub: 'gesperrt: braucht „Online erlauben“', qLocalSub: 'auf diesem Gerät', qOnlineSub: 'Cloud, braucht Schlüssel', qNoKey: 'API-Schlüssel fehlt', qModelHint: 'Tippen, um ein Modell zu wählen', qReset: 'Zurück', qSave: 'Als Modell-Standard speichern', qCopy: 'Werte kopieren', qSaved: 'Als Standard für {m} gespeichert. Threads werden je Modell automatisch gespeichert.', qChanged: 'weicht vom Modell-Standard ab', qHasDefault: 'Modell-Standard gespeichert. „Zurück“ kehrt dahin zurück.', qNoDefault: 'Noch kein Modell-Standard: die Werte folgen dem Modus. Threads werden je Modell automatisch gespeichert.', rConn: 'Verbindungsdaten', pxCheck: 'PRÜFE GITHUB', pxRestart: 'SERVER STARTET NEU', pxDone: 'AKTUALISIERT', pxCurrent: 'AKTUELL', pxErr: 'FEHLER', modelsTitle: 'Modell', modelsReload: 'Liste neu laden', modelSearchPh: 'Modelle filtern', modelLoaded: 'im Speicher', nothingFound: 'Nichts gefunden.', searchPh: 'Chats durchsuchen', scopeModeS: 'Dieser Modus', scopeAllS: 'Alle', delChat: 'Löschen', swOnline: 'Online erlauben', swOnlineSub: 'Aus: nichts verlässt dieses Gerät', swOwn: 'Eigener Systemprompt', swOwnSub: 'Modell bringt eigene Persona mit', swFast: 'Schnellmodus', swFastSub: 'Kurze Antwort, reiner Text', swPre: 'Modell vorladen', swPreSub: 'Lädt im Hintergrund', gChats: 'Gespräche', gModel: 'Modell und Leistung', gOnline: 'Online', gApp: 'App', rChats: 'Chatliste', rSave: 'Aktuellen Chat speichern', rDiscard: 'Aktuellen Chat verwerfen', rParams: 'Parameter', rParamsSub: 'Temperatur, Top-P, Top-K, Kontext, Threads', rSpeed: 'Tempo-Test', rSpeedSub: 'Beste Thread-Zahl finden', rKeys: 'Schlüssel und Online-Dienste', rKeysSub: 'API-Schlüssel bleibt in diesem Browser', rLook: 'Darstellung', rUpdate: 'Update und Info', rReload: 'Seite neu laden', thAuto: 'Automatisch (System)', thLt: 'Hell', thDk: 'Dunkel', nChats: '{n} gespeichert', pCtx: 'Kontextfenster',
                 locale: 'de-DE'
             }
         };
@@ -859,6 +895,7 @@
             settings.params = v;
             saveSettings();
             schedulePreload();
+            renderQuick();
         }
 
         function onDefaultToggle() {
@@ -1024,7 +1061,9 @@
             loadThreads();
             schedulePreload();
             if (!settings.useDefault) {
-                setSliders(preset.temp, preset.top_p, preset.top_k, parseInt($('param-ctx').value, 10));
+                const sp = savedParams();
+                if (sp) setSliders(sp.temp, sp.topp, sp.topk, sp.ctx);
+                else setSliders(preset.temp, preset.top_p, preset.top_k, parseInt($('param-ctx').value, 10));
                 settings.params = readSliders();
             }
             saveSettings();
@@ -1039,10 +1078,12 @@
             settings.modelByProvider[settings.provider] = settings.model;
             $('model-free').value = settings.provider === 'ollama' ? '' : settings.model;
             loadThreads();
+            applySavedParams();
             schedulePreload();
             saveSettings();
             persistCurrent();
             checkServer();
+            renderQuick();
         }
 
         function updateLangBtn() {
@@ -1068,8 +1109,8 @@
             if (generating) { cls = 'status-active'; color = 'green'; title = t(gotToken ? 'stAnswering' : 'stThinking'); }
             else if (preloadAbort) { cls = 'status-loading'; color = 'orange'; title = t('preLoading'); }
             el.className = 'ring-btn status-dot ' + (cls ? cls + ' ' : '') + 's-' + color;
-            el.title = title;
-            renderStatusRow(title, color);
+            el.title = title; qStatus = title;
+            renderStatusRow(title, color); renderQuick();
         }
         async function checkServer() {
             const prov = settings.provider;
@@ -1635,22 +1676,41 @@
             } catch (e) { /* ohne Server keine Version */ }
             $('upd-ver').textContent = label; $('menu-ver').textContent = label;
         }
+        // Update-LED: klein und fein (Raster 2 px, 3x5-Schrift), wie ein kleiner Rechner
+        let updPx = null, updState = { mode: 'idle', f: 0 };
+        function updDraw(g) {
+            const W = g.cols;
+            const m = updState.mode, ver = ($('upd-ver').textContent || '').toUpperCase();
+            const txt = { idle: ver, check: t('pxCheck'), restart: t('pxRestart'), done: t('pxDone'), current: t('pxCurrent'), err: t('pxErr') }[m] || '';
+            g.ticker('upd-t', 1, 2, txt, m === 'err' ? '#ea4335' : m === 'done' || m === 'current' ? '#34a853' : '#8ab4f8', { small: true, loop: false });
+            if (m === 'check') g.rect(2 + (g.frameNo * 2) % Math.max(1, W - 20), 9, 14, 2, '#fbbc04');
+            else if (m === 'restart') g.rect(2, 9, Math.round((W - 4) * Math.min(1, updState.f / 25)), 2, '#fbbc04');
+            else if (m === 'done' || m === 'current') g.rect(2, 9, W - 4, 2, '#34a853');
+            else if (m === 'err') g.rect(2, 9, W - 4, 2, '#ea4335');
+        }
+        function setUpd(mode, f) {
+            updState = { mode: mode, f: f || 0 };
+            if (!updPx) { if (!window.Heinz || !Heinz.Pixel) return; updPx = new Heinz.Pixel($('upd-led'), { rows: 12, pitch: 2, dot: 1.5 }); }
+            updPx.run(updDraw, { live: function () { return updState.mode === 'check'; } });
+        }
         async function doUpdate() {
             const st = $('upd-status'), btn = $('upd-btn');
             if (generating || speedTesting) { st.textContent = t('updBusy'); return; }
-            btn.disabled = true; st.textContent = t('updRunning'); 
+            btn.disabled = true; st.textContent = t('updRunning'); setUpd('check');
             try {
                 const res = await fetch('api/update', { method: 'POST', headers: { 'X-Heinz': '1' } });
                 const j = await res.json();
                 if (!res.ok || !j.ok) {
                     st.textContent = t('updErr', { m: (j.error || ('HTTP ' + res.status)) + (j.output ? ' - ' + j.output : '') });
-                    btn.disabled = false; return;
+                    setUpd('err'); btn.disabled = false; return;
                 }
-                if (!j.changed) { st.textContent = t('updCurrent', { v: j.to || '' }); btn.disabled = false; return; }
+                if (!j.changed) { st.textContent = t('updCurrent', { v: j.to || '' }); setUpd('current'); btn.disabled = false; return; }
                 st.textContent = t('updDone', { a: j.from || '?', b: j.to || '?', n: j.files.length });
+                setUpd('done');
                 if (j.restarting) {   // server.py changed: the server restarts itself, wait until it answers again
                     await sleep(1500);
                     for (let i = 0; i < 25; i++) {
+                        setUpd('restart', i);
                         try { const r = await fetch('api/ping', { cache: 'no-store' }); if (r.ok) break; } catch (e) { /* noch nicht da */ }
                         await sleep(1000);
                     }
@@ -1658,7 +1718,7 @@
                 location.reload();
             } catch (e) {
                 st.textContent = t('updErr', { m: e.message });
-                btn.disabled = false;
+                setUpd('err'); btn.disabled = false;
             }
         }
 
@@ -1799,7 +1859,7 @@
         function openMenu() { showPage('main'); openLayer('menu-sheet'); }
         function openDrawer() { renderSavedList(); openLayer('drawer'); }
         function openModels() { $('model-search').value = ''; renderModelSheet(); openLayer('model-sheet'); }
-        const PAGE_TITLES = { main: 'menuTitle', engine: 'engine', params: 'rParams', speed: 'rSpeed', look: 'rLook', update: 'rUpdate' };
+        const PAGE_TITLES = { main: 'menuTitle', engine: 'rConn', speed: 'rSpeed', look: 'rLook', update: 'rUpdate' };
         let curPage = 'main';
         function setSheetTitle() { $('sh-title').textContent = t(PAGE_TITLES[curPage]); }
         function showPage(id) {
@@ -1807,12 +1867,12 @@
             document.querySelectorAll('#menu-sheet .pg').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-pg') === id); });
             $('sh-back').hidden = id === 'main';
             setSheetTitle();
+            if (id === 'update') setUpd(updState.mode === 'check' ? 'idle' : updState.mode);
             document.querySelector('#menu-sheet .sh-body').scrollTop = 0;
         }
         function updateMenuInfo() {
             const p = PV.get(settings.provider) || PV.get('ollama');
             $('menu-engine').textContent = p.name + (settings.model ? ' · ' + settings.model : '');
-            $('grp-online').hidden = !PV.onlineAllowed();
             $('menu-chats').textContent = t('nChats', { n: getSaved().length });
             ['auto', 'lt', 'dk'].forEach(function (k) { $('th-' + k).classList.toggle('sel-on', (settings.theme || 'auto') === k); });
             $('menu-theme').textContent = t({ auto: 'thAuto', lt: 'thLt', dk: 'thDk' }[settings.theme || 'auto']);
@@ -1869,6 +1929,90 @@
             eqPx.run(drawEq, { live: eqLive });
             window.addEventListener('resize', function () { chipPx.resize(); chipPx.redraw(); });
         }
+        // ===== Schnellbereich im Einstellungs-Panel: Engine, Modell, Parameter =====
+        let qStatus = '', qLockEng = null, qEngOpen = false, modelFromPanel = false;
+        function modelKey() { return settings.provider + '|' + ($('model-select').value || settings.model || ''); }
+        function savedParams() { return (settings.modelParams || {})[modelKey()] || null; }
+        function baseParams() {
+            const sp = savedParams(); if (sp) return sp;
+            const pr = MODE_PRESETS[settings.mode] || MODE_PRESETS.wilson;
+            return { temp: pr.temp, topp: pr.top_p, topk: pr.top_k, ctx: 8192 };
+        }
+        function paramsDirty() {
+            const a = readSliders(), b = baseParams();
+            return a.temp !== b.temp || a.topp !== b.topp || a.topk !== b.topk || a.ctx !== b.ctx;
+        }
+        function applySavedParams() {
+            const sp = savedParams();
+            if (sp && !settings.useDefault) { setSliders(sp.temp, sp.topp, sp.topk, sp.ctx); settings.params = readSliders(); }
+        }
+        function resetParams() { const b = baseParams(); setSliders(b.temp, b.topp, b.topk, b.ctx); onSlider(); }
+        function saveModelDefault() {
+            if (!settings.modelParams) settings.modelParams = {};
+            settings.modelParams[modelKey()] = readSliders();
+            saveSettings(); renderQuick();
+            $('q-note').textContent = t('qSaved', { m: $('model-select').value || settings.model || '' });
+        }
+        function paramsText() {
+            const v = readSliders(), th = parseInt($('param-threads').value, 10), m = $('model-select').value || settings.model || '';
+            const pv = PV.get(settings.provider) || PV.get('ollama');
+            let o = 'Heinz UI | ' + m + ' (' + pv.name + ')\ntemperature ' + v.temp + '\ntop_p ' + v.topp + '\ntop_k ' + v.topk + '\nnum_ctx ' + v.ctx;
+            if (th > 0) o += '\nnum_thread ' + th;
+            o += '\n\nModelfile:\nPARAMETER temperature ' + v.temp + '\nPARAMETER top_p ' + v.topp + '\nPARAMETER top_k ' + v.topk + '\nPARAMETER num_ctx ' + v.ctx;
+            if (th > 0) o += '\nPARAMETER num_thread ' + th;
+            return o;
+        }
+        function copyParams() {
+            const sp = $('q-copy').querySelector('span'), old = sp.textContent;
+            copyText(paramsText()).then(function () { sp.textContent = '✓'; }).catch(function () { sp.textContent = '✕'; })
+                .then(function () { setTimeout(function () { sp.textContent = old; }, 1500); });
+        }
+        function toggleEngineList() { qEngOpen = !qEngOpen; qLockEng = null; renderQuick(); }
+        function pickEngine(id) {
+            const p = PV.get(id), locked = !p.local && !p.custom && !PV.onlineAllowed();
+            if (locked) { qLockEng = id; renderQuick(); return; }
+            qLockEng = null; qEngOpen = false;
+            if (id !== settings.provider) switchProvider(id); else renderQuick();
+        }
+        function unlockOnline() {
+            const id = qLockEng; qLockEng = null; qEngOpen = false;
+            $('online-on').checked = true; onOnlineToggle();
+            if (id) switchProvider(id);
+        }
+        function openModelsFromPanel() {
+            $('model-search').value = ''; renderModelSheet();
+            modelFromPanel = $('menu-sheet').classList.contains('open');
+            if (modelFromPanel) $('model-sheet').classList.add('open'); else openLayer('model-sheet');
+        }
+        function renderQuick() {
+            if (!$('q-engine-name')) return;
+            const pv = PV.get(settings.provider) || PV.get('ollama');
+            const online = !pv.local && !pv.custom;
+            $('q-engine-name').textContent = pv.name + (online ? ' · ' + t('chipOnline') : '');
+            let sub = qStatus;
+            if (pv.needsKey && !PV.getKey(pv.id)) sub = t('qNoKey');
+            $('q-engine-sub').textContent = sub;
+            $('q-engine-sub').style.color = (pv.needsKey && !PV.getKey(pv.id)) ? 'var(--orange)' : '';
+            $('q-eng-chev').style.transform = qEngOpen ? 'rotate(180deg)' : '';
+            const list = $('q-eng-list'); list.hidden = !qEngOpen;
+            if (qEngOpen) {
+                list.innerHTML = PV.list().map(function (p) {
+                    const on = !p.local && !p.custom, locked = on && !PV.onlineAllowed();
+                    return '<button type="button" class="row eng' + (locked ? ' locked' : '') + (p.id === settings.provider ? ' sel-on' : '') + '" data-eng="' + p.id + '">' +
+                        '<span class="tx"><b>' + esc(p.name) + (on ? ' · ' + t('chipOnline') : '') + '</b><small>' + esc(locked ? t('qLockedSub') : (p.local ? t('qLocalSub') : t('qOnlineSub'))) + '</small></span>' +
+                        (locked ? ICON('lock') : ICON('check', 'sm ck')) + '</button>';
+                }).join('');
+                list.querySelectorAll('[data-eng]').forEach(function (b) { b.onclick = function () { pickEngine(b.getAttribute('data-eng')); }; });
+            }
+            const lb = $('q-lock'); lb.hidden = !qLockEng;
+            if (qLockEng) $('q-lock-txt').textContent = t('qLocked', { n: (PV.get(qLockEng) || {}).name || '' });
+            $('q-model-name').textContent = $('model-select').value || settings.model || '–';
+            const d = paramsDirty(), sp = savedParams();
+            $('q-dirty').hidden = !d; $('q-dirty').title = t('qChanged');
+            $('q-reset').disabled = !d;
+            $('q-save').disabled = !!sp && !d;
+            if (d || !$('q-note').textContent) $('q-note').textContent = sp ? t('qHasDefault') : t('qNoDefault');
+        }
         function updateChip() {
             const p = PV.get(settings.provider) || PV.get('ollama');
             const online = !p.local && !p.custom;
@@ -1876,7 +2020,7 @@
             e.textContent = p.name + (online ? ' · ' + t('chipOnline') : '');
             e.classList.toggle('online', online);
             $('chip-model').textContent = settings.model || '–';
-            initChip(); chipWake();
+            initChip(); chipWake(); renderQuick();
         }
         function updateChatBar() {
             const first = chatHistory.find(function (m) { return m.role === 'user'; });
@@ -1909,7 +2053,10 @@
             });
             $('model-empty').textContent = list.length ? '' : t(all.length ? 'nothingFound' : 'noModels');
         }
-        function pickModel(n) { $('model-select').value = n; onModelChange(); closeAll(); }
+        function pickModel(n) {
+            $('model-select').value = n; onModelChange();
+            if (modelFromPanel) { modelFromPanel = false; $('model-sheet').classList.remove('open'); } else closeAll();
+        }
         function setQuery(v) { $('query').value = v; autosize(); }
         function autosize() {
             const ta = $('query');
