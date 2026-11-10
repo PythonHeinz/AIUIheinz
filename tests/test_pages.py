@@ -1001,14 +1001,39 @@ class PageTest(unittest.TestCase):
         page.click("#think-fast")
         self.send(page, "Hi")
         self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "low")
-        # counter test: gemini-3-flash-preview keeps "minimal"
-        page.evaluate("settings.model='models/gemini-3-flash-preview'; document.getElementById('model-select').value='models/gemini-3-flash-preview'")
-        self.assertEqual(page.evaluate("thinkRule().fast"), "minimal")
+        # all Gemini 3 flash versions use low (the user's rule from 11.11.2026); flash-lite keeps its own rule
+        for m in ("models/gemini-3-flash-preview", "models/gemini-3.5-flash", "models/gemini-3.7-flash"):
+            page.evaluate("m => { settings.model = m; document.getElementById('model-select').value = m; }", m)
+            self.assertEqual(page.evaluate("thinkRule().fast"), "low", m)
+        page.evaluate("settings.model='models/gemini-3.1-flash-lite'; document.getElementById('model-select').value='models/gemini-3.1-flash-lite'")
+        self.assertEqual(page.evaluate("thinkRule().fast"), "minimal", "counter test: flash-lite is not changed")
 
     def test_very_short_answers_show_no_speed(self):
         page, g = self.google_page("gemini-3-flash", chunks=("OK",), usage=False)
         self.send(page, "Hi")
         self.assertEqual(page.inner_text("#dash-speed"), "–")
+
+    def test_export_contains_last_request_body_and_raw_usage_without_key(self):
+        page, g = self.google_page("gemini-3-flash", reasoning=5)
+        page.evaluate("HeinzProviders.setKey('custom', 'AIza-secret')")
+        page.evaluate("document.getElementById('param-temp').value = 0.3; onSlider()")
+        self.send(page, "Hi")
+        txt = page.evaluate("paramsText()")
+        self.assertIn("Last request (custom, HTTP 200)", txt)
+        self.assertIn('"temperature":0.3', txt)
+        self.assertIn('"reasoning_tokens":5', txt)
+        self.assertIn("chunks 2", txt)
+        self.assertNotIn("AIza", txt)
+        self.assertNotIn("Hi", txt.split("Last request")[1].split("Last response")[0].replace("[", ""), "message text is not exported")
+
+    def test_online_back_on_does_not_return_to_cloud_engine(self):
+        # Entwicklerbeschluss 11.11.2026: Standard ist offline; nach Online aus und wieder an bleibt die lokale Engine
+        page, g = self.google_page("gemini-3-flash")
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.assertEqual(page.evaluate("settings.provider"), "ollama")
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change'))")
+        page.wait_for_timeout(200)
+        self.assertEqual(page.evaluate("settings.provider"), "ollama")
 
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.

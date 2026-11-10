@@ -162,23 +162,6 @@
       "thinking": { "kind": "level", "levels": ["minimal", "low", "medium", "high"], "default": "minimal", "canDisable": false, "fast": "minimal", "deep": "high", "effortMap": { "minimal": "minimal", "low": "low", "medium": "medium", "high": "high" } }
     },
     {
-      "id": "gemini-3.8-flash",
-      "engine": "gemini-compat",
-      "match": "^gemini-3\\.8-flash",
-      "status": "belegt",
-      "params": {
-        "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
-        "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
-        "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
-      },
-      "thinking": {
-        "kind": "level", "levels": ["low", "medium", "high"], "default": "high", "canDisable": false,
-        "fast": "low", "deep": "high",
-        "effortMap": { "low": "low", "medium": "medium", "high": "high" },
-        "hint": { "en": "Measured on the device 11.11.2026: Google AI Studio rejects thinking level MINIMAL for gemini-3.8-flash with error 400, so \"fast\" uses low.", "de": "Am Gerät gemessen 11.11.2026: Google AI Studio lehnt die Denkstufe MINIMAL bei gemini-3.8-flash mit Fehler 400 ab, daher nutzt „Schnell“ low." }
-      }
-    },
-    {
       "id": "gemini-3-flash",
       "engine": "gemini-compat",
       "match": "^gemini-3(\\.\\d+)?-flash",
@@ -188,7 +171,8 @@
         "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
         "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
       },
-      "thinking": { "kind": "level", "levels": ["minimal", "low", "medium", "high"], "default": "high", "canDisable": false, "fast": "minimal", "deep": "high", "effortMap": { "minimal": "minimal", "low": "low", "medium": "medium", "high": "high" } }
+      "thinking": { "kind": "level", "levels": ["minimal", "low", "medium", "high"], "default": "high", "canDisable": false, "fast": "low", "deep": "high", "effortMap": { "minimal": "minimal", "low": "low", "medium": "medium", "high": "high" },
+        "hint": { "en": "Fast uses low: measured on the device 11.11.2026, gemini-3.8-flash rejects MINIMAL with error 400. Low is accepted by all Gemini 3 flash versions that are documented; minimal stays selectable by the map but is not used.", "de": "Schnell nutzt low: am Gerät gemessen 11.11.2026 lehnt gemini-3.8-flash MINIMAL mit Fehler 400 ab. Low nehmen alle dokumentierten Gemini-3-Flash-Versionen an; minimal bleibt in der Zuordnung, wird aber nicht benutzt." } }
     },
     {
       "id": "gemini-2.5-pro",

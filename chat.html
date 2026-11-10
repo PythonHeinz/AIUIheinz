@@ -2501,6 +2501,11 @@
                 const oir = d.stats && d.stats.outputIncludesReasoning;
                 if ((st.reasoningTokens || 0) > 0 && (!oir || oir === 'unknown')) o += '\nNote: outputIncludesReasoning unknown, values not comparable.';
             }
+            const ex = PV.lastExchange;
+            if (ex) {
+                o += '\n\nLast request (' + ex.provider + ', HTTP ' + ex.status + '): ' + JSON.stringify(Object.assign({}, ex.body, { messages: '[' + (ex.body.messages || []).length + ' messages]' })) +
+                    '\nLast response: usage ' + JSON.stringify(ex.usage) + ', finish ' + (ex.finish || '?') + ', chunks ' + ex.chunks + ', first content after ' + ex.firstMs + ' ms, total ' + ex.totalMs + ' ms';
+            }
             return o;
         }
         function copyParams() {

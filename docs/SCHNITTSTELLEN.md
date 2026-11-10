@@ -227,3 +227,10 @@ Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Reg
 
 ### 8.2 Native Modellliste (11.11.2026, simuliert getestet, am Gerät noch offen)
 `GET https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000` mit Kopfzeile `x-goog-api-key` (Schlüssel nie in der URL), nur hinter „Online erlauben“. Gefiltert auf `generateContent`; je Modell werden `inputTokenLimit`, `outputTokenLimit`, `thinking`, `topK`, `maxTemperature` gelesen und im Modellblatt und im Export gezeigt. Bei Fehler (z. B. CORS) steht in der Statuszeile „Native Google-Liste nicht lesbar“ und die kompatible Liste wird gezeigt; es gibt keinen Umweg.
+
+### 8.3 Zweiter Handytest (11.11.2026 nachts, gemini-3.8-flash, kompatible Route)
+- **Native Liste am Gerät bestätigt:** 48 Einträge, mit Eingabe-/Ausgabegrenze und Denk-Flag; `models/gemini-3.8-flash`: Eingabe 1.048.576, Ausgabe 65.536, `thinking` true, `topK` 64, `maxTemperature` 2. Der Browser darf `generativelanguage.googleapis.com/v1beta/models` also lesen (CORS ist kein Hindernis).
+- **Schnell (`low`) funktioniert** (kein 400 mehr; „OK“, 1 Token).
+- **Tief (`high`), Primzahlfrage:** In 77, Out 112, `reasoningTokens` 0 (also nicht gemeldet), 10 s Wartezeit bis zum Text, danach kam die Antwort fast auf einmal (313 T/s sind kein echter Wert). Das lange Warten zeigt, dass gedacht wurde; die kompatible Route meldet die Denk-Token aber nicht (oder in einem Feld, das wir nicht lesen). Die rohe Antwort-Nutzung steht ab jetzt im Export („Last response: usage …“).
+- **Gemini 3.x flash:** „Schnell“ nutzt für alle Versionen `low` (Beschluss des Entwicklers, `minimal` nur bei 3.8 widerlegt); `flash-lite` unverändert.
+- **Verhalten Online aus/an (gewollt, Beschluss 11.11.2026):** Online aus fällt auf die lokale Engine zurück; Online wieder an kehrt **nicht** zur Cloud-Engine zurück (Standard ist offline).
