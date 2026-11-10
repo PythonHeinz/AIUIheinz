@@ -348,3 +348,43 @@ Vorschlag: eigener Strang „AIUIheinz-Assistent“, erste Aufgabe nur Dimension
 1. Namen der Hub-Einträge (Testumgebung, schlanker Chat) und Zuständigkeit für den schlanken Chat.
 2. Reihenfolge der Stränge: Modellmanager Phase 1 (nur Doku) kann sofort laufen; Modi und Modellmanager Phase 2 berühren beide `lib/providers.js` und laufen nacheinander.
 3. Handytest des Release Candidate und der Cloud-Anbindung (Abbruchhinweis, Modellliste, Gemini-Parameter) bleibt Voraussetzung für Aussagen „auf dem Gerät“.
+
+## 19 Schnittstellenwissen, Denken, Wissensquellen (10.11.2026 nachts, Strang Modelle, Entscheidungen des Entwicklers)
+Grundlage: `docs/SCHNITTSTELLEN.md` (Fähigkeiten von Google AI Studio und LiteRT-LM, Sonden-Konzept) und `lib/capabilities.json` (Daten). Vorschlag und Rückfragen der Recherche sind vom Entwickler beantwortet; dies ist der Beschluss, noch nichts davon gebaut außer den Daten.
+
+### 19.1 Fähigkeiten als Daten, Regler nach Schnittstelle
+- Der Chat bleibt mit seinen Parameternamen kompatibel zu allen Engines. Was die Schnittstelle des gewählten Modells zulässt, ist **regelbar**; was sie ablehnt oder nicht hat, ist **ausgegraut** (mit Grund). Was nicht geklärt ist (`unknown`), bleibt **regelbar und wird als „ungeklärt“ gekennzeichnet**, damit es sich ausprobieren lässt; die Ergebnisse tragen wir in `docs/SCHNITTSTELLEN.md` und dann in die Daten ein.
+- Erkenntnisse über ein Modell werden als **Vorgabe je Modell in der App hinterlegt**, auch wenn die Modellliste sie nicht liefert (Beispiel Gemini 3: Temperatur 1,0 empfohlen, Penalties gesperrt, Denken nicht abschaltbar). Erkennung über Engine plus Modellnamen-Muster, ergänzt durch Felder der Modellliste, wo es sie gibt (Google nativ: `thinking`, `maxTemperature`, Token-Grenzen).
+- Die Daten stehen in `lib/capabilities.json` (Zustände `on`, `unknown`, `off`, `error`, `fixed`, `config`; Status `belegt`, `drittquelle`, `code`, `vermutet`, `unbekannt`). Sie wachsen mit jedem recherchierten Anbieter und jeder Sondenmessung; sie sind **Daten**, nicht Seitenlogik.
+
+### 19.2 Denken: ein Schalter „Schnell | Tief“
+- Für Cloud-Modelle mit Denkoption steht in der Chatzeile ein Schalter Schnell | Tief (wie bei den großen Modellen). Pro Modell legt die Datei fest, welche Stufen es gibt (Stufen bei Gemini 3, Token-Budget bei Gemini 2.5, Schalter und Budget bei LiteRT-LM), was Schnell und Tief bedeuten und ob Denken abschaltbar ist. `thinking_level`, `thinking_budget` und `reasoning_effort` sind **ein** Schalter mit modellabhängigen Stufen und dürfen nie gemeinsam gesendet werden.
+- Entscheidung des Entwicklers: Die Bewertung aus dem Modelle-Strang gilt vor der aus dem Modi-Strang (der hatte noch keine Modellkenntnis); Umsetzung im Chat-Strang nach `docs/AUFTRAG_Chat_Schnittstellen.md`, Modi folgt auf dieser Grundlage.
+
+### 19.3 Eine Token-Statistik für alle Engines
+Die Dashboards brauchen vergleichbare Werte, auch wenn jede Engine anders zählt und streamt: Eingabe, Ausgabe (wie die Engine zählt), Denken, sichtbare Ausgabe, Gesamt, Quelle (Anbieter oder Schätzung), Tempo für sichtbare Ausgabe und für Ausgabe plus Denken (Block `stats` der Daten). Ob die Ausgabezahl die Denk-Token enthält, ist je Engine offen und wird gemessen; bis dahin zeigt die Anzeige beide getrennt und rechnet nicht ab.
+
+### 19.4 LiteRT-LM über `server.py` konfigurieren (Richtung beschlossen)
+- LiteRT-LM bezieht Threads (`cpu_thread_count`), Backend (`cpu`, `gpu`, `npu`), Kontext (`max_num_tokens`), Denken, Sampling und Seed aus einer Konfigurationsdatei je Modell-ID, nicht aus der Anfrage. `litert-lm serve --config FILE` erlaubt getrennte Profile. Der Python-Server soll diese Datei lesen und ändern dürfen (zum Beispiel `GET`/`PUT` auf einen Endpunkt der Seite, Prüfung der Schlüssel gegen die Liste der Daten, Neustart von `serve` auf Wunsch). Damit werden Regler wirksam, die heute `config` sind, und der Tempo-Test (Threads) lässt sich auch für LiteRT-LM bauen. `npu` kommt als schaltbare Option dazu; ob die NPU des Pixel in Termux läuft, ist offen und nur durch Ausprobieren zu klären.
+- Das ist **Fundament** (`server.py`, Engine-Aufrufe): Es baut nur ein Chat zur Zeit, nach dem Auftrag aus 19.2.
+- Später per Versuch zu klären (Sonde): Ob Bild, Audio und Funktionsaufrufe über `litert-lm serve` ansprechbar sind (die Kommandozeile kann Bild- und Audio-Anhänge und Python-Werkzeuge; die Server-Doku nennt dazu nichts).
+
+### 19.5 Funktionsplätze (schon beschlossen als Richtung, siehe 15.6 Punkt 4)
+Modul ruft einen Platz (`chat.main`, `check.second`, `vision.read`, `embed.local` …), der Nutzer ordnet lokal oder Cloud zu; Vorschlag und Nutzungsideen in `docs/MODELLQUELLEN.md` Abschnitt I. Wichtiger Zusatz des Entwicklers: Viele Nutzer der App sind selbst Entwickler, die **KI für ihre eigenen Apps und Tools** anbinden wollen; die Plätze und der Export der Testwerte sind dafür gedacht. Die Datenschutzstufe ist der wichtigste Filter der Quellenliste (Abstufung in `docs/MODELLQUELLEN.md`).
+
+### 19.6 Wissensquellen und Einbettung (Planung, Umsetzung in einer späteren Version)
+Ziel: Offline-Wikipedia auf dem Handy und eine lokale KI, die darin sucht und antwortet; dieselbe Technik für andere Wikis (Beispiel: ein VW-T4-Wiki), eigene Dokumentensammlungen und Listen.
+- **Einbettungsmodelle** werden gesondert erfasst und erscheinen nicht in der Chat-Modellliste. Bekannt: `nomic-embed-text` (Ollama), EmbeddingGemma 2 über `litert-lm serve` (`/v1/embeddings`, belegt in der Doku, nicht auf dem Handy geprüft).
+- **Offene Entscheidung Tool oder Seite:** (a) eigener Hub-Eintrag „Wissen“ (`tools/knowledge/`), der Quellen verwaltet, durchsucht und mit einem Chat-Modus kombiniert; (b) Bereich innerhalb der Modelle-Seite. Vorschlag: (a), weil Quellen (Speicherplatz, Format, Aktualisierung) und Suche ein eigenes Thema sind und Modelle-Seite und Chat entlastet bleiben; die Entscheidung fällt, wenn über die Bereiche (15.6 Punkt 1) entschieden wird. Bis dahin Planung ohne Bau.
+- **Offene Fragen (noch nicht recherchiert):** Format und Größe einer Offline-Wikipedia (zum Beispiel ZIM-Dateien von Kiwix, Teilmengen nach Thema), Import eines MediaWiki (XML-Dump oder Seitenexport) für fremde Wikis, Volltextsuche gegen Einbettungssuche (Speicher und Rechenzeit auf dem Pixel), wo der Index liegt (`data/`), Lizenzen (Wikipedia CC BY-SA; bei anderen Wikis die jeweilige Lizenz prüfen), Datenschutz (alles bleibt lokal; nur der Auszug für eine Frage darf, nur mit „Online erlauben“, an eine Cloud-Engine).
+- **Reihenfolge:** Recherche im Strang Modelle, danach Bereiche und Entscheidung Tool oder Seite, dann ein kleiner Prototyp mit einer Quelle.
+
+### 19.7 Reihenfolge
+1. `lib/capabilities.json` und Regler/Denken-Schalter in der Oberfläche (Chat-Strang, `docs/AUFTRAG_Chat_Schnittstellen.md`), Handytest durch den Entwickler.
+2. Sonde (Strang Modelle) und Nachtragen der Ergebnisse in die Daten; weitere Anbieter (Ollama, OpenRouter, Groq, Mistral, Ollama Cloud) in `docs/SCHNITTSTELLEN.md` und in die Daten.
+3. LiteRT-Konfiguration über `server.py` (19.4).
+4. Wissensbereich (19.6) und Funktionsplätze (19.5), nach der Bereichsentscheidung.
+
+### 19.8 Offen
+- Antwort der Sonde auf: top_k/seed bei Google kompatibel, Verhalten von Gemini 3 bei Penalties und bei `temperature` ≠ 1, Token-Zählung inklusive Denken, LiteRT-Anfrageparameter, CORS von Google aus dem Browser.
+- Ob die App Google zusätzlich **nativ** (`generateContent`) anspricht: Der Entwickler hat dafür bereits Python-Skripte mit demselben AI-Studio-Schlüssel genutzt (Bildauswertung, Gesichtserkennung), also funktioniert der Weg mit dem Schlüssel. Vorteil nativ: `topK`, `seed`, Denkbudget, Modellmetadaten; Nachteil: ein zweites Format neben dem OpenAI-Format. Entscheidung nach der Sonde.

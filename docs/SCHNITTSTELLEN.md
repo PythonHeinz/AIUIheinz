@@ -175,3 +175,34 @@ Ziel: Der Entwickler prüft mit eigenem Schlüssel auf dem Handy, was die Schnit
 7. **Einbettungsmodelle** werden gesondert erfasst, nicht in der Chat-Modellliste, sondern im geplanten Bereich für Wissensquellen (offline Wikipedia, andere Wikis wie ein VW-T4-Wiki). Recherche dazu (Kiwix/ZIM, Wiki-Auszüge, Einbettung und Suche auf dem Handy) steht noch aus.
 8. **Ausprobieren:** Ob Bild, Audio oder Funktionsaufrufe über `litert-lm serve` ansprechbar sind, wird später per Versuch geklärt (Teil der Sonde, Abschnitt 4).
 9. **Noch nicht testbar:** Eine weitere Google-Schnittstelle (nativ `generateContent`, neue Interactions-API in Beta, Live-API) hat der Entwickler noch nicht angebunden; die Recherche zu `generateContent` bleibt als Grundlage für eine native Anbindung stehen.
+
+---
+
+## 7 Festgelegte Werte (Version 1 von `lib/capabilities.json`, 10.11.2026 nachts)
+
+Aus diesem Bericht ist die Datei `lib/capabilities.json` entstanden (nur Daten, kein Code; geprüft durch `tests/test_capabilities.py`). Sie ist die maschinenlesbare Fassung der Abschnitte 1 und 2. Der Chat-Strang liest sie (Auftrag `docs/AUFTRAG_Chat_Schnittstellen.md`).
+
+**Zustand je Regler, Engine und Modell:**
+| Zustand | Bedeutung in der Oberfläche |
+|---|---|
+| `on` | regelbar, wird gesendet |
+| `unknown` | **regelbar und gesendet, aber als „ungeklärt“ gekennzeichnet** (damit man es ausprobieren kann; Ergebnis kommt in die Sonde) |
+| `off` | ausgegraut, wird nicht gesendet (Engine hat es nicht oder ignoriert es), mit Grund |
+| `error` | ausgegraut, wird nicht gesendet (Anfrage würde abgelehnt), mit Grund |
+| `fixed` | ausgegraut, zeigt den festen Wert des Modells |
+| `config` | gehört nicht in die Anfrage, sondern in die Serverkonfiguration (LiteRT-LM, `server.py` nötig); bis dahin ausgegraut mit Hinweis |
+
+Jede Zelle trägt den **Status** der Quelle: `belegt` (Anbieterdoku), `drittquelle`, `code` (eigener Code), `vermutet`, `unbekannt`.
+
+**Sicher festgelegt (belegt oder aus eigenem Code):**
+- **Ollama:** Temperatur, top_p, top_k, Kontext, Threads, max. Token, Stopp, Seed sind regelbar (Code). Penalties und Denken: ungeklärt.
+- **Alle Cloud-Engines (OpenAI-Weg):** Threads sind aus (läuft beim Anbieter); Kontext ist je Modell fest.
+- **Google, kompatibel:** Temperatur, top_p, max. Token, Stopp regelbar; Kontext fest (aus `inputTokenLimit`); Threads aus; Denken über `reasoning_effort` (belegt), niemals zusammen mit `thinking_level` oder `thinking_budget`.
+- **Gemini 3 (alle Varianten Pro, Flash, Flash-Lite):** Temperatur regelbar, aber **Vorgabe 1,0 mit Hinweis**; Penalties **gesperrt** (Fehler 400, Drittquelle).
+- **Denken, Gemini 3:** Stufen `low`/`medium`/`high` (Pro) und `minimal`/`low`/`medium`/`high` (Flash, Flash-Lite); Standard `high` (Flash-Lite: `minimal`); nicht abschaltbar. **Schnell** = niedrigste Stufe (Pro `low`, Flash `minimal`), **Tief** = `high`.
+- **Denken, Gemini 2.5:** Token-Budget; Flash und Flash-Lite abschaltbar (0), Pro nicht. Zuordnung `none` 0, `minimal`/`low` 1.024, `medium` 8.192, `high` 24.576. **Schnell** = `low` (Flash-Lite: `none`), **Tief** = `high`. Wertebereich von 2.5 Pro unbekannt.
+- **LiteRT-LM:** Kontext (`max_num_tokens`), Threads (`cpu_thread_count`) und Denken (`thinking`, `thinking_budget`) sind `config`; Backends `cpu`, `gpu` (Code), `npu` (in der Konfiguration genannt, auf dem Gerät unbekannt). Die Anfrageparameter sind ungeklärt.
+
+**Bewusst offen gelassen:** top_k und seed bei Google (kompatibel), alle Penalties außerhalb Gemini 3, Parameter von OpenRouter, Groq, Mistral einzeln, Denken bei Ollama und den übrigen Cloud-Anbietern. Die Datei enthält dafür `unknown`, nie eine geratene Sperre.
+
+**Token-Statistik (Vorschlag, Block `stats` der Datei):** Eingabe, Ausgabe (wie die Engine zählt), Denken, sichtbare Ausgabe, Gesamt, Quelle (Anbieter oder Schätzung), Tempo für sichtbare Ausgabe und für Ausgabe plus Denken. Ob die Ausgabezahl die Denk-Token enthält, ist je Engine offen (`outputIncludesReasoning`); das klärt die Sonde, bis dahin zeigt die Anzeige beide Zahlen getrennt und rechnet nicht ab.

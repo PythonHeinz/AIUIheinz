@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "stand": "2026-11-10",
+  "note": {
+    "en": "Capabilities of engines and models as data. Written by the Models strand from vendor documentation; not verified on the device. Entries marked unknown stay adjustable and are flagged so they can be tried (probe).",
+    "de": "Fähigkeiten von Engines und Modellen als Daten. Vom Strang Modelle aus Anbieterdokus zusammengetragen, nicht auf dem Gerät geprüft. Einträge mit „unknown“ bleiben regelbar und werden als ungeklärt markiert, damit man sie ausprobieren kann (Sonde)."
+  },
+  "doc": "docs/SCHNITTSTELLEN.md",
+
+  "rules": {
+    "states": {
+      "on": "adjustable and sent",
+      "unknown": "adjustable and sent, flagged as unverified",
+      "off": "greyed out, not sent (the engine ignores it or does not have it)",
+      "error": "greyed out, not sent (the request is rejected with an error)",
+      "fixed": "greyed out, shows the fixed value of the model",
+      "config": "not part of the request; set through the engine's server configuration (needs server.py, see KONZEPT 19.4); greyed out until then"
+    },
+    "status": {
+      "belegt": "read in the vendor documentation",
+      "drittquelle": "third-party source, vendor wording not seen",
+      "code": "taken from our own code (lib/providers.js, chat.html), simulated tests only",
+      "vermutet": "inferred",
+      "unbekannt": "not found"
+    },
+    "resolve": "1. engineFor(provider, baseUrl): the first endpointRules entry whose hostContains is part of baseUrl wins, otherwise engines[provider.id], otherwise engines.openai. 2. modelRule: the first models entry whose match (case-insensitive regex on the model id without a leading 'models/') fits and whose engine equals the resolved engine. 3. The cell of a parameter is engines[engine].params[key] merged with models[i].params[key] (model overrides)."
+  },
+
+  "parameters": {
+    "temperature": { "appKey": "temp", "min": 0, "label": { "en": "Temperature", "de": "Temperatur" } },
+    "top_p": { "appKey": "topp", "min": 0, "max": 1, "label": { "en": "Top-p", "de": "Top-p" } },
+    "top_k": { "appKey": "topk", "min": 1, "label": { "en": "Top-k", "de": "Top-k" } },
+    "num_ctx": { "appKey": "ctx", "label": { "en": "Context window", "de": "Kontextfenster" } },
+    "num_thread": { "appKey": "threads", "min": 1, "label": { "en": "CPU threads", "de": "CPU-Threads" } },
+    "max_tokens": { "appKey": "num_predict", "min": 1, "label": { "en": "Max. answer tokens", "de": "Max. Antwort-Token" } },
+    "stop": { "appKey": "stop", "label": { "en": "Stop sequences", "de": "Stoppsequenzen" } },
+    "seed": { "appKey": "seed", "label": { "en": "Seed", "de": "Seed" } },
+    "frequency_penalty": { "appKey": "frequency_penalty", "min": -2, "max": 2, "label": { "en": "Frequency penalty", "de": "Frequenz-Strafe" } },
+    "presence_penalty": { "appKey": "presence_penalty", "min": -2, "max": 2, "label": { "en": "Presence penalty", "de": "Präsenz-Strafe" } },
+    "thinking": { "appKey": "thinking", "label": { "en": "Thinking", "de": "Denken" } }
+  },
+
+  "endpointRules": [
+    { "hostContains": "generativelanguage.googleapis.com", "engine": "gemini-compat" }
+  ],
+
+  "engines": {
+    "ollama": {
+      "label": "Ollama",
+      "params": {
+        "temperature": { "state": "on", "via": "options.temperature", "status": "code" },
+        "top_p": { "state": "on", "via": "options.top_p", "status": "code" },
+        "top_k": { "state": "on", "via": "options.top_k", "status": "code" },
+        "num_ctx": { "state": "on", "via": "options.num_ctx", "status": "code" },
+        "num_thread": { "state": "on", "via": "options.num_thread", "status": "code", "hint": { "en": "Speed depends strongly on this value (see tempo test).", "de": "Das Tempo hängt stark von diesem Wert ab (siehe Tempo-Test)." } },
+        "max_tokens": { "state": "on", "via": "options.num_predict", "status": "code" },
+        "stop": { "state": "on", "via": "options.stop", "status": "code" },
+        "seed": { "state": "on", "via": "options.seed", "status": "code" },
+        "frequency_penalty": { "state": "unknown", "via": "options.frequency_penalty", "status": "unbekannt" },
+        "presence_penalty": { "state": "unknown", "via": "options.presence_penalty", "status": "unbekannt" },
+        "thinking": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Not yet researched for Ollama.", "de": "Für Ollama noch nicht recherchiert." } }
+      },
+      "stats": { "outputIncludesReasoning": "unknown" }
+    },
+
+    "litert": {
+      "label": "LiteRT-LM serve",
+      "backends": [
+        { "id": "cpu", "status": "code" },
+        { "id": "gpu", "status": "code" },
+        { "id": "npu", "status": "belegt", "onDevice": "unbekannt", "hint": { "en": "Named in the configuration; whether the Pixel NPU works in Termux is unknown.", "de": "In der Konfiguration genannt; ob die NPU des Pixel in Termux nutzbar ist, ist unbekannt." } }
+      ],
+      "configFile": "~/.litert-lm/config.json",
+      "configKeys": ["backend", "audio_backend", "vision_backend", "cpu_thread_count", "gpu_decode_steps_per_sync", "cache", "max_num_tokens", "temperature", "top_p", "top_k", "seed", "speculative_decoding", "thinking", "thinking_budget", "activation_data_type"],
+      "serveOptions": ["--config", "--host", "--port", "--cors-origin", "--verbose"],
+      "params": {
+        "temperature": { "state": "unknown", "config": "temperature", "status": "unbekannt", "hint": { "en": "The server documents no request parameters; the configuration file sets it.", "de": "Der Server dokumentiert keine Anfrageparameter; die Konfigurationsdatei setzt den Wert." } },
+        "top_p": { "state": "unknown", "config": "top_p", "status": "unbekannt" },
+        "top_k": { "state": "unknown", "config": "top_k", "status": "unbekannt" },
+        "num_ctx": { "state": "config", "config": "max_num_tokens", "status": "belegt", "hint": { "en": "Covers prompt plus answer.", "de": "Gilt für Prompt plus Antwort." } },
+        "num_thread": { "state": "config", "config": "cpu_thread_count", "status": "belegt" },
+        "max_tokens": { "state": "unknown", "status": "unbekannt" },
+        "stop": { "state": "unknown", "status": "unbekannt" },
+        "seed": { "state": "unknown", "config": "seed", "status": "unbekannt" },
+        "frequency_penalty": { "state": "unknown", "status": "unbekannt" },
+        "presence_penalty": { "state": "unknown", "status": "unbekannt" },
+        "thinking": { "state": "config", "config": "thinking, thinking_budget", "status": "belegt", "hint": { "en": "Switch and budget live in the configuration; whether the reasoning arrives in the HTTP answer is unknown.", "de": "Schalter und Budget stehen in der Konfiguration; ob die Denkausgabe in der HTTP-Antwort ankommt, ist unbekannt." } }
+      },
+      "stats": { "outputIncludesReasoning": "unknown" }
+    },
+
+    "openai": {
+      "label": "OpenAI-compatible (OpenRouter, Groq, Mistral, custom)",
+      "note": { "en": "Default for providers not yet researched individually; based on the OpenAI standard.", "de": "Vorgabe für Anbieter, die noch nicht einzeln recherchiert sind; beruht auf dem OpenAI-Standard." },
+      "params": {
+        "temperature": { "state": "on", "via": "temperature", "status": "vermutet" },
+        "top_p": { "state": "on", "via": "top_p", "status": "vermutet" },
+        "top_k": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Not part of the OpenAI standard; the app does not send it yet.", "de": "Nicht Teil des OpenAI-Standards; die App sendet es noch nicht." } },
+        "num_ctx": { "state": "fixed", "status": "vermutet", "hint": { "en": "Fixed per model on cloud engines.", "de": "Bei Cloud-Engines je Modell fest." } },
+        "num_thread": { "state": "off", "status": "code", "hint": { "en": "Runs on the provider's servers; there is no thread setting.", "de": "Läuft auf den Servern des Anbieters, es gibt keine Thread-Einstellung." } },
+        "max_tokens": { "state": "on", "via": "max_tokens", "status": "vermutet" },
+        "stop": { "state": "on", "via": "stop", "status": "vermutet" },
+        "seed": { "state": "unknown", "status": "unbekannt" },
+        "frequency_penalty": { "state": "unknown", "status": "unbekannt" },
+        "presence_penalty": { "state": "unknown", "status": "unbekannt" },
+        "thinking": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Not yet researched for this provider.", "de": "Für diesen Anbieter noch nicht recherchiert." } }
+      },
+      "stats": { "outputIncludesReasoning": "unknown" }
+    },
+
+    "gemini-compat": {
+      "label": "Google AI Studio, OpenAI-compatible route",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "keyHeader": "Authorization: Bearer",
+      "params": {
+        "temperature": { "state": "on", "via": "temperature", "status": "belegt" },
+        "top_p": { "state": "on", "via": "top_p", "status": "belegt" },
+        "top_k": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Only the native route documents topK; unknown on the compatible route.", "de": "Nur die native Schnittstelle dokumentiert topK; auf der kompatiblen unbekannt." } },
+        "num_ctx": { "state": "fixed", "status": "belegt", "from": "inputTokenLimit", "hint": { "en": "Fixed per model (input limit from the model list).", "de": "Je Modell fest (Eingabegrenze aus der Modellliste)." } },
+        "num_thread": { "state": "off", "status": "code" },
+        "max_tokens": { "state": "on", "via": "max_tokens", "status": "drittquelle", "limit": "outputTokenLimit", "hint": { "en": "Thinking tokens probably count towards the limit: too small a value can give an empty answer.", "de": "Denk-Token zählen vermutlich mit: ein zu kleiner Wert kann eine leere Antwort ergeben." } },
+        "stop": { "state": "on", "via": "stop", "status": "drittquelle" },
+        "seed": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Documented for the native route only.", "de": "Nur für die native Schnittstelle dokumentiert." } },
+        "frequency_penalty": { "state": "unknown", "status": "unbekannt" },
+        "presence_penalty": { "state": "unknown", "status": "unbekannt" },
+        "thinking": { "state": "on", "via": "reasoning_effort", "status": "belegt", "exclusive": "reasoning_effort must not be combined with thinking_level or thinking_budget in the same request (extra_body.google.thinking_config)" }
+      },
+      "stats": { "outputIncludesReasoning": "unknown", "streamUsage": "stream_options.include_usage (already sent by the app)" },
+      "modelList": {
+        "native": "GET https://generativelanguage.googleapis.com/v1beta/models (pageSize up to 1000, pageToken)",
+        "compat": "GET .../v1beta/openai/models (fields unknown, probably id only)",
+        "fields": ["name", "baseModelId", "version", "displayName", "description", "inputTokenLimit", "outputTokenLimit", "supportedGenerationMethods", "thinking", "temperature", "maxTemperature", "topP", "topK"],
+        "status": "belegt",
+        "chatIfMethod": "generateContent"
+      }
+    }
+  },
+
+  "models": [
+    {
+      "id": "gemini-3-pro",
+      "engine": "gemini-compat",
+      "match": "^gemini-3(\\.\\d+)?-pro",
+      "status": "belegt",
+      "params": {
+        "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
+        "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
+      },
+      "thinking": { "kind": "level", "levels": ["low", "medium", "high"], "default": "high", "canDisable": false, "fast": "low", "deep": "high", "effortMap": { "minimal": "low", "low": "low", "medium": "medium", "high": "high" } }
+    },
+    {
+      "id": "gemini-3-flash-lite",
+      "engine": "gemini-compat",
+      "match": "^gemini-3(\\.\\d+)?-flash-lite",
+      "status": "belegt",
+      "params": {
+        "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
+        "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
+      },
+      "thinking": { "kind": "level", "levels": ["minimal", "low", "medium", "high"], "default": "minimal", "canDisable": false, "fast": "minimal", "deep": "high", "effortMap": { "minimal": "minimal", "low": "low", "medium": "medium", "high": "high" } }
+    },
+    {
+      "id": "gemini-3-flash",
+      "engine": "gemini-compat",
+      "match": "^gemini-3(\\.\\d+)?-flash",
+      "status": "belegt",
+      "params": {
+        "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
+        "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
+      },
+      "thinking": { "kind": "level", "levels": ["minimal", "low", "medium", "high"], "default": "high", "canDisable": false, "fast": "minimal", "deep": "high", "effortMap": { "minimal": "minimal", "low": "low", "medium": "medium", "high": "high" } }
+    },
+    {
+      "id": "gemini-2.5-pro",
+      "engine": "gemini-compat",
+      "match": "^gemini-2\\.5-pro",
+      "status": "belegt",
+      "thinking": { "kind": "budget", "canDisable": false, "default": -1, "min": null, "max": null, "rangeStatus": "unbekannt", "fast": "low", "deep": "high", "effortMap": { "minimal": 1024, "low": 1024, "medium": 8192, "high": 24576 } }
+    },
+    {
+      "id": "gemini-2.5-flash-lite",
+      "engine": "gemini-compat",
+      "match": "^gemini-2\\.5-flash-lite",
+      "status": "belegt",
+      "thinking": { "kind": "budget", "canDisable": true, "default": 0, "min": 512, "max": 24576, "fast": "none", "deep": "high", "effortMap": { "none": 0, "minimal": 1024, "low": 1024, "medium": 8192, "high": 24576 } }
+    },
+    {
+      "id": "gemini-2.5-flash",
+      "engine": "gemini-compat",
+      "match": "^gemini-2\\.5-flash",
+      "status": "belegt",
+      "thinking": { "kind": "budget", "canDisable": true, "default": -1, "min": 0, "max": 24576, "fast": "low", "deep": "high", "effortMap": { "none": 0, "minimal": 1024, "low": 1024, "medium": 8192, "high": 24576 } }
+    }
+  ],
+
+  "stats": {
+    "note": { "en": "One definition for every engine so dashboards compare. Open: does the engine's output count include the thinking tokens (stats.outputIncludesReasoning).", "de": "Eine Definition für alle Engines, damit Dashboards vergleichbar sind. Offen: enthält die Ausgabezahl der Engine die Denk-Token (stats.outputIncludesReasoning)." },
+    "fields": {
+      "promptTokens": "tokens of the input",
+      "outputTokens": "all generated tokens as the engine counts them",
+      "reasoningTokens": "thinking tokens, 0 if the engine does not report them",
+      "visibleTokens": "answer tokens the user sees; outputTokens minus reasoningTokens when the engine includes them, otherwise outputTokens",
+      "totalTokens": "promptTokens + visibleTokens + reasoningTokens",
+      "source": "'provider' when the engine reported usage, 'estimate' when counted from stream chunks (existing flag: approx)",
+      "tokensPerSecVisible": "visibleTokens per second of generation",
+      "tokensPerSecAll": "visibleTokens + reasoningTokens per second of generation"
+    }
+  },
+
+  "sources": {
+    "S1": "https://ai.google.dev/gemini-api/docs/openai",
+    "S2": "https://ai.google.dev/api/models",
+    "S3": "https://ai.google.dev/gemini-api/docs/gemini-3",
+    "S4": "https://ai.google.dev/gemini-api/docs/thinking",
+    "S5": "https://firebase.google.com/docs/reference/js/ai.generationconfig",
+    "S6": "https://ai.google.dev/edge/litert-lm/cli/configuration",
+    "S7": "https://ai.google.dev/edge/litert-lm/cli/openai_server",
+    "S8": "output of `litert-lm serve --help` on the developer's phone, 2026-11-10",
+    "S9": "lib/providers.js, chat.html (own code)"
+  }
+}

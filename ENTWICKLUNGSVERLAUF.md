@@ -397,3 +397,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `docs/MODELLQUELLEN.md`: Beschlüsse des Entwicklers (Datenschutzstufe als Hauptfilter, AI Horde zurückgestellt, Haltung) ergänzt.
 - Nichts davon ist auf dem Gerät geprüft; die Sonde (Abschnitt 4) ist nur geplant. `lib/providers.js` blieb unberührt.
 - (10.11.2026 abends, Strang Modelle) `docs/SCHNITTSTELLEN.md` Abschnitt 6: Beschlüsse des Entwicklers (Parameter je Schnittstelle ausgrauen, Modellvorgaben als Daten, Denken als ein Schalter, Token-Definition, NPU, Einbettung getrennt); `litert-lm serve --help` vom Handy (Host 127.0.0.1, `--config`, `--cors-origin`, Doku veraltet). Nur Dokumente.
+
+## 10.11.2026 (nachts) – Fähigkeitendaten, Auftrag Chat, Konzept 19 (Chat „AIUIheinz-Modelle“)
+- Neu `lib/capabilities.json` (nur Daten, Version 1): Zustände je Regler, Engine und Modell (`on`, `unknown`, `off`, `error`, `fixed`, `config`) mit Status der Quelle; Regeln für Gemini 3 (Temperatur 1,0 empfohlen, Penalties Fehler 400, Denken nicht abschaltbar) und Gemini 2.5; Denkstufen mit Schnell/Tief und `effortMap`; LiteRT-LM-Konfigurationsschlüssel; Token-Statistik-Definition. Neu `tests/test_capabilities.py` (6 Tests, mit Referenz-Auflöser), in `tests/run_all.sh` eingehängt.
+- Neu `docs/AUFTRAG_Chat_Schnittstellen.md`: Auftrag für den Strang „AIUIheinz-Chat“ (Daten laden, Regler nach Zustand, Schnell/Tief über `reasoning_effort`, Token-Statistik, optional native Google-Modellliste, Export). Vorrang vor dem Denken-Teil von `AUFTRAG_Modi.md` (Entscheidung des Entwicklers).
+- `docs/KONZEPT.md` Abschnitt 19 neu (Fähigkeiten als Daten, Denken, Token-Statistik, LiteRT-Konfiguration über `server.py`, Funktionsplätze, Wissensquellen mit Einbettung und Offline-Wikipedia, Reihenfolge, Offen); `docs/SCHNITTSTELLEN.md` Abschnitt 7.
+- Kein Code der Seiten geändert; `lib/providers.js`, `chat.html` und `server.py` unberührt. Nichts auf dem Gerät geprüft.
