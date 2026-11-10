@@ -116,3 +116,8 @@ table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom
 /* LED display panel (lib/pixel.js): dark in every theme */
 .led { border-radius: 12px; overflow: hidden; background: #0a0b0d; border: 1px solid var(--line); line-height: 0; margin: 8px 0; }
 .led canvas { display: block; width: 100%; }
+
+/* Metal ring (Heinz UI logo frame): opt-in via class "metal" on .ring-btn. Values documented in docs/DESIGN.md. */
+.ring-btn.metal { width: 52px; height: 52px; position: relative; border: 1px solid #26292e; background: #0a0b0d; box-shadow: inset 0 0 0 1px #4b5058; color: #e8eaed; }
+.ring-btn.metal::before { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 2px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
+.ring-btn.metal .rt { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; }

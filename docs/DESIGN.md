@@ -67,3 +67,10 @@ Hell, Dunkel, Auto (folgt dem System): `<html data-theme="auto|lt|dk">`, gesetzt
 
 ## 8 Umsetzung
 Strang „AIUIheinz-Design“: (1) Manifest geschärft ✔, (2) Variablen, Themes und Symbolsatz in `lib/` ✔, (3) Bausteine als Beispielseite `tools/design/index.html` ✔ (ohne `tool.json`, nicht im Hub; erreichbar unter `/tools/design/index.html`), (4) Hub im neuen Stil ✔ (Bereichsumschalter, Zeilen mit Symbolen), (5) Chat-Seite ✔ (vorgezogen auf ausdrücklichen Wunsch, der Chat-Strang hatte schon gepusht). Offen: Zuschnitt der drei Bereiche, Lesemodus in warmer Serife, Werkzeuge mit Online-Sperre, Sprache der Oberfläche im Menü „Einstellungen“, ob Inter lokal mitgeliefert wird.
+
+
+## Logo und Metallring (konserviert, 2026-11-10)
+Nicht mehr aendern ohne Absprache. Code: `lib/core.css` (`.ring-btn.metal`), `lib/core.js` (`Heinz.ringLogo(svgEl)`); in anderen Menues einfach `<a class="ring-btn metal s-blue"><span class="rt"><svg viewBox="0 0 34 22" width="34" height="22"></svg></span></a>` und `Heinz.ringLogo(svg)`.
+- Ring: 52 px, 1 px Rand #26292e, innen `inset 0 0 0 1px #4b5058` (Metallrahmen); `::before` 2 px eingerueckt, 2 px Rand in Statusfarbe `--s`, Fuellung `--s` 16 % auf #0a0b0d, Glow 9 px.
+- Logo: zwei SVG-Textzeilen "HEINZ" (x 17,25 / y 11,1) und "UI" (y 20,1); Schrift system-ui/Roboto/Helvetica Neue/Arial, Gewicht 700, Groesse 8, Buchstabenabstand .5, mittig, Farbe #e8eaed.
+- Chat-Entscheidung 2026-11-10: Max.-Antwort-Token gilt nur im Schnellmodus (Standard 300); Schnellmodus + Token teilen eine Kachel, "Nur Modus-Vorgaben" hat eine eigene.

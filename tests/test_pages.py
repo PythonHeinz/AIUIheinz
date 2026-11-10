@@ -411,6 +411,16 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
 
+    def test_chat_list_action_pills_of_the_last_entry_stay_fully_visible(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("var l=[]; for (let i=0;i<14;i++){ l.push({id:2000+i,title:'Chat '+i,mode:'wilson',messages:[],pinned:false,ts:'',model:'m'}); } lsSet('heinz_chats', l)")
+        page.click("#chats-open")
+        page.click("#saved-list .saved-item >> nth=-1 >> .more")
+        page.wait_for_timeout(600)
+        bottom = page.evaluate("document.querySelector('#saved-list .saved-item:last-child .acts2').getBoundingClientRect().bottom")
+        self.assertLessEqual(bottom, page.evaluate("innerHeight") - 30, "pills must not touch the screen bottom")
+
     def test_rename_chat_in_the_title_bar_and_pin_in_the_list(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
@@ -665,7 +675,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("Private earlier question", sent, "only the current chat leaves the device")
         self.assertIn("Public question", sent)
         self.assertEqual(sorted(body.keys()), ["messages", "model", "stop", "stream", "stream_options", "temperature", "top_p"])
-        self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "ring-btn status-dot status-cloud s-blue")
+        self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "ring-btn metal status-dot status-cloud s-blue")
         self.assertIn("ONLINE", page.inner_text("#chip-engine").upper(), "header chip tells that this engine is online")
         # switching online off returns to Ollama
         page.click(".burger-btn")

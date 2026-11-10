@@ -373,3 +373,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tempo-Test-Kacheln im Knicklicht-Look (hellgrün, hellblau, hellviolett). Die Farben sind nur Hinweis auf die Kern-Cluster: der Test setzt nur die Thread-Zahl, der Android-Scheduler wählt die Kerne. Idee für später: Test auf bestimmte Kerne festnageln (z. B. `taskset` beim Start des Ollama-Servers durch `server.py`).
 - Statuspunkt unter dem Ring zentriert, Logo-Text tiefer, Chatliste fährt Aktionen weiter ins Bild.
 - Nicht auf dem Gerät getestet.
+
+## 2026-11-10 (AIUIheinz-Design) – Chat-Liste, Schnellmodus-Kachel, Logo in lib/
+- Chat-Liste: Ursache der abgeschnittenen Pillen war eine kaputte CSS-Regel (Scroll-Regel von `#saved-list` stand als ungueltiges `.saved-item { border-top flex:1 ...}`); Liste scrollt jetzt (flex, overflow, 150 px + Safe-Area Polster), Drawer-Hoehe folgt `--appH`, `revealRow` laeuft zweimal. Neuer Test.
+- Einstellungen: "Nur Modus-Vorgaben" eigene Kachel; Schnellmodus + Max.-Antwort-Token (nur Schnellmodus, Standard 300) zusammen in einer Kachel.
+- Speedtest-Kachel gruen: hellere, mildere Tuerkis-Mint-Toene (#b9f7d2).
+- Logo/Metallring nach `lib/core.css` (`.ring-btn.metal`) und `lib/core.js` (`Heinz.ringLogo`), Werte in docs/DESIGN.md. Nur simuliert getestet (62+1 Seitentests, 20 Servertests), nicht auf dem Geraet.
