@@ -386,3 +386,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Tempo-Test: Balkenkarten, Tabelle klappbar, Uebernehmen-Button angeheftet.
 - Neuer Auftrag fuer Folge-Chat: docs/AUFTRAG_Modi.md. Aufgeschobenes in docs/DESIGN.md. Nur simuliert getestet (67 Seitentests, 20 Servertests).
 - Tempo-Test live: Balkenkarten stehen ab Start, laufender Balken bewegt sich mit Sekundenzaehler, Gesamtfortschritt oben; Pillen der Chat-Liste 20 px Abstand. DR1 abgeschlossen, DR2-Planung in docs/DESIGN.md.
+
+## 10.11.2026 – Konzeptphase 2, Auftrag Modelle (Chat „AIUIheinz“, nur Dokumente)
+- `docs/KONZEPT.md` Abschnitt 18: zwei Hub-Einträge (Heinz UI als Testumgebung, neuer schlanker Chat), Schnittstellenlücke bei Cloud-Anbietern, Grobplanung des Einrichtungsassistenten mit offenen Fragen; 15.3 verweist darauf.
+- Neu `docs/AUFTRAG_Modelle.md` für den Strang „AIUIheinz-Modelle“ (Modellmanager). `docs/AUFTRAG_Modi.md` Punkt 3 mit Hinweis auf Abstimmung ergänzt.

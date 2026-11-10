@@ -206,7 +206,7 @@ Aus `docs/GEPLANT.md` (dort „zwei Bereiche“, überholt) und `docs/DESIGN.md`
 - **Bereich B, schlanker Chat** („Heinz UI“ als Markenname): Oberfläche wie Claude oder Gemini, maximale Chatfläche, wachsende Eingabezeile, Menüs von links (Chats) und rechts (wesentliche Einstellungen), keine Temperatur und keine Testläufe. Das Menü „Einstellungen“ gilt in allen Bereichen gleich.
 - **Bereich C, Tools** (Widgets, Rechner, Converter, alles, was von KI profitiert; im Hub als App-Drawer): Sheet, Filter, später convert2, Kamera- und Dokumentwerkzeuge (Abschnitt 10a) und Tools anderer Projekte wie INCIheinz (`appicon`). Welche Tools ohne „Online erlauben“ grau werden, ist offen.
 - **Im Hub** gibt es derzeit zwei Reiter: **Chats & Modelle** (A und B, Chat „Heinz UI“, Modelle, Alte Versionen) und **Tools** (C). Die heutige `chat.html` vereint A und B **mit Absicht**: Wer mit der App lokale und Cloud-Modelle ausprobiert, will beim Chatten Modell und Parameter ändern, ohne die Seite zu wechseln. Die Testfunktionen liegen im Menü „Einstellungen“ (Bottom-Sheet), der Chat selbst hat Modusleiste und viel Platz. Eine Trennung ist deshalb **keine Pflicht**.
-- **Schlanker Chat im Hub (offen, Designthema):** Eine Möglichkeit wäre ein zusätzlicher Eintrag im Hub mit einem Chat ohne Parameter und Testwerkzeuge. Er war gedacht, als die Testfunktionen noch nicht im Menü lagen. Gelingt der vorhandene Chat so aufgeräumt wie die Chats der großen Anbieter, entfällt der Zusatzeintrag. Der Design-Strang entscheidet das, mit dem Entwickler.
+- **Schlanker Chat im Hub (am 10.11.2026 entschieden, siehe 18.1; ältere Fassung dieses Punktes):** Eine Möglichkeit wäre ein zusätzlicher Eintrag im Hub mit einem Chat ohne Parameter und Testwerkzeuge. Er war gedacht, als die Testfunktionen noch nicht im Menü lagen. Gelingt der vorhandene Chat so aufgeräumt wie die Chats der großen Anbieter, entfällt der Zusatzeintrag. Der Design-Strang entscheidet das, mit dem Entwickler.
 - **Wozu das Testfeld dient:** Der Entwickler will Modelle aus dem Netz herunterladen, in Ollama installieren oder über eine Cloud-Schnittstelle anbinden, vergleichen und herausfinden, was sich für eigene Anwendungen eignet. Dabei lernt er, wie Schnittstellen und lokale Modelle arbeiten, was für Apps zählt, die früher nur aus Tabellen bestanden und mit Wissen in Tabellenform und Taxonomien erst richtig leistungsfähig werden.
 - **Testfeld für andere Tools:** `lib/providers.js` ist ein gemeinsamer Baustein, damit zum Beispiel convert2 Fragen an ein lokales oder Cloud-Modell auslagern kann.
 - **Online:** Mit „Online erlauben“ erscheinen zusätzliche Menügruppen und ein Chip „· ONLINE“; ohne den Haken kein Online-Eintrag und keine Anfrage nach außen. Welche Modi und Werkzeuge online zusätzlich erscheinen, ist offen.
@@ -307,3 +307,44 @@ Reihenfolge: (1) Korrekturen, (2) Modellwerte „Modell-Standard / Meine Werte�
 5. Logo „HEINZ UI“: echte serifenlose Schrift mit gleichmäßiger Strichstärke und „I“ als Strich (statt gezeichneter Pfade); Zentrierung per Textmessung.
 6. Equalizer antippbar: kleines graues Fenster mit den letzten drei Statusschritten in Kurzform und Statusfarbe (z. B. Server gestartet, Modell wird bereitgestellt, Modell im RAM).
 7. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss).
+
+## 18 Konzeptphase 2 (10.11.2026, nach dem Design-Review 1)
+Stand: Die Oberfläche ist lauffähig und bereinigt (Commit `3d13228`, 67 Seiten- und 20 Servertests simuliert grün). Der Entwickler hat Google AI Studio mit eigenem Schlüssel über das Menü Engine angebunden: Modellliste korrekt, viele Gemini-Modelle wählbar, schnell, Kosten beim Chatten sehr gering. Daraus und aus dem Test folgt die weitere Richtung.
+
+### 18.1 Zwei Einträge im Hub statt einem
+- **Heinz UI (Testumgebung):** die heutige `chat.html` mit Modi, Parametern, Tempo-Test, Engine-Verwaltung und Sicherung. Zweck: Modelle ausprobieren und prüfen, weil Nutzer in **eigenen Tools und Apps** lokale und Cloud-KI einsetzen wollen, um Formate und Eingaben zu verarbeiten und das Ergebnis an den Rechner zurückzugeben. Die Testwerte (Modell, Parameter, Prompt, Messwerte) sollen sich exportieren lassen. Die Schnittstellenkenntnis dafür fehlt noch (18.2).
+- **Neuer Hub-Eintrag: schlanker Chat** (Arbeitsname offen, zum Beispiel „Heinz Chat“; der Markenname „Heinz UI“ aus 15.3 gehört jetzt der Testumgebung): größtmögliche Textfläche mit schöner Typografie, nur ein kleines Einstellungsmenü zur **Modellwahl**, keine Parameter und Testwerkzeuge. Es soll sich nicht wie eine selbstgebastelte App anfühlen. Im Hintergrund werden Modelle gewechselt „wie die Unterhosen“: Wahl und Wechsel zwischen lokalen und Cloud-Modellen einfach, ohne Technik zu zeigen. Er nutzt dieselbe Anbieterschicht (`lib/providers.js`) und dieselben Engine-Einträge wie die Testumgebung. Offen: Namen beider Einträge; welche Modelle und Engines im schlanken Chat wählbar sind (nur freigegebene? Standardmodell je Engine); ob Chats geteilt oder getrennt liegen; die Online-Sperre muss sichtbar bleiben, Schlüsseldialoge nicht. Zuständig: Design-Strang oder neuer Strang, nach der Modellmanager-Phase 1.
+- Hub-Reiter heute: Chats & Modelle, Tools. Mit dem neuen Eintrag stehen unter „Chats & Modelle“ zwei Chat-Einträge (schlanker Chat, Testumgebung) und die Alten Versionen; A, B, C aus 15.3 bleibt als Denkmodell.
+
+### 18.2 Schnittstellenkenntnis (Strang Modellmanager)
+- **Befund:** Die Oberfläche zeigt für alle Engines dieselben Regler. Wirksam sind die meisten nur bei Ollama; an OpenAI-kompatible Anbieter gehen derzeit nur Temperatur, `top_p`, `max_tokens` und Stoppsequenzen (`lib/providers.js`). Es gibt keine Information, welche Parameter ein Anbieter oder Modell annimmt, ignoriert oder ablehnt, und die Modellliste wird nicht auf Metadaten ausgewertet.
+- **Auftrag:** `docs/AUFTRAG_Modelle.md` (Phase 1 Recherche und Fähigkeitenübersicht `docs/SCHNITTSTELLEN.md`, Sonde auf dem Handy; Phase 2 Daten in der App, mehrere eigene Engines, Modelle in Ollama installieren). Der Strang „AIUIheinz-Modi“ nutzt das Ergebnis für den Denkaufwand bei Cloud-Modellen.
+- **Ziel für die Oberfläche:** Im Parameterfenster zeigt jeder Regler, ob er für das gewählte Modell wirkt, ignoriert wird oder nur lokal gilt; der Export enthält diese Angabe.
+- **Kosten:** Der Entwickler sieht in Google AI Studio kaum Kosten. Eine Kostenanzeige je Antwort (Token mal Preis aus der Modelldatenbank) wäre eine spätere Idee, nicht beschlossen.
+
+### 18.3 Einrichtungsassistent (zu dimensionieren, noch kein Strang gestartet)
+Ziel: Ein neuer Nutzer kommt ohne Vorwissen vom frischen Handy bis zum ersten Gespräch mit einem lokalen Modell. Das Konzept enthält bisher nur den kleinen Assistenten aus Abschnitt 6 (prüft Ollama und fehlende Modelle). Hier die erste Grobplanung; **was automatisch geht und was nur Textanleitung bleibt, ist offen und die erste Aufgabe des Assistenten-Strangs.**
+
+| Schritt | Inhalt | Automatisierbar? (Annahme, zu prüfen) |
+|---|---|---|
+| 1 | F-Droid installieren (APK laden, „Unbekannte Apps“ erlauben) | nein, Textanleitung mit Bildern |
+| 2 | Termux aus F-Droid installieren (nicht aus dem Play Store) | nein, Anleitung |
+| 3 | In Termux Pakete installieren, Repo klonen, Server starten | **ein kopierbarer Befehl** („Bootstrap-Zeile“: `pkg install git python`, `git clone`, `bash start.sh`); Einfügen durch den Nutzer, Ausführung automatisch |
+| 4 | Ollama installieren und starten, Skripte und Datenordner anlegen | ja per Skript, sobald Schritt 3 lief (`start.sh` startet Ollama schon) |
+| 5 | Android-Einstellungen: Akku „Nicht eingeschränkt“, Phantom-Prozess-Beschränkung, Termux sichtbar halten (Tempo, siehe 15.4) | nein, Textanleitung; die App kann prüfen und warnen (zum Beispiel über den Tempo-Test) |
+| 6 | Modell wählen und installieren: Suche in der Ollama-Bibliothek und auf Hugging Face (`hf.co/<nutzer>/<repo>`), Größe gegen freien Speicher und RAM prüfen, `POST /api/pull` mit Fortschritt | halbautomatisch: der Server zieht, der Nutzer wählt und bestätigt; die Suche braucht „Online erlauben“ |
+| 7 | Erstes Gespräch und Tempo-Test (Threads) | ja, vorhanden |
+
+Offene Fragen:
+- **Henne und Ei:** Bevor der Server läuft, gibt es keine App auf dem Handy. Die Anleitung muss außerhalb liegen (README, gehostete Seite wie GitHub Pages, Abschnitt 14). Ob eine gehostete Seite später den lokalen Server und Ollama erreicht (Browser-Regeln für `localhost`, CORS, `OLLAMA_ORIGINS`), ist ungeklärt.
+- Wie viel kann der Python-Server als Termux-Prozess selbst ausführen (Pakete installieren, Umgebung setzen), ohne Rechte zu brauchen, die er nicht hat?
+- Sicherheit: Ein „Befehl zum Einfügen“ verlangt Vertrauen; Befehl und Quelle offen zeigen, nichts mit `curl | sh` verstecken.
+- Zielgruppe und Umfang: der Weg des Entwicklers (Pixel 9 Pro) oder jedes Android-Gerät; Geräteprofile (15.6, Punkt 5) spielen hinein.
+- Reihenfolge: zuerst Dimensionierung mit Probelauf auf einem frischen Termux (Zweitgerät oder Neuinstallation), dann Text, dann Automatisierung.
+
+Vorschlag: eigener Strang „AIUIheinz-Assistent“, erste Aufgabe nur Dimensionierung (Tabelle prüfen, Probelauf, Ergebnisbericht), noch kein Code. Für Schritt 6 greift er auf den Modellmanager zu.
+
+### 18.4 Offen in dieser Phase
+1. Namen der Hub-Einträge (Testumgebung, schlanker Chat) und Zuständigkeit für den schlanken Chat.
+2. Reihenfolge der Stränge: Modellmanager Phase 1 (nur Doku) kann sofort laufen; Modi und Modellmanager Phase 2 berühren beide `lib/providers.js` und laufen nacheinander.
+3. Handytest des Release Candidate und der Cloud-Anbindung (Abbruchhinweis, Modellliste, Gemini-Parameter) bleibt Voraussetzung für Aussagen „auf dem Gerät“.
