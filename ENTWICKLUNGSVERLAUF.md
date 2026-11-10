@@ -352,3 +352,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu: App-Sicherung (Export/Import als JSON, Schlüssel nur auf Wunsch) unter Menü → Info, Sicherung, Update. Test: Rundlauf.
 - Geplant: mehrere eigene OpenAI-kompatible Engines (Server + Schlüssel je Eintrag) – heute gibt es nur einen „custom“-Platz.
 - Nicht auf dem Gerät getestet.
+
+## 2026-11-10 – AIUIheinz-Design: Parameter in drei Ansichten (19:20)
+- Parameter-Quellen getrennt: **Modell** (`/api/show` bzw. Ollama-Standard, gesperrt, es wird nichts gesendet), **Modus** (Vorgabe, gesperrt, wird gesendet), **Meine** (frei, Speichern/Reset nur hier). „Meine Werte“ gelten je Modell UND Modus (`modelParams["engine|modell|modus"]`, alte Schlüssel ohne Modus gelten als Rückfall); die Wahl der Ansicht merkt sich `paramSrcBy` je Schlüssel, vorhandene eigene Werte werden automatisch geladen.
+- Fehler behoben: `modelParams` wurde beim Start nicht aus dem Speicher gelesen, gespeicherte Werte waren nach dem Neuladen weg.
+- Reset/Speichern leuchten in der Auszeichnungsfarbe, wenn bedienbar. Hinweistext nennt Ziel (Modell · Modus).
+- Aktionszeile unter der Antwort erst nach Ende der Ausgabe. Chatliste scrollt beim Öffnen der Symbolzeile; „Alle · N“ zeigt die Gesamtzahl. Logo als serifenlose Schrift. Equalizer antippbar: letzte drei Statusschritte.
+- Nicht auf dem Gerät getestet.

@@ -34,6 +34,9 @@ class FakeOllama:
         if url.endswith("/api/ps"):
             return route.fulfill(status=200, content_type="application/json",
                                  body=json.dumps({"models": [{"name": "gemma2:2b"}]}))
+        if url.endswith("/api/show"):
+            return route.fulfill(status=200, content_type="application/json",
+                                 body=json.dumps({"parameters": "temperature 1\ntop_k 64\nstop \"<end>\""}))
         if url.endswith("/api/generate"):
             self.unloads.append(json.loads(route.request.post_data))
             self.loaded = False
@@ -428,6 +431,55 @@ class PageTest(unittest.TestCase):
         page.evaluate("var l=getSaved(); for (let i=0;i<6;i++){ l.push({id:1000+i,title:'x'+i,mode:'wilson',messages:[],pinned:i<4,ts:'',model:'m'}); } lsSet('heinz_chats', l)")
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; togglePin(1004); togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
+
+    def test_three_parameter_views_model_mode_mine_per_model_and_mode(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.menu(page)
+        page.click("#seg-model")
+        page.wait_for_function("document.getElementById('val-topk').innerText == '64'")
+        self.assertEqual(page.inner_text("#val-temp"), "1")
+        self.assertTrue(page.is_disabled("#param-temp"), "model values are locked")
+        page.evaluate("closeAll()")
+        self.send(page, "native")
+        self.menu(page)
+        self.assertNotIn("temperature", self.ollama.requests[-1]["options"], "model view sends nothing")
+        page.click("#seg-mode")
+        self.assertEqual(page.inner_text("#val-temp"), "0.75")
+        self.assertTrue(page.is_disabled("#param-temp"))
+        page.click("#seg-own")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input'))")
+        self.assertFalse(page.is_disabled("#q-reset"), "reset is live once my values differ")
+        self.assertIn("act", page.get_attribute("#q-reset", "class"))
+        page.click("#q-save")
+        self.assertTrue(page.is_disabled("#q-reset"))
+        page.reload()
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.assertEqual(page.evaluate("paramSrc()"), "own", "saved values come back after a reload")
+        self.assertEqual(page.input_value("#param-temp"), "0.3")
+        page.evaluate("closeAll()")
+        page.click("#mode-bar [data-mode=creative]")
+        self.assertEqual(page.evaluate("paramSrc()"), "mode", "own values belong to model + mode")
+        self.assertEqual(page.input_value("#param-temp"), "0.75")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.input_value("#param-temp"), "0.3")
+        self.menu(page)
+        page.click("#seg-mode")
+        self.assertEqual(page.input_value("#param-temp"), "0.75", "the mode preset is always recoverable")
+
+    def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("stLog.length >= 1")
+        page.evaluate("stLog.unshift({txt: 'a', color: 'blue', at: new Date()}); stLog.unshift({txt: 'b', color: 'orange', at: new Date()}); stLog.unshift({txt: 'c', color: 'green', at: new Date()}); stLog.length = 3")
+        page.click("#eq-led")
+        self.assertTrue(page.is_visible("#st-log"))
+        self.assertEqual(page.locator("#st-log > div").count(), 3)
+        page.mouse.click(200, 500)
+        self.assertFalse(page.is_visible("#st-log"))
+        page.evaluate("var l=getSaved(); for (let i=0;i<4;i++){ l.push({id:2000+i,title:'y'+i,mode:i<2?'wilson':'code',messages:[],ts:'',model:'m'}); } lsSet('heinz_chats', l); updateChatBar()")
+        self.assertIn("4", page.text_content("#scope-all"))
 
     def test_backup_roundtrip_leaves_keys_out_unless_asked(self):
         page = self.new_page()
@@ -1011,6 +1063,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("updateReadBtn(false)")
         self.assertIn("i-volume", page.get_attribute(".msg-read use", "href"))
         page.evaluate("setGenerating(true)")
+        self.assertFalse(page.is_visible(".msg-assistant:last-child .msg-acts"), "actions appear only when the output is finished")
         self.assertIn("i-stop", page.get_attribute("#send-btn use", "href"), "stop replaces send while answering")
         page.evaluate("setGenerating(false)")
         self.assertIn("i-send", page.get_attribute("#send-btn use", "href"))
