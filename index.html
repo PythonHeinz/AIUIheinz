@@ -11,82 +11,127 @@
 <title>AIUIheinz</title>
 <link rel="stylesheet" href="/lib/core.css">
 <script src="/lib/core.js"></script>
+<script src="/lib/pixel.js"></script>
 <style>
 body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
-.top { display: flex; align-items: center; gap: 12px; padding: 12px 14px 8px; max-width: 600px; margin: 0 auto; }
-.top .ttl { flex: 1; min-width: 0; line-height: 1.15; }
-.top .ttl b { font-size: 1.2rem; font-weight: 500; display: block; }
-.top .ttl small { color: var(--sub); font-size: .78rem; }
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px; }
+.top { display: flex; align-items: center; gap: 12px; padding: 16px 0 14px; }
+.top .ttl { flex: 1; min-width: 0; line-height: 1.2; }
+.top .ttl b { font-size: 1.25rem; font-weight: 500; letter-spacing: .01em; display: block; }
+.top .ttl small { display: block; margin-top: 2px; color: var(--sub); font-family: var(--serif); font-style: italic; font-size: .85rem; }
 a.ring-btn { text-decoration: none; color: var(--txt); }
-.hub { max-width: 600px; margin: 0 auto; padding: 4px 16px 60px; }
-.areas { display: flex; gap: 8px; margin: 8px 0 14px; }
-.areas .pill { flex: 1; justify-content: center; min-height: 44px; }
+.led { border-radius: 12px; overflow: hidden; background: #0a0b0d; border: 1px solid var(--line); line-height: 0; }
+.led canvas { display: block; width: 100%; }
+.areas { display: flex; gap: 22px; margin: 22px 0 6px; border-bottom: 1px solid var(--line); }
+.areas button { background: none; border: 0; padding: 8px 0 11px; font: inherit; font-size: .95rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.areas button.on { color: var(--txt); border-bottom-color: var(--acc, var(--pri)); }
 a.row { text-decoration: none; }
+a.row .tile { color: var(--pri); }
 .row .tag { font-size: .68rem; color: var(--sub); border: 1px solid var(--edge); border-radius: 99px; padding: 2px 8px; flex: none; }
-.eng { display: flex; flex-direction: column; gap: 4px; margin: 18px 0 4px; font-size: .85rem; color: var(--sub); }
-.eng div { display: flex; align-items: center; gap: 8px; } .eng b { color: var(--txt); font-weight: 500; }
-.foot { margin-top: 22px; }
+.drawer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 8px; padding: 18px 0 4px; }
+.app { display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--txt); font-size: .78rem; text-align: center; }
+.app .ic { width: 68px; height: 68px; border-radius: 20px; background: var(--card); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.app .ic img { width: 100%; height: 100%; object-fit: cover; }
+.app .ic .i { width: 30px; height: 30px; }
+.app.soon { opacity: .5; }
+.app:active .ic { transform: scale(.96); }
+.sr { position: absolute; left: -9999px; }
+.foot { margin: 34px 0 40px; color: var(--muted); font-size: .72rem; text-align: center; letter-spacing: .04em; }
 </style>
 </head>
 <body>
+<div class="wrap">
 <div class="top">
     <a class="ring-btn s-red" id="ring" href="/" aria-label="Heinz UI"><svg class="i"><use href="/lib/icons.svg#i-heinz"/></svg></a>
     <div class="ttl"><b>AIUI<span style="color:var(--pri)">heinz</span></b><small id="sub"></small></div>
     <button class="ibtn" id="theme" type="button" aria-label="Theme"><svg class="i"><use href="/lib/icons.svg#i-contrast"/></svg></button>
     <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
 </div>
-<main class="hub">
-    <div class="areas" id="areas"></div>
+<div class="led" id="led-box"><canvas id="led" aria-hidden="true"></canvas></div>
+<div class="sr" id="status" role="status"><span id="t-ollama">…</span> <span id="t-litert">…</span></div>
+<nav class="areas" id="areas"></nav>
+<main>
     <div id="tools"></div>
-    <div class="caps" id="legacy-h" hidden style="margin-top:22px"></div>
+    <div class="caps" id="legacy-h" hidden style="margin-top:26px"></div>
     <div id="legacy"></div>
-    <div class="eng" id="status">
-        <div><span class="dot" id="dot-ollama"></span><span><b>Ollama</b> <span id="t-ollama">…</span></span></div>
-        <div><span class="dot" id="dot-litert"></span><span><b>LiteRT-LM</b> <span id="t-litert">…</span></span></div>
-    </div>
-    <div class="foot" id="foot"></div>
 </main>
+<div class="foot" id="foot"></div>
+</div>
 <script>
 (function () {
     var D = {
-        en: { sub: 'offline AI', ollamaOff: 'not reachable', litertOff: 'not reachable (optional)', up: 'running', loaded: 'loaded: {m}', models: '{n} models', soon: 'placeholder', legacy: 'Old versions', foot: 'Viewport reference: Pixel 9 Pro about 426 × 803 px', noTools: 'No tools found (server too old?)', aChat: 'Chat & models', aTools: 'Tools', empty: 'Nothing here yet.' },
-        de: { sub: 'offline KI', ollamaOff: 'nicht erreichbar', litertOff: 'nicht erreichbar (optional)', up: 'läuft', loaded: 'geladen: {m}', models: '{n} Modelle', soon: 'Platzhalter', legacy: 'Alte Versionen', foot: 'Referenz-Viewport: Pixel 9 Pro rund 426 × 803 px', noTools: 'Keine Tools gefunden (Server zu alt?)', aChat: 'Chat & Modelle', aTools: 'Tools', empty: 'Hier ist noch nichts.' }
+        en: { sub: 'Private AI tools that work offline.', ollamaOff: 'not reachable', litertOff: 'not reachable (optional)', up: 'running', loaded: 'loaded: {m}', models: '{n} models', soon: 'placeholder', legacy: 'Old versions', foot: 'OFFLINE FIRST · NOTHING LEAVES THIS DEVICE', noTools: 'No tools found (server too old?)', aChat: 'Chats & models', aTools: 'Tools', empty: 'Nothing here yet.',
+              ledModels: 'MODELS', ledOff: 'OFF', ledReady: 'READY', ledWait: '...' },
+        de: { sub: 'Private KI-Werkzeuge, die offline laufen.', ollamaOff: 'nicht erreichbar', litertOff: 'nicht erreichbar (optional)', up: 'läuft', loaded: 'geladen: {m}', models: '{n} Modelle', soon: 'Platzhalter', legacy: 'Alte Versionen', foot: 'OFFLINE ZUERST · NICHTS VERLÄSST DIESES GERÄT', noTools: 'Keine Tools gefunden (Server zu alt?)', aChat: 'Chats & Modelle', aTools: 'Tools', empty: 'Hier ist noch nichts.',
+              ledModels: 'MODELLE', ledOff: 'AUS', ledReady: 'BEREIT', ledWait: '...' }
     };
     var AREAS = [{ id: 'chat', k: 'aChat' }, { id: 'tools', k: 'aTools' }];
-    var tools = null, ollama = null, litert = null, area = 'chat';
+    var COL = { blue: '#4285f4', green: '#34a853', red: '#ea4335', yellow: '#fbbc05', gray: '#9aa0a6' };
+    var tools = null, ollama = null, litert = null, area = 'chat', led = null;
     try { var sv = Heinz.lsGet('heinz_hub', {}).area; if (sv === 'chat' || sv === 'tools') area = sv; } catch (e) {}
     function t(k, v) { return Heinz.t(D, k, v); }
+    function safePath(s) { return typeof s === 'string' && /^[\w.\/-]+$/.test(s) && s.indexOf('..') < 0 ? s : ''; }
+    function sym(x) { return /^i-[a-z-]+$/.test(x.symbol || '') ? x.symbol : 'i-sparkle'; }
     function row(x) {
-        var sym = /^i-[a-z-]+$/.test(x.symbol || '') ? x.symbol : 'i-sparkle';
         return '<a class="row" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '">' +
-            '<span class="tile"><svg class="i"><use href="/lib/icons.svg#' + sym + '"/></svg></span>' +
+            '<span class="tile"><svg class="i"><use href="/lib/icons.svg#' + sym(x) + '"/></svg></span>' +
             '<span class="tx"><b>' + Heinz.esc(Heinz.pick(x.name)) + '</b><small>' + Heinz.esc(Heinz.pick(x.desc)) + '</small></span>' +
             (x.status === 'placeholder' ? '<span class="tag">' + t('soon') + '</span>' : '') +
             '<svg class="i sm go"><use href="/lib/icons.svg#i-chev-r"/></svg></a>';
     }
+    function app(x) {
+        var img = safePath(x.appicon), c = COL[x.color] || 'var(--pri)';
+        return '<a class="app' + (x.status === 'placeholder' ? ' soon' : '') + '" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '" title="' + Heinz.esc(Heinz.pick(x.desc)) + '">' +
+            '<span class="ic">' + (img ? '<img src="/' + Heinz.esc(img) + '" alt="">' : '<svg class="i" style="color:' + c + '"><use href="/lib/icons.svg#' + sym(x) + '"/></svg>') + '</span>' +
+            '<span>' + Heinz.esc(Heinz.pick(x.name)) + '</span></a>';
+    }
+    function state(r, label) {
+        if (!r) return { c: '#5f6368', s: label + ' ' + t('ledWait') };
+        return null;
+    }
+    function drawLed(p) {
+        var s1 = state(ollama, 'OLLAMA'), s2 = state(litert, 'LITERT');
+        if (!s1) {
+            if (!ollama.up) s1 = { c: COL.red, s: 'OLLAMA ' + t('ledOff') };
+            else if (ollama.loaded.length) s1 = { c: COL.green, s: 'OLLAMA ' + ollama.loaded[0] };
+            else s1 = { c: COL.blue, s: 'OLLAMA ' + ollama.models.length + ' ' + t('ledModels') };
+        }
+        if (!s2) s2 = litert.up ? { c: COL.blue, s: 'LITERT ' + t('ledReady') } : { c: COL.red, s: 'LITERT ' + t('ledOff') };
+        [[s1, 3], [s2, 11]].forEach(function (r) {
+            p.lamp(3, r[1] + 1, r[0].c);
+            p.ticker('l' + r[1], r[1], 12, r[0].s, r[0].c);
+        });
+    }
+    function paintLed() {
+        var cv = document.getElementById('led');
+        if (!led) led = new Heinz.Pixel(cv, { rows: 19, pitch: 3 });
+        led.tickers = led.tickers || {};
+        led.run(drawLed);
+    }
     function render() {
         document.getElementById('sub').textContent = t('sub');
         document.getElementById('areas').innerHTML = AREAS.map(function (a) {
-            return '<button type="button" class="pill' + (a.id === area ? ' acc' : '') + '" data-area="' + a.id + '">' + t(a.k) + '</button>';
+            return '<button type="button" class="' + (a.id === area ? 'on' : '') + '" data-area="' + a.id + '">' + t(a.k) + '</button>';
         }).join('');
         var tl = document.getElementById('tools'), lg = document.getElementById('legacy'), lh = document.getElementById('legacy-h');
         if (tools) {
             var mine = tools.filter(function (x) { return (x.area || 'tools') === area; });
             var main = mine.filter(function (x) { return !x.legacy; }), old = mine.filter(function (x) { return x.legacy; });
-            tl.innerHTML = main.length ? main.map(row).join('') : '<p style="color:var(--sub)">' + (tools.length ? t('empty') : t('noTools')) + '</p>';
+            if (!main.length) tl.innerHTML = '<p style="color:var(--sub)">' + (tools.length ? t('empty') : t('noTools')) + '</p>';
+            else if (area === 'tools') tl.innerHTML = '<div class="drawer">' + main.map(app).join('') + '</div>';
+            else tl.innerHTML = main.map(row).join('');
             lg.innerHTML = old.map(row).join('');
             lh.hidden = !old.length; lh.textContent = t('legacy');
         }
-        var o = document.getElementById('dot-ollama'), ot = document.getElementById('t-ollama');
+        var ot = document.getElementById('t-ollama');
         if (ollama) {
-            o.className = 'dot ' + (ollama.up ? (ollama.loaded.length ? 'run' : 'on') : '');
-            ot.textContent = ollama.up ? (ollama.loaded.length ? t('loaded', { m: ollama.loaded.join(', ') }) : t('up') + ' · ' + t('models', { n: ollama.models.length })) : t('ollamaOff');
+            ot.textContent = 'Ollama ' + (ollama.up ? (ollama.loaded.length ? t('loaded', { m: ollama.loaded.join(', ') }) : t('up') + ' · ' + t('models', { n: ollama.models.length })) : t('ollamaOff'));
             document.getElementById('ring').className = 'ring-btn ' + (ollama.up ? (ollama.loaded.length ? 's-green' : 's-blue') : 's-red');
         }
-        var l = document.getElementById('dot-litert'), lt = document.getElementById('t-litert');
-        if (litert) { l.className = 'dot ' + (litert.up ? 'on' : ''); lt.textContent = litert.up ? t('up') : t('litertOff'); }
+        if (litert) document.getElementById('t-litert').textContent = 'LiteRT-LM ' + (litert.up ? t('up') : t('litertOff'));
         document.getElementById('foot').textContent = t('foot');
         document.title = 'AIUIheinz';
+        paintLed();
     }
     document.getElementById('areas').addEventListener('click', function (e) {
         var b = e.target.closest('[data-area]'); if (!b) return;
@@ -99,6 +144,7 @@ a.row { text-decoration: none; }
     lb.onclick = Heinz.toggleLang;
     function lbPaint() { Array.prototype.forEach.call(lb.querySelectorAll('span'), function (s) { s.classList.toggle('active', s.getAttribute('data-l') === Heinz.lang); }); document.documentElement.lang = Heinz.lang; }
     Heinz.onLang(function () { lbPaint(); render(); });
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (led) { led.resize(); led.tickers = {}; paintLed(); } }, 150); });
     lbPaint(); render();
     fetch('/api/tools').then(function (r) { return r.json(); }).then(function (j) { tools = j.tools || []; render(); }).catch(function () { tools = []; render(); });
     function poll() {

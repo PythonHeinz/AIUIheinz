@@ -1,12 +1,12 @@
 {
   "id": "chat",
   "name": {
-    "en": "Chat",
-    "de": "Chat"
+    "en": "Heinz UI",
+    "de": "Heinz UI"
   },
   "desc": {
-    "en": "Talk to your local models: Wilson, Heinz, Audit, Code, Creative.",
-    "de": "Sprich mit deinen lokalen Modellen: Wilson, Heinz, Audit, Code, Creative."
+    "en": "Ask any model and continue the chat: Wilson, Heinz, Audit, Code, Creative.",
+    "de": "Jedes Modell fragen und den Chat fortführen: Wilson, Heinz, Audit, Code, Creative."
   },
   "icon": "💬",
   "entry": "chat.html",
@@ -14,5 +14,5 @@
   "status": "ready",
   "order": 10,
   "area": "chat",
-  "symbol": "i-chats"
+  "symbol": "i-heinz"
 }

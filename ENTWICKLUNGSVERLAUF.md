@@ -225,3 +225,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `tool.json` bekommt `area` und `symbol`; `server.py` reicht beide Schlüssel in `/api/tools` durch (TOOL_KEYS). Alle sechs `tool.json` ergänzt.
 - Tests: `test_hub_areas_switch_and_persist`, `test_hub_theme_button_cycles`; 51 Seiten- und 20 Servertests grün (simuliert, nicht auf dem Handy).
 
+## 10.11.2026 – Pixeldisplay und Hub als Visitenkarte (Strang AIUIheinz-Design)
+- Neu `lib/pixel.js`: LED-Matrix-Display (5×7-Schrift, Laufschrift, Lampen, Balken, Linie), Katalog in `tools/design/index.html`.
+- Hub: Pixeldisplay mit Ollama/LiteRT-LM direkt unter der Kopfzeile (ersetzt die Statuszeilen; unsichtbarer Text für Screenreader und Tests), Bereiche als Reiter „Chats & Modelle“ / „Tools“, Tools als App-Drawer (Kacheln, `appicon` möglich), Chat-Eintrag heißt „Heinz UI“ (Arbeitsname), Slogan in Georgia kursiv, Fußzeile „Offline first“. `server.py` reicht `appicon` durch.
+- Tests angepasst (51 Seiten-, 20 Servertests grün, simuliert; nicht auf dem Handy).
+
