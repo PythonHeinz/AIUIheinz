@@ -214,3 +214,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Entscheidungen des Entwicklers (in `docs/DESIGN.md`): drei Bereiche mit teils eigenen Menüs plus gemeinsame Rubrik „Einstellungen“; EN/DE bleibt in der Chat-Kopfzeile; Hell mit denselben dünnen Linien, im Dunkel teils Umrisse, möglichst wenige Linien; Systemschriften, besondere Schriften nur lokal im Repo; Online ändert Menü und Design.
 - Geändert: `chat.html`, `lib/core.css`, `lib/core.js`, `lib/icons.svg` (neu), `docs/DESIGN.md`, `tests/test_pages.py`, `UEBERGABE.md`.
 - Offen: Handytest (Eingabe mit Tastatur, Mikrofon, Vorlesen, Wischen im Drawer, Splitscreen); Beispielseite `tools/design/index.html`; Hub im neuen Stil; Zuschnitt und Namen der drei Bereiche; Lesemodus in warmer Serife; Werkzeuge mit Online-Sperre; Sprache der Oberfläche im Menü „Einstellungen“; Auswahl eines Modells für ein Nicht-Ollama-Engine ohne Liste nur im Menü Engine (Eingabefeld dort).
+
+## 10.11.2026 – Design-Beispielseite (Strang AIUIheinz-Design)
+- Neu `tools/design/index.html`: Katalog der Bausteine (Farben, Schrift, Knöpfe, Statusring, Zeilen/Schalter, Regler-Karte, alle Symbole, Bottom-Sheet) mit Umschalter Auto/Hell/Dunkel und EN/DE. Nur `lib/core.css`, `lib/core.js`, `lib/icons.svg`; kein `tool.json`, deshalb nicht im Hub.
+- Test `test_design_page_blocks_symbols_theme_and_language`, Seite in `PAGES` (kein Fehler, keine externe Anfrage). 50 Seitentests grün (simuliert, nicht auf dem Handy).
+- Konzept 15.3 (zwei Bereiche) und DESIGN.md (drei Bereiche) widersprechen sich; Abgleich mit dem Entwickler offen.
+

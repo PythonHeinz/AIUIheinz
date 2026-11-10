@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<title>Heinz UI – Design</title>
+<link rel="stylesheet" href="../../lib/core.css">
+<script src="../../lib/core.js"></script>
+<style>
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--font)}
+main{max-width:640px;margin:0 auto;padding:16px 16px 48px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+header h1{flex:1;font-size:1.2rem;font-weight:500;margin:0}
+section{margin-top:28px}
+.box{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+.sw-col{display:flex;gap:8px;flex-wrap:wrap}.sw-col i{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);display:block}
+.sw-col div{font-size:.7rem;color:var(--sub);text-align:center}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:10px}
+.ic{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border-radius:12px;background:var(--card)}
+.ic small{font-size:.62rem;color:var(--sub);overflow-wrap:anywhere;text-align:center}
+.serif{font-family:var(--serif);line-height:1.6}
+.mono{font-family:var(--mono)}
+.seg{display:flex;gap:6px}
+p.note{color:var(--sub);font-size:.85rem;margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <a class="ring-btn s-blue" href="../../index.html" title="Hub"><svg class="i"><use href="../../lib/icons.svg#i-heinz"/></svg></a>
+ <h1 data-t="title">Design building blocks</h1>
+ <button class="lang-btn" type="button" id="lang"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+</header>
+<p class="note" data-t="intro">Everything the pages are built from, taken from lib/core.css and lib/icons.svg. One look for all tools.</p>
+
+<section><div class="caps" data-t="theme">Appearance</div>
+<div class="box seg"><button class="pill" data-th="auto" data-t="auto">Auto</button><button class="pill" data-th="lt" data-t="light">Light</button><button class="pill" data-th="dk" data-t="dark">Dark</button></div></section>
+
+<section><div class="caps" data-t="colors">Colours</div>
+<div class="box sw-col" id="colors"></div></section>
+
+<section><div class="caps" data-t="type">Type</div>
+<p style="margin:10px 0 0">Inter / system-ui – tools and controls.</p>
+<p class="serif" style="margin:6px 0 0" data-t="serif">Georgia – assistant answers and reading text, without a box.</p>
+<p class="mono" style="margin:6px 0 0">mono 12.34 T/s · 512 ctx</p></section>
+
+<section><div class="caps" data-t="buttons">Buttons</div>
+<div class="box">
+<button class="pill"><svg class="i sm"><use href="../../lib/icons.svg#i-copy"/></svg><span data-t="copy">Copy</span></button>
+<button class="pill acc"><span data-t="primary">Primary</span></button>
+<button class="pill danger"><svg class="i sm"><use href="../../lib/icons.svg#i-stop"/></svg><span data-t="stop">Stop</span></button>
+<button class="pill" disabled><span data-t="disabled">Disabled</span></button>
+<button class="round"><svg class="i"><use href="../../lib/icons.svg#i-mic"/></svg></button>
+<button class="round acc"><svg class="i"><use href="../../lib/icons.svg#i-send"/></svg></button>
+<button class="ibtn"><svg class="i"><use href="../../lib/icons.svg#i-menu"/></svg></button>
+</div></section>
+
+<section><div class="caps" data-t="status">Status ring</div>
+<div class="box">
+<span class="ring-btn s-red"></span><span class="ring-btn s-orange"></span><span class="ring-btn s-blue"></span><span class="ring-btn s-green"></span></div>
+<p class="note" data-t="ringNote">Red: engine unreachable · orange: model loading · blue: ready · green: answering.</p></section>
+
+<section><div class="caps" data-t="rows">List rows and switches</div>
+<button class="row" type="button" id="open-sheet"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-cpu"/></svg></span><span class="tx"><b data-t="rowEngine">Engine</b><small>Ollama · localhost:11434</small></span><svg class="i sm go"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
+<label class="row"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-t="rowOnline">Allow online</b><small data-t="rowOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox"><i></i></span></label>
+<label class="row off"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-lock"/></svg></span><span class="tx"><b data-t="rowLocked">Needs online</b><small data-t="rowLockedSub">Greyed out while online is off</small></span><span class="sw"><input type="checkbox" disabled><i></i></span></label></section>
+
+<section><div class="caps" data-t="slider">Slider card</div>
+<div class="slidercard"><div class="sc-top"><b data-t="temp">Temperature</b><span class="mono" id="sv">0.7</span></div><input type="range" min="0" max="2" step="0.1" value="0.7" id="sr"><small data-t="tempSub">Higher = more varied</small></div></section>
+
+<section><div class="caps" data-t="symbols">Symbols (lib/icons.svg)</div>
+<div class="icons"><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-menu"/></svg><small>menu</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-copy"/></svg><small>copy</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-plus"/></svg><small>plus</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-chats"/></svg><small>chats</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-send"/></svg><small>send</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-mic"/></svg><small>mic</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-volume"/></svg><small>volume</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-stop"/></svg><small>stop</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-chev-l"/></svg><small>chev-l</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg><small>chev-r</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-chev-d"/></svg><small>chev-d</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg><small>arrow-l</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-x"/></svg><small>x</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-check"/></svg><small>check</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-search"/></svg><small>search</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-dots"/></svg><small>dots</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-expand"/></svg><small>expand</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-shrink"/></svg><small>shrink</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-doc"/></svg><small>doc</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-cpu"/></svg><small>cpu</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-cloud"/></svg><small>cloud</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-cloud-off"/></svg><small>cloud-off</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-terminal"/></svg><small>terminal</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-bolt"/></svg><small>bolt</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-rocket"/></svg><small>rocket</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg><small>sliders</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-gauge"/></svg><small>gauge</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-timer"/></svg><small>timer</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-key"/></svg><small>key</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-contrast"/></svg><small>contrast</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-download"/></svg><small>download</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-refresh"/></svg><small>refresh</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg><small>trash</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-save"/></svg><small>save</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-pencil"/></svg><small>pencil</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-globe"/></svg><small>globe</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-info"/></svg><small>info</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-lock"/></svg><small>lock</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-layers"/></svg><small>layers</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-language"/></svg><small>language</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg><small>sparkle</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-m-wilson"/></svg><small>m-wilson</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-m-heinz"/></svg><small>m-heinz</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-m-audit"/></svg><small>m-audit</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-m-code"/></svg><small>m-code</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-m-creative"/></svg><small>m-creative</small></div><div class="ic"><svg class="i"><use href="../../lib/icons.svg#i-heinz"/></svg><small>heinz</small></div></div></section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="grab"></div>
+<div class="sh-head"><h3 data-t="sheetT">Bottom sheet</h3><button class="ibtn" id="close-sheet"><svg class="i"><use href="../../lib/icons.svg#i-x"/></svg></button></div>
+<div class="sh-body"><p data-t="sheetP">Menus and pickers open as a sheet from the bottom, with a back arrow for sub-pages.</p></div></div>
+
+<script>
+var T={
+en:{title:'Design building blocks',intro:'Everything the pages are built from, taken from lib/core.css and lib/icons.svg. One look for all tools.',theme:'Appearance',auto:'Auto',light:'Light',dark:'Dark',colors:'Colours',type:'Type',serif:'Georgia – assistant answers and reading text, without a box.',buttons:'Buttons',copy:'Copy',primary:'Primary',stop:'Stop',disabled:'Disabled',status:'Status ring',ringNote:'Red: engine unreachable · orange: model loading · blue: ready · green: answering.',rows:'List rows and switches',rowEngine:'Engine',rowOnline:'Allow online',rowOnlineSub:'Off: nothing leaves this device',rowLocked:'Needs online',rowLockedSub:'Greyed out while online is off',slider:'Slider card',temp:'Temperature',tempSub:'Higher = more varied',symbols:'Symbols (lib/icons.svg)',sheetT:'Bottom sheet',sheetP:'Menus and pickers open as a sheet from the bottom, with a back arrow for sub-pages.'},
+de:{title:'Design-Bausteine',intro:'Alles, woraus die Seiten gebaut sind, aus lib/core.css und lib/icons.svg. Ein Aussehen für alle Werkzeuge.',theme:'Darstellung',auto:'Auto',light:'Hell',dark:'Dunkel',colors:'Farben',type:'Schrift',serif:'Georgia – Antworten des Assistenten und Lesetext, ohne Kasten.',buttons:'Knöpfe',copy:'Kopieren',primary:'Hauptaktion',stop:'Stopp',disabled:'Gesperrt',status:'Statusring',ringNote:'Rot: Engine nicht erreichbar · orange: Modell lädt · blau: bereit · grün: antwortet.',rows:'Listenzeilen und Schalter',rowEngine:'Engine',rowOnline:'Online erlauben',rowOnlineSub:'Aus: nichts verlässt dieses Gerät',rowLocked:'Braucht Online',rowLockedSub:'Grau, solange Online aus ist',slider:'Regler-Karte',temp:'Temperatur',tempSub:'Höher = abwechslungsreicher',symbols:'Symbole (lib/icons.svg)',sheetT:'Bottom-Sheet',sheetP:'Menüs und Auswahllisten öffnen als Sheet von unten, Unterseiten mit Zurückpfeil.'}};
+function $(s){return document.querySelector(s)}
+function applyLang(){var l=Heinz.lang;document.documentElement.lang=l;
+ document.querySelectorAll('[data-t]').forEach(function(e){e.textContent=T[l][e.dataset.t]});
+ document.querySelectorAll('[data-l]').forEach(function(e){e.classList.toggle('active',e.dataset.l===l)});}
+$('#lang').onclick=function(){Heinz.setLang(Heinz.lang==='de'?'en':'de');applyLang();};
+document.querySelectorAll('[data-th]').forEach(function(b){b.onclick=function(){Heinz.setTheme(b.dataset.th);paint();}});
+function paint(){document.querySelectorAll('[data-th]').forEach(function(b){b.classList.toggle('acc',b.dataset.th===Heinz.theme)});
+ var cs=getComputedStyle(document.documentElement),h='';
+ ['bg','surf','card','line','txt','sub','pri','blue','green','yellow','orange','red'].forEach(function(n){h+='<div><i style="background:var(--'+n+')"></i>'+n+'</div>'});
+ $('#colors').innerHTML=h;}
+function sheet(o){$('#sheet').classList.toggle('open',o);$('#scrim').classList.toggle('open',o);}
+$('#open-sheet').onclick=function(){sheet(true)};$('#close-sheet').onclick=$('#scrim').onclick=function(){sheet(false)};
+$('#sr').oninput=function(){$('#sv').textContent=this.value};
+applyLang();paint();
+</script>
+</body></html>

@@ -44,7 +44,7 @@ Hell, Dunkel, Auto (folgt dem System): `<html data-theme="auto|lt|dk">`, gesetzt
 - **Online ändert die Oberfläche:** mit „Online erlauben“ erscheint die Gruppe „Online“ im Menü, und eine Online-Engine zeigt am Chip „… · ONLINE“ in Orange. Ohne den Haken kein Online-Eintrag. Welche Werkzeuge ohne Online grau werden, ist offen (kommt mit dem Werkzeug-Bereich).
 
 ## 5 Navigation (Zielbild und Stand)
-- **Drei Bereiche** mit teils eigenen Menüeinträgen (wie in INCIheinz) plus eine Rubrik „Einstellungen“, die in allen Bereichen an derselben Stelle im Menü steht und nur Einstellungen enthält, die überall gelten (Darstellung, Update und Info, Sprache der Oberfläche, Online erlauben). Zuschnitt und Namen der drei Bereiche sind noch offen; gebaut ist bisher nur der Bereich Chat.
+- **Drei Bereiche** mit teils eigenen Menüeinträgen (wie in INCIheinz) plus eine Rubrik „Einstellungen“, die in allen Bereichen an derselben Stelle im Menü steht und nur Einstellungen enthält, die überall gelten (Darstellung, Update und Info, Sprache der Oberfläche, Online erlauben). Zuschnitt und Namen der drei Bereiche sind noch offen. **Abweichung:** `docs/KONZEPT.md` 15.3 (Konzept-Planer) spricht von zwei Bereichen (A Ausprobieren/Modelle, B schlanker Chat); die Entscheidung des Entwicklers zu drei Bereichen steht gegen Abschnitt 15.3, Abgleich offen; gebaut ist bisher nur der Bereich Chat.
 - **EN/DE bleibt in der Chat-Kopfzeile sichtbar** (schnell dieselbe Frage in der anderen Sprache prüfen, Sprachtest), nicht im Menü versteckt.
 - Kein Wischen zwischen Bereichen und kein Wischen zum Aktualisieren (`overscroll-behavior-y: none`).
 - Zielbild später: untere Leiste mit runder Mitteltaste, Bereichsumschalter unter der Kopfzeile.
@@ -61,4 +61,4 @@ Hell, Dunkel, Auto (folgt dem System): `<html data-theme="auto|lt|dk">`, gesetzt
 - Vor dem Umbau einer bestehenden Seite kurz fragen; Hub, Kopfzeile und `lib/` gehören zum Fundament (ein Chat zur Zeit).
 
 ## 8 Umsetzung
-Strang „AIUIheinz-Design“: (1) Manifest geschärft ✔, (2) Variablen, Themes und Symbolsatz in `lib/` ✔, (3) Bausteine als Beispielseite `tools/design/index.html` ○, (4) Hub im neuen Stil ○, (5) Chat-Seite ✔ (vorgezogen auf ausdrücklichen Wunsch, der Chat-Strang hatte schon gepusht). Offen: Zuschnitt der drei Bereiche, Lesemodus in warmer Serife, Werkzeuge mit Online-Sperre, Sprache der Oberfläche im Menü „Einstellungen“, ob Inter lokal mitgeliefert wird.
+Strang „AIUIheinz-Design“: (1) Manifest geschärft ✔, (2) Variablen, Themes und Symbolsatz in `lib/` ✔, (3) Bausteine als Beispielseite `tools/design/index.html` ✔ (ohne `tool.json`, nicht im Hub; erreichbar unter `/tools/design/index.html`), (4) Hub im neuen Stil ○, (5) Chat-Seite ✔ (vorgezogen auf ausdrücklichen Wunsch, der Chat-Strang hatte schon gepusht). Offen: Zuschnitt der drei Bereiche, Lesemodus in warmer Serife, Werkzeuge mit Online-Sperre, Sprache der Oberfläche im Menü „Einstellungen“, ob Inter lokal mitgeliefert wird.

@@ -10,7 +10,7 @@ from helpers import Server
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html"]
+PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html"]
 
 
 class FakeOllama:
@@ -969,6 +969,23 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelector('#ollama').textContent.includes('gemma2:2b')")
         self.assertIn("LiteRT", page.text_content("#h-litert"))
         self.assertEqual(self.errors, [])
+
+    def test_design_page_blocks_symbols_theme_and_language(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/design/index.html")
+        self.assertGreater(page.locator(".icons .ic").count(), 40)
+        page.click("[data-th=dk]")
+        self.assertEqual(page.get_attribute("html", "data-theme"), "dk")
+        page.click("[data-th=lt]")
+        self.assertEqual(page.get_attribute("html", "data-theme"), "lt")
+        page.click("#lang")
+        self.assertIn("Bausteine", page.inner_text("h1"))
+        page.click("#open-sheet")
+        self.assertTrue(page.locator("#sheet.open").count() == 1)
+        page.click("#close-sheet")
+        self.assertEqual(page.locator("#sheet.open").count(), 0)
+        self.assertEqual(self.errors, [])
+        self.assertEqual(self.external, [])
 
     def test_manifest_and_service_worker_installable(self):
         page = self.new_page()
