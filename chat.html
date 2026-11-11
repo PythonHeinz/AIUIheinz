@@ -1328,7 +1328,9 @@
             if (chatHistory.length) saveCurrentToList();
             settings.mode = normalizeMode($('mode-select').value);
             const preset = MODE_PRESETS[settings.mode];
-            if (settings.provider === 'ollama') settings.model = resolveModel(preset);
+            // Mode = prompt + sampling only. The chosen model stays (the bench tests any model with any mode, and the model choice is shared
+            // with the other pages, so a mode click must not unload it). The preset model is only a suggestion when nothing usable is chosen.
+            if (settings.provider === 'ollama' && MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(preset);
             $('model-select').value = settings.model;
             loadThreads();
             schedulePreload();

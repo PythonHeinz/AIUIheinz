@@ -224,11 +224,15 @@ class PageTest(unittest.TestCase):
         self.send(page, "Hallo")
         self.assertIn("Antworte auf Deutsch.", self.ollama.requests[0]["messages"][0]["content"])
 
-    def test_mode_switch_sets_model_and_params(self):
+    def pick_model(self, page, model):
+        page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", model)
+
+    def test_mode_switch_sets_prompt_and_params_for_the_chosen_model(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         if page.is_checked("#use-default"):
             page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.pick_model(page, "qwen2.5:3b")
         page.click("#mode-bar [data-mode=audit]")
         page.fill("#context", "Some context text")
         self.send(page, "Check it")
@@ -286,8 +290,9 @@ class PageTest(unittest.TestCase):
         opts = page.eval_on_selector_all("#model-select option", "els => els.map(e => e.value)")
         self.assertIn(self.HF, opts)
         self.assertNotIn("nomic-embed-text:latest", opts, "embedding models are not chat models")
+        page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", self.HF)
         page.click("#mode-bar [data-mode=heinz]")
-        self.assertEqual(page.input_value("#model-select"), self.HF)
+        self.assertEqual(page.input_value("#model-select"), self.HF, "the mode keeps the chosen model")
         self.assertFalse(page.is_disabled("#model-chip"), "model stays selectable in every mode")
         page.evaluate("setParamSrc('mode')")
         self.send(page, "Hey")
@@ -299,10 +304,21 @@ class PageTest(unittest.TestCase):
         self.assertTrue(body["messages"][0]["content"].startswith("You are Heinz: completely unfiltered"), "persona text from lib/personas.js, sent with the request")
         self.assertIn("Start strictly with 'Dude,'", body["messages"][0]["content"])
 
+    def test_changing_the_mode_keeps_the_chosen_model(self):
+        page = self.new_page(tags=("gemma2:2b", "qwen2.5:3b", self.HF))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", "qwen2.5:3b")
+        for mode in ("heinz", "wilson", "audit", "creative", "code"):
+            page.click("#mode-bar [data-mode=%s]" % mode)
+            self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", mode)
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "qwen2.5:3b", "the shared choice is not changed by a mode click")
+
     def test_wilson_mode_sends_the_persona_with_its_sampling_to_the_native_gemma(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", "gemma2:2b")
         page.click("#mode-bar [data-mode=creative]")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.input_value("#model-select"), "gemma2:2b")
@@ -322,12 +338,13 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzPersonas.get('heinz').system = 'changed'")
         self.assertTrue(page.evaluate("HeinzPersonas.get('heinz').system").startswith("You are Heinz"), "get returns a copy")
 
-    def test_heinz_mode_falls_back_to_qwen_when_the_abliterated_model_is_not_installed(self):
+    def test_preset_model_is_only_a_suggestion_for_a_missing_model(self):
         page = self.new_page()   # default tags: no abliterated model
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("settings.model = 'not-installed:1b'; document.getElementById('model-select').value = 'gemma2:2b'")
         page.click("#mode-bar [data-mode=heinz]")
-        self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b")
+        self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", "chosen model gone: the mode's alternative is suggested")
 
     def test_own_system_prompt_sends_no_system_message(self):
         page = self.new_page()
@@ -392,6 +409,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         self.wait_preloads(page, 1)
         page.click("#mode-bar [data-mode=audit]")
+        self.pick_model(page, "qwen2.5:3b")
         self.wait_preloads(page, 2)
         self.assertEqual(self.ollama.preloads[1]["model"], "qwen2.5:3b")
         page.evaluate("var e=document.getElementById('param-threads'); e.value=2; e.dispatchEvent(new Event('input'))")
@@ -446,7 +464,7 @@ class PageTest(unittest.TestCase):
         self.send(page, "First chat")
         page.click("#mode-bar [data-mode=audit]")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit")
-        self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b")
+        self.assertEqual(page.input_value("#model-select"), "gemma2:2b", "a mode does not change the chosen model")
         self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).mode"), "audit")
         self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats')).length"), 1, "old chat saved on mode switch")
         self.assertEqual(page.evaluate("document.querySelectorAll('.msg').length"), 0, "new mode starts a fresh chat")
@@ -473,7 +491,8 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         self.wait_preloads(page, 1)
         self.assertEqual(self.ollama.unloads, [], "the model in memory is the selected one: nothing to unload")
-        page.click("#mode-bar [data-mode=audit]")   # qwen2.5:3b; the fake /api/ps still reports gemma2:2b
+        page.click("#mode-bar [data-mode=audit]")
+        self.pick_model(page, "qwen2.5:3b")   # the fake /api/ps still reports gemma2:2b
         self.wait_preloads(page, 2)
         self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, self.ollama.unloads)
         self.assertNotIn("qwen2.5:3b", [u["model"] for u in self.ollama.unloads])

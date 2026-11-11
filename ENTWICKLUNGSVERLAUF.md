@@ -629,3 +629,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html`: Modus-Prompts Wilson und Heinz (EN und DE) sind die Persona-Texte (Sprachregel steht im Text); Presets Wilson (`gemma2:2b`, Temp 0,4, Top-P 0,8) und Heinz (nativ `hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M`, sonst `qwen2.5:3b`; Temp 0,2, Top-P 0,4, Top-K 20, Stopp „Als KI“/„As an AI“).
 - Regel 9 in `docs/LOKALE_MODELLE.md`, Abschnitt in `docs/OLLAMA_UND_MODELLE.md` (inkl. `ollama rm`), `UEBERGABE.md`.
 - Tests: 3 neue/umgebaute (Heinz-Modus, Wilson-Modus, Personas als Daten mit Kopie); alter heinz-fakt-Test ersetzt. Nur simuliert; der Vergleich der Antworten mit früher am Handy steht aus. Löschen der Modelle macht der Entwickler am Handy.
+
+## 11.11.2026 – Prüfstand: Moduswechsel ändert das gewählte Modell nicht mehr (Chat „AIUIheinz-Chat“)
+- Entwickler: Der Prüfstand testet beliebige Modelle mit den fünf Modi; der Modus soll kein Modell mehr vorschreiben. Dazu kommt: Die Modellwahl gilt für alle Seiten, ein Moduswechsel würde sonst auch im Chat das Modell umladen.
+- `chat.html` (`updateModeUI`): Das Preset-Modell wird nur noch gesetzt, wenn das gewählte Modell fehlt (Vorschlag); sonst bleibt die Wahl.
+- Befund am Handy: Im Screenshot „In 36“ Token im Heinz-Modus zeigt, dass dort noch die Fassung vor den Personas lief (Persona-Prompt rund 340 Token); nach `git pull` und Neuladen soll „In“ bei rund 350 liegen.
+- Tests: 2 neue/umgebaute (Modus behält Modell in allen fünf Modi und die gemeinsame Wahl; Preset nur Vorschlag bei fehlendem Modell); frühere Tests auf explizite Modellwahl angepasst. Nur simuliert.
