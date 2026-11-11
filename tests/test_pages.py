@@ -1323,8 +1323,10 @@ class PageTest(unittest.TestCase):
         page.click("#sr-start")
         page.wait_for_function("srRuns.length >= 1")
         page.click("#sr-stop")
-        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped after')", timeout=30000)
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertEqual(page.evaluate("srMeta.stopped"), "by user")
+        self.assertIn('"aborted":true', page.evaluate("srExportParts().join('\\n')"), "an interrupted run is marked, not shown as ok")
+        self.assertEqual(page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)")[-1], "\u2013")
         self.assertLess(page.evaluate("srRuns.length"), 9)
 
     def test_series_native_google_sends_thinking_levels_greys_out_top_k_and_asks_before_cloud_requests(self):
