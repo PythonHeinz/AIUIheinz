@@ -2409,6 +2409,18 @@ class PageTest(unittest.TestCase):
         }""")
         self.assertEqual(res, "AbortError:true", "pagehide aborts the open request at once")
 
+    def test_bench_takes_over_a_chat_model_that_only_the_real_model_list_knows(self):
+        # heinz-fakt:latest is not in the bench's fallback list; the first fill happens with that list and must not discard the chat's choice
+        page = self.new_page()
+        FakeOllama(page, tags=("gemma2:2b", "qwen2.5:3b", "heinz-fakt:latest"))
+        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.getElementById('model-select').value === 'heinz-fakt:latest'", timeout=15000)
+        page.wait_for_timeout(800)
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "heinz-fakt:latest", "the shared choice is not overwritten")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('heinz-fakt:latest') >= 0", timeout=15000)
+
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()
         fake = FakeOllama(page)

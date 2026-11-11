@@ -802,7 +802,7 @@
         // Modus-Presets: Modell + Sampling. Bei kleinen Modellen bewusst polarisiert.
         // Fallback-Liste, solange /api/tags nicht antwortet; danach gilt die echte Liste von Ollama.
         const FALLBACK_MODELS = ['gemma2:2b', 'qwen2.5:3b', 'gemma:2b'];
-        let MODELS = FALLBACK_MODELS.slice(), modelsFor = 'ollama';
+        let MODELS = FALLBACK_MODELS.slice(), modelsFor = 'ollama', modelsReal = false;   // modelsReal: the list comes from the engine, not from the fallback
         // Modus = Daten: model (bevorzugt), alt (Ersatz, falls nicht installiert), stop (Stoppsequenzen).
         // Modell ist in jedem Modus frei wählbar (Modus und Modell sind getrennte Angaben).
         const MODE_PRESETS = {
@@ -829,7 +829,7 @@
                 o.value = m; o.textContent = m;
                 sel.appendChild(o);
             });
-            if (!activeAdopted) {   // once per page load: take over the model chosen on another page (e.g. the chat)
+            if (!activeAdopted && (settings.provider !== 'ollama' || modelsReal)) {   // once per page load, with the real model list (the fallback list does not know e.g. heinz-fakt:latest)
                 activeAdopted = true;
                 const a = PV.activeModel();
                 if (a && a.provider === settings.provider && (settings.provider !== 'ollama' || MODELS.indexOf(a.model) >= 0)) settings.model = a.model;
@@ -837,7 +837,7 @@
             if (settings.provider === 'ollama' && MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
             if (settings.provider !== 'ollama' && !settings.model) settings.model = names[0] || '';
             sel.value = settings.model;
-            PV.setActiveModel(settings.provider, settings.model);
+            if (activeAdopted) PV.setActiveModel(settings.provider, settings.model);
             updateChip(); renderModelSheet();
             const mp = $('ml-pill'); if (mp) mp.hidden = settings.provider !== 'ollama' && MODELS.length > 0;
             $('eng-status').classList.toggle('tappable', MODELS.length > 0 && settings.provider !== 'ollama');
@@ -858,11 +858,13 @@
                 if (seq !== modelsSeq) return;
                 if (prov !== settings.provider) return;   // Engine wurde inzwischen gewechselt
                 if (names.length) {
-                    MODELS = names; modelsFor = prov; hs[prov] = true; checkServer();
+                    MODELS = names; modelsFor = prov; modelsReal = true; hs[prov] = true; checkServer();
                     // Ein gewähltes Modell wird nie durch die Liste ersetzt (auch wenn eine kurze oder andere Liste es nicht enthält);
                     // nur wenn für diese Engine noch nichts gewählt wurde, kommt der erste Eintrag als Vorschlag.
                     if (prov !== 'ollama' && !settings.model) settings.model = settings.modelByProvider[prov] || names[0];
+                    const before = settings.model;
                     fillModelSelect(); saveSettings(); loadThreads();
+                    if (settings.model !== before) { applySavedParams(); schedulePreload(); }   // model taken over from another page
                     if (prov !== 'ollama') setEngStatus(PV.modelNote && PV.modelNote.engine === prov ? t('modelsNativeFail', { n: names.length, m: PV.modelNote.message }) : t('modelsDone', { n: names.length }));
                 } else if (prov !== 'ollama') { MODELS = []; fillModelSelect(); setEngStatus(t('noModels')); }
             } catch (e) {

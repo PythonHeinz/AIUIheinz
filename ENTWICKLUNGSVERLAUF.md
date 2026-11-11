@@ -601,3 +601,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `lib/providers.js`: `HeinzProviders.chat` bricht die laufende Anfrage bei `pagehide` selbst ab (alle Engines), damit die nächste Seite das Modell frei vorfindet.
 - `tests/test_rules.py` (in `run_all.sh`): Seiten außer einer Liste älterer Seiten (`chat.html`, `sheet.html`, `lab.html`, `vitals.html`) dürfen nicht direkt `/api/chat`, `/api/generate`, `num_thread` oder `keep_alive` verwenden; Regeldokument muss existieren und verlinkt sein. Dazu 1 Seitentest (pagehide bricht die offene Anfrage ab).
 - Offen: `sheet.html`, `lab.html`, `vitals.html` auf `HeinzProviders` umstellen (gehört den jeweiligen Strängen). Nur simuliert getestet.
+
+## 11.11.2026 – Fix: Prüfstand übernimmt auch Modelle, die nur die echte Modellliste kennt (Chat „AIUIheinz-Chat“)
+- Befund des Entwicklers (Handy): Im Chat `heinz-fakt:latest` gewählt, im Prüfstand stand wieder Qwen (orange, wurde geladen). Ursache: Der Prüfstand füllt die Modellauswahl zuerst mit der kurzen Fallback-Liste (`gemma2:2b`, `qwen2.5:3b`, `gemma:2b`) und übernahm die gemeinsame Wahl dabei nicht, weil sie dort fehlte; danach überschrieb er sie mit seinem Moduswert.
+- `chat.html`: Die gemeinsame Wahl wird erst übernommen, wenn die echte Liste von der Engine da ist (`modelsReal`); nach der Übernahme werden gespeicherte Regler und Vorladen für das neue Modell angewendet. Vor der Übernahme schreibt der Prüfstand die gemeinsame Wahl nicht mehr zurück.
+- Test: 1 neuer (Modell nur in der echten Liste wird übernommen, gemeinsame Wahl bleibt erhalten); Mutation erkannt. Nur simuliert.
+- Offen (Vermutung, nicht gemessen): Im Chat kommt nach Prüfstand-Nachrichten keine Antwort innerhalb einer Minute. Wahrscheinlich liest Ollama den langen Chat-Verlauf komplett neu, weil Prüfstand-Anfragen den Zwischenspeicher ersetzen. Test am Handy: neuer, leerer Chat (+).
