@@ -126,7 +126,7 @@
         "presence_penalty": { "state": "unknown", "status": "belegt" },
         "thinking": { "state": "on", "via": "generationConfig.thinkingConfig", "status": "belegt", "exclusive": "thinkingLevel and thinkingBudget must not be combined" }
       },
-      "stats": { "outputIncludesReasoning": "unknown", "note": "usageMetadata: promptTokenCount, candidatesTokenCount, thoughtsTokenCount, totalTokenCount; not yet measured on the device" }
+      "stats": { "outputIncludesReasoning": "no", "measured": "11.11.2026, gemini-3.8-flash, deep: 76 + 153 + 5679 = 5908, candidatesTokenCount excludes thoughtsTokenCount; thoughtsTokenCount is absent at low", "note": "usageMetadata: promptTokenCount, candidatesTokenCount, thoughtsTokenCount, totalTokenCount" }
     },
     "gemini-compat": {
       "label": "Google AI Studio, OpenAI-compatible route",

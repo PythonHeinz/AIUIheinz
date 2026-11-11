@@ -1188,6 +1188,22 @@ class PageTest(unittest.TestCase):
         self.assertEqual(list(tc), ["thinkingBudget"])
         self.assertIsInstance(tc["thinkingBudget"], int)
 
+    def test_native_google_temperature_goes_up_to_two_while_local_engine_stays_at_one(self):
+        page, g = self.gemini_page()
+        self.assertEqual(page.evaluate("document.getElementById('param-temp').max"), "2")
+        page.evaluate("document.getElementById('param-temp').value = 2; onSlider()")
+        self.send(page, "hot")
+        self.assertEqual(g.requests[-1][2]["generationConfig"]["temperature"], 2)
+        # honest labels for the native route
+        page.click("#think-deep")
+        self.assertEqual(page.inner_text("#think-note"), "sends thinkingLevel high")
+        self.assertIn("-> thinkingLevel high", page.evaluate("capsStates()"))
+        self.assertNotIn("reasoning_effort", page.evaluate("capsStates()"))
+        # counter test: the local engine keeps the old limit
+        page2 = self.new_page(); FakeOllama(page2)
+        page2.goto(self.srv.base + "/chat.html")
+        self.assertEqual(page2.evaluate("document.getElementById('param-temp').max"), "1.0")
+
     def test_native_google_length_cut_and_error_are_reported_and_online_off_sends_nothing(self):
         page, g = self.gemini_page(chunks=("Ye",), finish="MAX_TOKENS")
         page.fill("#query", "Hi"); page.click("#send-btn")

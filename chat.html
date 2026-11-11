@@ -913,7 +913,7 @@
                 hintKey: ' (API key rejected or missing rights)', hintLimit: ' (rate limit reached, try again later)', hintNoModel: ' (model name unknown to this engine?)',
                 connFailGeneric: 'Connection to {n} failed ({m}). The engine may be offline, the address wrong, or the provider blocks browser access (CORS).',
                 modelsFail: 'Could not load the model list: {m}', modelsLoading: 'Loading model list…',
-                mThink: 'Think', thinkLbl: 'Thinking', thinkFast: 'Fast', thinkDeep: 'Deep', thinkDefault: 'model default', thinkSent: 'sends reasoning_effort: {e}',
+                mThink: 'Think', thinkLbl: 'Thinking', thinkFast: 'Fast', thinkDeep: 'Deep', thinkDefault: 'model default', thinkSent: 'sends reasoning_effort: {e}', thinkSentNative: 'sends {w}',
                 capUnk: 'unverified', capLocked: 'locked', capNote: 'note', capRec: 'Recommended: {v}', capApply: 'Use recommendation',
                 capSt_unknown: 'Not verified yet: the value is sent, but it is unknown whether the engine uses it.', capSt_off: 'This engine ignores the setting, so it is not sent.', capSt_error: 'This model rejects the setting with an error, so it is not sent.', capSt_fixed: 'Fixed by the model, cannot be changed here.', capSt_config: 'Set in the engine configuration, not in the request (needs server.py, planned), so it is not sent.',
                 capSrc: 'Source', capSrc_belegt: 'vendor documentation', capSrc_drittquelle: 'third-party source', capSrc_code: 'our own code', capSrc_vermutet: 'assumed', capSrc_unbekannt: 'unknown',
@@ -962,7 +962,7 @@
                 hintKey: ' (API-Schlüssel abgelehnt oder ohne Rechte)', hintLimit: ' (Limit erreicht, später erneut versuchen)', hintNoModel: ' (Modellname dieser Engine unbekannt?)',
                 connFailGeneric: 'Verbindung zu {n} fehlgeschlagen ({m}). Die Engine ist vielleicht aus, die Adresse falsch oder der Anbieter sperrt Browserzugriff (CORS).',
                 modelsFail: 'Modellliste nicht ladbar: {m}', modelsLoading: 'Modellliste wird geladen…',
-                mThink: 'Denken', thinkLbl: 'Denken', thinkFast: 'Schnell', thinkDeep: 'Tief', thinkDefault: 'Modellstandard', thinkSent: 'sendet reasoning_effort: {e}',
+                mThink: 'Denken', thinkLbl: 'Denken', thinkFast: 'Schnell', thinkDeep: 'Tief', thinkDefault: 'Modellstandard', thinkSent: 'sendet reasoning_effort: {e}', thinkSentNative: 'sendet {w}',
                 capUnk: 'ungeklärt', capLocked: 'gesperrt', capNote: 'Hinweis', capRec: 'Empfohlen: {v}', capApply: 'Empfehlung übernehmen',
                 capSt_unknown: 'Noch nicht geprüft: der Wert wird gesendet, ob die Engine ihn nutzt, ist unbekannt.', capSt_off: 'Diese Engine ignoriert die Einstellung, deshalb wird sie nicht gesendet.', capSt_error: 'Dieses Modell lehnt die Einstellung mit einem Fehler ab, deshalb wird sie nicht gesendet.', capSt_fixed: 'Vom Modell fest vorgegeben, hier nicht änderbar.', capSt_config: 'Wird in der Konfiguration der Engine gesetzt, nicht in der Anfrage (braucht server.py, geplant), deshalb nicht gesendet.',
                 capSrc: 'Quelle', capSrc_belegt: 'Anbieterdoku', capSrc_drittquelle: 'Drittquelle', capSrc_code: 'eigener Code', capSrc_vermutet: 'vermutet', capSrc_unbekannt: 'unbekannt',
@@ -2507,7 +2507,7 @@
             const mm = PV.modelMeta ? PV.modelMeta(c.model) : null;
             if (mm) o += '\nmodel list (native): inputTokenLimit ' + mm.inputTokenLimit + ', outputTokenLimit ' + mm.outputTokenLimit + ', thinking ' + mm.thinking + ', topK ' + mm.topK + ', maxTemperature ' + mm.maxTemperature;
             const r = thinkRule();
-            if (r) o += '\nthinking: ' + (thinkStage() || 'model default') + (thinkEffort() ? ' -> reasoning_effort ' + thinkEffort() : ' (nothing sent)');
+            if (r) { const sd = thinkSend(); o += '\nthinking: ' + (thinkStage() || 'model default') + (sd ? ' -> ' + thinkWire(sd) : ' (nothing sent)'); }
             return o;
         }
         // the sent body without any message text (neither the chat nor the system prompt)
@@ -2575,9 +2575,20 @@
             if (cell.status) txt += (txt ? ' ' : '') + t('capSrc') + ': ' + t('capSrc_' + cell.status) + '.';
             return txt;
         }
+        // Obergrenze der Temperatur: Wert aus der Modellliste (Google: maxTemperature), sonst 2 bei Online-/OpenAI-Wegen, 1 bei lokalen Engines
+        function tempRange() {
+            const inp = $('param-temp'); if (!inp) return;
+            const c = capCtx(), pv = PV.get(settings.provider) || PV.get('ollama');
+            const mm = PV.modelMeta ? PV.modelMeta(c.model) : null;
+            let mx = 1;
+            if (mm && typeof mm.maxTemperature === 'number' && mm.maxTemperature > 0) mx = mm.maxTemperature;
+            else if (!pv.local) mx = 2;
+            if (parseFloat(inp.max) !== mx) { inp.max = String(mx); if (parseFloat(inp.value) > mx) { inp.value = mx; onSlider(); } }
+        }
         function renderCaps() {
             if (!window.HeinzCaps || !HeinzCaps.ready()) return;
             const src = paramSrc();
+            tempRange();
             CAP_CARDS.forEach(function (id) {
                 const card = $(id); if (!card) return;
                 const cell = capCell(card.getAttribute('data-cap-card'));
@@ -2636,6 +2647,11 @@
             if (!r || !e) return null;
             return { kind: r.kind, value: r.effortMap[e] };
         }
+        // Name des gesendeten Feldes je Weg: nativ thinkingLevel/thinkingBudget, sonst reasoning_effort
+        function thinkWire(sd) {
+            if (settings.provider === 'google') return (sd.kind === 'budget' ? 'thinkingBudget ' : 'thinkingLevel ') + sd.value;
+            return 'reasoning_effort ' + thinkEffort();
+        }
         function setThink(st) {
             if (!thinkRule()) return;
             if (!settings.thinkBy) settings.thinkBy = {};
@@ -2650,7 +2666,7 @@
             if (!r) return;
             const st = thinkStage(), e = thinkEffort();
             $('think-fast').classList.toggle('on', st === 'fast'); $('think-deep').classList.toggle('on', st === 'deep');
-            $('think-note').textContent = e ? t('thinkSent', { e: e }) : t('thinkDefault');
+            $('think-note').textContent = e ? (settings.provider === 'google' ? t('thinkSentNative', { w: thinkWire(thinkSend()) }) : t('thinkSent', { e: e })) : t('thinkDefault');
         }
         function renderQuick() {
             if (!$('q-engine-val')) return;

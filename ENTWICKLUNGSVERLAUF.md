@@ -434,3 +434,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 
 ## 11.11.2026 – Konzept 20: Prüfung lokaler Sprache, Reihenfolge Einlesen vor Bildstudio (Chat „AIUIheinz“, nur Dokumente)
 - Beschlüsse des Entwicklers eingetragen: Einlesen vor Bildstudio, IndexedDB-Medienspeicher, App prüft, ob Sprache lokal läuft, und weist sonst hin (Konzept 20.5); Auftrag Modelle Punkt 5 entsprechend ergänzt.
+
+## 11.11.2026 – Handytest native Engine, Temperatur bis 2 (Chat „AIUIheinz-Chat“)
+- Handytest (Entwickler, gemini-3.8-flash, nativ): HTTP 200 in Schnell und Tief; `thinkingLevel` in Kleinschreibung wird angenommen; Tief meldet `thoughtsTokenCount` 5679, Rechnung 76 + 153 + 5679 = 5908 geht auf, `candidatesTokenCount` enthält die Denk-Token also nicht (`outputIncludesReasoning: no` für `google`); bei Schnell fehlt `thoughtsTokenCount`. Erste Zeichen bei Tief nach 35,5 s, danach Burst (T/s bedeutungslos). `topK` 1 und 64 werden akzeptiert (200), Wirkung bei Gemini 3 noch offen (Prüfung mit Temperatur 2).
+- Fehler: der Temperatur-Regler stand fest auf Maximum 1.0, der Entwickler konnte Temperatur 2 nicht einstellen. Neu `tempRange()` in `chat.html`: Obergrenze aus `maxTemperature` der Modellliste, sonst 2 bei Online-/Custom-Wegen, 1 bei lokalen Engines.
+- Beschriftung: Hinweis unter dem Denken-Schalter und Testprotokoll nennen bei der nativen Engine `thinkingLevel`/`thinkingBudget` statt `reasoning_effort` (`thinkWire()`).
+- Test `test_native_google_temperature_goes_up_to_two_while_local_engine_stays_at_one`. 90 Seitentests grün, nur simuliert.
