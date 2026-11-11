@@ -41,7 +41,8 @@
   },
 
   "endpointRules": [
-    { "hostContains": "generativelanguage.googleapis.com/v1beta/openai", "engine": "gemini-compat" }
+    { "hostContains": "generativelanguage.googleapis.com/v1beta/openai", "engine": "gemini-compat" },
+    { "hostContains": "ollama.com", "engine": "ollama-cloud" }
   ],
 
   "engines": {
@@ -58,7 +59,7 @@
         "seed": { "state": "on", "via": "options.seed", "status": "code" },
         "frequency_penalty": { "state": "unknown", "via": "options.frequency_penalty", "status": "unbekannt" },
         "presence_penalty": { "state": "unknown", "via": "options.presence_penalty", "status": "unbekannt" },
-        "thinking": { "state": "unknown", "status": "unbekannt", "hint": { "en": "Not yet researched for Ollama.", "de": "Für Ollama noch nicht recherchiert." } }
+        "thinking": {"state": "unknown", "via": "think", "status": "belegt", "hint": {"en": "Field think on chat and generate: true/false for most models, \"low\"/\"medium\"/\"high\" for gpt-oss (true/false ignored there, cannot be switched off); newer docs also name \"max\". The reasoning arrives in message.thinking, the answer in message.content. Which levels a model takes: POST /api/show (capabilities, thinking). The app does not send it yet.", "de": "Feld think bei chat und generate: true/false bei den meisten Modellen, \"low\"/\"medium\"/\"high\" bei gpt-oss (true/false wird dort ignoriert, nicht abschaltbar); neuere Seiten nennen auch \"max\". Die Denkspur kommt in message.thinking, die Antwort in message.content. Welche Stufen ein Modell nimmt: POST /api/show (capabilities, thinking). Die App sendet es noch nicht."}}
       },
       "stats": { "outputIncludesReasoning": "unknown" }
     },
@@ -91,7 +92,7 @@
 
     "openai": {
       "label": "OpenAI-compatible (OpenRouter, Groq, Mistral, custom)",
-      "note": { "en": "Default for providers not yet researched individually; based on the OpenAI standard.", "de": "Vorgabe für Anbieter, die noch nicht einzeln recherchiert sind; beruht auf dem OpenAI-Standard." },
+      "note": { "en": "Default for providers without their own entry (custom engines); based on the OpenAI standard. OpenRouter, Groq and Mistral have their own entries since 11.11.2026.", "de": "Vorgabe für Anbieter ohne eigenen Eintrag (eigene Engines); beruht auf dem OpenAI-Standard. OpenRouter, Groq und Mistral haben seit 11.11.2026 eigene Einträge." },
       "params": {
         "temperature": { "state": "on", "via": "temperature", "status": "vermutet" },
         "top_p": { "state": "on", "via": "top_p", "status": "vermutet" },
@@ -153,6 +154,101 @@
         "status": "belegt",
         "chatIfMethod": "generateContent"
       }
+    },
+
+    "openrouter": {
+      "label": "OpenRouter",
+      "note": {"en": "Gateway to many providers; each model has its own supported_parameters. A parameter the chosen model does not support is ignored (documentation).", "de": "Vermittler zu vielen Anbietern; jedes Modell hat eigene supported_parameters. Ein Parameter, den das Modell nicht kann, wird ignoriert (Dokumentation)."},
+      "params": {
+        "temperature": {"state": "on", "via": "temperature", "status": "belegt", "range": [0, 2], "default": 1.0},
+        "top_p": {"state": "on", "via": "top_p", "status": "belegt", "range": [0, 1], "default": 1.0},
+        "top_k": {"state": "on", "via": "top_k", "status": "belegt", "hint": {"en": "Range 1 and up (0 = off). Not available for OpenAI models: ignored there.", "de": "Wert ab 1 (0 = aus). Bei OpenAI-Modellen nicht verfügbar: wird dort ignoriert."}},
+        "num_ctx": {"state": "fixed", "status": "vermutet", "hint": {"en": "Fixed per model; context_length comes with the model list.", "de": "Je Modell fest; context_length kommt mit der Modellliste."}},
+        "num_thread": {"state": "off", "status": "code", "hint": {"en": "Runs on the provider's servers.", "de": "Läuft auf den Servern des Anbieters."}},
+        "max_tokens": {"state": "on", "via": "max_tokens", "status": "belegt", "range": ["1", "context_length"]},
+        "stop": {"state": "on", "via": "stop", "status": "belegt"},
+        "seed": {"state": "on", "via": "seed", "status": "belegt", "hint": {"en": "Integer. Determinism is not guaranteed for some models.", "de": "Ganzzahl. Bei manchen Modellen ist Wiederholbarkeit nicht garantiert."}},
+        "frequency_penalty": {"state": "on", "via": "frequency_penalty", "status": "belegt", "range": [-2, 2]},
+        "presence_penalty": {"state": "on", "via": "presence_penalty", "status": "belegt", "range": [-2, 2]},
+        "thinking": {"state": "unknown", "via": "reasoning", "status": "belegt", "hint": {"en": "One object: reasoning.effort (max/xhigh/high/medium/low/minimal/none), reasoning.max_tokens (token budget) or reasoning.enabled; effort and max_tokens not together. reasoning.exclude:true hides the text but the tokens are still billed and count against max_tokens. Reasoning arrives in message.reasoning. Models that do not reason ignore it. Not sent by the app yet.", "de": "Ein Objekt: reasoning.effort (max/xhigh/high/medium/low/minimal/none), reasoning.max_tokens (Token-Budget) oder reasoning.enabled; effort und max_tokens nicht zusammen. reasoning.exclude:true blendet den Text aus, die Token werden trotzdem berechnet und zählen zu max_tokens. Die Denkspur steht in message.reasoning. Modelle ohne Denken ignorieren es. Die App sendet es noch nicht."}}
+      },
+      "stats": {"outputIncludesReasoning": "unknown", "note": "Reasoning tokens count against max_tokens (documentation); whether usage.completion_tokens includes them is not read."}
+    },
+
+    "groq": {
+      "label": "Groq",
+      "note": {"en": "OpenAI-compatible; reasoning has its own fields (reasoning_effort, reasoning_format) with per-model values.", "de": "OpenAI-kompatibel; das Denken hat eigene Felder (reasoning_effort, reasoning_format) mit Werten je Modell."},
+      "params": {
+        "temperature": {"state": "on", "via": "temperature", "status": "vermutet"},
+        "top_p": {"state": "on", "via": "top_p", "status": "vermutet"},
+        "top_k": {"state": "unknown", "status": "unbekannt", "hint": {"en": "Not read for Groq; the OpenAI standard has no top_k.", "de": "Für Groq nicht gelesen; der OpenAI-Standard kennt kein top_k."}},
+        "num_ctx": {"state": "fixed", "status": "vermutet", "hint": {"en": "Fixed per model (131K for the models seen).", "de": "Je Modell fest (131K bei den gesehenen Modellen)."}},
+        "num_thread": {"state": "off", "status": "code", "hint": {"en": "Runs on the provider's servers.", "de": "Läuft auf den Servern des Anbieters."}},
+        "max_tokens": {"state": "on", "via": "max_completion_tokens", "status": "drittquelle", "hint": {"en": "max_tokens is the old name; limits per model 8K to 65K (third party).", "de": "max_tokens ist der alte Name; Grenzen je Modell 8K bis 65K (Drittquelle)."}},
+        "stop": {"state": "on", "via": "stop", "status": "drittquelle", "hint": {"en": "Up to 4 sequences.", "de": "Bis zu 4 Folgen."}},
+        "seed": {"state": "unknown", "status": "unbekannt"},
+        "frequency_penalty": {"state": "unknown", "status": "unbekannt"},
+        "presence_penalty": {"state": "unknown", "status": "unbekannt"},
+        "thinking": {"state": "unknown", "via": "reasoning_effort", "status": "belegt", "hint": {"en": "reasoning_effort: low/medium/high (default medium) for openai/gpt-oss-*; none/default for qwen3 (on or off only). reasoning_format: parsed (message.reasoning), raw (<think> tags in the text), hidden. include_reasoning (true/false) is the alternative; both together are not allowed. With JSON mode or tool use raw is rejected (400).", "de": "reasoning_effort: low/medium/high (Standard medium) bei openai/gpt-oss-*; none/default bei qwen3 (nur an oder aus). reasoning_format: parsed (message.reasoning), raw (<think>-Marken im Text), hidden. include_reasoning (true/false) ist die Alternative; beides zusammen ist nicht erlaubt. Bei JSON-Modus oder Werkzeugaufrufen wird raw mit 400 abgelehnt."}}
+      },
+      "stats": {"outputIncludesReasoning": "unknown"}
+    },
+
+    "mistral": {
+      "label": "Mistral",
+      "note": {"en": "Own API shape close to OpenAI; seed is random_seed. Reasoning models (Magistral) have their own controls.", "de": "Eigene API-Form nahe an OpenAI; seed heißt random_seed. Denkmodelle (Magistral) haben eigene Regler."},
+      "params": {
+        "temperature": {"state": "on", "via": "temperature", "status": "belegt", "range": [0, 2], "default": 0.7},
+        "top_p": {"state": "on", "via": "top_p", "status": "belegt", "range": [0, 1], "default": 1},
+        "top_k": {"state": "unknown", "status": "unbekannt", "hint": {"en": "Not found in the request fields.", "de": "In den Anfragefeldern nicht gefunden."}},
+        "num_ctx": {"state": "fixed", "status": "vermutet", "hint": {"en": "Fixed per model.", "de": "Je Modell fest."}},
+        "num_thread": {"state": "off", "status": "code", "hint": {"en": "Runs on the provider's servers.", "de": "Läuft auf den Servern des Anbieters."}},
+        "max_tokens": {"state": "on", "via": "max_tokens", "status": "belegt"},
+        "stop": {"state": "on", "via": "stop", "status": "belegt", "hint": {"en": "String or list.", "de": "Zeichenfolge oder Liste."}},
+        "seed": {"state": "on", "via": "random_seed", "status": "belegt", "hint": {"en": "Named random_seed, not seed; the OpenAI field seed does not apply.", "de": "Heißt random_seed, nicht seed; das OpenAI-Feld seed gilt nicht."}},
+        "frequency_penalty": {"state": "on", "via": "frequency_penalty", "status": "belegt", "range": [-2, 2]},
+        "presence_penalty": {"state": "on", "via": "presence_penalty", "status": "belegt", "range": [-2, 2]},
+        "thinking": {"state": "unknown", "via": "reasoning_effort", "status": "drittquelle", "hint": {"en": "The request has reasoning_effort (values seen in a third-party wrapper: low/medium/high for Magistral) and prompt_mode (\"reasoning\" switches the reasoning system prompt). Whether the reasoning arrives separately or in the text: not read.", "de": "Die Anfrage hat reasoning_effort (Werte aus einem Fremd-Wrapper: low/medium/high bei Magistral) und prompt_mode (\"reasoning\" schaltet den Denk-Systemprompt). Ob die Denkspur getrennt oder im Text ankommt: nicht gelesen."}}
+      },
+      "stats": {"outputIncludesReasoning": "unknown"}
+    },
+
+    "ollama-cloud": {
+      "label": "Ollama Cloud",
+      "note": {"en": "Hosted models through ollama.com; same native API shape as local Ollama (/api/chat, think, options), but runs on Ollama's servers. Models carry the suffix :cloud when reached through a local Ollama; direct use needs a key. Only partly read.", "de": "Gehostete Modelle über ollama.com; gleiche native API-Form wie lokales Ollama (/api/chat, think, options), läuft aber auf Servern von Ollama. Über ein lokales Ollama tragen die Modelle das Suffix :cloud; direkter Zugriff braucht einen Schlüssel. Nur teilweise gelesen."},
+      "params": {
+        "temperature": {"state": "on", "via": "options.temperature", "status": "vermutet"},
+        "top_p": {"state": "on", "via": "options.top_p", "status": "vermutet"},
+        "top_k": {"state": "on", "via": "options.top_k", "status": "vermutet"},
+        "num_ctx": {"state": "fixed", "status": "vermutet", "hint": {"en": "Set by the cloud model.", "de": "Vom Cloud-Modell vorgegeben."}},
+        "num_thread": {"state": "off", "status": "code", "hint": {"en": "Runs on Ollama's servers.", "de": "Läuft auf Servern von Ollama."}},
+        "max_tokens": {"state": "on", "via": "options.num_predict", "status": "vermutet"},
+        "stop": {"state": "on", "via": "options.stop", "status": "vermutet"},
+        "seed": {"state": "on", "via": "options.seed", "status": "vermutet"},
+        "frequency_penalty": {"state": "unknown", "status": "unbekannt"},
+        "presence_penalty": {"state": "unknown", "status": "unbekannt"},
+        "thinking": {"state": "unknown", "via": "think", "status": "drittquelle", "hint": {"en": "Same think field as local Ollama. A test report (GitHub issue) shows deepseek-v4-flash:cloud accepting options.think and an OpenAI-compatible reasoning_effort with none/low/medium/high/max, while top-level think rejects \"max\". Not confirmed by the documentation.", "de": "Gleiches think-Feld wie beim lokalen Ollama. Ein Testbericht (GitHub-Issue) zeigt, dass deepseek-v4-flash:cloud options.think und ein OpenAI-kompatibles reasoning_effort mit none/low/medium/high/max annimmt, während think auf oberster Ebene \"max\" ablehnt. Von der Dokumentation nicht bestätigt."}}
+      },
+      "stats": {"outputIncludesReasoning": "unknown"}
+    },
+
+    "llamacpp": {
+      "label": "llama.cpp (llama-server)",
+      "note": {"en": "Own server: OpenAI-compatible /v1/chat/completions plus the native /completion. Sampling fields are request fields (default values set at server start); the native route takes repeat_penalty and n_predict, the OpenAI route max_tokens. Typical port 8080; no host rule, so the engine must be chosen by the user.", "de": "Eigener Server: OpenAI-kompatibles /v1/chat/completions plus das native /completion. Sampling-Felder sind Anfragefelder (Vorgabewerte beim Serverstart); die native Route nimmt repeat_penalty und n_predict, die OpenAI-Route max_tokens. Üblicher Port 8080; keine Host-Regel, die Engine muss der Nutzer wählen."},
+      "params": {
+        "temperature": {"state": "on", "via": "temperature", "status": "belegt", "default": 0.8},
+        "top_p": {"state": "on", "via": "top_p", "status": "belegt", "default": 0.9, "hint": {"en": "1.0 switches it off.", "de": "1,0 schaltet es ab."}},
+        "top_k": {"state": "on", "via": "top_k", "status": "belegt", "default": 40, "hint": {"en": "0 switches it off. Part of the sampler list, sent in the request body even on the OpenAI route (the server reads it).", "de": "0 schaltet es ab. Teil der Sampler-Liste, wird auch auf der OpenAI-Route im Anfragekörper gelesen."}},
+        "num_ctx": {"state": "config", "via": "-c / --ctx-size", "status": "belegt", "config": "--ctx-size", "hint": {"en": "Context size is a server start option, not a request field.", "de": "Die Kontextgröße ist eine Startoption des Servers, kein Anfragefeld."}},
+        "num_thread": {"state": "config", "via": "-t / --threads", "status": "belegt", "config": "--threads", "hint": {"en": "Threads are a server start option.", "de": "Threads sind eine Startoption des Servers."}},
+        "max_tokens": {"state": "on", "via": "max_tokens", "status": "drittquelle", "hint": {"en": "Native route: n_predict.", "de": "Native Route: n_predict."}},
+        "stop": {"state": "on", "via": "stop", "status": "drittquelle"},
+        "seed": {"state": "on", "via": "seed", "status": "belegt", "hint": {"en": "-1 = random.", "de": "-1 = zufällig."}},
+        "frequency_penalty": {"state": "unknown", "status": "unbekannt"},
+        "presence_penalty": {"state": "on", "via": "presence_penalty", "status": "drittquelle", "hint": {"en": "Listed among the sampling fields of the server code.", "de": "In der Sampling-Feldliste des Servercodes aufgeführt."}},
+        "thinking": {"state": "unknown", "via": "reasoning_format", "status": "drittquelle", "hint": {"en": "The server splits <think> blocks into message.reasoning_content on the OpenAI route; reasoning_format \"none\" keeps everything in content (third party). Switching thinking on or off per request: not read.", "de": "Der Server trennt <think>-Blöcke auf der OpenAI-Route in message.reasoning_content; reasoning_format \"none\" belässt alles im Text (Drittquelle). Denken je Anfrage an- oder abschalten: nicht gelesen."}}
+      },
+      "stats": {"outputIncludesReasoning": "unknown"}
     }
   },
 

@@ -74,7 +74,7 @@ class CapabilitiesTest(unittest.TestCase):
         self.assertEqual(engine_for("custom", "http://192.168.1.5:8080/v1"), "openai")
         self.assertEqual(engine_for("ollama", "http://localhost:11434"), "ollama")
         self.assertEqual(engine_for("litert", "http://127.0.0.1:9379/v1"), "litert")
-        self.assertEqual(engine_for("groq", "https://api.groq.com/openai/v1"), "openai")
+        self.assertEqual(engine_for("custom", "https://api.groq.com/openai/v1"), "openai")  # own engines are found by provider id, not by host (except Ollama Cloud)
 
     def test_gemini3_rules(self):
         for mid in ("gemini-3.8-flash", "models/gemini-3.8-flash", "gemini-3-pro-preview", "gemini-3.1-flash-lite"):
@@ -312,6 +312,43 @@ class MediaGoogleTest(unittest.TestCase):
         g = CAP["mediaGoogle"]["speech_out"]
         usd_per_minute = g["outputTokensPerSecond"]["value"] * 60 * 20.0 / 1_000_000
         self.assertAlmostEqual(usd_per_minute, 0.03, places=3)
+
+
+class ProvidersTest(unittest.TestCase):
+    """Engines researched on 11.11.2026 (SCHNITTSTELLEN 17): shape of the entries and resolution of the hosts."""
+    OWN = ("openrouter", "groq", "mistral", "ollama-cloud", "llamacpp")
+
+    def test_every_own_engine_covers_all_parameters(self):
+        for eid in self.OWN:
+            eng = CAP["engines"][eid]
+            self.assertEqual(set(eng["params"]), set(CAP["parameters"]) - {"note"} if "note" in CAP["parameters"] else set(CAP["parameters"]), eid)
+            for key, c in eng["params"].items():
+                self.assertIn(c["state"], STATES, (eid, key))
+                self.assertIn(c["status"], STATUS, (eid, key))
+                if c["state"] == "config":
+                    self.assertTrue(c.get("config"), (eid, key))
+                if "hint" in c:
+                    self.assertTrue(c["hint"]["en"] and c["hint"]["de"], (eid, key))
+            self.assertIn(eng["stats"]["outputIncludesReasoning"], ("yes", "no", "unknown"), eid)
+
+    def test_hosts_resolve(self):
+        self.assertEqual(engine_for("custom-1", "https://ollama.com"), "ollama-cloud")
+        self.assertEqual(engine_for("ollama", "http://localhost:11434"), "ollama")
+        self.assertEqual(engine_for("openrouter", "https://openrouter.ai/api/v1"), "openrouter")
+        self.assertEqual(engine_for("groq", "https://api.groq.com/openai/v1"), "groq")
+        self.assertEqual(engine_for("mistral", "https://api.mistral.ai/v1"), "mistral")
+        self.assertEqual(engine_for("custom-2", "http://192.168.1.5:8080/v1"), "openai")  # unknown custom engine stays generic
+
+    def test_documented_differences(self):
+        self.assertEqual(cell("mistral", "mistral-small-latest", "seed")["via"], "random_seed")
+        self.assertEqual(cell("openrouter", "x/y", "top_k")["state"], "on")
+        self.assertEqual(cell("llamacpp", "m", "num_ctx")["state"], "config")
+        self.assertEqual(cell("groq", "m", "num_thread")["state"], "off")
+        self.assertEqual(cell("ollama", "m", "thinking")["via"], "think")
+
+    def test_no_cloud_engine_has_thread_setting(self):
+        for eid in ("openrouter", "groq", "mistral", "ollama-cloud"):
+            self.assertEqual(CAP["engines"][eid]["params"]["num_thread"]["state"], "off", eid)
 
 
 if __name__ == "__main__":

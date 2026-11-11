@@ -412,3 +412,49 @@ Die Schnittstellen lokaler Bildprogramme (Stable-Diffusion-Server, ComfyUI, Loca
 - **Mengen als Rechengrundlage (Rechnung, keine Messung):** ein Foto aus der Kamera 2 bis 5 MB; erzeugte Bilder 1K etwa 1 bis 2 MB als PNG; Sprache als WAV 16 kHz mono 16 Bit rund 1,9 MB je Minute (Abschnitt 12.4). 500 Bilder sind also etwa 1 GB.
 - **Vorschlag (Entwurf):** Medien als Blob in IndexedDB (Mediensatz KONZEPT 20.6) und nicht in `localStorage` (Grenze rund 5 MB je Herkunft, nur Text); beim Start `persisted()` prüfen, bei `false` einmal `persist()` versuchen und in den Einstellungen anzeigen; Belegung (`estimate`) in den Einstellungen mit Warnung ab 80 %; beim Fehler `QuotaExceededError` Speichern mit klarer Meldung abbrechen; Export der Medien als Datei anbieten (Sicherung), da Räumung stumm erfolgt.
 - **Test am Gerät (Entwickler):** `navigator.storage.estimate()` und `persisted()` in der Konsole auf dem Pixel (Tab und installierte PWA) ausgeben und die Zahlen eintragen.
+
+## 17 Weitere Anbieter (11.11.2026, Nachtrag Phase 3; Daten in `lib/capabilities.json`, Engines `openrouter`, `groq`, `mistral`, `ollama-cloud`, `llamacpp`, Zelle `thinking` von `ollama`)
+
+Gelesen wurden Suchauszüge der Herstellerseiten (Seiten selbst sind aus dem Arbeitsbereich nicht abrufbar). `belegt` steht nur dort, wo der Auszug der Herstellerseite (oder deren Schnittstellenbeschreibung) die Aussage trägt, sonst `drittquelle` oder `unbekannt`. Nichts davon ist am Gerät gegen den echten Dienst geprüft.
+
+### 17.1 Ollama, lokal (Zelle `thinking`)
+- Feld **`think`** bei `/api/chat` und `/api/generate` (belegt, Ollama-Dokumentation): `true`/`false` bei den meisten Modellen, **`"low"`/`"medium"`/`"high"` bei gpt-oss** (`true`/`false` wird dort ignoriert, **nicht abschaltbar**). Neuere Fassungen der Seite und die OpenAPI-Datei nennen zusätzlich `"max"`; ein Fehlerbericht zeigt, dass ältere Server `"max"` mit „invalid think value“ ablehnen (Drittquelle).
+- Antwort: Denkspur in **`message.thinking`**, Antwort in `message.content` (belegt). Bei unterstützten Modellen ist Denken **standardmäßig an** (CLI und API).
+- Welche Stufen ein Modell nimmt, steht in **`POST /api/show`** (Feld `capabilities`, neuere Fassungen mit eigenem Block `thinking` samt Standardwert; Drittquelle zu Version 0.34). Damit lässt sich der Schalter je Modell aufbauen, statt Modellnamen zu raten.
+- Folge für die App (Vorschlag): `think` nur senden, wenn `/api/show` „thinking“ meldet; bei gpt-oss Stufen anbieten, sonst Ein/Aus. **Noch nicht gebaut.**
+
+### 17.2 OpenRouter
+- Schema fast wie OpenAI, **ein Parametersatz für alle Modelle**: `temperature` 0–2 (Standard 1), `top_p` 0–1, `top_k` ab 1 (0 = aus; „nicht für OpenAI-Modelle“), `min_p`, `top_a`, `repetition_penalty` (0–2), `frequency_penalty` und `presence_penalty` (−2 bis 2), `seed` (Ganzzahl, Wiederholbarkeit nicht überall), `max_tokens`, `stop` (belegt, API-Referenz).
+- **Unbekannte Parameter werden ignoriert**, die übrigen an das Modell weitergegeben (belegt). Welche ein Modell wirklich nimmt, zeigt die Modellliste (`supported_parameters`; Filter `?supported_parameters=tools` auf der Webseite). Mit `provider.require_parameters` lässt sich erzwingen, dass nur Anbieter gewählt werden, die alles können (Drittquelle).
+- **Denken:** ein Objekt `reasoning` mit `effort` (`max`/`xhigh`, `high`, `medium`, `low`, `minimal`, `none`) **oder** `max_tokens` (Budget) **oder** `enabled`; `effort` und `max_tokens` nicht gleichzeitig (Pydantic-Doku, Drittquelle). Prozentwerte: high etwa 80 %, medium 50 %, low 20 %, minimal 10 % von `max_tokens` (belegt). Nicht abschaltbare Modelle tragen `mandatory: true` in der Modellliste.
+- **Ausgabe:** `message.reasoning`; `reasoning.exclude: true` lässt den Text weg, die **Token werden trotzdem berechnet und zählen zu `max_tokens`** (belegt). Folge: Denkbudget und `max_tokens` müssen zusammenpassen, sonst endet die Antwort leer (Seite beschreibt das ausdrücklich).
+- Offen: ob `usage.completion_tokens` die Denk-Token enthält (`outputIncludesReasoning` bleibt `unknown`); ob `reasoning_effort` (OpenAI-Name) als Abkürzung akzeptiert wird (nicht gelesen).
+
+### 17.3 Groq
+- OpenAI-kompatibel (`/openai/v1`). Denken: **`reasoning_effort`**, **`reasoning_format`**, **`include_reasoning`** (belegt, Groq-Dokumentation).
+  - gpt-oss-20b/120b: `reasoning_effort` `low`/`medium`/`high` (Standard `medium`); nur dort gilt auch `include_reasoning` (`false` blendet die Denkspur aus).
+  - qwen3: `reasoning_effort` nur `none` (aus) oder `default` (an) (Drittquelle, deckt sich mit der Dokumentation).
+  - `reasoning_format`: `parsed` (Denkspur in `message.reasoning`), `raw` (`<think>`-Marken im Text), `hidden`. **`include_reasoning` und `reasoning_format` schließen sich aus.** Mit JSON-Modus oder Werkzeugaufrufen ist `raw` nicht erlaubt (Fehler 400).
+- Token-Grenze je Modell 8K bis 65K (`max_completion_tokens`; Drittquelle); Kontext 131K bei den gesehenen Modellen. `stop` bis 4 Folgen. `seed`, Penalties, `top_k`: **nicht gelesen**.
+
+### 17.4 Mistral
+- Eigene API-Form (`/v1/chat/completions`), nahe an OpenAI, aber **`random_seed`** statt `seed` (belegt). `temperature` 0–2 (Drittquelle: Standard 0,7), `top_p`, `max_tokens`, `stop`, `presence_penalty`, `frequency_penalty` (belegt, Seite der Schnittstelle); `top_k` fehlt in den Feldlisten.
+- Denken: Anfragefeld **`reasoning_effort`** und **`prompt_mode`** (`"reasoning"` schaltet den Denk-Systemprompt). Werte `low`/`medium`/`high` nur aus einem Fremd-Wrapper (Magistral). Ob die Denkspur getrennt oder im Text kommt: **nicht gelesen**.
+- Datenschutz: laut Projektliste Server in Frankreich, Gratisplan kann Eingaben zum Training nutzen (Hinweis steht schon in `lib/providers.js`; Seite nicht erneut geprüft).
+
+### 17.5 Ollama Cloud
+- Gleiche native Form wie lokales Ollama; gehostete Modelle über `ollama.com`. Über ein lokales Ollama laufen sie mit dem Suffix `:cloud` (Drittquelle), die Deaktivierung steht in der FAQ („Ollama cloud disabled“). Direkter Zugriff mit Schlüssel: **nicht gelesen**.
+- Datenschutz: Eingaben verlassen das Gerät, auch wenn der Aufruf **über** das lokale Ollama läuft. Anzeige wie bei jedem Cloud-Anbieter (Datenschutzstufe 3 oder höher, KONZEPT 19.5), kein „offline“.
+- Ein Testbericht (GitHub-Issue) zeigt für ein Cloud-Modell `options.think` und `reasoning_effort` (`none` bis `max`) über die OpenAI-kompatible Route; die Dokumentation sagt das nicht. In den Daten nur als `drittquelle`.
+- Auswahl in der App: Host-Regel `ollama.com` (Daten: `endpointRules`).
+
+### 17.6 llama.cpp (`llama-server`)
+- Eigener Server mit **OpenAI-Route** (`/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`) und **nativer Route** (`/completion`); Webseite und Ollama-Nachbildung sind vorhanden (Drittquelle).
+- Sampling (Serverstart-Vorgabe, je Anfrage überschreibbar, belegt aus Parameterliste und Servercode): `temperature` (0,8), `top_k` (40, 0 = aus), `top_p` (0,9; 1,0 = aus), `min_p` (0,1), `seed` (−1 = zufällig), `repeat_penalty`, `repeat_last_n`, `presence_penalty`, Typ-P, XTC, DRY, Mirostat. Native Route: `n_predict`, OpenAI-Route: `max_tokens`.
+- **Kontextgröße und Threads sind Startoptionen** (`--ctx-size`, `--threads`), keine Anfragefelder: in den Daten Zustand `config` wie bei LiteRT-LM.
+- Denken: die OpenAI-Route trennt `<think>`-Blöcke in `message.reasoning_content`; `reasoning_format: "none"` lässt alles im Text (Drittquelle). Schalter je Anfrage: nicht gelesen.
+- Anmeldung optional (`--api-key`, `--api-key-file`); lokal Standard offen. Standardport 8080. **Keine Host-Regel**: in der App als eigene OpenAI-kompatible Engine einzutragen; sie verwendet dann die Zellen von `openai`. Der Eintrag `llamacpp` in den Daten greift nur, wenn die Seite einen Anbieter mit dieser Kennung anlegt (Entscheidung Chat-Strang).
+
+### 17.7 Wirkung auf die App und offene Punkte
+- Die Seite liest die Zellen über `HeinzCaps`. Geändert hat sich: OpenRouter, Groq, Mistral haben jetzt eigene Zellen statt der allgemeinen; Ollama Cloud wird an `ollama.com` erkannt; sonst nichts. Das Verhalten der Seite wurde nicht geändert; ob die Regler wie gewünscht reagieren, prüft der Chat-Strang am Gerät. Besonders: Mistral-Seed muss `random_seed` heißen (`via`), Groq nutzt `max_completion_tokens`.
+- **Offen (Sonde):** Wirkt `top_k` bei OpenRouter für Nicht-OpenAI-Modelle sichtbar; kommt bei Groq/Mistral `reasoning` getrennt an; zählt die Ausgabezahl bei OpenRouter/Groq/Mistral die Denk-Token (`outputIncludesReasoning`); Browser-Zugriff (CORS) auf alle fünf Dienste (in `lib/providers.js` steht `cors: 'unchecked'`).
