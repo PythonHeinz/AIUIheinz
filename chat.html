@@ -285,6 +285,7 @@
         .st-chips input { margin: 0; accent-color: var(--acc); }
         .chk { display: flex; align-items: center; gap: 10px; font-size: .88rem; margin: 10px 0; cursor: pointer; }
         .chk input { accent-color: var(--acc); width: 18px; height: 18px; margin: 0; }
+        .sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .sr-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; } .sr-grid label.sr-off { opacity: .45; } .sr-grid .inp { width: 100%; box-sizing: border-box; }
         .st-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: 8px; }
         .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid var(--line); }
         .st-table th:first-child, .st-table td:first-child { text-align: left; }
@@ -472,6 +473,7 @@
                 <div class="caps grp"><span data-i18n="gPerf">Performance</span></div>
                 <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" onchange="onPreloadToggle()"><i></i></span></label>
                 <button class="row" type="button" data-go="speed" onclick="showPage('speed')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i18n="rSpeed">Speed test</b><small data-i18n="rSpeedSub">Find the best thread count</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="series" onclick="showPage('series')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="rSeries">Test series</b><small data-i18n="rSeriesSub">Run many settings, export for an agent</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
                 <div class="caps grp"><span data-i18n="gPrivacy">Privacy</span></div>
                 <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" onchange="onOnlineToggle()"><i></i></span></label>
                 <div class="caps grp"><span data-i18n="gApp">App</span></div>
@@ -505,6 +507,41 @@
                 <small id="eng-note" class="help"></small>
                 <div id="eng-status" class="status-line" style="cursor:pointer" onclick="if (MODELS.length) openModelsFromPanel()"></div>
                 <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
+            </div>
+
+            <div class="pg" data-pg="series">
+                <small class="help" style="margin-top:0" data-i18n="srNote">Runs one prompt under many settings, one after the other, and collects the data. No system prompt, no chat history. Empty field = the slider value stays.</small>
+                <div class="caps grp"><span data-i18n="srPromptLbl">Prompt</span></div>
+                <textarea id="sr-prompt" class="inp" rows="2" oninput="srPlan()">Name one unusual animal in one sentence.</textarea>
+                <div class="caps grp"><span data-i18n="srValues">Values to try (separate with commas)</span></div>
+                <div class="sr-grid">
+                    <label data-sr="temperature"><b title="Temperature">T°</b><input id="sr-temp" class="inp" inputmode="decimal" placeholder="0, 0.5" oninput="srPlan()"></label>
+                    <label data-sr="top_p"><b>Top-p</b><input id="sr-topp" class="inp" inputmode="decimal" placeholder="1" oninput="srPlan()"></label>
+                    <label data-sr="top_k"><b>Top-k</b><input id="sr-topk" class="inp" inputmode="numeric" placeholder="1, 64" oninput="srPlan()"></label>
+                    <label data-sr="num_thread" id="sr-thr-box"><b data-i18n="srThreads">Threads</b><input id="sr-thr" class="inp" inputmode="numeric" placeholder="2, 4" oninput="srPlan()"></label>
+                </div>
+                <div id="sr-think-box">
+                    <div class="caps grp"><span data-i18n="thinkLbl">Thinking</span></div>
+                    <div class="st-chips" id="sr-think">
+                        <label class="tile" data-c="v"><input type="checkbox" value="default" onchange="srPlan()"><span data-i18n="thinkDefault">model default</span></label>
+                        <label class="tile" data-c="b"><input type="checkbox" value="fast" onchange="srPlan()"><span data-i18n="thinkFast">Fast</span></label>
+                        <label class="tile" data-c="g"><input type="checkbox" value="deep" onchange="srPlan()"><span data-i18n="thinkDeep">Deep</span></label>
+                    </div>
+                </div>
+                <div class="sr-grid">
+                    <label><b data-i18n="srReps">Repeats</b><input id="sr-reps" class="inp" inputmode="numeric" value="1" oninput="srPlan()"></label>
+                    <label><b data-i18n="srMaxTok">Max. answer tokens</b><input id="sr-max" class="inp" inputmode="numeric" value="200" oninput="srPlan()"></label>
+                </div>
+                <label class="chk"><input type="checkbox" id="sr-answers" checked><span data-i18n="srAnswers">Answer texts in the export</span></label>
+                <div id="sr-plan" class="help" style="min-height:16px"></div>
+                <div class="st-btns">
+                    <button class="pill acc" id="sr-start" type="button" onclick="srStart()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
+                    <button class="pill danger" id="sr-stop" type="button" onclick="srStop()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
+                </div>
+                <div id="sr-status" class="help" style="min-height:16px"></div>
+                <div class="st-prog"><i id="sr-prog-i"></i></div>
+                <details class="st-det"><summary data-i18n="stTable">Table</summary><div id="sr-table"></div></details>
+                <div class="st-btns st-sticky" id="sr-copies"></div>
             </div>
 
             <div class="pg" data-pg="speed">
@@ -560,6 +597,7 @@
     </section>
 
     <script src="lib/providers.js"></script>
+    <script src="lib/testreihe.js"></script>
     <script>
         // ===== PARSER START =====
         // Escape für alles, was in HTML landet
@@ -925,7 +963,7 @@
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
                 updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
-                speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
+                rSeries: 'Test series', rSeriesSub: 'Run many settings, export for an agent', srNote: 'Runs one prompt under many settings, one after the other, and collects the data. No system prompt, no chat history. An empty field keeps the slider value.', srPromptLbl: 'Prompt', srValues: 'Values to try (separate with commas)', srThreads: 'Threads', srReps: 'Repeats', srMaxTok: 'Max. answer tokens', srAnswers: 'Answer texts in the export', srPlan: 'Runs: {n} (limit {max})', srPlanTime: ', about {m} min', srTooMany: '{n} runs are too many (limit {max}). Remove values or repeats.', srNoPrompt: 'Write a prompt first.', srCloud: 'This sends {n} requests to {e}. Tap again to confirm.', srConfirm: 'Confirm and start', srRunning: 'Run {i} of {n} …', srDone: 'Done: {n} runs.', srStopped: 'Stopped after {n} runs.', srErrors: 'Stopped after three errors in a row: {m}', srCopy: 'Copy export', srCopyPart: 'Copy part {i} of {n}', srBlocked: 'locked for this model', srBusy: 'Wait until the answer is finished.', srNoModel: 'Choose a model first.', srOnlineOff: 'Online is off.', srCol: 'Settings', speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
                 stCold: 'Unload model first (measures real load time)', stStart: 'Start test', stStop: 'Stop', stCopy: 'Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
@@ -974,7 +1012,7 @@
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
                 updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
-                speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
+                rSeries: 'Testreihe', rSeriesSub: 'Viele Einstellungen durchlaufen, Export für einen Agenten', srNote: 'Schickt einen Prompt nacheinander mit vielen Einstellungen und sammelt die Daten. Kein Systemprompt, kein Chatverlauf. Ein leeres Feld lässt den Reglerwert stehen.', srPromptLbl: 'Prompt', srValues: 'Werte zum Ausprobieren (mit Komma trennen)', srThreads: 'Threads', srReps: 'Wiederholungen', srMaxTok: 'Max. Antwort-Token', srAnswers: 'Antworttexte im Export', srPlan: 'Läufe: {n} (Grenze {max})', srPlanTime: ', etwa {m} Min.', srTooMany: '{n} Läufe sind zu viel (Grenze {max}). Werte oder Wiederholungen streichen.', srNoPrompt: 'Erst einen Prompt schreiben.', srCloud: 'Das schickt {n} Anfragen an {e}. Zum Bestätigen noch einmal tippen.', srConfirm: 'Bestätigen und starten', srRunning: 'Lauf {i} von {n} …', srDone: 'Fertig: {n} Läufe.', srStopped: 'Nach {n} Läufen gestoppt.', srErrors: 'Nach drei Fehlern in Folge gestoppt: {m}', srCopy: 'Export kopieren', srCopyPart: 'Teil {i} von {n} kopieren', srBlocked: 'für dieses Modell gesperrt', srBusy: 'Warte, bis die Antwort fertig ist.', srNoModel: 'Erst ein Modell wählen.', srOnlineOff: 'Online ist aus.', srCol: 'Einstellung', speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
                 stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: 'Test starten', stStop: 'Stopp', stCopy: 'Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
@@ -1912,7 +1950,7 @@
         }
 
         async function askGemma() {
-            if (generating || speedTesting) return;
+            if (generating || speedTesting || seriesRunning) return;
             const contextText = document.getElementById('context').value.trim();
             const queryInput = document.getElementById('query');
             const queryText = queryInput.value.trim();
@@ -2251,6 +2289,158 @@
         }
 
 
+
+        // ===== Testreihe (docs/KONZEPT.md 21, Schritt 1: Läufer mit Matrix und Export; Logik in lib/testreihe.js) =====
+        let seriesRunning = false, srAbort = null, srConfirmed = false, srRuns = [], srMeta = null;
+        const SR_AXES = [['temperature', 'sr-temp', 'float'], ['top_p', 'sr-topp', 'float'], ['top_k', 'sr-topk', 'int'], ['num_thread', 'sr-thr', 'int']];
+        function srSpec() {
+            const axes = {};
+            SR_AXES.forEach(function (a) {
+                if (!capSendable(a[0]) || (a[0] === 'num_thread' && settings.provider !== 'ollama')) return;
+                const list = HeinzSeries.parseList($(a[1]).value, a[2]);
+                if (list.length) axes[a[0]] = list;
+            });
+            if (thinkRule()) {
+                const th = Array.prototype.slice.call(document.querySelectorAll('#sr-think input:checked')).map(function (i) { return i.value; });
+                if (th.length) axes.think = ['default', 'fast', 'deep'].filter(function (k) { return th.indexOf(k) >= 0; });
+            }
+            return { axes: axes, reps: Math.max(1, parseInt($('sr-reps').value, 10) || 1) };
+        }
+        function srGate() {
+            SR_AXES.forEach(function (a) {
+                const lab = document.querySelector('[data-sr="' + a[0] + '"]'); if (!lab) return;
+                const blocked = !capSendable(a[0]) || (a[0] === 'num_thread' && settings.provider !== 'ollama');
+                lab.classList.toggle('sr-off', blocked); $(a[1]).disabled = blocked;
+                if (blocked && a[0] !== 'num_thread') $(a[1]).placeholder = t('srBlocked');
+            });
+            $('sr-thr-box').hidden = settings.provider !== 'ollama';
+            $('sr-think-box').hidden = !thinkRule();
+        }
+        function srPlan() {
+            srConfirmed = false; srGate();
+            const n = HeinzSeries.count(srSpec()), box = $('sr-plan'), start = $('sr-start');
+            let m = '';
+            const perRun = settings.provider === 'ollama' ? 8 : (thinkRule() ? 15 : 4);
+            m = t('srPlanTime', { m: Math.max(1, Math.round(n * perRun / 60)) });
+            box.textContent = n > HeinzSeries.MAX_RUNS ? t('srTooMany', { n: n, max: HeinzSeries.MAX_RUNS }) : t('srPlan', { n: n, max: HeinzSeries.MAX_RUNS }) + m;
+            start.disabled = n > HeinzSeries.MAX_RUNS;
+            $('sr-start').querySelector('span').textContent = t('stStart');
+        }
+        function srOptions(params, maxTok) {
+            const o = {};
+            const num = function (v, d) { return v === undefined ? d : v; };
+            if (capSendable('temperature')) o.temperature = num(params.temperature, parseFloat($('param-temp').value));
+            if (capSendable('top_p')) o.top_p = num(params.top_p, parseFloat($('param-topp').value));
+            if (capSendable('top_k')) o.top_k = num(params.top_k, parseInt($('param-topk').value, 10));
+            if (capSendable('num_ctx')) o.num_ctx = parseInt($('param-ctx').value, 10);
+            if (settings.provider === 'ollama' && capSendable('num_thread')) {
+                const th = num(params.num_thread, parseInt($('param-threads').value, 10));
+                if (th > 0) o.num_thread = th;
+            }
+            if (maxTok > 0 && capSendable('max_tokens')) o.num_predict = maxTok;
+            return o;
+        }
+        function srRender() {
+            const prog = $('sr-prog-i'); const planned = srMeta ? srMeta.planned : 0;
+            if (prog) prog.style.width = planned ? Math.round(srRuns.length / planned * 100) + '%' : '0';
+            if (!srRuns.length) { $('sr-table').innerHTML = ''; $('sr-copies').innerHTML = ''; return; }
+            let h = '<table class="st-table"><tr><th>#</th><th>' + esc(t('srCol')) + '</th><th>Out</th><th>Think</th><th>s</th><th>ok</th></tr>';
+            srRuns.forEach(function (r) {
+                const st = r.stats || {};
+                h += '<tr><td>' + r.n + '</td><td style="text-align:left">' + esc(Object.keys(r.params).map(function (k) { return k + ' ' + r.params[k]; }).join(', ') || '–') + '</td><td>' + (st.outputTokens || 0) +
+                    '</td><td>' + (st.reasoningTokens || 0) + '</td><td>' + ((r.totalMs || 0) / 1000).toFixed(1) + '</td><td>' + (r.error ? '✕' : st.finishReason === 'length' ? '!' : '✓') + '</td></tr>';
+            });
+            $('sr-table').innerHTML = h + '</table>';
+            const parts = srExportParts();
+            $('sr-copies').innerHTML = parts.map(function (txt, i) {
+                return '<button class="pill" type="button" data-sr-copy="' + i + '"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span>' + esc(parts.length > 1 ? t('srCopyPart', { i: i + 1, n: parts.length }) : t('srCopy')) + '</span></button>';
+            }).join('');
+        }
+        function srExportParts() {
+            if (!srMeta) return [];
+            return HeinzSeries.exportParts(srMeta, srRuns, { answers: $('sr-answers').checked, answerMax: 600, maxChars: 12000 });
+        }
+        document.addEventListener('click', function (e) {
+            const b = e.target.closest && e.target.closest('[data-sr-copy]'); if (!b) return;
+            const sp = b.querySelector('span'), old = sp.textContent, parts = srExportParts();
+            copyText(parts[parseInt(b.getAttribute('data-sr-copy'), 10)] || '').then(function () { sp.textContent = '✓'; }).catch(function () { sp.textContent = '✕'; })
+                .then(function () { setTimeout(function () { sp.textContent = old; }, 1500); });
+        });
+        function srStop() { if (srAbort) srAbort.abort(); }
+        async function srStart() {
+            if (seriesRunning) return;
+            if (generating || speedTesting) { $('sr-status').textContent = t('srBusy'); return; }
+            const prompt = $('sr-prompt').value.trim(), model = $('model-select').value || settings.model;
+            if (!prompt) { $('sr-status').textContent = t('srNoPrompt'); return; }
+            if (!model) { $('sr-status').textContent = t('srNoModel'); return; }
+            const prov = settings.provider, pv = PV.get(prov) || PV.get('ollama');
+            if (!pv.local && !pv.custom && !PV.onlineAllowed()) { $('sr-status').textContent = t('srOnlineOff'); return; }
+            const spec = srSpec(), rows = HeinzSeries.expand(spec);
+            if (rows.length > HeinzSeries.MAX_RUNS) return;
+            if (!pv.local && !srConfirmed) {   // Cloud: Anzahl nennen, zweites Tippen bestätigt
+                srConfirmed = true;
+                $('sr-status').textContent = t('srCloud', { n: rows.length, e: pv.name });
+                $('sr-start').querySelector('span').textContent = t('srConfirm');
+                return;
+            }
+            srConfirmed = false; $('sr-start').querySelector('span').textContent = t('stStart');
+            const maxTok = parseInt($('sr-max').value, 10) || 0;
+            let app = '?';
+            try { app = (await (await fetch('VERSION.txt', { cache: 'no-store' })).text()).trim().split('\n')[0]; } catch (e) { /* offline: Version unbekannt */ }
+            srRuns = [];
+            srMeta = { name: '', date: new Date().toISOString().slice(0, 16).replace('T', ' '), app: app, device: (navigator.platform || '?') + ' ' + innerWidth + 'x' + innerHeight,
+                engine: pv.name + ' (' + pv.id + ')', model: model, prompt: prompt, axes: spec.axes, reps: spec.reps, planned: rows.length,
+                fixed: { num_predict: maxTok || null, num_ctx: capSendable('num_ctx') ? parseInt($('param-ctx').value, 10) : null }, seed: 'not sent', caps: capsStates().trim(), stopped: '' };
+            ['temperature', 'top_p', 'top_k'].forEach(function (k) { if (!spec.axes[k] && capSendable(k)) srMeta.fixed[k] = { temperature: parseFloat($('param-temp').value), top_p: parseFloat($('param-topp').value), top_k: parseInt($('param-topk').value, 10) }[k]; });
+            seriesRunning = true; srAbort = new AbortController();
+            $('sr-start').style.display = 'none'; $('sr-stop').style.display = 'inline-flex';
+            let wake = null; try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
+            let status = '', errRow = 0;
+            try {
+                if (prov === 'ollama') await unloadOthers(model);
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    $('sr-status').textContent = t('srRunning', { i: i + 1, n: rows.length }); srRender();
+                    const opts = srOptions(row.params, maxTok);
+                    const th = row.params.think;
+                    const eff = th ? thinkEffortFor(th === 'default' ? '' : th) : '', snd = th ? thinkSendFor(th === 'default' ? '' : th) : null;
+                    const run = { n: row.n, row: row.row, rep: row.rep, params: row.params, answer: '', sent: { options: opts, reasoningEffort: eff || undefined, thinking: snd || undefined }, at: new Date().toISOString() };
+                    const t0 = performance.now(); let first = null, buf = '';
+                    try {
+                        const result = await PV.chat(prov, {
+                            model: model, messages: [{ role: 'user', content: prompt }], options: opts, keepAlive: KEEP_ALIVE, backend: settings.backend,
+                            reasoningEffort: eff, thinking: snd, signal: srAbort.signal,
+                            onDelta: function (d) { if (first === null) first = performance.now() - t0; buf += d; }
+                        });
+                        run.stats = result.stats; errRow = 0;
+                        const ex = PV.lastExchange && PV.lastExchange.provider === prov ? PV.lastExchange : null;
+                        if (ex) { run.usage = ex.usage; if (!srMeta.fixed.request) srMeta.fixed.request = exBodyText(ex.body); }
+                    } catch (err) {
+                        if (err.name === 'AbortError') { run.answer = buf; srRuns.push(run); throw err; }
+                        run.error = errText(err, prov); errRow++;
+                    }
+                    run.answer = buf; run.firstMs = first === null ? null : Math.round(first); run.totalMs = Math.round(performance.now() - t0);
+                    srRuns.push(run); srRender();
+                    if (errRow >= 3) { status = t('srErrors', { m: run.error }); srMeta.stopped = 'three errors in a row'; break; }
+                    if (!pv.local && i < rows.length - 1) await sleep(1200);   // Gratisstufen haben Anfragegrenzen
+                }
+                if (!status) status = t('srDone', { n: srRuns.length });
+            } catch (e) {
+                if (e.name === 'AbortError') { status = t('srStopped', { n: srRuns.length }); srMeta.stopped = 'by user'; }
+                else status = e.message;
+            } finally {
+                seriesRunning = false; srAbort = null;
+                try { if (wake) wake.release(); } catch (e) { /* schon frei */ }
+                $('sr-start').style.display = 'inline-flex'; $('sr-stop').style.display = 'none';
+                $('sr-status').textContent = status; srRender();
+                lsSet('heinz_series', { meta: srMeta, runs: srRuns.map(function (r) { return Object.assign({}, r, { answer: String(r.answer || '').slice(0, 2000) }); }) });
+            }
+        }
+        function srRestore() {
+            const d = lsGet('heinz_series', null);
+            if (d && d.meta && d.runs && d.runs.length) { srMeta = d.meta; srRuns = d.runs; srRender(); }
+        }
+
         // ===== Menue, Chatliste, Modellwahl, Vollbild-Editor =====
         const ICON = function (n, cls) { return '<svg class="i' + (cls === undefined ? ' sm' : (cls ? ' ' + cls : '')) + '"><use href="lib/icons.svg#i-' + n + '"/></svg>'; };
         function closeAll() { ['menu-sheet', 'model-sheet', 'drawer'].forEach(function (id) { $(id).classList.remove('open'); }); $('scrim').classList.remove('open'); }
@@ -2258,7 +2448,7 @@
         function openMenu() { showPage('main'); openLayer('menu-sheet'); }
         function openDrawer() { renderSavedList(); openLayer('drawer'); }
         function openModels() { $('model-search').value = ''; renderModelSheet(); openLayer('model-sheet'); }
-        const PAGE_TITLES = { main: 'menuTitle', engine: 'rEngine', speed: 'rSpeed', look: 'rLook', update: 'rInfo' };
+        const PAGE_TITLES = { main: 'menuTitle', engine: 'rEngine', speed: 'rSpeed', series: 'rSeries', look: 'rLook', update: 'rInfo' };
         let curPage = 'main';
         function setSheetTitle() { $('sh-title').textContent = t(PAGE_TITLES[curPage]); }
         function exportBackup() {
@@ -2302,6 +2492,7 @@
             document.querySelectorAll('#menu-sheet .pg').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-pg') === id); });
             $('sh-back').hidden = id === 'main'; $('q-reload').hidden = id !== 'main'; 
             setSheetTitle();
+            if (id === 'series') srPlan();
             if (id === 'update') setUpd(updState.mode === 'check' ? 'idle' : updState.mode);
             document.querySelector('#menu-sheet .sh-body').scrollTop = 0;
         }
@@ -2588,7 +2779,7 @@
         function renderCaps() {
             if (!window.HeinzCaps || !HeinzCaps.ready()) return;
             const src = paramSrc();
-            tempRange();
+            tempRange(); srGate();
             CAP_CARDS.forEach(function (id) {
                 const card = $(id); if (!card) return;
                 const cell = capCell(card.getAttribute('data-cap-card'));
@@ -2635,18 +2826,20 @@
         function thinkKey() { const c = capCtx(); return c.id + '|' + c.model; }
         function thinkStage() { const v = (settings.thinkBy || {})[thinkKey()]; return v === 'fast' || v === 'deep' ? v : ''; }
         // reasoning_effort = Name der Stufe aus der Regel (Schlüssel von effortMap); nie zusammen mit thinking_level oder thinking_budget
-        function thinkEffort() {
-            const r = thinkRule(), st = thinkStage();
+        function thinkEffortFor(st) {
+            const r = thinkRule();
             if (!r || !st) return '';
             const e = r[st];
             return e && r.effortMap && Object.prototype.hasOwnProperty.call(r.effortMap, e) ? e : '';
         }
+        function thinkEffort() { return thinkEffortFor(thinkStage()); }
         // Native route (Google): the same rule gives the level or the token budget, sent as thinkingConfig; null = send nothing
-        function thinkSend() {
-            const r = thinkRule(), e = thinkEffort();
+        function thinkSendFor(st) {
+            const r = thinkRule(), e = thinkEffortFor(st);
             if (!r || !e) return null;
             return { kind: r.kind, value: r.effortMap[e] };
         }
+        function thinkSend() { return thinkSendFor(thinkStage()); }
         // Name des gesendeten Feldes je Weg: nativ thinkingLevel/thinkingBudget, sonst reasoning_effort
         function thinkWire(sd) {
             if (settings.provider === 'google') return (sd.kind === 'budget' ? 'thinkingBudget ' : 'thinkingLevel ') + sd.value;
@@ -2863,6 +3056,7 @@
             showVersion();
             const lastSt = lsGet('heinz_speedtest', null);
             if (lastSt && Array.isArray(lastSt.rows)) { stRows = lastSt.rows; stMeta = lastSt.meta; renderSpeedTest(); }
+            srRestore();
         })();
     </script>
 </body>

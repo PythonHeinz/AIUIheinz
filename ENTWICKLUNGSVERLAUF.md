@@ -467,3 +467,11 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `docs/SCHNITTSTELLEN.md` Abschnitte 10 (Datenformat, Auflösung) und 11 (Modellwechsel, Recherche zu Abkündigungen). Nachtrag 3 (Bild und Sprache bei Google) folgt als Abschnitt 12.
 - `tests/test_capabilities.py`: 10 neue Tests (Referenzauflösung `resolve_slot`, Medienregeln, Fehlermuster). Gesamtlauf grün (20 Server-, 16 Capabilities-, 90 Seitentests, alles simuliert, nichts am Gerät).
 - Alle Eingabearten der Chatmodelle und die Angaben zu den übrigen Engines sind Vorwissen (`vermutet`), Quellen zu Abkündigungen teils nur Suchausschnitte oder Foren (`drittquelle`).
+
+## 11.11.2026 – Testreihen Schritt 1 (Chat „AIUIheinz-Chat“)
+- Entscheidungen des Entwicklers zu `docs/KONZEPT.md` 21.5: nur Browser-Speicher, ein Kopierblock mit Teilen bei Überlänge, höchstens 30 Läufe (festgehalten in 21.5a).
+- Neu `lib/testreihe.js` (`HeinzSeries`: `parseList`, `expand`, `count`, `exportParts`, ohne DOM) und die Menüseite „Testreihe“ in `chat.html` (Läufer `srStart`, Hilfen `srSpec`, `srOptions`, `srRender`, `srExportParts`). Achsen: Temperatur, Top-p, Top-k, Threads (nur Ollama), Denken; Threads laufen als äußerste Achse (Modell lädt nicht neu), Wiederholungen innen. Dieselbe Anbieterschicht wie der Chat (`PV.chat`), aber ohne Chatverlauf, ohne Systemprompt, ohne Eingriff in `chatHistory`. Gesperrte Parameter (Zustand off/error/fixed/config) sind grau und gehören nicht zur Matrix; unbekannte bleiben nutzbar und stehen im Export unter „Capabilities“.
+- Sicherungen: Cloud-Engines fragen mit Anzahl der Anfragen (zweites Tippen), 1,2 s Pause, nach drei Fehlern in Folge Abbruch, Wake Lock des Browsers, Online-Sperre gilt. Ergebnis wird in `heinz_series` gespeichert (Antworttexte auf 2000 Zeichen).
+- `thinkEffort`/`thinkSend` haben jetzt Varianten mit Stufe (`thinkEffortFor`, `thinkSendFor`); Verhalten des Chats unverändert.
+- Zahlen: Dezimalpunkt, Komma trennt Werte („0, 0.5“). Tempo-Test bleibt unverändert als eigener Weg.
+- Tests: 5 neue (Logik, Matrix mit Ollama, Threads außen und Grenze 30, Stopp und drei Fehler, natives Google mit Denkstufen, gesperrtem Top-k und Bestätigung); Mutation (gesperrte Achse nicht ausgenommen) erkannt. 95 Seitentests grün, nur simuliert, nicht am Gerät geprüft.

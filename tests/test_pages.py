@@ -1208,6 +1208,142 @@ class PageTest(unittest.TestCase):
         page2.goto(self.srv.base + "/chat.html")
         self.assertEqual(page2.evaluate("document.getElementById('param-temp').max"), "1.0")
 
+    # ---------- test series (docs/KONZEPT.md 21, lib/testreihe.js) ----------
+    def series_open(self, page):
+        self.menu(page, "series")
+        page.wait_for_selector("#sr-start")
+
+    def series_fill(self, page, **v):
+        for k, val in v.items():
+            page.fill("#sr-" + k, val)
+
+    def test_series_logic_parses_lists_expands_cross_product_threads_outermost_and_splits_export(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        self.assertEqual(page.evaluate("HeinzSeries.parseList('0, 0.5; 1 x 1', 'float')"), [0, 0.5, 1])
+        self.assertEqual(page.evaluate("HeinzSeries.parseList('2 4 4 abc', 'int')"), [2, 4])
+        rows = page.evaluate("HeinzSeries.expand({ axes: { temperature: [0, 1], top_k: [1, 64], num_thread: [2, 4] }, reps: 2 })")
+        self.assertEqual(len(rows), 16)
+        self.assertEqual([r["params"]["num_thread"] for r in rows], [2] * 8 + [4] * 8, "threads change least often")
+        self.assertEqual([r["rep"] for r in rows[:4]], [1, 2, 1, 2], "repetitions are innermost")
+        self.assertEqual([r["n"] for r in rows], list(range(1, 17)))
+        self.assertEqual(page.evaluate("HeinzSeries.count({ axes: { temperature: [0, 1, 2] }, reps: 4 })"), 12)
+        self.assertEqual(page.evaluate("HeinzSeries.count({ axes: {}, reps: 1 })"), 1, "no axis = one run")
+        # export: split into parts, every run in exactly one part, no key anywhere
+        parts = page.evaluate("""() => {
+            const runs = []; for (let i = 1; i <= 30; i++) runs.push({ n: i, row: i, rep: 1, params: { temperature: i }, answer: 'x'.repeat(500), stats: { outputTokens: 10 }, at: 'now' });
+            return HeinzSeries.exportParts({ model: 'm', engine: 'e', prompt: 'p', axes: {}, planned: 30 }, runs, { maxChars: 4000 });
+        }""")
+        self.assertGreater(len(parts), 1)
+        self.assertEqual(sum(p.count('"run":') for p in parts), 30)
+        self.assertIn("[Part 1 of %d]" % len(parts), parts[0])
+        self.assertTrue(all(len(p) < 4600 for p in parts), [len(p) for p in parts])
+
+    def test_series_runs_the_matrix_without_system_prompt_and_history_and_exports_runs(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, prompt="Name one animal.", temp="0, 1", topk="1, 64", reps="1", max="50")
+        self.assertIn("Runs: 4", page.inner_text("#sr-plan"))
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        reqs = self.ollama.requests
+        self.assertEqual(len(reqs), 4)
+        for r in reqs:
+            self.assertEqual([m["role"] for m in r["messages"]], ["user"], "no system prompt, no history")
+            self.assertEqual(r["messages"][0]["content"], "Name one animal.")
+            self.assertEqual(r["options"]["num_predict"], 50)
+        got = sorted((r["options"]["temperature"], r["options"]["top_k"]) for r in reqs)
+        self.assertEqual(got, [(0, 1), (0, 64), (1, 1), (1, 64)])
+        self.assertEqual(page.evaluate("chatHistory.length"), 0)
+        self.assertEqual(page.locator("#chat-box .msg-assistant").count(), 0, "the chat stays untouched")
+        self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%")
+        self.assertEqual(page.locator("#sr-table tr").count(), 5)
+        page.evaluate("window.copyText = function (t) { window.__sr = t; return Promise.resolve(); }")
+        page.click("#sr-copies [data-sr-copy='0']")
+        txt = page.evaluate("window.__sr")
+        self.assertIn("# Heinz UI test series", txt)
+        self.assertIn("model gemma2:2b", txt)
+        self.assertIn("system prompt: none", txt)
+        self.assertEqual(txt.count('"run":'), 4)
+        self.assertIn('"answer":"Hello world"', txt)
+        self.assertIn("Capabilities", txt)
+        # survives a reload
+        page.reload()
+        self.series_open(page)
+        self.assertEqual(page.locator("#sr-table tr").count(), 5)
+
+    def test_series_threads_axis_outermost_and_too_many_runs_block_the_start(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, temp="0, 1", thr="2, 4", reps="1")
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        self.assertEqual([r["options"]["num_thread"] for r in self.ollama.requests], [2, 2, 4, 4])
+        # counter test: 31 runs are refused
+        self.series_fill(page, temp="0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1", thr="2, 4", reps="2")
+        self.assertIn("too many", page.inner_text("#sr-plan"))
+        self.assertTrue(page.is_disabled("#sr-start"))
+        self.series_fill(page, reps="1")
+        self.assertFalse(page.is_disabled("#sr-start"))
+
+    def test_series_can_be_stopped_and_stops_after_three_errors_in_a_row(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, temp="0, 0.5, 1", topk="1, 2, 3", reps="1")
+        self.ollama.status = 500
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped after three errors')", timeout=30000)
+        self.assertEqual(len(self.ollama.requests), 3)
+        self.assertIn("three errors in a row", page.evaluate("srMeta.stopped"))
+        self.assertEqual(page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)"), ["\u2715"] * 3)
+        # stop by the user (slow answers are not simulated: stop right after the first run)
+        self.ollama.status = 200
+        page.click("#sr-start")
+        page.wait_for_function("srRuns.length >= 1")
+        page.click("#sr-stop")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped after')", timeout=30000)
+        self.assertEqual(page.evaluate("srMeta.stopped"), "by user")
+        self.assertLess(page.evaluate("srRuns.length"), 9)
+
+    def test_series_native_google_sends_thinking_levels_greys_out_top_k_and_asks_before_cloud_requests(self):
+        page, g = self.gemini_page()
+        self.series_open(page)
+        self.assertTrue(page.is_disabled("#sr-topk"), "top_k is measured without effect on gemini-3.8-flash: locked")
+        self.assertFalse(page.is_hidden("#sr-think-box"))
+        self.assertTrue(page.is_hidden("#sr-thr-box"), "threads are an Ollama setting")
+        self.series_fill(page, temp="1, 2", max="40")
+        page.evaluate("document.getElementById('sr-topk').value = '5'")   # typed before the lock: must still not be sent
+        page.click("#sr-think label:has(input[value=fast])"); page.click("#sr-think label:has(input[value=deep])")
+        self.assertIn("Runs: 4", page.inner_text("#sr-plan"))
+        n0 = len(g.requests)
+        page.click("#sr-start")
+        self.assertEqual(len(g.requests), n0, "the first tap only asks")
+        self.assertIn("4 requests", page.inner_text("#sr-status"))
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        gcs = [r[2]["generationConfig"] for r in g.requests[n0:]]
+        self.assertEqual(len(gcs), 4)
+        self.assertEqual(sorted((c["thinkingConfig"]["thinkingLevel"], c["temperature"]) for c in gcs), [("high", 1), ("high", 2), ("low", 1), ("low", 2)])
+        for c in gcs:
+            self.assertNotIn("topK", c, "locked parameter is never sent, even when typed")
+            self.assertEqual(c["maxOutputTokens"], 40)
+        for r in g.requests[n0:]:
+            self.assertEqual(len(r[2]["contents"]), 1)
+        self.assertNotIn("top_k", page.evaluate("srMeta.axes"), "a locked parameter is not part of the matrix")
+        txt = page.evaluate("srExportParts().join('\\n')")
+        self.assertNotIn("AIza", txt)
+        self.assertIn("thinkingLevel", txt)
+        # online off: no request
+        n1 = len(g.requests)
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.assertEqual(len(g.requests), n1)
+
     def test_native_google_length_cut_and_error_are_reported_and_online_off_sends_nothing(self):
         page, g = self.gemini_page(chunks=("Ye",), finish="MAX_TOKENS")
         page.fill("#query", "Hi"); page.click("#send-btn")
