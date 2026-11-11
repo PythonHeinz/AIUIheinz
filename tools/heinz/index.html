@@ -75,6 +75,10 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         <input class="inp" id="free" type="text" hidden>
         <div class="swr"><span class="tx" id="onl-t"></span><span class="sw"><input type="checkbox" id="onl"><i></i></span></div>
         <p class="hint" id="onl-h"></p>
+        <label class="fld" id="sys-l" for="sys"></label>
+        <textarea class="inp" id="sys" rows="4" style="resize:vertical;width:100%;height:auto;padding:10px 12px"></textarea>
+        <button type="button" class="pill" id="sys-reset" style="margin-top:6px"></button>
+        <p class="hint" id="sys-h"></p>
         <p class="hint" id="rt-h" style="white-space:pre-line"></p>
     </div>
 </section>
@@ -88,10 +92,10 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 (function () {
     var PV = HeinzProviders;
     var D = {
-        en: { preLoading: 'Preparing model …', rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the test bench, per model)', rtDef: 'default', rtT: 'threads', rtC: 'context', rtLast: 'Last request seen by Ollama:', rtB: 'Test bench', rtCh: 'Chat', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
+        en: { preLoading: 'Preparing model …', rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the test bench, per model)', rtDef: 'default', sysL: 'System prompt (this model)', sysReset: 'Reset to default', sysH: 'Sent with every message. Empty = no system prompt. Keep it short: it is read again after another page used the model.', rtT: 'threads', rtC: 'context', rtLast: 'Last request seen by Ollama:', rtB: 'Test bench', rtCh: 'Chat', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
             local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
             reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the test bench under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
-        de: { preLoading: 'Modell wird vorbereitet …', rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Prüfstand, je Modell)', rtDef: 'Standard', rtT: 'Threads', rtC: 'Kontext', rtLast: 'Zuletzt an Ollama gesendet:', rtB: 'Prüfstand', rtCh: 'Chat', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
+        de: { preLoading: 'Modell wird vorbereitet …', rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Prüfstand, je Modell)', rtDef: 'Standard', sysL: 'Systemprompt (dieses Modell)', sysReset: 'Auf Standard zurücksetzen', sysH: 'Wird mit jeder Nachricht gesendet. Leer = kein Systemprompt. Kurz halten: Er wird neu gelesen, wenn eine andere Seite das Modell benutzt hat.', rtT: 'Threads', rtC: 'Kontext', rtLast: 'Zuletzt an Ollama gesendet:', rtB: 'Prüfstand', rtCh: 'Chat', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
             local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
             reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Prüfstand unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
     };
@@ -215,7 +219,12 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         var lr = PV.lastRequests(), fmt = function (x) { return x ? x.model + ': ' + t('rtT') + ' ' + (x.threads === null ? t('rtDef') : x.threads) + ', ' + t('rtC') + ' ' + (x.ctx === null ? t('rtDef') : x.ctx) + ', ' + new Date(x.ts).toTimeString().slice(0, 8) : '–'; };
         el.textContent = t('rtH', { n: o.num_thread || t('rtDef'), c: o.num_ctx || t('rtDef'), k: r.keepAlive }) + '\n' + t('rtLast') + '\n' + t('rtB') + ' ' + fmt(lr.bench) + '\n' + t('rtCh') + ' ' + fmt(lr.chat);
     }
+    function sysNote() {
+        $('sys-l').textContent = t('sysL'); $('sys-reset').textContent = t('sysReset'); $('sys-h').textContent = t('sysH');
+        $('sys').value = S.model ? PV.chatSystemFor(S.model) : ''; $('sys').disabled = !S.model;
+    }
     function renderSheet() {
+        sysNote();
         $('sm-h').textContent = t('model'); $('onl-t').textContent = t('onl'); $('onl-h').textContent = t('onlH'); $('onl').checked = PV.onlineAllowed(); runtimeNote();
         var ps = PV.list().filter(engineOk);
         if (!ps.some(function (p) { return p.id === S.provider; })) { S.provider = 'ollama'; }
@@ -255,7 +264,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         abort = new AbortController();
         var hist = msgs.slice(0, -1).map(function (m) { return { role: m.role, content: m.content }; });
         var rt = PV.runtime(S.provider, S.model);   // Threads, Kontext, Haltezeit: gemeinsame Regel in lib/providers.js
-        PV.prepare(S.provider, S.model).then(function () { return PV.chat(S.provider, { model: S.model, messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: abort.signal, onDelta: function (d) { if (!gotTok) { gotTok = true; ring(); } msgs[msgs.length - 1].content += d; renderLog(true); } }) })
+        PV.prepare(S.provider, S.model).then(function () { return PV.chat(S.provider, { model: S.model, system: PV.chatSystemFor(S.model), messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: abort.signal, onDelta: function (d) { if (!gotTok) { gotTok = true; ring(); } msgs[msgs.length - 1].content += d; renderLog(true); } }) })
             .then(function () { }, function (e) {
                 if (e && e.name === 'AbortError') { msgs[msgs.length - 1].content += (msgs[msgs.length - 1].content ? ' ' : '') + t('stopped'); return; }
                 var code = e && e.code, m = code === 'ONLINE_BLOCKED' ? t('blocked') : code === 'NO_KEY' ? t('noKey') : t('err', { m: (e && e.message) || '' });
@@ -273,6 +282,8 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     $('new').onclick = newChat;
     $('eng').addEventListener('click', function (e) { var b = e.target.closest('[data-eng]'); if (b) pickEngine(b.getAttribute('data-eng')); });
     $('models').addEventListener('click', function (e) { var b = e.target.closest('[data-model]'); if (b) pickModel(b.getAttribute('data-model')); });
+    $('sys').addEventListener('change', function () { if (S.model) PV.setChatSystem(S.model, $('sys').value); });
+    $('sys-reset').addEventListener('click', function () { if (S.model) { PV.setChatSystem(S.model, null); sysNote(); } });
     $('free').addEventListener('change', function () { S.model = $('free').value.trim(); save(); head(); renderLog(gen); });
     $('onl').addEventListener('change', function () { PV.setOnlineAllowed($('onl').checked); if (!$('onl').checked && !pv().local) { S.provider = 'ollama'; S.model = ''; save(); head(); } renderSheet(); loadModels(); });
     $('chats').addEventListener('click', function (e) {

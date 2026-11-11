@@ -615,3 +615,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 
 ## 11.11.2026 – Handytest bestätigt: schneller Seitenwechsel (Chat „AIUIheinz-Chat“)
 - Entwickler (Pixel 9 Pro, Version `adf8889`): Modelle bleiben beim Wechsel zwischen Chat, Prüfstand und allen Modellen im Speicher; erste Antwort bei allen Modellen 4 bis 6 s, auf beiden Seiten gleich. Messwerte in `docs/LOKALE_MODELLE.md` und `docs/OLLAMA_UND_MODELLE.md`. Nur Doku.
+
+## 11.11.2026 – Systemprompt je Modell im Heinz Chat, Regeln für Systemprompts (Chat „AIUIheinz-Chat“)
+- Beschluss des Entwicklers: Der Chat bekommt einen kurzen Standard-Systemprompt, je Modell im Modellblatt änderbar, damit kleine Modelle ohne Modi natürlich antworten (z. B. keine unerwartete Sprache). Jedes Tool bringt seine eigenen Prompts für seine Aufgabe mit. Die Regeln sollen alle Agenten befolgen.
+- `lib/providers.js`: `HeinzProviders.chat` nimmt `system` (wird vorangestellt, nur wenn die Nachrichten keine Systemnachricht haben); `DEFAULT_CHAT_SYSTEM`, `chatSystemFor(model)`, `setChatSystem(model, text|null)` (Schlüssel `heinz_chat_system`; leer = kein Prompt, null/Standardtext = Standard).
+- `tools/heinz/index.html`: Modellblatt mit Feld „Systemprompt (dieses Modell)“ und „Auf Standard zurücksetzen“ (EN/DE); der Chat sendet `system: chatSystemFor(S.model)`.
+- `docs/LOKALE_MODELLE.md`: Regeln 10 (Systemprompts frei, kurz, stabil, eigene Stelle im Tool, kein Vorladen mit Prompt) und 11 (Chat-Standardprompt); Regel 8 angepasst; `UEBERGABE.md` angepasst.
+- Tests: 2 neue (Standardprompt wird gesendet, je Modell änderbar, leer, zurücksetzen; `chat` fügt den Text einmal ein und nur ohne vorhandene Systemnachricht); Mutation erkannt. Nur simuliert; Wirkung auf die Antworten (z. B. Sprache beim abliterierten Qwen) am Handy offen.

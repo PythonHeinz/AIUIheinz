@@ -2433,6 +2433,43 @@ class PageTest(unittest.TestCase):
         rows = page.eval_on_selector_all("#models [data-model]", "els => els.map(e => e.dataset.model)")
         self.assertEqual(sorted(rows), ["gemma2:2b", "qwen2.5:3b"])
 
+    def test_slim_chat_sends_the_default_system_prompt_and_it_can_be_changed_per_model(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        default = page.evaluate("HeinzProviders.DEFAULT_CHAT_SYSTEM")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        self.assertEqual(fake.requests[-1]["messages"][0], {"role": "system", "content": default})
+        self.assertEqual(fake.requests[-1]["messages"][-1], {"role": "user", "content": "Hi"})
+        # change it for this model only
+        page.click("#mod"); page.wait_for_selector("#sh-model.open")
+        page.fill("#sys", "Answer in one word."); page.press("#sys", "Tab")
+        page.evaluate("Heinz.sheetClose()")
+        page.fill("#q", "Again"); page.click("#send")
+        page.wait_for_function("document.querySelectorAll('#log .msg.a').length >= 2")
+        page.wait_for_timeout(600)
+        self.assertEqual(fake.requests[-1]["messages"][0], {"role": "system", "content": "Answer in one word."})
+        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('qwen2.5:3b')"), default, "other models keep the default")
+        # empty = no system prompt; reset = default again
+        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', '')")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "")
+        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', null)")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), default)
+
+    def test_chat_adds_the_system_text_once_and_only_when_the_messages_have_none(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("typeof HeinzProviders !== 'undefined'")
+        page.evaluate("""async () => {
+            await HeinzProviders.chat('ollama', { model: 'gemma2:2b', system: 'S1', messages: [{ role: 'user', content: 'a' }], stream: true, onDelta: () => {} });
+            await HeinzProviders.chat('ollama', { model: 'gemma2:2b', system: 'S2', messages: [{ role: 'system', content: 'own' }, { role: 'user', content: 'b' }], stream: true, onDelta: () => {} });
+        }""")
+        self.assertEqual([m["role"] + ":" + m["content"] for m in fake.requests[-2]["messages"]], ["system:S1", "user:a"])
+        self.assertEqual([m["role"] + ":" + m["content"] for m in fake.requests[-1]["messages"]], ["system:own", "user:b"])
+
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()
         fake = FakeOllama(page)
