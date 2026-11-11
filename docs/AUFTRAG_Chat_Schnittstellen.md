@@ -5,6 +5,7 @@
 - **Am Gerät noch offen:** Wirkt `topK` bei Gemini 3 (Test: Temperatur 2, Top-P 1, Schnell, dreimal die Frage „Nenne ein ungewöhnliches Tier.“ bei top_k 1 und dreimal bei 64)? Wird `thinkingLevel` in Kleinschreibung angenommen? Meldet `thoughtsTokenCount` die Denk-Token? Läuft CORS auch für `streamGenerateContent`? Messwerte nach `docs/SCHNITTSTELLEN.md`, nicht in die Daten raten.
 - **Nächste Schritte dieses Strangs** (Reihenfolge nach `docs/KONZEPT.md` 20.8, jeder Schritt nur nach Rückfrage, weil Fundament):
   1. Offene Gerätetests abschließen, Befunde nachtragen.
+  1a. **Testreihen** (`docs/KONZEPT.md` Abschnitt 21, Beschluss 11.11.2026): Läufer für viele Parameterkombinationen mit einem Modell, Protokoll je Lauf, Export für Agenten, Tempo-Test als Sonderfall. Vorrang vor Schritt 2, weil er die Messmethode liefert; Rückfrage vor Beginn (Fundament).
   2. **Anhang-Baustein und Bild-Eingabe** im Chat, **Medienspeicher** (IndexedDB, Chats verweisen auf Medien-IDs, Export und Aufräumen). Wartet auf die erweiterten Fähigkeitendaten (Ein- und Ausgabearten) aus dem Strang Modelle.
   3. **Funktionsplätze** mit Wunschliste und Ersatzregel (20.1, 20.2), Datenformat aus dem Strang Modelle.
   4. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss laut Entwickler), LiteRT-Konfiguration über `server.py` (19.4), später Bildausgabe im Chat mit Kennzeichnung (20.7), Sprache auf zwei Wegen (20.5).

@@ -449,3 +449,33 @@ Videoerzeugung und -auswertung. Der Entwickler will sie offen lassen für den Fa
 
 ### 20.10 Offen
 Namen der Plätze und der Hub-Einträge; Wunschliste je Platz in der Oberfläche (wie einfach?); ob der Medienspeicher in den Browser oder in `data/` gehört; Browser-Spracherkennung offline oder Cloud (20.5); Pflicht und Form der Kennzeichnung; Heimserver-Details (20.4); Kosten je Bild und je Audiominute in der Anzeige.
+
+## 21 Testreihen: automatisierte Parameterläufe (11.11.2026, Idee und Beschlüsse des Entwicklers)
+Anlass: Der Entwickler kopiert Testläufe bisher von Hand zwischen App und Chat und liest die Testaufgabe mühsam über dem Eingabefeld. Eine Testautomation soll Chats unter vielen Parametereinstellungen selbst durchlaufen und die Streaming-Daten einsammeln.
+
+### 21.1 Beschlüsse
+- **Erster Anwendungsfall:** **ein Modell mit vielen Parameterkombinationen durchfahren** (zum Beispiel Temperatur × top_k × Threads × Denkstufe). Der Modellvergleich mit demselben Prompt-Satz kommt später, er ist derselbe Läufer mit einer anderen Matrix.
+- **Auswertung zunächst nur durch Code.** Für den Entwickler zählt das **Ergebnis, das der Agent des jeweiligen Strangs auswertet**. Der Hauptzweck ist deshalb ein **Export für Agenten**, keine schöne Vergleichsansicht in der App. Eine Vergleichstabelle und Diagramme sind nachrangig.
+
+### 21.2 Bausteine
+1. **Testreihe als Datei** (JSON): Name, Engine und Modell, Prompt-Satz (eigene oder die Testprompts aus Abschnitt 11, je Prompt eine ID), Matrix der Parameter (Liste je Parameter; Kombinationen als Kreuzprodukt oder als frei gewählte Zeilen), Wiederholungen je Zeile, optionale Prüfregeln je Prompt, Obergrenze für Laufzeit und Kosten. Testreihen lassen sich importieren und exportieren (später auch zum Teilen, passend zum Starterkit).
+2. **Läufer:** Er ruft dieselbe Anbieterschicht (`lib/providers.js`) wie der Chat auf, Zeile für Zeile, ohne Chatverlauf zu verändern. Er ist die Verallgemeinerung des Tempo-Tests, der ein Sonderfall bleibt (Threads, Kurzprompt, zwei Läufe). Reihenfolge nach Modell und Parameter geordnet, damit nicht unnötig neu geladen wird. Abbrechen und Fortsetzen möglich, Fortschritt sichtbar.
+3. **Protokoll je Lauf:** das, was das Testprotokoll je Antwort heute schon enthält (Parameter, Fähigkeitenzustand, gesendeter Body ohne Nachricht und Schlüssel, rohes `usage`, Zeiten bis zum ersten Token und gesamt, Tokenzahlen, Abbruchgrund, Fehler), dazu der **volle Antworttext**, die Zeilen- und Wiederholungsnummer und der Zeitpunkt.
+4. **Prüfregeln durch Code** (je Prompt, optional): enthält oder enthält nicht, regulärer Ausdruck, Zahl stimmt, gültiges JSON, Längengrenzen, Abbruchgrund `stop`. Ergebnis je Lauf bestanden oder nicht, mit Grund. Kein zweites Modell als Bewerter in dieser Stufe.
+5. **Export für den Agenten:** **eine** Datei oder ein Kopierblock mit Kopf (App-Version, Gerät, Zeitpunkt, Engine, Modell, Testreihe) und allen Läufen, Markdown für das Lesen und JSON für das Rechnen. Länge im Blick: Der Block muss in einen Chat passen; ist er zu lang, werden Antworttexte gekürzt (mit Hinweis) oder die Läufe in mehrere Teile geteilt. Schlüssel nie, Antworttexte optional.
+6. **Speicher:** Ergebnisse im Medien- und Datenspeicher (IndexedDB, Abschnitt 20.6), nicht im Chatverlauf; Export, Löschen und Größe sichtbar.
+
+### 21.3 Betrieb und Fallstricke
+- **Bildschirm an und App sichtbar:** Der Läufer hält den Bildschirm wach (Wake Lock des Browsers). Lokal bleibt **Termux sichtbar**, sonst verfälscht Androids Prozessverwaltung das Tempo (Abschnitt 14, 15.4). Die Testreihe sagt das vor dem Start.
+- **Cloud:** Vor dem Start Schätzung von Anfragen, Token und Kosten, eine **Obergrenze** und eine Bestätigung; die Online-Sperre gilt. Gratisstufen haben Anfragegrenzen, der Läufer macht Pausen und wiederholt bei Fehlern begrenzt (Abbruchgrund `429`). Denken dauert 10 bis 35 s je Anfrage (gemessen, `docs/SCHNITTSTELLEN.md` 8), die Zeitschätzung muss das einrechnen.
+- **Zufall:** Temperatur 0 oder Seed, wo die Schnittstelle ihn annimmt (Ollama ja, bei Google offen), sonst Wiederholungen; der Export nennt, ob ein Seed galt.
+- **Nur ein Modell im Speicher** (Ollama): Modellwechsel mitten in der Reihe bedeutet Laden und kostet Zeit und Stabilität (Signal 9).
+- **Parameter nach Fähigkeitendaten:** Die Matrix bietet nur Parameter an, die laut `lib/capabilities.json` wirken; als „ungeklärt“ markierte werden als solche in den Export geschrieben, ausgegraute fehlen. So wird die Testreihe zugleich zur **Sonde** für die Schnittstellen (Abschnitt 19, `docs/SCHNITTSTELLEN.md` 4).
+
+### 21.4 Wo und wann
+- Teil von **Heinz UI (Testumgebung)**, im Menü unter Leistung neben dem Tempo-Test. Strang **AIUIheinz-Chat**, weil es Fundament (Anbieterschicht, Chat-Seite) berührt; ein Chat zur Zeit.
+- **Reihenfolge:** nach den offenen Gerätetests und parallel zur Medien-Vorbereitung im Strang Modelle (Daten); vor dem Anhang-Baustein, weil der Läufer die Messmethode für alles Weitere liefert: ein Gerüst, um Antworten reproduzierbar zu messen, auch für Bild und Sprache später. Schritte: (1) Läufer mit Matrix und Export (Tempo-Test als Sonderfall), (2) Prüfregeln, (3) Fortsetzen, Kosten und Zeit, (4) Import und Export von Testreihen, (5) Vergleichsansicht nur auf Wunsch.
+- **Nutzen für das Projekt:** Reproduzierbare Messreihen statt Einzelstichproben (Abschnitt 14 und 15.4 haben bisher nur solche). Das stärkt die Doku und die Eignung als Lehr- oder Abschlussarbeit (Auftrag Tertius).
+
+### 21.5 Offen
+Format und Länge des Export-Blocks, wie viele Läufe in einen Chat passen, Obergrenze für die Matrix (Zeilen mal Wiederholungen), ob Testreihen im Repo (`data/` ist ignoriert) oder nur im Browser liegen, Name des Menüpunkts.
