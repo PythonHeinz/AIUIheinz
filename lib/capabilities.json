@@ -23,7 +23,7 @@
       "vermutet": "inferred",
       "unbekannt": "not found"
     },
-    "resolve": "1. engineFor(provider, baseUrl): the first endpointRules entry whose hostContains is part of baseUrl wins, otherwise engines[provider.id], otherwise engines.openai. 2. modelRule: the first models entry whose match (case-insensitive regex on the model id without a leading 'models/') fits and whose engine equals the resolved engine. 3. The cell of a parameter is engines[engine].params[key] merged with models[i].params[key] (model overrides)."
+    "resolve": "1. engineFor(provider, baseUrl): the first endpointRules entry whose hostContains is part of baseUrl wins, otherwise engines[provider.id], otherwise engines.openai. 2. modelRule: the first models entry whose match (case-insensitive regex on the model id without a leading 'models/') fits and whose engine equals the resolved engine or the engine named in engines[engine].modelRulesFrom. 3. The cell of a parameter is engines[engine].params[key] merged with models[i].params[key] (model overrides)."
   },
 
   "parameters": {
@@ -41,7 +41,7 @@
   },
 
   "endpointRules": [
-    { "hostContains": "generativelanguage.googleapis.com", "engine": "gemini-compat" }
+    { "hostContains": "generativelanguage.googleapis.com/v1beta/openai", "engine": "gemini-compat" }
   ],
 
   "engines": {
@@ -108,6 +108,26 @@
       "stats": { "outputIncludesReasoning": "unknown" }
     },
 
+    "google": {
+      "label": "Google AI Studio, native route (generateContent)",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+      "keyHeader": "x-goog-api-key",
+      "modelRulesFrom": "gemini-compat",
+      "params": {
+        "temperature": { "state": "on", "via": "generationConfig.temperature", "status": "belegt" },
+        "top_p": { "state": "on", "via": "generationConfig.topP", "status": "belegt" },
+        "top_k": { "state": "unknown", "via": "generationConfig.topK", "status": "drittquelle", "hint": { "en": "Documented for the native route; a third-party reference says Gemini 3 ignores it. Not yet checked on the device.", "de": "Für die native Schnittstelle dokumentiert; eine Drittquelle sagt, Gemini 3 ignoriere es. Am Gerät noch nicht geprüft." } },
+        "num_ctx": { "state": "fixed", "status": "belegt", "from": "inputTokenLimit", "hint": { "en": "Fixed per model (input limit from the model list).", "de": "Je Modell fest (Eingabegrenze aus der Modellliste)." } },
+        "num_thread": { "state": "off", "status": "code" },
+        "max_tokens": { "state": "on", "via": "generationConfig.maxOutputTokens", "status": "belegt", "limit": "outputTokenLimit", "hint": { "en": "Thinking tokens count towards the limit (measured on the device): too small a value cuts the answer or leaves it empty.", "de": "Denk-Token zählen zur Grenze (am Gerät gemessen): ein zu kleiner Wert schneidet die Antwort ab oder lässt sie leer." } },
+        "stop": { "state": "on", "via": "generationConfig.stopSequences", "status": "belegt", "hint": { "en": "At most 5 sequences.", "de": "Höchstens 5 Sequenzen." } },
+        "seed": { "state": "unknown", "via": "generationConfig.seed", "status": "belegt" },
+        "frequency_penalty": { "state": "unknown", "status": "belegt" },
+        "presence_penalty": { "state": "unknown", "status": "belegt" },
+        "thinking": { "state": "on", "via": "generationConfig.thinkingConfig", "status": "belegt", "exclusive": "thinkingLevel and thinkingBudget must not be combined" }
+      },
+      "stats": { "outputIncludesReasoning": "unknown", "note": "usageMetadata: promptTokenCount, candidatesTokenCount, thoughtsTokenCount, totalTokenCount; not yet measured on the device" }
+    },
     "gemini-compat": {
       "label": "Google AI Studio, OpenAI-compatible route",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",

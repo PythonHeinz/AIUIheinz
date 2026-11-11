@@ -1976,7 +1976,7 @@
                 if (prov === 'ollama') await unloadOthers(selectedModel);
                 const result = await PV.chat(prov, {
                     model: selectedModel, messages: apiMessages, options: opts, keepAlive: KEEP_ALIVE, backend: settings.backend,
-                    reasoningEffort: thinkEffort(),
+                    reasoningEffort: thinkEffort(), thinking: thinkSend(),
                     signal: currentAbortController.signal,
                     onDelta: function (d) { outputBuffer += d; scheduleRender(); pulse.e = Math.min(1, pulse.e + 0.3); if (!gotToken) { gotToken = true; renderRing(); } if (eqPx) eqPx.wake(); }
                 });
@@ -2510,6 +2510,13 @@
             if (r) o += '\nthinking: ' + (thinkStage() || 'model default') + (thinkEffort() ? ' -> reasoning_effort ' + thinkEffort() : ' (nothing sent)');
             return o;
         }
+        // the sent body without any message text (neither the chat nor the system prompt)
+        function exBodyText(b) {
+            const c = Object.assign({}, b);
+            ['messages', 'contents'].forEach(function (k) { if (Array.isArray(c[k])) c[k] = '[' + c[k].length + ' ' + k + ']'; });
+            if (c.systemInstruction) c.systemInstruction = '[system]';
+            return JSON.stringify(c);
+        }
         function exchangeText(st, ex, err) {
             let o = '';
             const d = window.HeinzCaps && HeinzCaps.ready() ? HeinzCaps.data() : {};
@@ -2522,7 +2529,7 @@
                 else if ((st.reasoningTokens || 0) > 0 && (!oir || oir === 'unknown')) o += '\nNote: outputIncludesReasoning unknown, values not comparable.';
             }
             if (ex) {
-                o += '\n\nLast request (' + ex.provider + ', HTTP ' + ex.status + '): ' + JSON.stringify(Object.assign({}, ex.body, { messages: '[' + (ex.body.messages || []).length + ' messages]' })) +
+                o += '\n\nLast request (' + ex.provider + ', HTTP ' + ex.status + '): ' + exBodyText(ex.body) +
                     '\nLast response: usage ' + JSON.stringify(ex.usage) + ', finish ' + (ex.finish || '?') + ', chunks ' + ex.chunks + ', first content after ' + ex.firstMs + ' ms, total ' + ex.totalMs + ' ms';
             }
             if (err) o += '\n\nError: ' + err;
@@ -2622,6 +2629,12 @@
             if (!r || !st) return '';
             const e = r[st];
             return e && r.effortMap && Object.prototype.hasOwnProperty.call(r.effortMap, e) ? e : '';
+        }
+        // Native route (Google): the same rule gives the level or the token budget, sent as thinkingConfig; null = send nothing
+        function thinkSend() {
+            const r = thinkRule(), e = thinkEffort();
+            if (!r || !e) return null;
+            return { kind: r.kind, value: r.effortMap[e] };
         }
         function setThink(st) {
             if (!thinkRule()) return;

@@ -26,7 +26,7 @@ def cell(engine, model_id, key):
     base = dict(CAP["engines"][engine]["params"].get(key, {}))
     mid = re.sub(r"^models/", "", model_id or "")
     for m in CAP["models"]:
-        if m["engine"] == engine and re.search(m["match"], mid, re.I):
+        if m["engine"] in (engine, CAP["engines"][engine].get("modelRulesFrom")) and re.search(m["match"], mid, re.I):
             base.update(m.get("params", {}).get(key, {}))
             break
     return base
@@ -35,7 +35,7 @@ def cell(engine, model_id, key):
 def thinking_rule(engine, model_id):
     mid = re.sub(r"^models/", "", model_id or "")
     for m in CAP["models"]:
-        if m["engine"] == engine and re.search(m["match"], mid, re.I):
+        if m["engine"] in (engine, CAP["engines"][engine].get("modelRulesFrom")) and re.search(m["match"], mid, re.I):
             return m.get("thinking")
     return None
 

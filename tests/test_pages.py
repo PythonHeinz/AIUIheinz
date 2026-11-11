@@ -108,6 +108,42 @@ class FakeOpenAI:
         return route.fulfill(status=404, body="")
 
 
+class FakeGemini:
+    """Google AI Studio, native route: GET /v1beta/models and streamed POST /v1beta/models/<id>:streamGenerateContent."""
+
+    def __init__(self, page, chunks=("Hi", " there"), status=200, thoughts=0, finish="STOP", models=None):
+        self.requests = []      # (url, headers, body)
+        self.list_calls = []
+        self.chunks, self.status, self.thoughts, self.finish = chunks, status, thoughts, finish
+        self.models = models if models is not None else [
+            {"name": "models/gemini-3.8-flash", "inputTokenLimit": 1048576, "outputTokenLimit": 65536, "thinking": True, "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-2.5-flash", "inputTokenLimit": 1048576, "outputTokenLimit": 65536, "thinking": True, "supportedGenerationMethods": ["generateContent"]},
+            {"name": "models/gemini-embedding-2", "supportedGenerationMethods": ["embedContent"]}]
+        page.route("https://generativelanguage.googleapis.com/v1beta/**", self.handle)
+
+    def handle(self, route):
+        url = route.request.url
+        cors = {"access-control-allow-origin": "*"}
+        if route.request.method == "OPTIONS":
+            return route.fulfill(status=204, headers={**cors, "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
+        if ":streamGenerateContent" in url:
+            self.requests.append((url, route.request.headers, json.loads(route.request.post_data)))
+            if self.status != 200:
+                return route.fulfill(status=self.status, headers=cors, body='{"error":{"message":"nope"}}')
+            lines = []
+            for c in self.chunks:
+                lines.append("data: " + json.dumps({"candidates": [{"content": {"role": "model", "parts": [{"text": c}]}}]}))
+            usage = {"promptTokenCount": 21, "candidatesTokenCount": 7, "totalTokenCount": 28 + self.thoughts}
+            if self.thoughts:
+                usage["thoughtsTokenCount"] = self.thoughts
+            lines.append("data: " + json.dumps({"candidates": [{"content": {"role": "model", "parts": [{"text": ""}]}, "finishReason": self.finish}], "usageMetadata": usage}))
+            return route.fulfill(status=200, content_type="text/event-stream", headers=cors, body="\r\n\r\n".join(lines) + "\r\n\r\n")
+        if "/v1beta/models" in url:
+            self.list_calls.append((url, route.request.headers))
+            return route.fulfill(status=200, content_type="application/json", headers=cors, body=json.dumps({"models": self.models}))
+        return route.fulfill(status=404, body="")
+
+
 class PageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1098,6 +1134,94 @@ class PageTest(unittest.TestCase):
         w2 = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
         self.assertLess(max(w2) - min(w2), 3)
         self.assertLess(abs(w2[0] - w[0]), 3)
+
+    # ===== Google AI Studio, native route (provider "google") =====
+    def gemini_page(self, model="models/gemini-3.8-flash", **fake):
+        page = self.new_page()
+        g = FakeGemini(page, **fake)
+        page.goto(self.srv.base + "/chat.html")
+        page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('google', 'AIza-native')")
+        page.reload()
+        self.pick_engine(page, "google")
+        page.wait_for_function("MODELS.length >= 1")
+        page.evaluate("m => { document.getElementById('model-select').value = m; onModelChange(); }", model)
+        page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
+        page.evaluate("renderCaps(); renderThink()")
+        return page, g
+
+    def test_native_google_sends_generation_config_with_top_k_and_key_only_in_header(self):
+        page, g = self.gemini_page()
+        self.assertEqual(page.evaluate("MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "embedding model filtered")
+        page.evaluate("document.getElementById('param-temp').value = 0.4; onSlider()")
+        self.send(page, "Hi there")
+        url, hdr, body = g.requests[-1]
+        self.assertIn("/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse", url)
+        self.assertNotIn("AIza", url)
+        self.assertEqual(hdr.get("x-goog-api-key"), "AIza-native")
+        gc = body["generationConfig"]
+        self.assertEqual(gc["temperature"], 0.4)
+        self.assertIn("topK", gc, "top_k is sent on the native route")
+        self.assertIn("topP", gc)
+        for k in ("num_ctx", "num_thread", "max_tokens", "reasoning_effort", "messages", "stream"):
+            self.assertNotIn(k, body)
+            self.assertNotIn(k, gc)
+        self.assertNotIn("thinkingConfig", gc, "thinking stays at the model default")
+        self.assertEqual(body["contents"][-1], {"role": "user", "parts": [{"text": "Hi there"}]})
+        self.assertIn("systemInstruction", body, "the system prompt goes to systemInstruction")
+        self.assertEqual(page.inner_text(".msg-assistant"), "Hi there")
+        self.assertEqual(self.external and [u for u in self.external if "AIza" in u], [])
+
+    def test_native_google_thinking_level_and_budget_never_both_and_real_thought_tokens(self):
+        page, g = self.gemini_page(thoughts=40)
+        page.click("#think-deep")
+        self.send(page, "deep")
+        gc = g.requests[-1][2]["generationConfig"]
+        self.assertEqual(gc["thinkingConfig"], {"thinkingLevel": "high"})
+        self.assertNotIn("reasoning_effort", g.requests[-1][2])
+        self.assertEqual(page.inner_text("#dash-think"), "40", "real value, no tilde")
+        self.assertEqual(page.inner_text("#dash-a-tok"), "7")
+        # budget kind for Gemini 2.5 (counter test: not a level)
+        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; onModelChange()")
+        page.click("#think-fast")
+        self.send(page, "fast")
+        tc = g.requests[-1][2]["generationConfig"]["thinkingConfig"]
+        self.assertEqual(list(tc), ["thinkingBudget"])
+        self.assertIsInstance(tc["thinkingBudget"], int)
+
+    def test_native_google_length_cut_and_error_are_reported_and_online_off_sends_nothing(self):
+        page, g = self.gemini_page(chunks=("Ye",), finish="MAX_TOKENS")
+        page.fill("#query", "Hi"); page.click("#send-btn")
+        page.wait_for_function("document.querySelector('.msg-assistant') && document.querySelector('.msg-assistant').innerText.includes('cut off')")
+        self.assertIn("finish length", self.proto(page))
+        g.status = 400
+        self.send(page, "again")
+        self.assertIn("HTTP 400", page.inner_text(".msg-assistant:last-of-type"))
+        self.assertNotIn("AIza", self.proto(page))
+        # online off: nothing is requested any more
+        n = len(g.requests)
+        page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        self.assertEqual(page.evaluate("settings.provider"), "ollama")
+        code = page.evaluate("""async () => { try { await HeinzProviders.chat('google', {model:'x', messages:[{role:'user',content:'hi'}]}); return 'sent'; } catch (e) { return e.code; } }""")
+        self.assertEqual(code, "ONLINE_BLOCKED")
+        self.assertEqual(len(g.requests), n)
+
+    def test_native_google_cells_differ_from_compatible_route_and_penalties_stay_blocked_on_gemini_3(self):
+        page, g = self.gemini_page()
+        self.assertEqual(page.evaluate("HeinzCaps.engineFor('google', 'https://generativelanguage.googleapis.com/v1beta')"), "google")
+        self.assertEqual(page.evaluate("HeinzCaps.engineFor('custom', 'https://generativelanguage.googleapis.com/v1beta/openai')"), "gemini-compat", "compatible route unchanged")
+        self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-3.8-flash', 'frequency_penalty').state"), "error", "model rules are shared")
+        self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-2.5-flash', 'frequency_penalty').state"), "unknown")
+        self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-3.8-flash', 'top_k').state"), "unknown")
+        self.assertEqual(page.evaluate("document.getElementById('sc-topk').dataset.capState"), "unknown")
+        self.assertEqual(page.evaluate("document.getElementById('sc-ctx').dataset.capState"), "fixed")
+        txt = None
+        self.send(page, "Hi")
+        txt = self.proto(page)
+        self.assertIn("Last request (google, HTTP 200)", txt)
+        self.assertIn('"generationConfig"', txt)
+        self.assertIn("[1 contents]", txt)
+        self.assertIn("[system]", txt)
+        self.assertNotIn("Hi", txt.split("Last request")[1].split("Last response")[0])
 
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
