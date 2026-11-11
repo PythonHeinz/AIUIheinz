@@ -1,0 +1,18 @@
+{
+  "id": "setup",
+  "name": {
+    "en": "Setup guide",
+    "de": "Einrichtung"
+  },
+  "desc": {
+    "en": "From a fresh phone to your first local model, step by step.",
+    "de": "Vom frischen Handy zum ersten lokalen Modell, Schritt für Schritt."
+  },
+  "icon": "•",
+  "entry": "tools/setup/index.html",
+  "color": "green",
+  "status": "ready",
+  "order": 40,
+  "area": "hub2",
+  "symbol": "i-rocket"
+}

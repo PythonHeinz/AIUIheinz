@@ -66,3 +66,11 @@ Regeln wie bisher: kein Umbau ohne Absprache, nur simuliert getestet bleibt geke
 3. Hub: Fußzeile und Erste Schritte (Wortlaut des Datenschutzversprechens).
 4. Reihenfolge Phase A bis D, und welcher Strang Phase B übernimmt.
 5. Namen der Hub-Einträge und Funktionsplätze (offen in Konzept 18.4 und 20.10).
+
+## Stand 11.11.2026, Phase A (Entscheidungen vom Entwickler, 05:10)
+- **Neuer Hub** `hub.html` (alter `index.html` bleibt bis zur Freigabe). Tabs: **Chat | Werkzeuge | Einrichten** (EN: Chat | Tools | Set up). Namen: **Heinz Chat** (schlanker Text, `tools/heinz/index.html`), **Heinz Prüfstand / Heinz Test Bench** (bisherige Heinz UI, `chat.html`), **Einlesen / Read in** und **Bildstudio / Image studio** (Platzhalter), **Einrichtungsassistent / Setup guide** (`tools/setup/index.html`).
+- **Schnellblatt von unten** (`.bsheet`) für den neuen Chat (Modell, Chats); das Seitenblatt von rechts bleibt nur im Prüfstand.
+- **Fußzeile des Hubs sachlich**, kein Datenschutzversprechen mit Bezug auf Richtlinien oder Verordnungen.
+- **Modus-Schieberegler**: bedienbares Mockup `tools/design/modus.html` (Kragen am linken Rand, senkrechte Leiste, Rahmen ziehen, Akzentfarbe live). Noch nicht im Prüfstand.
+- **Phase B (Menü umbauen)** wird eigener Strang **AIUIheinz-Menu**, Auftrag `docs/AUFTRAG_Menu.md`.
+- Neue Bausteine in `lib/core.css`/`core.js`: `.notice`, `.bsheet`/`.bscrim`, `.step`, `.cmd`, `Heinz.copy`, `Heinz.sheetOpen/Close`. Nur simuliert getestet, nicht am Gerät.

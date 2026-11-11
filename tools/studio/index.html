@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Image studio</title>
+<link rel="stylesheet" href="/lib/core.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page">
+    <div class="panel"><h3 id="h"></h3><div id="p"></div></div>
+</main>
+<script src="/lib/core.js"></script>
+<script>
+(function () {
+    var D = {
+        en: { sub: 'image studio', h: 'Image studio (placeholder)', p: 'Planned: make and edit pictures with a model of your choice, with a gallery. Generated pictures are marked as AI-made.', old: '' },
+        de: { sub: 'bildstudio', h: 'Bildstudio (Platzhalter)', p: 'Geplant: Bilder erzeugen und bearbeiten mit einem Modell deiner Wahl, mit Galerie. Erzeugte Bilder werden als KI-erzeugt gekennzeichnet.', old: '' }
+    };
+    function render() { ['h', 'p'].forEach(function (k) { document.getElementById(k).textContent = Heinz.t(D, k); }); }
+    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
+    Heinz.onLang(render); render();
+})();
+</script>
+</body>
+</html>

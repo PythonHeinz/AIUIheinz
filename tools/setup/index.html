@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark light">
+<title>AIUIheinz · Setup</title>
+<link rel="stylesheet" href="/lib/core.css">
+<script src="/lib/core.js"></script>
+<style>
+/* Setup guide (DR2 draft). Works without the server for reading; the live checks only light up when the page runs from the app server. */
+body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
+.top { display: flex; align-items: center; gap: 8px; padding: 12px 0 6px; }
+.top h1 { flex: 1; margin: 0; font-size: 1.2rem; font-weight: 500; }
+.lead { color: var(--sub); line-height: 1.5; margin: 6px 0 12px; font-family: var(--serif); font-size: 1rem; }
+.prog { height: 4px; border-radius: 99px; background: var(--card); overflow: hidden; margin: 8px 0 14px; }
+.prog i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: 0 0 8px var(--green); transition: width .4s; }
+.steps { display: flex; flex-direction: column; gap: 10px; }
+.step a.lnk { color: var(--pri); }
+.step .pill { margin-top: 8px; text-decoration: none; min-height: 36px; }
+.chk { margin-top: 6px; font: 12px var(--mono); color: var(--sub); }
+.step.ok .chk { color: var(--green); } .step.warn .chk { color: var(--orange); }
+.notice { margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+    <a class="ibtn" href="/hub.html" aria-label="Hub"><svg class="i"><use href="/lib/icons.svg#i-arrow-l"/></svg></a>
+    <h1 id="h"></h1>
+    <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+</div>
+<p class="lead" id="lead"></p>
+<div class="notice warn" id="warn"></div>
+<div class="prog"><i id="pg"></i></div>
+<div class="steps" id="steps"></div>
+</div>
+<script>
+(function () {
+    var REPO = 'https://github.com/PythonHeinz/AIUIheinz.git';
+    var D = {
+        en: { h: 'Setup guide', lead: 'From a fresh phone to your first answer from a model that runs on the phone itself. Seven steps; some the app can check for you.',
+            warn: 'Draft: the steps and commands have not been tried on a fresh phone yet. If a step fails, the text is what needs fixing, not you.',
+            copy: 'Copy', copied: 'Copied', ok: 'done', todo: 'not checked yet', open: 'Open',
+            s1t: 'Get F-Droid', s1: 'Install the F-Droid app store from f-droid.org. Allow "Install unknown apps" for your browser when Android asks.', s1l: 'f-droid.org',
+            s2t: 'Install Termux', s2: 'In F-Droid search for "Termux" and install it. Use the F-Droid version, not the Play Store one: that one is outdated.',
+            s3t: 'Fetch the app and start it', s3: 'Open Termux, paste this line once and press Enter. It installs the tools, fetches the app and starts it. Read the line first: it only installs packages and copies the app from its public repository.', s3c: 'Server answers on this page:', s3ok: 'the app server is running', s3no: 'open this guide from the app (localhost:3000) to check',
+            s4t: 'Install and start Ollama', s4: 'Ollama runs the models. Install it in Termux; the start script starts it for you.', s4c: 'Ollama:', s4ok: 'Ollama is running', s4no: 'Ollama is not reachable yet',
+            s5t: 'Keep Termux alive', s5: 'Android stops background apps. Set battery for Termux to "Unrestricted" and keep Termux visible (split screen) while a model works, otherwise it gets slow or is closed.',
+            s6t: 'Choose a model', s6: 'Start small: a model of about 2 to 3 billion parameters fits most phones. Install one in Termux, later the app will do this for you.', s6c: 'Models:', s6ok: '{n} installed', s6no: 'none installed yet',
+            s7t: 'Say hello', s7: 'Open Heinz Chat and write something. For speed and settings use the test bench.', s7a: 'Open Heinz Chat', s7b: 'Test bench' },
+        de: { h: 'Einrichtung', lead: 'Vom frischen Handy bis zur ersten Antwort eines Modells, das auf dem Handy selbst läuft. Sieben Schritte; einige kann die App für dich prüfen.',
+            warn: 'Entwurf: Die Schritte und Befehle wurden noch nicht auf einem frischen Handy ausprobiert. Wenn ein Schritt scheitert, muss der Text besser werden, nicht du.',
+            copy: 'Kopieren', copied: 'Kopiert', ok: 'erledigt', todo: 'noch nicht geprüft', open: 'Öffnen',
+            s1t: 'F-Droid holen', s1: 'Installiere den App-Store F-Droid von f-droid.org. Erlaube „Unbekannte Apps installieren“ für deinen Browser, wenn Android fragt.', s1l: 'f-droid.org',
+            s2t: 'Termux installieren', s2: 'Suche in F-Droid nach „Termux“ und installiere es. Nimm die F-Droid-Version, nicht die aus dem Play Store: die ist veraltet.',
+            s3t: 'App holen und starten', s3: 'Öffne Termux, füge diese Zeile einmal ein und drücke Enter. Sie installiert die Werkzeuge, holt die App und startet sie. Lies die Zeile vorher: sie installiert nur Pakete und kopiert die App aus ihrem öffentlichen Repository.', s3c: 'Server antwortet auf dieser Seite:', s3ok: 'der App-Server läuft', s3no: 'öffne diese Anleitung aus der App (localhost:3000), um zu prüfen',
+            s4t: 'Ollama installieren und starten', s4: 'Ollama führt die Modelle aus. Installiere es in Termux; das Startskript startet es für dich.', s4c: 'Ollama:', s4ok: 'Ollama läuft', s4no: 'Ollama ist noch nicht erreichbar',
+            s5t: 'Termux am Leben halten', s5: 'Android beendet Hintergrund-Apps. Stelle den Akku für Termux auf „Nicht eingeschränkt“ und lass Termux sichtbar (Splitscreen), solange ein Modell arbeitet, sonst wird es langsam oder beendet.',
+            s6t: 'Modell wählen', s6: 'Fang klein an: Ein Modell mit etwa 2 bis 3 Milliarden Parametern passt auf die meisten Handys. Installiere eins in Termux, später übernimmt das die App.', s6c: 'Modelle:', s6ok: '{n} installiert', s6no: 'noch keins installiert',
+            s7t: 'Hallo sagen', s7: 'Öffne Heinz Chat und schreibe etwas. Für Tempo und Einstellungen nimm den Prüfstand.', s7a: 'Heinz Chat öffnen', s7b: 'Prüfstand' }
+    };
+    var CMD3 = 'pkg update -y && pkg install -y git python && git clone ' + REPO + ' ~/AIUIheinz && cd ~/AIUIheinz && bash start.sh';
+    var CMD4 = 'pkg install -y ollama';
+    var CMD6 = 'ollama pull qwen2.5:3b';
+    var st = { server: null, ollama: null, models: null };
+    function t(k, v) { return Heinz.t(D, k, v); }
+    function cmd(c) { return '<div class="cmd"><span>' + Heinz.esc(c) + '</span><button type="button" data-copy="' + Heinz.esc(c) + '" aria-label="' + t('copy') + '"><svg class="i sm"><use href="/lib/icons.svg#i-copy"/></svg></button></div>'; }
+    function step(n, state, title, body, extra, chk) {
+        return '<div class="step ' + state + '" data-step="' + n + '"><span class="no">' + (state === 'ok' ? '✓' : n) + '</span><div class="sb"><b>' + title + '</b><p>' + body + '</p>' + (extra || '') + (chk ? '<div class="chk">' + chk + '</div>' : '') + '</div></div>';
+    }
+    function render() {
+        document.getElementById('h').textContent = t('h'); document.getElementById('lead').textContent = t('lead'); document.getElementById('warn').textContent = t('warn');
+        var sOk = st.server === true, oOk = st.ollama === true, mOk = st.models > 0;
+        var h = '';
+        h += step(1, 'todo', t('s1t'), t('s1'), '<a class="pill" href="https://f-droid.org" target="_blank" rel="noopener noreferrer">' + t('s1l') + '</a>');
+        h += step(2, 'todo', t('s2t'), t('s2'));
+        h += step(3, sOk ? 'ok' : 'todo', t('s3t'), t('s3'), cmd(CMD3), t('s3c') + ' ' + (sOk ? t('s3ok') : t('s3no')));
+        h += step(4, oOk ? 'ok' : (st.ollama === false ? 'warn' : 'todo'), t('s4t'), t('s4'), cmd(CMD4), t('s4c') + ' ' + (oOk ? t('s4ok') : t('s4no')));
+        h += step(5, 'todo', t('s5t'), t('s5'));
+        h += step(6, mOk ? 'ok' : 'todo', t('s6t'), t('s6'), cmd(CMD6), t('s6c') + ' ' + (mOk ? t('s6ok', { n: st.models }) : t('s6no')));
+        h += step(7, 'todo', t('s7t'), t('s7'), '<a class="pill acc" href="/tools/heinz/index.html">' + t('s7a') + '</a> <a class="pill" href="/chat.html">' + t('s7b') + '</a>');
+        document.getElementById('steps').innerHTML = h;
+        var done = (sOk ? 1 : 0) + (oOk ? 1 : 0) + (mOk ? 1 : 0);
+        document.getElementById('pg').style.width = Math.round(done / 3 * 100) + '%';
+        document.title = 'AIUIheinz · ' + t('h');
+    }
+    document.getElementById('steps').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-copy]'); if (!b) return;
+        Heinz.copy(b.getAttribute('data-copy')).then(function () { b.title = t('copied'); b.innerHTML = '<svg class="i sm"><use href="/lib/icons.svg#i-check"/></svg>'; setTimeout(function () { b.innerHTML = '<svg class="i sm"><use href="/lib/icons.svg#i-copy"/></svg>'; }, 1500); }).catch(function () {});
+    });
+    var lb = document.getElementById('lang-btn'); lb.onclick = Heinz.toggleLang;
+    function lbPaint() { Array.prototype.forEach.call(lb.querySelectorAll('span'), function (s) { s.classList.toggle('active', s.getAttribute('data-l') === Heinz.lang); }); document.documentElement.lang = Heinz.lang; }
+    Heinz.onLang(function () { lbPaint(); render(); });
+    lbPaint(); render();
+    function check() {
+        fetch('/api/ping').then(function (r) { st.server = r.ok; render(); }, function () { st.server = null; render(); });
+        Heinz.pingOllama().then(function (r) { st.ollama = r.up; st.models = r.models.length; render(); });
+    }
+    check(); setInterval(check, 6000);
+})();
+</script>
+</body>
+</html>

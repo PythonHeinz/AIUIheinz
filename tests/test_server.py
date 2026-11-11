@@ -48,7 +48,7 @@ class ServerTest(unittest.TestCase):
         st, data = self.req("GET", "/api/tools")
         self.assertEqual(st, 200)
         ids = [t["id"] for t in json.loads(data)["tools"]]
-        self.assertEqual(ids, ["chat", "models", "filter", "sheet", "lab", "vitals"])
+        self.assertEqual(ids, ["heinz", "chat", "models", "filter", "scan", "setup", "sheet", "studio", "lab", "vitals"])
 
     def test_tools_apps_json_and_invalid_entries(self):
         d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "zz-bad")

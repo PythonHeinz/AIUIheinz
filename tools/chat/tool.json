@@ -1,12 +1,12 @@
 {
   "id": "chat",
   "name": {
-    "en": "Heinz UI",
-    "de": "Heinz UI"
+    "en": "Heinz Test Bench",
+    "de": "Heinz Prüfstand"
   },
   "desc": {
-    "en": "Ask any model and continue the chat: Wilson, Heinz, Audit, Code, Creative.",
-    "de": "Jedes Modell fragen und den Chat fortführen: Wilson, Heinz, Audit, Code, Creative."
+    "en": "Try models and settings: five modes, parameters, speed test, test series, engines.",
+    "de": "Modelle und Einstellungen ausprobieren: fünf Modi, Parameter, Tempo-Test, Testreihe, Engines."
   },
   "icon": "💬",
   "entry": "chat.html",

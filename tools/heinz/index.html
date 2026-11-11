@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark light">
+<title>Heinz Chat</title>
+<link rel="stylesheet" href="/lib/core.css">
+<script src="/lib/core.js"></script>
+<script src="/lib/providers.js"></script>
+<style>
+/* Heinz Chat: the calm chat (DR2 draft). Reading first, one model switch, no parameters. Own storage keys heinz_slim and heinz_slim_chats. */
+html, body { height: 100%; overflow: hidden; }
+body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
+.app { height: var(--appH, 100dvh); display: flex; flex-direction: column; max-width: 680px; margin: 0 auto; padding: 0 12px; }
+.top { display: flex; align-items: center; gap: 4px; height: 56px; flex: none; }
+.top .mod { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 99px; background: var(--card); border: 1px solid var(--ol); padding: 0 14px; font-size: .9rem; cursor: pointer; color: var(--txt); }
+.top .mod span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top .mod .on { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
+.top .mod .on.cloud { background: var(--orange); }
+#note { flex: none; margin: 0 0 8px; }
+#log { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 2px 16px; scroll-behavior: smooth; }
+.empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--sub); gap: 8px; padding: 0 24px; }
+.empty b { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; color: var(--txt); }
+.msg { margin: 0 0 18px; line-height: 1.65; }
+.msg.u { display: flex; justify-content: flex-end; }
+.msg.u div { max-width: 86%; background: var(--card); border: 1px solid var(--ol); border-radius: 20px 20px 6px 20px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.a { font-family: var(--serif); font-size: 1.06rem; overflow-wrap: anywhere; }
+.msg.a p { margin: 0 0 .8em; } .msg.a ul, .msg.a ol { margin: 0 0 .8em; padding-left: 1.3em; }
+.msg.a code { font: .86em var(--mono); background: var(--card); padding: 1px 5px; border-radius: 6px; }
+.msg.a pre { margin: 0 0 .8em; padding: 10px 12px; border-radius: 12px; background: #0a0b0d; color: #d4d4d4; overflow-x: auto; font: 12.5px/1.5 var(--mono); }
+.msg.a pre code { background: none; padding: 0; }
+.msg.a .cur { display: inline-block; width: .5em; height: 1em; background: var(--pri); vertical-align: -.12em; animation: bl 1s steps(2) infinite; }
+@keyframes bl { 50% { opacity: 0; } }
+.msg .cp { display: inline-flex; margin-top: 2px; width: 34px; height: 34px; }
+.comp { flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 8px 8px 8px 16px; margin: 0 0 max(8px, env(safe-area-inset-bottom)); border-radius: 28px; background: var(--surf); border: 1.5px solid var(--edge); }
+.comp textarea { flex: 1; min-width: 0; background: none; border: 0; outline: none; resize: none; color: var(--txt); font: inherit; font-size: 1rem; line-height: 1.45; padding: 9px 0; max-height: 34vh; }
+.comp textarea::placeholder { color: var(--muted); }
+.comp .round { flex: none; }
+.lst .row { border-top: 1px solid var(--line); }
+.lst .row small { display: block; color: var(--sub); font-size: .78rem; margin-top: 2px; }
+.lst .row.sel b { color: var(--pri); }
+.eng { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+.eng .pill.on { border-color: var(--pri); color: var(--pri); }
+.fld { display: block; margin: 12px 0 4px; font-size: .8rem; color: var(--sub); }
+.inp { width: 100%; height: 44px; border-radius: 12px; border: 1px solid var(--ol); background: var(--card); color: var(--txt); padding: 0 12px; font: inherit; }
+.hint { color: var(--sub); font-size: .82rem; line-height: 1.45; margin: 8px 0; }
+.swr { display: flex; align-items: center; gap: 12px; padding: 8px 0; } .swr .tx { flex: 1; font-size: .95rem; }
+.row .ibtn { margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+    <div class="top">
+        <a class="ibtn" href="/hub.html" id="hub" aria-label="Hub"><svg class="i"><use href="/lib/icons.svg#i-arrow-l"/></svg></a>
+        <button class="mod" id="mod" type="button"><i class="on" id="mod-dot"></i><span id="mod-t">…</span><svg class="i sm"><use href="/lib/icons.svg#i-chev-d"/></svg></button>
+        <button class="ibtn" id="new" type="button" aria-label="New chat"><svg class="i"><use href="/lib/icons.svg#i-plus"/></svg></button>
+        <button class="ibtn" id="hist" type="button" aria-label="Chats"><svg class="i"><use href="/lib/icons.svg#i-chats"/></svg></button>
+    </div>
+    <div id="note" hidden></div>
+    <div id="log"></div>
+    <div class="comp">
+        <textarea id="q" rows="1" autocomplete="off"></textarea>
+        <button class="round acc" id="send" type="button" aria-label="Send"><svg class="i"><use href="/lib/icons.svg#i-send"/></svg></button>
+    </div>
+</div>
+
+<div class="bscrim" id="bscrim"></div>
+<section class="bsheet" id="sh-model" aria-label="Model">
+    <div class="grab"></div>
+    <div class="bs-h"><h3 id="sm-h"></h3><button class="ibtn" type="button" onclick="Heinz.sheetClose()" aria-label="Close"><svg class="i"><use href="/lib/icons.svg#i-x"/></svg></button></div>
+    <div class="bs-b">
+        <div class="eng" id="eng"></div>
+        <div class="lst" id="models"></div>
+        <label class="fld" id="free-l" hidden></label>
+        <input class="inp" id="free" type="text" hidden>
+        <div class="swr"><span class="tx" id="onl-t"></span><span class="sw"><input type="checkbox" id="onl"><i></i></span></div>
+        <p class="hint" id="onl-h"></p>
+    </div>
+</section>
+<section class="bsheet" id="sh-hist" aria-label="Chats">
+    <div class="grab"></div>
+    <div class="bs-h"><h3 id="sh-h"></h3><button class="ibtn" type="button" onclick="Heinz.sheetClose()" aria-label="Close"><svg class="i"><use href="/lib/icons.svg#i-x"/></svg></button></div>
+    <div class="bs-b"><div class="lst" id="chats"></div></div>
+</section>
+
+<script>
+(function () {
+    var PV = HeinzProviders;
+    var D = {
+        en: { title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
+            local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
+            reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the test bench under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
+        de: { title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
+            local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
+            reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Prüfstand unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
+    };
+    function t(k, v) { return Heinz.t(D, k, v); }
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = Heinz.esc;
+    var S = Heinz.lsGet('heinz_slim', null);
+    if (!S) { var gs = Heinz.lsGet('heinz_settings', {}) || {}; S = { provider: gs.provider || 'ollama', model: '', chat: 0 }; }
+    var chats = Heinz.lsGet('heinz_slim_chats', []); if (!Array.isArray(chats)) chats = [];
+    var cur = chats.filter(function (c) { return c.id === S.chat; })[0] || null;
+    var msgs = cur ? cur.messages.slice() : [];
+    var gen = false, abort = null, modelsList = [], modelsFor = '';
+    function save() { Heinz.lsSet('heinz_slim', S); Heinz.lsSet('heinz_slim_chats', chats.slice(0, 100)); }
+
+    // ---- minimal markdown for answers (escaped first) ----
+    function md(src) {
+        var s = esc(src), blocks = [];
+        s = s.replace(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g, function (m, c) { blocks.push('<pre><code>' + c.replace(/\n$/, '') + '</code></pre>'); return '\u0000' + (blocks.length - 1) + '\u0000'; });
+        var out = [], lines = s.split('\n'), list = null, para = [];
+        function flushP() { if (para.length) { out.push('<p>' + para.join('<br>') + '</p>'); para = []; } }
+        function flushL() { if (list) { out.push('</' + list + '>'); list = null; } }
+        lines.forEach(function (ln) {
+            var ul = /^\s*[-*]\s+(.*)/.exec(ln), ol = /^\s*\d+[.)]\s+(.*)/.exec(ln);
+            if (ul || ol) { flushP(); var k = ul ? 'ul' : 'ol'; if (list !== k) { flushL(); out.push('<' + k + '>'); list = k; } out.push('<li>' + (ul || ol)[1] + '</li>'); }
+            else if (!ln.trim()) { flushP(); flushL(); }
+            else { flushL(); para.push(ln); }
+        });
+        flushP(); flushL();
+        var h = out.join('').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code>$1</code>');
+        return h.replace(/\u0000(\d+)\u0000/g, function (m, i) { return blocks[+i]; });
+    }
+
+    // ---- view ----
+    function pv() { return PV.get(S.provider) || PV.get('ollama'); }
+    function head() {
+        var p = pv();
+        $('mod-t').textContent = (S.model || t('model')) + (p.local ? '' : ' · ' + t('cloud'));
+        $('mod-dot').className = 'on' + (p.local ? '' : ' cloud');
+        $('q').placeholder = t('ph');
+        document.title = t('title');
+    }
+    function renderLog(streaming) {
+        var box = $('log');
+        if (!msgs.length) { box.innerHTML = '<div class="empty"><b>' + t('hello') + '</b><span>' + esc(t('sub', { m: S.model || '–' })) + '</span></div>'; return; }
+        box.innerHTML = msgs.map(function (m, i) {
+            if (m.role === 'user') return '<div class="msg u"><div>' + esc(m.content) + '</div></div>';
+            var last = streaming && i === msgs.length - 1;
+            return '<div class="msg a">' + md(m.content) + (last ? '<span class="cur"></span>' : '') + (last ? '' : '<br><button class="ibtn cp" type="button" data-cp="' + i + '" aria-label="' + t('copy') + '"><svg class="i sm"><use href="/lib/icons.svg#i-copy"/></svg></button>') + '</div>';
+        }).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+    function notice(kind, text) { var n = $('note'); if (!text) { n.hidden = true; return; } n.hidden = false; n.className = 'notice ' + kind; n.textContent = text; }
+    function setBusy(b) {
+        gen = b;
+        $('send').innerHTML = '<svg class="i"><use href="/lib/icons.svg#i-' + (b ? 'stop' : 'send') + '"/></svg>';
+        $('send').setAttribute('aria-label', b ? 'Stop' : 'Send');
+    }
+
+    // ---- chats ----
+    function persist() {
+        if (!msgs.length) return;
+        var first = msgs.filter(function (m) { return m.role === 'user'; })[0];
+        if (!cur) { cur = { id: Date.now(), title: '', messages: [], ts: Date.now() }; chats.unshift(cur); S.chat = cur.id; }
+        cur.messages = msgs.slice(); cur.title = first ? first.content.replace(/\s+/g, ' ').slice(0, 44) : t('untitled');
+        cur.provider = S.provider; cur.model = S.model; cur.ts = Date.now();
+        save();
+    }
+    function newChat() { if (gen && abort) abort.abort(); persist(); cur = null; msgs = []; S.chat = 0; save(); notice('', ''); renderLog(); $('q').focus(); }
+    function openChat(id) {
+        var c = chats.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+        if (gen && abort) abort.abort(); persist();
+        cur = c; msgs = c.messages.slice(); S.chat = c.id; if (c.provider && PV.get(c.provider)) { S.provider = c.provider; } if (c.model) S.model = c.model;
+        save(); head(); renderLog(); Heinz.sheetClose();
+    }
+    function renderHist() {
+        $('sh-h').textContent = t('chats');
+        var list = chats.slice().sort(function (a, b) { return b.ts - a.ts; });
+        $('chats').innerHTML = list.length ? list.map(function (c) {
+            return '<div class="row' + (c.id === S.chat ? ' sel' : '') + '" data-open="' + c.id + '"><span class="tx"><b>' + esc(c.title || t('untitled')) + '</b><small>' + esc((c.model || '') + ' · ' + new Date(c.ts).toLocaleString(Heinz.lang === 'de' ? 'de-DE' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' })) + '</small></span><button class="ibtn" type="button" data-del="' + c.id + '" aria-label="' + t('del') + '"><svg class="i sm"><use href="/lib/icons.svg#i-trash"/></svg></button></div>';
+        }).join('') : '<p class="hint">' + t('none') + '</p>';
+    }
+
+    // ---- model sheet ----
+    function engineOk(p) { return p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(p.id))); }
+    function renderSheet() {
+        $('sm-h').textContent = t('model'); $('onl-t').textContent = t('onl'); $('onl-h').textContent = t('onlH'); $('onl').checked = PV.onlineAllowed();
+        var ps = PV.list().filter(engineOk);
+        if (!ps.some(function (p) { return p.id === S.provider; })) { S.provider = 'ollama'; }
+        $('eng').innerHTML = ps.map(function (p) { return '<button type="button" class="pill' + (p.id === S.provider ? ' on' : '') + '" data-eng="' + esc(p.id) + '">' + esc(p.name) + '</button>'; }).join('');
+        var hasList = modelsFor === S.provider && modelsList.length;
+        $('models').innerHTML = hasList ? modelsList.map(function (m) {
+            return '<button type="button" class="row' + (m === S.model ? ' sel' : '') + '" data-model="' + esc(m) + '"><span class="tx"><b>' + esc(m) + '</b></span>' + (m === S.model ? '<svg class="i sm"><use href="/lib/icons.svg#i-check"/></svg>' : '') + '</button>';
+        }).join('') : '<p class="hint">' + (modelsFor === S.provider ? t('noModels') : t('loading')) + '</p>';
+        var free = !hasList; $('free').hidden = !free; $('free-l').hidden = !free; $('free-l').textContent = t('freeL'); $('free').value = free ? (S.model || '') : '';
+    }
+    function loadModels() {
+        var id = S.provider; modelsFor = ''; renderSheet();
+        PV.models(id).then(function (l) {
+            if (S.provider !== id) return;
+            modelsList = (l || []).map(function (m) { return typeof m === 'string' ? m : (m.id || m.name || ''); }).filter(Boolean);
+            modelsFor = id;
+            if (!S.model || (modelsList.length && modelsList.indexOf(S.model) < 0 && id === 'ollama')) { S.model = modelsList[0] || S.model; save(); }
+            head(); renderSheet(); renderLog(gen);
+        }, function () { if (S.provider !== id) return; modelsList = []; modelsFor = id; renderSheet(); });
+    }
+    function pickEngine(id) { S.provider = id; S.model = ''; save(); head(); loadModels(); }
+    function pickModel(m) { S.model = m; save(); head(); renderSheet(); renderLog(gen); Heinz.sheetClose(); }
+
+    // ---- sending ----
+    function send() {
+        if (gen) { if (abort) abort.abort(); return; }
+        var q = $('q').value.trim(); if (!q) return;
+        if (!S.model) { notice('warn', t('noModel')); Heinz.sheetOpen('sh-model'); renderSheet(); return; }
+        notice('', '');
+        msgs.push({ role: 'user', content: q }); msgs.push({ role: 'assistant', content: '' });
+        $('q').value = ''; autosize(); setBusy(true); renderLog(true);
+        abort = new AbortController();
+        var hist = msgs.slice(0, -1).map(function (m) { return { role: m.role, content: m.content }; });
+        PV.chat(S.provider, { model: S.model, messages: hist, stream: true, signal: abort.signal, onDelta: function (d) { msgs[msgs.length - 1].content += d; renderLog(true); } })
+            .then(function () { }, function (e) {
+                if (e && e.name === 'AbortError') { msgs[msgs.length - 1].content += (msgs[msgs.length - 1].content ? ' ' : '') + t('stopped'); return; }
+                var code = e && e.code, m = code === 'ONLINE_BLOCKED' ? t('blocked') : code === 'NO_KEY' ? t('noKey') : t('err', { m: (e && e.message) || '' });
+                if (!msgs[msgs.length - 1].content) msgs.pop();
+                if (msgs.length && msgs[msgs.length - 1].role === 'user') { $('q').value = msgs.pop().content; autosize(); }
+                notice('err', m);
+            }).then(function () { setBusy(false); abort = null; persist(); renderLog(false); });
+    }
+    function autosize() { var q = $('q'); q.style.height = 'auto'; q.style.height = Math.min(q.scrollHeight, innerHeight * .34) + 'px'; }
+
+    // ---- wiring ----
+    $('send').onclick = send; $('q').addEventListener('input', autosize);
+    $('mod').onclick = function () { Heinz.sheetOpen('sh-model'); renderSheet(); loadModels(); };
+    $('hist').onclick = function () { persist(); renderHist(); Heinz.sheetOpen('sh-hist'); };
+    $('new').onclick = newChat;
+    $('eng').addEventListener('click', function (e) { var b = e.target.closest('[data-eng]'); if (b) pickEngine(b.getAttribute('data-eng')); });
+    $('models').addEventListener('click', function (e) { var b = e.target.closest('[data-model]'); if (b) pickModel(b.getAttribute('data-model')); });
+    $('free').addEventListener('change', function () { S.model = $('free').value.trim(); save(); head(); renderLog(gen); });
+    $('onl').addEventListener('change', function () { PV.setOnlineAllowed($('onl').checked); if (!$('onl').checked && !pv().local) { S.provider = 'ollama'; S.model = ''; save(); head(); } renderSheet(); loadModels(); });
+    $('chats').addEventListener('click', function (e) {
+        var d = e.target.closest('[data-del]');
+        if (d) { var id = +d.getAttribute('data-del'); chats = chats.filter(function (c) { return c.id !== id; }); if (S.chat === id) { cur = null; msgs = []; S.chat = 0; renderLog(); } save(); renderHist(); return; }
+        var o = e.target.closest('[data-open]'); if (o) openChat(+o.getAttribute('data-open'));
+    });
+    $('log').addEventListener('click', function (e) { var b = e.target.closest('[data-cp]'); if (b) Heinz.copy(msgs[+b.getAttribute('data-cp')].content).then(function () { b.innerHTML = '<svg class="i sm"><use href="/lib/icons.svg#i-check"/></svg>'; }); });
+    Heinz.onLang(function () { head(); renderLog(gen); renderSheet(); });
+    function fit() { if (window.visualViewport) document.documentElement.style.setProperty('--appH', Math.round(visualViewport.height * visualViewport.scale) + 'px'); }
+    if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); } fit();
+    head(); renderLog(); autosize(); loadModels();
+})();
+</script>
+</body>
+</html>

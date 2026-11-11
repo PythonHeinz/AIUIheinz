@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Read in</title>
+<link rel="stylesheet" href="/lib/core.css">
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page">
+    <div class="panel"><h3 id="h"></h3><div id="p"></div></div>
+</main>
+<script src="/lib/core.js"></script>
+<script>
+(function () {
+    var D = {
+        en: { sub: 'read in', h: 'Read in (placeholder)', p: 'Planned: take a photo of a recipe, bill, letter or code. The picture is read on this device first; the cloud is optional. The result is text or a table you can copy, export or send on to the sheet.', old: '' },
+        de: { sub: 'einlesen', h: 'Einlesen (Platzhalter)', p: 'Geplant: Foto von Rezept, Rechnung, Brief oder Code. Das Bild wird zuerst auf diesem Gerät gelesen, die Cloud ist zuschaltbar. Das Ergebnis ist Text oder eine Tabelle zum Kopieren, Exportieren oder Weiterreichen an das Sheet.', old: '' }
+    };
+    function render() { ['h', 'p'].forEach(function (k) { document.getElementById(k).textContent = Heinz.t(D, k); }); }
+    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
+    Heinz.onLang(render); render();
+})();
+</script>
+</body>
+</html>

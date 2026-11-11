@@ -1,0 +1,18 @@
+{
+  "id": "scan",
+  "name": {
+    "en": "Read in",
+    "de": "Einlesen"
+  },
+  "desc": {
+    "en": "Photo to text or table: recipe, bill, letter, code. Planned.",
+    "de": "Foto zu Text oder Tabelle: Rezept, Rechnung, Brief, Code. Geplant."
+  },
+  "icon": "•",
+  "entry": "tools/scan/index.html",
+  "color": "yellow",
+  "status": "placeholder",
+  "order": 40,
+  "area": "tools",
+  "symbol": "i-doc"
+}

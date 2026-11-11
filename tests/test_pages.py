@@ -10,7 +10,7 @@ from helpers import Server
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html"]
+PAGES = ["/", "/hub.html", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/tools/heinz/index.html", "/tools/setup/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
 
 
 class FakeOllama:
@@ -2042,7 +2042,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#legacy a.row").count(), 2)
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#tools a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids, ["filter", "sheet"])
+        self.assertEqual(ids, ["filter", "scan", "sheet", "studio"])
         self.assertEqual(page.locator("#legacy a.row").count(), 0)
         page.reload()
         page.wait_for_selector("a.app[data-tool]")
@@ -2093,6 +2093,72 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#sheet.open").count(), 0)
         self.assertEqual(self.errors, [])
         self.assertEqual(self.external, [])
+
+    # ---- DR2 phase A: new hub, Heinz Chat, setup, mode slider ----
+    def test_new_hub_groups_names_and_footer(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/hub.html")
+        page.wait_for_selector("#main a, #main .row, #main button", timeout=5000)
+        txt = page.inner_text("body")
+        self.assertIn("Heinz Chat", txt)
+        page.click("[data-area=tools]")
+        self.assertIn("Filter", page.inner_text("#main"))
+        self.assertNotIn("privacy", page.inner_text("body").lower().replace("private", ""))
+        self.assertEqual(self.errors, [])
+        self.assertEqual(self.external, [])
+
+    def test_slim_chat_sends_streams_and_picks_model_in_bottom_sheet(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        self.assertEqual(page.locator("#sh-model.open").count(), 0)
+        self.assertIn("qwen2.5:3b", page.inner_text("#mod-t"))
+        page.fill("#q", "Hi there")
+        page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        self.assertEqual(fake.requests[-1]["model"], "qwen2.5:3b")
+        self.assertEqual(fake.requests[-1]["messages"][-1]["content"], "Hi there")
+        page.click("#new")
+        self.assertEqual(page.locator("#log .msg").count(), 0)
+        page.click("#hist")
+        page.wait_for_selector("#sh-hist.open")
+        self.assertEqual(page.locator("#chats [data-open]").count(), 1)
+        self.assertEqual(self.errors, [])
+        self.assertEqual(self.external, [])
+
+    def test_slim_chat_error_keeps_text_and_shows_notice(self):
+        page = self.new_page()
+        FakeOllama(page, status=500)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.fill("#q", "Hello?")
+        page.click("#send")
+        page.wait_for_selector("#note.err:not([hidden])")
+        self.assertEqual(page.input_value("#q"), "Hello?")
+
+    def test_setup_page_has_steps_and_copy_command(self):
+        page = self.new_page()
+        FakeOllama(page)
+        page.goto(self.srv.base + "/tools/setup/index.html")
+        self.assertGreaterEqual(page.locator(".step").count(), 6)
+        self.assertGreaterEqual(page.locator(".cmd").count(), 2)
+        self.assertEqual(self.errors, [])
+
+    def test_mode_slider_mockup_changes_accent(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/design/modus.html")
+        before = page.evaluate("getComputedStyle(document.body).getPropertyValue('--macc').trim()")
+        page.click("#collar")
+        page.wait_for_selector("#vbar.open")
+        page.click(".mo[data-i='4']")
+        after = page.evaluate("getComputedStyle(document.body).getPropertyValue('--macc').trim()")
+        self.assertNotEqual(before, after)
+        self.assertEqual(after.lower(), "#b184ec")
+        self.assertEqual(self.errors, [])
 
     def test_manifest_and_service_worker_installable(self):
         page = self.new_page()

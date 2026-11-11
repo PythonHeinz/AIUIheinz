@@ -1,0 +1,18 @@
+{
+  "id": "studio",
+  "name": {
+    "en": "Image studio",
+    "de": "Bildstudio"
+  },
+  "desc": {
+    "en": "Make and edit pictures with a model of your choice. Planned.",
+    "de": "Bilder erzeugen und bearbeiten mit einem Modell deiner Wahl. Geplant."
+  },
+  "icon": "•",
+  "entry": "tools/studio/index.html",
+  "color": "red",
+  "status": "placeholder",
+  "order": 50,
+  "area": "tools",
+  "symbol": "i-sparkle"
+}
