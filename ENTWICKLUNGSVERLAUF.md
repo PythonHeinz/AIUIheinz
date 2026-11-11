@@ -449,3 +449,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 11.11.2026 – Konzept 21 Testreihen (Chat „AIUIheinz“, nur Dokumente)
 - `docs/KONZEPT.md` Abschnitt 21: automatisierte Parameterläufe in der Testumgebung. Beschluss des Entwicklers: erster Fall ein Modell mit vielen Parameterkombinationen, Auswertung zunächst nur durch Code, Hauptzweck ist der Export für den auswertenden Agenten. Bausteine, Betrieb (Bildschirm an, Termux sichtbar, Cloud-Obergrenze), Reihenfolge.
 - `docs/AUFTRAG_Chat_Schnittstellen.md`: Schritt 1a (Testreihen) vor dem Anhang-Baustein.
+
+## 11.11.2026 – Strang AIUIheinz-Tertius, Durchgang 1 (nur Dokument)
+- Neu: `docs/TERTIUS.md` (Eindruck von außen, Befunde nach Gewicht, Eignung als Bachelor-/Masterarbeit, Qualifikationsprofil, Stellenbild, offene Fragen). Kein Code, keine fremden Dokumente geändert.
+- Tests: `bash tests/run_all.sh` im Lauf grün (simuliert, nicht auf dem Gerät). Oberfläche mit simuliertem Ollama und Viewport 426 × 803 angesehen.
