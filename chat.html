@@ -484,8 +484,13 @@
             <div class="pg" data-pg="engine" id="engine-box">
                 <div id="q-lock" class="lockbox" hidden><span id="q-lock-txt"></span><button class="pill acc" type="button" onclick="unlockOnline()" data-i18n="qAllow">Allow online</button></div>
                 <div id="q-eng-list"></div>
-                <div class="caps grp" data-i18n="rConn">Connection details</div>
-                <select id="provider-select" class="sel" onchange="onProvider()" style="margin-top:0"></select>
+                <div class="st-btns"><button class="pill" id="eng-add" type="button" onclick="addEngine()"><svg class="i sm"><use href="lib/icons.svg#i-plus"/></svg><span data-i18n="engAdd">Add own engine</span></button></div>
+                <div class="caps grp"><span data-i18n="rConn">Connection details</span><span id="eng-conn-name"></span></div>
+                <div id="eng-name" hidden>
+                    <label class="fld" data-i18n="engName">Name</label>
+                    <input type="text" id="prov-name" class="inp" onchange="onEngineName()" style="margin-top:4px">
+                </div>
+                <select id="provider-select" onchange="onProvider()" hidden aria-hidden="true" tabindex="-1"></select>
                 <div id="eng-backend" hidden>
                     <label class="fld" data-i18n="backend">Backend (LiteRT-LM)</label>
                     <select id="backend-select" class="sel" onchange="onBackend()" style="margin-top:4px"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
@@ -504,6 +509,7 @@
                     <input type="text" id="model-free" class="inp" onchange="onModelFree()" style="margin-top:4px">
                     <div class="st-btns" id="ml-pill"><button class="pill" type="button" onclick="loadModels()"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
                 </div>
+                <div class="st-btns" id="eng-del-row" hidden><button class="pill danger" id="eng-del" type="button" onclick="removeEngineTap()"><svg class="i sm"><use href="lib/icons.svg#i-trash"/></svg><span data-i18n="engDel">Remove this engine</span></button></div>
                 <small id="eng-note" class="help"></small>
                 <div id="eng-status" class="status-line" style="cursor:pointer" onclick="if (MODELS.length) openModelsFromPanel()"></div>
                 <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
@@ -882,7 +888,9 @@
             $('eng-backend').hidden = !p.backends;
             $('backend-select').value = settings.backend;
             $('eng-url').hidden = !p.custom;
-            $('prov-url').value = p.custom ? PV.getCustomUrl() : '';
+            $('prov-url').value = p.custom ? PV.getCustomUrl(p.id) : '';
+            $('eng-name').hidden = !p.user; $('eng-del-row').hidden = !p.user; $('prov-name').value = p.user ? p.name : '';
+            $('eng-conn-name').textContent = ' · ' + p.name; engDelArmed = false; $('eng-del').querySelector('span').textContent = t('engDel');
             $('eng-key').hidden = !(p.needsKey || (p.custom && !p.local));
             $('prov-key').value = PV.getKey(p.id);
             const link = $('prov-keylink'); link.style.display = p.keyUrl ? 'inline' : 'none'; if (p.keyUrl) link.href = p.keyUrl;
@@ -906,7 +914,18 @@
         }
         function onProvider() { switchProvider($('provider-select').value); }
         function onBackend() { settings.backend = $('backend-select').value; saveSettings(); }
-        function onProviderUrl() { PV.setCustomUrl($('prov-url').value); renderEngineUI(); loadModels(); checkServer(); }
+        function onProviderUrl() { PV.setCustomUrl($('prov-url').value, settings.provider); renderEngineUI(); loadModels(); checkServer(); }
+        let engDelArmed = false;
+        function addEngine() {
+            const id = PV.addEngine(t('engNewName') + ' ' + (PV.userEngines().length + 1), '');
+            fillProviderSelect(); switchProvider(id);
+        }
+        function onEngineName() { PV.updateEngine(settings.provider, { name: $('prov-name').value }); fillProviderSelect(); renderEngineUI(); }
+        function removeEngineTap() {
+            if (!engDelArmed) { engDelArmed = true; $('eng-del').querySelector('span').textContent = t('engDelSure'); return; }
+            const id = settings.provider; PV.removeEngine(id); delete settings.modelByProvider[id];
+            switchProvider('ollama');
+        }
         function onProviderKey() { PV.setKey(settings.provider, $('prov-key').value.trim()); loadModels(); }
         function onModelFree() {
             const v = $('model-free').value.trim();
@@ -969,7 +988,7 @@
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
                 stCold: 'Unload model first (measures real load time)', stStart: 'Start test', stStop: 'Stop', stCopy: 'Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
-                stBusy: 'Wait until the answer is finished.', stTable: 'Table', stRun: 'Run', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: 'Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
+                stBusy: 'Wait until the answer is finished.', engAdd: 'Add own engine', engName: 'Name', engDel: 'Remove this engine', engDelSure: 'Tap again to remove', engNewName: 'My engine', stTable: 'Table', stRun: 'Run', stBest: 'Best: {n} threads ({v} tokens/s)', stApply: 'Use {n} threads for this model', stApplied: 'Saved: {n} threads for {m}.',
                 threads: 'CPU threads (0 = Ollama default)', threadsHelp: 'Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values).',
                 fastMode: 'Fast mode (short plain-text answer)', fastN: 'Max. answer tokens (fast mode only)', fastHelp: 'Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.', preloadOpt: 'Preload model', preloadHelp: 'Loads the model and its system prompt in the background after opening the page or changing mode, model or settings, so the first answer starts sooner. Uses memory and battery.', preLoading: 'Preparing model …', preReady: 'Model ready',
                 ownSystem: "Use the model's own system prompt", ownSystemHelp: 'Sends no mode prompt (for models with a built-in persona such as heinz-fakt). Answer language and context go into your message instead.',
@@ -1018,7 +1037,7 @@
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
                 stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: 'Test starten', stStop: 'Stopp', stCopy: 'Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
-                stBusy: 'Warte, bis die Antwort fertig ist.', stTable: 'Tabelle', stRun: 'Lauf', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '{n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
+                stBusy: 'Warte, bis die Antwort fertig ist.', engAdd: 'Eigene Engine hinzufügen', engName: 'Name', engDel: 'Diese Engine entfernen', engDelSure: 'Nochmal tippen zum Entfernen', engNewName: 'Meine Engine', stTable: 'Tabelle', stRun: 'Lauf', stBest: 'Beste: {n} Threads ({v} Token/s)', stApply: '{n} Threads für dieses Modell übernehmen', stApplied: 'Gespeichert: {n} Threads für {m}.',
                 threads: 'CPU-Threads (0 = Ollama-Standard)', threadsHelp: 'Tempo: weniger Threads sind auf dem Handy oft schneller. Wird je Modell gespeichert und immer mitgeschickt (auch bei Standardwerten).',
                 fastMode: 'Schnellmodus (kurze Antwort, reiner Text)', fastN: 'Max. Antwort-Token (nur Schnellmodus)', fastHelp: 'Bittet um eine knappe Antwort ohne Markdown, begrenzt ihre Länge und zeigt sie als reinen Text. Weniger Token = kürzere Wartezeit.', preloadOpt: 'Modell vorladen', preloadHelp: 'Lädt das Modell samt Systemprompt im Hintergrund, nach dem Öffnen der Seite oder bei Wechsel von Modus, Modell oder Einstellungen; die erste Antwort startet dann früher. Braucht Speicher und Akku.', preLoading: 'Modell wird vorbereitet …', preReady: 'Modell bereit',
                 ownSystem: 'Eigenen Systemprompt des Modells nutzen', ownSystemHelp: 'Sendet keinen Modus-Prompt (für Modelle mit eingebauter Persona wie heinz-fakt). Antwortsprache und Kontext gehen stattdessen in deine Nachricht.',

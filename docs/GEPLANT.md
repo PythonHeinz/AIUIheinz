@@ -40,7 +40,7 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 - Offen: Akku und Wärme beim Handytest messen, Drosselung festlegen.
 
 **Weitere vorgemerkte Punkte (Sammlung)**
-- Mehrere eigene OpenAI-kompatible Engines, je mit eigenem Server und Schlüssel (vom Entwickler als Muss bezeichnet, nächstes größeres Feature). Dazu: Im Engine-Menü zeigt das Auswahlfeld unter „Verbindungsdaten" dieselbe Engine-Liste wie die Liste darüber; beim Umbau klären, ob das Feld bleibt.
+- (erledigt 11.11.2026) Mehrere eigene OpenAI-kompatible Engines mit eigenem Namen, Adresse und Schlüssel; das doppelte Auswahlfeld im Engine-Menü ist weg (Liste oben wählt aus). Handytest offen.
 - Modus-Schieberegler am linken Rand (Halbkreis-Kragen, senkrechte Leiste mit farbigen Kreisen), Wichtigstes im Daumenbereich, Parameter-Schnellöffner: siehe `docs/DESIGN.md`, Abschnitt Design-Review 1, Planung für DR2.
 - Zwei Stufen „Schnell/Tief" als Pille an der Eingabe und Reasoning für Cloud-Modelle: Auftrag `docs/AUFTRAG_Modi.md`.
 - App-Sprache (Oberfläche und Vorlesen, Englisch als Rückfall), Geräte- und CPU-Listen.
