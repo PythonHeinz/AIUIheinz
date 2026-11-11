@@ -460,6 +460,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 11.11.2026 – Gerätetests Schnittstellen abgeschlossen (Chat „AIUIheinz-Chat“, nur Doku)
 - Die offenen Fragen aus `docs/AUFTRAG_Chat_Schnittstellen.md` sind am Gerät beantwortet (gemini-3.8-flash, native Engine): `thinkingLevel` in Kleinschreibung wird angenommen (HTTP 200); `thoughtsTokenCount` kommt bei „Tief“ (bei „Schnell“ fehlt das Feld = 0); `topK` wird akzeptiert, wirkt aber nicht; CORS für `streamGenerateContent` läuft aus dem Browser (Header `x-goog-api-key`, 200 mit Stream). Einträge siehe oben („Handytest native Engine“, „top_k-Messung“).
 - Nächster Schritt dieses Strangs: Testreihen (`docs/KONZEPT.md` 21), vorher Rückfrage zu 21.5.
+
 ## 11.11.2026 – Strang AIUIheinz-Modelle: Ein-/Ausgabearten, Funktionsplätze, Modellwechsel (Daten und Doku)
 - `lib/capabilities.json` Version 2: neue Blöcke `media` (Medienarten, Aufrufarten, Regeln je Google-Modellname, Vorgaben je Engine, Funktionsplätze, Format der Zuordnung mit Auflösung) und `lifecycle` (Signale, Fehlermuster, Startliste für Ersatz). Alte Blöcke unverändert; es wurde kein Seitencode geändert.
 - Fund: Die Denkregeln passen nach Namen auch auf TTS- und Bildmodelle; `mediaRule` muss vor der Denkregel gelten, nur `chatList: true` kommt in die Chat-Modellwahl.
