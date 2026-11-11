@@ -594,3 +594,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `lib/providers.js`: `HeinzProviders.loadedWith(id, model, options)` (Modell in `/api/ps` und letzte gesendete Threads/Kontext aus `heinz_lastreq` gleich); `preload()` sendet dann nichts. `chat.html` nutzt dieselbe Prüfung in `preloadModel` (Status „bereit“, andere Modelle werden weiter entladen). Bei geänderten Threads/Kontext oder nicht geladenem Modell wird wie bisher vorgeladen.
 - Folge: Die erste Nachricht im Prüfstand liest den Modus-Prompt selbst (kein vorgewärmter Zwischenspeicher mehr, wenn das Modell schon geladen war).
 - Tests: 2 neue (Prüfstand und Chat: kein Vorladen bei gleichen Werten, Vorladen bei geänderten Werten bzw. anderem Modell); Mutation erkannt. Nur simuliert.
+
+## 11.11.2026 – Pflichtregeln für lokale Modelle, Abbruch beim Verlassen der Seite (Chat „AIUIheinz-Chat“)
+- Auftrag des Entwicklers: Die Grundfunktion (schnelle lokale Antworten, Modell bleibt beim Seitenwechsel geladen) muss für alle Chats und neuen Module verbindlich sein; bei jeder neuen Seite darf die Performance nicht neu in Frage stehen.
+- `docs/LOKALE_MODELLE.md`: neue Pflichtregeln (nur `HeinzProviders`, Laufzeitwerte, `prepare`, gemeinsame Modellwahl, Vorladen nur wenn nötig, Abbruch beim Verlassen, Status, Chat ohne Modus, Diagnose); Verweis oben in `UEBERGABE.md`.
+- `lib/providers.js`: `HeinzProviders.chat` bricht die laufende Anfrage bei `pagehide` selbst ab (alle Engines), damit die nächste Seite das Modell frei vorfindet.
+- `tests/test_rules.py` (in `run_all.sh`): Seiten außer einer Liste älterer Seiten (`chat.html`, `sheet.html`, `lab.html`, `vitals.html`) dürfen nicht direkt `/api/chat`, `/api/generate`, `num_thread` oder `keep_alive` verwenden; Regeldokument muss existieren und verlinkt sein. Dazu 1 Seitentest (pagehide bricht die offene Anfrage ab).
+- Offen: `sheet.html`, `lab.html`, `vitals.html` auf `HeinzProviders` umstellen (gehört den jeweiligen Strängen). Nur simuliert getestet.

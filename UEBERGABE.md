@@ -3,6 +3,9 @@
 ## Was das ist
 Heinz UI ist eine Sammlung kleiner Web-Seiten für lokale Sprachmodelle. Ollama läuft in Termux auf dem Pixel 9 Pro des Entwicklers, die Seiten laufen im Handy-Browser unter `http://localhost:3000`. Ziel: ein privates „Schweizer Taschenmesser“, das ohne Internet und Strom aus der Steckdose funktioniert. Kleine Modelle (2B bis 3B) sind Absicht.
 
+## Pflichtregel: lokale Modelle
+Wer ein lokales Modell anspricht (jede Chat-Seite, jedes neue Tool), liest zuerst `docs/LOKALE_MODELLE.md` und nutzt nur `HeinzProviders` (Laufzeit, Vorladen, gemeinsame Modellwahl, Abbruch beim Verlassen der Seite). Beschluss des Entwicklers: Die Performance darf nicht bei jedem Modul neu verhandelt werden.
+
 ## Stand
 Siehe `STAND.md` (Module, nächste Aufgaben, aktive Arbeit).
 
@@ -22,7 +25,7 @@ Die Chats arbeiten im angehängten GitHub-Repo, getestet wird auf dem Handy. Weg
 Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls ~/storage/downloads | grep <name>` prüfen.
 
 ## Fallstricke
-- **Ollama laden nur über die gemeinsame Laufzeit.** Jedes Tool, das ein Ollama-Modell ansteuert, nimmt `options` und `keepAlive` aus `HeinzProviders.runtime(id, model)` und ruft vorher `HeinzProviders.prepare(id, model)` auf (`lib/providers.js`). Eigene Werte für Threads, Kontext oder keep_alive in einem Tool lassen Ollama beim Seitenwechsel das Modell neu laden und machen die Antworten auf dem Handy zäh (11.11.2026, Heinz Chat gegen Prüfstand). Gepflegt werden die Werte nur im Prüfstand.
+- **Ollama laden nur über die gemeinsame Laufzeit** (Regeln: `docs/LOKALE_MODELLE.md`). Jedes Tool, das ein Ollama-Modell ansteuert, nimmt `options` und `keepAlive` aus `HeinzProviders.runtime(id, model)` und ruft vorher `HeinzProviders.prepare(id, model)` auf (`lib/providers.js`). Eigene Werte für Threads, Kontext oder keep_alive in einem Tool lassen Ollama beim Seitenwechsel das Modell neu laden und machen die Antworten auf dem Handy zäh (11.11.2026, Heinz Chat gegen Prüfstand). Gepflegt werden die Werte nur im Prüfstand.
 - **Der Heinz Chat übernimmt bewusst keinen Modus.** Der Prüfstand testet Modelle (Modus, Systemprompt, Regler); der Chat schickt nur den Gesprächsverlauf, ohne Systemprompt. Übernommen werden nur die Laufzeitwerte pro Modell (Threads, Kontext, Haltezeit) über `HeinzProviders.runtime`. Beschluss des Entwicklers 11.11.2026.
 - **Modellwahl gilt für alle Seiten.** Jedes Tool, das ein Modell wählt, schreibt es mit `HeinzProviders.setActiveModel(provider, model)` und übernimmt beim Start `activeModel()` (Schlüssel `heinz_active`). Eigene Modellwahl pro Seite würde beim Wechsel das Modell entladen und neu laden.
 - **Gearbeitet, getestet und gepusht wird im angehängten GitHub-Repo, nicht in der Offline-Kopie am PC.** Die PC-Kopie (`AIUIheinz\repo`) wird nur gelesen und per `git pull` aktualisiert. Sie wird nie von Hand geändert, sonst gibt es beim nächsten `git pull` Konflikte. Am PC ist kein Push-Zugang eingerichtet.

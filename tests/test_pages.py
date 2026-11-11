@@ -2395,6 +2395,20 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(1200)
         self.assertGreater(len(fake.preloads), 0, "a model that is not loaded is still preloaded")
 
+    def test_leaving_the_page_cancels_the_running_request(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("typeof HeinzProviders !== 'undefined'")
+        page.unroute("**/localhost:11434/**")
+        page.route("**/localhost:11434/**", lambda route: None)   # never answers: the request stays open
+        res = page.evaluate("""async () => {
+            const t0 = Date.now();
+            const p = HeinzProviders.chat('ollama', { model: 'gemma2:2b', messages: [{ role: 'user', content: 'Hi' }], stream: true, onDelta: () => {} });
+            setTimeout(() => window.dispatchEvent(new Event('pagehide')), 300);
+            try { await p; return 'finished'; } catch (e) { return e.name + ':' + (Date.now() - t0 < 3000); }
+        }""")
+        self.assertEqual(res, "AbortError:true", "pagehide aborts the open request at once")
+
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()
         fake = FakeOllama(page)
