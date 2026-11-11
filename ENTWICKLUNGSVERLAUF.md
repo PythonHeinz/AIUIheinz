@@ -545,3 +545,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu: Versionszeile unten im Hub aus `/api/ping` (`v1.0 · Commit · Datum`), damit man nach dem Update sofort sieht, welcher Stand läuft.
 - Tests: Hub-Tests auf den neuen Hub umgestellt, neu: Startseite ist der neue Hub und `/hub.html` leitet weiter, Versionszeile. 114 Seitentests grün, nur simuliert, am Gerät nicht geprüft.
 - Regel künftig: Neue Seiten und Tools müssen in diesem Hub (Bereiche in `AREAS`) oder per `tool.json` erreichbar sein, sonst gibt es sie für den Entwickler nicht.
+
+## 11.11.2026 – Stand festgehalten nach Fix Threads und Hub-Umstellung (Chat „AIUIheinz“, nur Doku)
+- Stand: neuer Hub ist Startseite `/` (2d7f7df, `hub.html` nur Weiterleitung), Heinz Chat sendet `num_thread` an Ollama (20e9333), Repo-Adresse `PythonHeinz/AIUIheinz` (376cfc9). Alles nur simuliert getestet; Handytests gesammelt in `docs/HANDYTEST.md` (nach Freigabe des Entwicklers).
+- `UEBERGABE.md` Grundgerüst: Regel ergänzt, dass neue Seiten und Tools über `AREAS` in `index.html` (und `tool.json`) im Hub erreichbar sein müssen. Auslöser: Der Entwickler sah nach dem Update den Stand nicht, weil der neue Hub zunächst `hub.html` hieß.
