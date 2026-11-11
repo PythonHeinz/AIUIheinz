@@ -1232,6 +1232,7 @@
         // Es bleibt nur das gewählte Modell im Arbeitsspeicher: sonst halten mehrere Modelle (mit 30 min keep_alive)
         // und große Kontexte den Speicher, und Android beendet Termux (Absturz am Handy 10.11.2026).
         async function unloadOthers(model) { await PV.prepare('ollama', model); }
+        function alreadyLoaded(model, opts) { return PV.loadedWith('ollama', model, opts); }
         async function preloadModel() {
             if (!settings.preload || generating || speedTesting || settings.provider !== 'ollama') return;
             const model = $('model-select').value;
@@ -1247,6 +1248,14 @@
                 const opts = buildOptions(MODE_PRESETS[settings.mode]);
                 delete opts.stop; delete opts.num_predict;
                 opts.num_predict = 1;
+                // Model already in memory and the last request (any page) used the same load options: nothing would be loaded, and the
+                // preload would only make Ollama read the mode prompt again (seconds on the phone). Skip it.
+                if (await alreadyLoaded(model, opts)) {
+                    preloadKey = key;
+                    if (preloadAbort === ac) setPreloadStatus('ready');
+                    checkServer();
+                    return;
+                }
                 await PV.chat('ollama', { model: model, stream: false, keepAlive: KEEP_ALIVE, options: opts, signal: ac.signal,
                     messages: buildMessages(false, '', [{ role: 'user', content: '.' }]) });
                 preloadKey = key;

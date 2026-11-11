@@ -347,6 +347,18 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(1800)
         self.assertEqual(len(self.ollama.preloads), 1, "no second preload for unchanged settings")
 
+    def test_bench_skips_the_preload_when_the_model_is_loaded_with_the_same_options(self):
+        # gemma2:2b is reported as loaded; the chat has just sent it with threads 2, context 8192: the bench must not send a preload
+        page = self.new_page()
+        page.add_init_script("if (!localStorage.getItem('heinz_settings')) { localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}})); localStorage.setItem('heinz_lastreq', JSON.stringify({chat: {model: 'gemma2:2b', threads: 2, ctx: 8192, keep: '30m', preload: false, ts: Date.now()}})); }")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.wait_for_timeout(2500)
+        self.assertEqual(self.ollama.preloads, [], "loaded with the same options: no preload request")
+        # different threads: the model would be reloaded, so the preload still runs
+        page.evaluate("() => { const t = document.getElementById('param-threads'); t.value = 3; onThreads(); }")
+        self.wait_preloads(page, 1)
+
     def test_preload_follows_mode_threads_and_can_be_switched_off(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
@@ -2356,7 +2368,9 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(2500)   # the bench preloads on its own
         page.goto(self.srv.base + "/tools/heinz/index.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.wait_for_timeout(1500)   # the chat preloads too
+        page.fill("#q", "Hi")   # the chat has no preload of its own here (the bench just loaded the model): it sends a real message
+        page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
         txt = page.inner_text("#rt-h")
@@ -2365,6 +2379,21 @@ class PageTest(unittest.TestCase):
         c = re.search(r"Chat gemma2:2b: threads 2, context (\d+)", txt)
         self.assertTrue(b and c, txt)
         self.assertEqual(b.group(1), c.group(1), "bench and chat send the same context")
+
+    def test_slim_chat_skips_the_preload_when_the_model_is_loaded_with_the_same_options(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.add_init_script("if (!localStorage.getItem('heinz_settings')) { localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}})); localStorage.setItem('heinz_lastreq', JSON.stringify({bench: {model: 'gemma2:2b', threads: 2, ctx: 8192, keep: '30m', preload: false, ts: Date.now()}})); }")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.wait_for_timeout(1500)
+        self.assertEqual(fake.preloads, [], "loaded with the same options: the chat must not overwrite Ollama's cache with a preload")
+        self.assertIn("s-blue", page.get_attribute("#ring", "class"))
+        # other threads would reload the model: preload as before
+        page.evaluate("() => { const s = JSON.parse(localStorage.getItem('heinz_settings')); s.threads['gemma2:2b'] = 3; localStorage.setItem('heinz_settings', JSON.stringify(s)); }")
+        page.click("#mod"); page.wait_for_selector("#sh-model.open"); page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_timeout(1200)
+        self.assertGreater(len(fake.preloads), 0, "a model that is not loaded is still preloaded")
 
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()

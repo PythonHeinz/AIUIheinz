@@ -588,3 +588,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `lib/providers.js`: `HeinzProviders.noteRequest` merkt je Seite (Prüfstand/Chat) Modell, Threads, Kontext, Haltezeit und Uhrzeit der letzten Ollama-Anfrage (`heinz_lastreq`), `lastRequests()` liest sie.
 - `tools/heinz/index.html`: Das Modellblatt zeigt zusätzlich „Zuletzt an Ollama gesendet“ für Prüfstand und Chat.
 - Test: 1 neuer (beide Zeilen sichtbar, gleicher Kontext). Nur simuliert; die Ursache ist damit nicht behoben.
+
+## 11.11.2026 – Vorladen überspringen, wenn das Modell schon mit denselben Werten geladen ist (Prüfstand und Heinz Chat; Chat „AIUIheinz-Chat“)
+- Befund des Entwicklers (Handy): Nach dem Seitenwechsel braucht die erste Chat-Antwort über 30 s, danach wieder 3–4 s; `ollama ps` zeigt dabei dasselbe Modell mit derselben ID (kein Neuladen). Vermutete Ursache (aus der Funktionsweise von Ollama abgeleitet, nicht am Gerät gemessen): Jede Vorlade-Anfrage (Prüfstand mit Modus-Prompt, Chat mit „.“) ersetzt den Prompt-Zwischenspeicher von Ollama; die nächste Chat-Nachricht muss dann den ganzen Verlauf neu lesen.
+- `lib/providers.js`: `HeinzProviders.loadedWith(id, model, options)` (Modell in `/api/ps` und letzte gesendete Threads/Kontext aus `heinz_lastreq` gleich); `preload()` sendet dann nichts. `chat.html` nutzt dieselbe Prüfung in `preloadModel` (Status „bereit“, andere Modelle werden weiter entladen). Bei geänderten Threads/Kontext oder nicht geladenem Modell wird wie bisher vorgeladen.
+- Folge: Die erste Nachricht im Prüfstand liest den Modus-Prompt selbst (kein vorgewärmter Zwischenspeicher mehr, wenn das Modell schon geladen war).
+- Tests: 2 neue (Prüfstand und Chat: kein Vorladen bei gleichen Werten, Vorladen bei geänderten Werten bzw. anderem Modell); Mutation erkannt. Nur simuliert.
