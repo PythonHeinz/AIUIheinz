@@ -427,3 +427,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neue Engine `google` („Google AI Studio (native)“) mit `chatGemini` in `lib/providers.js`: `streamGenerateContent`, `topK`, `thinkingConfig` (Level oder Budget nach Modellregel), echte Denk-Token aus `thoughtsTokenCount`, Schlüssel nur im Header, Modellliste nativ (nur Chat-Modelle). Die Custom-Engine mit OpenAI-kompatibler Google-Adresse bleibt unverändert.
 - `lib/capabilities.json`: Engine `google`, `modelRulesFrom` (Modellregeln gemeinsam mit `gemini-compat`), Endpunktregel der kompatiblen Route auf `…/v1beta/openai` verengt; `tests/test_capabilities.py` und `HeinzCaps.modelRule` angepasst. Testprotokoll zeigt statt Nachrichtentext nur Anzahlen (`[1 contents]`, `[system]`).
 - Tests: 4 neue Seitentests (FakeGemini), Mutation (Level statt Budget) erkannt. Nur simuliert, nicht am Gerät geprüft.
+
+## 11.11.2026 – Konzept 20 generative KI, Nachtrag Auftrag Modelle (Chat „AIUIheinz“, nur Dokumente)
+- `docs/KONZEPT.md` Abschnitt 20: Funktionsplätze nach dem SIM-Prinzip, Fähigkeit statt Modellname bei Abkündigungen, Orte in der App (Chat zuerst, Einlesen, Bildstudio, Sprache), Heimserver-Engine, Sprache auf zwei Wegen mit Browser-Rückfall, Medienspeicher (IndexedDB), Datenschutz, Kennzeichnung, Reihenfolge; Video ausgeschlossen (ferne Version).
+- `docs/AUFTRAG_Modelle.md`: Nachtrag mit sieben Aufgaben (Fähigkeitendaten um Ein- und Ausgabearten, Modellwechsel-Auflösung, Bild und Sprache bei Google, Kennzeichnung, Browser-Sprache, Heimserver, Medienspeicher).

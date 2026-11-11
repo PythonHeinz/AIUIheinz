@@ -388,3 +388,62 @@ Ziel: Offline-Wikipedia auf dem Handy und eine lokale KI, die darin sucht und an
 ### 19.8 Offen
 - Antwort der Sonde auf: top_k/seed bei Google kompatibel, Verhalten von Gemini 3 bei Penalties und bei `temperature` ≠ 1, Token-Zählung inklusive Denken, LiteRT-Anfrageparameter, CORS von Google aus dem Browser.
 - Ob die App Google zusätzlich **nativ** (`generateContent`) anspricht: Der Entwickler hat dafür bereits Python-Skripte mit demselben AI-Studio-Schlüssel genutzt (Bildauswertung, Gesichtserkennung), also funktioniert der Weg mit dem Schlüssel. Vorteil nativ: `topK`, `seed`, Denkbudget, Modellmetadaten; Nachteil: ein zweites Format neben dem OpenAI-Format. Entscheidung nach der Sonde.
+
+## 20 Generative KI: Bild, Sprache, Medien (11.11.2026, Beschlüsse des Entwicklers im Root-Chat)
+Anlass: Der native Google-Weg (`generateContent`) ist der nächste Schritt im Chat-Strang und öffnet Bild- und Audio-Ein- und -Ausgabe. Dieser Abschnitt legt fest, wie die App damit umgeht. Gebaut ist davon nichts.
+
+### 20.1 Grundidee: Funktionsplätze wie bei den SIM-Karten
+- Ein Chat-Beitrag kann aus **Text, Bild und Audio** bestehen. Module und Tools fragen nach einer **Funktion**, nicht nach einem Modell: `vision.read` (Bild lesen), `image.make` (Bild erzeugen oder bearbeiten), `speech.say` (Sprache ausgeben), `speech.hear` (Sprache erkennen), `embed.local` (Einbettung), `chat.main`, `check.second` und weitere (Abschnitt 19.5).
+- Der Nutzer legt je Funktion fest, **welche Engine und welches Modell** sie übernimmt, so wie man früher wählte, welche SIM-Karte für Daten und welche für SMS gilt. Zuordnung gespeichert in den Einstellungen, einsehbar und änderbar.
+- Eine Zuordnung besteht nicht aus einem Modellnamen, sondern aus **Wunschliste und Bedingungen** (siehe 20.2).
+
+### 20.2 Modellwechsel beim Anbieter: Fähigkeit statt Name
+Anbieter kündigen Modelle ab und ersetzen sie (Beispiel: die alten Veo-Modelle sind zum 30.06.2026 abgeschaltet). Der Entwickler will nicht jedes Mal nachsehen müssen, ob ein Modell noch existiert.
+- Der Funktionsplatz speichert **die gewünschte Fähigkeit** (zum Beispiel „Bildausgabe“ oder „Sprachausgabe“) und optional eine **Rangfolge** (bevorzugtes Modell, Ersatz, „neuestes seiner Familie“).
+- Die App löst die Zuordnung **bei jedem Start und bei jedem Abruf der Modellliste** gegen die aktuelle Liste auf (Felder wie `supportedGenerationMethods`, Eingabe- und Ausgabearten, Namensmuster aus `lib/capabilities.json`). Fehlt das bevorzugte Modell, tritt das nächste ein, und die Oberfläche **sagt es** („Bildmodell ersetzt: A durch B“); nichts geschieht lautlos, die Wahl bleibt änderbar.
+- Gibt es nirgends ein passendes Modell, zeigt der Platz „nicht verfügbar“ mit Grund; das Tool bleibt nutzbar, soweit es ohne diese Funktion geht.
+- Fähigkeitendaten wachsen deshalb um **Ein- und Ausgabearten** je Modell (`in`, `out`: Text, Bild, Audio, Video) und um die **Aufrufart** (`chat`, `generateContent` mit Bild, Imagen `predict`, Sprache, Transkription, Einbettung). Das gehört zuerst in die Daten (Auftrag Modelle).
+
+### 20.3 Wo es in der App landet
+- **Heinz UI (Testumgebung):** Anhang-Knopf an der Eingabe (Bild, Audio), Antworten dürfen Bilder und Audio enthalten, die Modellwahl zeigt, was ein Modell kann, das Testprotokoll nennt die Medienarten. Später ein **Modellvergleich**: derselbe Prompt oder dasselbe Bild an mehrere Modelle, Ergebnisse nebeneinander.
+- **Schlanker Chat:** Foto aufnehmen oder anhängen, Bild in der Antwort, Vorlesen; hängt ein Bild an, bleiben nur Modelle wählbar, die Bilder können.
+- **Bilderzeugung zuerst im Chat** (Beschluss), ein eigenes **Bildstudio** im Hub folgt, wenn der Chat nicht mehr reicht (Serien, Galerie, Seitenverhältnis, Kostenanzeige).
+- **Einlesen** (Hub-Tool, Bild zu Text oder Tabelle: Rezept, Rechnung, Brief, Code): Das Bild wird zuerst **lokal** gelesen (Gemma über LiteRT-LM, klassische Texterkennung, wenn das Handy es kann), die Cloud ist zuschaltbar. Das Ergebnis ist Text und Daten, die weiter in Sheet, Export oder Zwischenablage gehen. Es ist kein Vorschritt für das Bildstudio: Einlesen wertet Bilder aus, das Bildstudio erzeugt neue. Eine Kette (Einlesen, dann Text als Prompt ins Bildstudio) ist möglich, aber kein Muss.
+- **Sprache:** siehe 20.5. **Medien auswerten** (Audio und Video-Datei zu Zusammenfassung): nur Cloud, später, gehört mit dem Wissensbereich (19.6) zusammen.
+- **Videoerzeugung: ausgeschlossen.** Für eine sehr ferne Version vermerkt (siehe 20.9).
+
+### 20.4 Heimserver statt Cloud (Idee des Entwicklers)
+- Der Entwickler möchte Bildfunktionen so einstellen können, dass sie **nur verfügbar sind, wenn er zu Hause ist und der eigene PC erreichbar ist**; die Bilder gehen dann zur Verarbeitung an diesen PC, nicht an die Cloud.
+- Klarstellung: Die App läuft auf dem Handy und schickt ein Bild heute **direkt vom Browser an die Engine** (Google, OpenRouter und so weiter). Ein Zwischenserver ist nicht nötig. Ein eigener PC wäre eine **weitere Engine** („Heimserver“: Adresse im WLAN, zum Beispiel Ollama mit Bildmodell oder ein Bildgenerator auf dem PC), die wie die anderen im Menü Engine steht.
+- „Nur zu Hause“ lässt sich als **Bedingung am Funktionsplatz** ausdrücken: Der Platz `image.make` ist an die Engine „Heimserver“ gebunden und gilt als verfügbar, solange sie antwortet; sonst grau mit Grund, oder Rückfall nach Wahl (Cloud nur mit „Online erlauben“).
+- Zu klären (Auftrag Modelle): PC-Seite (Ollama im Netz, `OLLAMA_HOST`, `OLLAMA_ORIGINS`), Browserregeln für Zugriffe von `localhost` auf Adressen im Heimnetz (CORS, Mischinhalt, Chromes Regeln für lokale Netze), Erkennung „bin ich zu Hause“ (einfach: Server antwortet), Sicherheit im WLAN (Schlüssel oder Token).
+
+### 20.5 Sprache: immer zwei Wege, Browser als Rückfall
+- `speech.say` und `speech.hear` laufen **sowohl über die Browserfunktionen als auch über Gemini (Cloud)**. Mit Schlüssel einer nativen API und „Online erlauben“ steht der Mehrwert der Cloud bereit; ohne Schlüssel oder online gesperrt fällt die App auf die **Browserfunktion offline** zurück. Der Nutzer sieht, welcher Weg gerade arbeitet.
+- **Zu prüfen, weil es die Datenschutzzusage berührt:** Die Spracherkennung des Browsers (Web Speech API in Chrome auf Android) sendet Audio **nach meinem Wissen zur Erkennung an Google**, wenn nicht ein lokales Sprachpaket auf dem Gerät liegt. Die Sprachausgabe (`speechSynthesis`) läuft mit installierten Stimmen offline. Der Auftrag Modelle belegt das; wo „offline“ nicht stimmt, steht es in der Oberfläche, sonst gilt das Versprechen „nichts verlässt das Gerät“ für diesen Weg nicht.
+
+### 20.6 Medienspeicher (IndexedDB)
+- Bilder und Audio sind zu groß für den bisherigen Chatspeicher (`localStorage`, rund 5 MB, nur Text). Dafür ein **Medienspeicher im Browser (IndexedDB)**, der Chats nur auf Medien-IDs verweisen lässt, plus Export (Medien mit in die App-Sicherung, Größe anzeigen) und Aufräumen. Alternative `data/` über den Server ist denkbar; Entscheidung im Fundament (Strang Chat).
+- Erklärung: IndexedDB ist eine **Datenbank im Browser**, die große Daten (Bilder, Audiodateien, ganze Dokumente) als Objekte ablegt und nach Schlüsseln wieder holt. Sie ist unabhängig vom Server, bleibt beim Neuladen erhalten und fasst deutlich mehr als `localStorage` (typisch einige hundert MB, abhängig vom freien Speicher; Chrome kann sie bei Platzmangel räumen, wenn der Speicher nicht als dauerhaft angefordert ist). Zugriff nur über JavaScript (asynchron), je Adresse getrennt (`localhost:3000` und die Heimserver-Seite hätten getrennte Speicher).
+
+### 20.7 Datenschutz und Kennzeichnung
+- **Vor jedem Cloud-Aufruf mit Medien ein Hinweis**, was das Gerät verlässt (Bild, Audio), und ein Schalter „nicht mehr fragen je Engine“. Ohne „Online erlauben“ geschieht nichts; die Sperre in `lib/providers.js` gilt auch für Medien.
+- **Vor dem Senden verkleinern und Metadaten entfernen:** Bild neu zeichnen (Größe begrenzen), dabei fallen Ortsdaten (EXIF) weg. Das spart Datenmenge und Kosten.
+- **Personenbezug:** Fotos mit Personen, Gesichtserkennung und Ähnliches brauchen vorher eine Klärung (Datenschutz, Zweck); nichts davon ohne ausdrücklichen Beschluss.
+- **Kennzeichnung erzeugter Bilder:** laut Entwickler inzwischen Pflicht. Die Quelle ist im Auftrag Modelle zu prüfen (Pflicht je nach Einsatz, Art der Kennzeichnung: sichtbar, in den Metadaten, Wasserzeichen des Anbieters). **Umsetzung, sobald das erste Bild erzeugt wird:** Vermerk „KI-erzeugt“ in der Oberfläche, im Export und in der Datei, soweit zulässig.
+
+### 20.8 Reihenfolge
+1. Nativer Google-Adapter (Chat-Strang, läuft).
+2. **Fähigkeitendaten um Ein- und Ausgabearten und Aufrufarten erweitern** (Strang Modelle), dazu die Recherche aus dem Nachtrag in `docs/AUFTRAG_Modelle.md`.
+3. Anhang-Baustein und Bild-Eingabe im Chat; Medienspeicher.
+4. Funktionsplätze mit Wunschliste und Ersatzregel (20.1, 20.2).
+5. Einlesen-Tool.
+6. Bildausgabe im Chat mit Kennzeichnung, später Bildstudio.
+7. Sprache über beide Wege.
+8. Modellvergleich, Heimserver-Engine, Medien auswerten.
+
+### 20.9 Ferne Version (nicht planen, nur vermerkt)
+Videoerzeugung und -auswertung. Der Entwickler will sie offen lassen für den Fall, dass sie in einigen Jahren lokal auf dem Handy läuft; dann würde sie als weiterer Funktionsplatz (`video.make`) einziehen.
+
+### 20.10 Offen
+Namen der Plätze und der Hub-Einträge; Wunschliste je Platz in der Oberfläche (wie einfach?); ob der Medienspeicher in den Browser oder in `data/` gehört; Browser-Spracherkennung offline oder Cloud (20.5); Pflicht und Form der Kennzeichnung; Heimserver-Details (20.4); Kosten je Bild und je Audiominute in der Anzeige.
