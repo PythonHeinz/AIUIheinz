@@ -90,3 +90,6 @@ Planung für Design-Review 2 (DR2, nicht v1.0; Modusleiste bleibt bis dahin unve
 - **Wichtigste Einstellungen im Daumenbereich** (Auditor-Anregung): hängt an einer neuen Gliederung des Einstellungsmenüs, Thema des zweiten Design-Reviews.
 - Parameter-Schnellöffner (schmales Overlay) an der Eingabeleiste: erst nach der Gliederung des Menüs prüfen; überschneidet sich mit dem Schnellbereich im Einstellungspanel.
 - Verworfen: Drawer bis 85 % Breite, Umbau auf Bottom Sheet.
+
+
+DR2-Vorbereitung (Bedarf aus Konzept, Chat, Modelle, Tertius; Bausteine, Menügliederung, Ablauf): `docs/DESIGN_DR2.md`.
