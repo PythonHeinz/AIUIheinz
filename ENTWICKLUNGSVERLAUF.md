@@ -440,3 +440,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Fehler: der Temperatur-Regler stand fest auf Maximum 1.0, der Entwickler konnte Temperatur 2 nicht einstellen. Neu `tempRange()` in `chat.html`: Obergrenze aus `maxTemperature` der Modellliste, sonst 2 bei Online-/Custom-Wegen, 1 bei lokalen Engines.
 - Beschriftung: Hinweis unter dem Denken-Schalter und Testprotokoll nennen bei der nativen Engine `thinkingLevel`/`thinkingBudget` statt `reasoning_effort` (`thinkWire()`).
 - Test `test_native_google_temperature_goes_up_to_two_while_local_engine_stays_at_one`. 90 Seitentests grün, nur simuliert.
+
+## 11.11.2026 – Aufträge auf den Stand gebracht (Chat „AIUIheinz“, nur Dokumente)
+- `docs/AUFTRAG_Modelle.md`, `docs/AUFTRAG_Chat_Schnittstellen.md`, `docs/AUFTRAG_Modi.md`, `docs/AUFTRAG_Tertius.md`: je ein Block „Stand 11.11.2026“ (erledigt, offen, Reihenfolge, Abstimmung). Modi: Reasoning und Schnell/Tief hat der Chat-Strang gebaut, Auftrag nicht ohne Rücksprache starten. Modelle: Medien-Nachtrag vorrangig. Chat: Aufgaben 1 bis 6 erledigt, nächste Schritte Anhänge und Medienspeicher.
+- Im Projektordner (nur dort): `AUFTRAG_CHAT-SEITE.md` und `AUFTRAG_DESIGN.md` mit Stand-Block.

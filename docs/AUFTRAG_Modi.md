@@ -1,5 +1,11 @@
 # AUFTRAG Modi (Strang AIUIheinz-Modi)
 
+## Stand 11.11.2026 02:15 (vom Root-Chat nachgeführt): Auftrag teilweise überholt, nicht starten ohne Rücksprache
+- **Punkt 3 (Reasoning bei Cloud-Modellen) hat der Chat-Strang erledigt:** Schalter Schnell | Tief, `reasoning_effort` (kompatibel) und `thinkingConfig` (native Google-Engine), Denk-Token getrennt, gesteuert aus `lib/capabilities.json`; Messungen in `docs/SCHNITTSTELLEN.md` 8. Nicht doppelt bauen. Für andere Anbieter (OpenRouter, Groq, Mistral) liefert der Strang Modelle die Daten.
+- **Punkt 2 (zwei Stufen als Pille) ist für Cloud-Modelle schon da.** Offen bleibt die Frage, ob der **Schnellmodus** (kurze reine Textantwort, `fastN`) und Schnell | Tief zusammengehören oder getrennt bleiben, und was „Tief“ bei lokalen Modellen (Ollama, LiteRT-LM) bedeuten könnte. Das ist der Kern, der hier noch zu klären ist.
+- **Punkt 1 (Modi überarbeiten) bleibt der eigentliche Auftrag:** Modi als klare Prüfwerkzeuge, Beschreibung EN und DE, Parameter, Prompts, Stoppsequenzen, Standardmodelle je Modus. Neue Rahmenbedingungen: Modi gehören zu **Heinz UI (Testumgebung)**; der geplante **schlanke Chat** (Konzept 18.1) hat keine Modi oder höchstens einen Standard. Parameter laufen seit DR1 in drei Ansichten (Modell | Modus | Meine), Prompts in drei Quellen, dazu der Schalter „Nur Modus-Vorgaben“.
+- Vor dem Start: `docs/KONZEPT.md` Abschnitte 18 bis 20, `docs/DESIGN.md` (DR2-Planung mit Modus-Schieberegler), `docs/SCHNITTSTELLEN.md` 8 und 9. `lib/providers.js` und Parameterfenster ändert vorerst der Chat-Strang; Rückfrage vor jedem Eingriff.
+
 Für einen neuen Chat. Vorher lesen: `STAND.md`, `UEBERGABE.md`, `docs/KONZEPT.md`, `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`. Fundament (lib/, server.py, gemeinsame localStorage-Schlüssel, Engine-Aufrufe) nur nach Rückfrage ändern.
 
 ## Stand der Modi

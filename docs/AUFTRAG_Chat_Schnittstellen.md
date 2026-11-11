@@ -1,5 +1,15 @@
 # AUFTRAG Chat: Schnittstellenwissen in der Oberfläche (Strang „AIUIheinz-Chat“)
 
+## Stand 11.11.2026 02:15 (vom Root-Chat nachgeführt)
+- **Aufgaben 1 bis 6 sind umgesetzt** (Commits bis `b9299be`): Fähigkeitendaten laden, Regler nach Zustand, Schnell | Tief, getrennte Token-Statistik, native Google-Modellliste, Testprotokoll je Antwort. Zusätzlich gebaut: native Google-Engine (`streamGenerateContent`, `topK`, `thinkingConfig`, echte Denk-Token), Temperatur bis 2 aus der Modellliste. Handytests 1 bis 4 stehen in `docs/SCHNITTSTELLEN.md` 8.
+- **Am Gerät noch offen:** Wirkt `topK` bei Gemini 3 (Test: Temperatur 2, Top-P 1, Schnell, dreimal die Frage „Nenne ein ungewöhnliches Tier.“ bei top_k 1 und dreimal bei 64)? Wird `thinkingLevel` in Kleinschreibung angenommen? Meldet `thoughtsTokenCount` die Denk-Token? Läuft CORS auch für `streamGenerateContent`? Messwerte nach `docs/SCHNITTSTELLEN.md`, nicht in die Daten raten.
+- **Nächste Schritte dieses Strangs** (Reihenfolge nach `docs/KONZEPT.md` 20.8, jeder Schritt nur nach Rückfrage, weil Fundament):
+  1. Offene Gerätetests abschließen, Befunde nachtragen.
+  2. **Anhang-Baustein und Bild-Eingabe** im Chat, **Medienspeicher** (IndexedDB, Chats verweisen auf Medien-IDs, Export und Aufräumen). Wartet auf die erweiterten Fähigkeitendaten (Ein- und Ausgabearten) aus dem Strang Modelle.
+  3. **Funktionsplätze** mit Wunschliste und Ersatzregel (20.1, 20.2), Datenformat aus dem Strang Modelle.
+  4. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss laut Entwickler), LiteRT-Konfiguration über `server.py` (19.4), später Bildausgabe im Chat mit Kennzeichnung (20.7), Sprache auf zwei Wegen (20.5).
+- Der Schlanke Chat als zweiter Hub-Eintrag (`docs/KONZEPT.md` 18.1) ist **nicht** Teil dieses Strangs; Zuständigkeit offen.
+
 Angelegt 10.11.2026 (nachts) im Strang „AIUIheinz-Modelle“ auf Wunsch des Entwicklers. Der Chat-Strang setzt um, was Modelle recherchiert hat, damit die Werte **auf dem Handy testbar** werden. Der Chat startet mit dem Strangnamen **AIUIheinz-Chat** und diesem Auftrag.
 
 Vorher lesen: `STAND.md` (Aktive Arbeit), `docs/SCHNITTSTELLEN.md` (vor allem Abschnitt 1, 2, 6, 7), `lib/capabilities.json`, `docs/KONZEPT.md` Abschnitt 18 und 19, `docs/AUFTRAG_Modi.md` (Nachbarstrang), `lib/providers.js`, `docs/DESIGN.md`.

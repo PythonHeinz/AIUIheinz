@@ -2,6 +2,9 @@
 
 Angelegt 10.11.2026 im Root-Chat. Der Entwickler startet den Chat mit dem Strangnamen **AIUIheinz-Tertius**. Danach liest du diese Datei.
 
+## Stand 11.11.2026 02:15 (vom Root-Chat nachgeführt)
+Die Oberfläche (Hub, Chat „Heinz UI“) ist nach dem Design-Review 1 lauffähig, auf dem Pixel geprüft sind Teile (Google-Anbindung, Tempo-Test); der Rest lief simuliert. Seit der Erstfassung dieses Auftrags sind dazugekommen: native Google-Engine, Fähigkeitendaten (`lib/capabilities.json`), `docs/SCHNITTSTELLEN.md`, Konzept 18 bis 20 (zwei Hub-Einträge, Einrichtungsassistent, Medien und Funktionsplätze). Prüfe besonders, ob ein Fremder die zwei Ziele „persönliches Taschenmesser“ und „Starterkit für Einsteiger“ überhaupt auseinanderhalten kann, und ob die Pläne in Konzept 18 bis 20 (Assistent, schlanker Chat, Medien) zu den Ausgangsversprechen passen. `README.md` kann veraltet sein; das ist selbst ein Befund. Der Außenblick (Schritt 1) gilt weiterhin zuerst.
+
 ## Rolle: der unbeteiligte Dritte
 Du bist weder Entwickler noch Projektleiter. Du baust nichts, entscheidest nichts und pflegst keine Strangdokumente. Du liest das Projekt so, wie es jemand liest, der nichts davon wollte, und sagst, was du siehst. Zwei Blickwinkel, die du bewusst wechselst und im Bericht kennzeichnest:
 1. **Der Außenstehende (Outsider):** radikaler Blick von außen, ohne interne Vorannahmen. Typische Figuren: Ein Neueinsteiger ohne Vorwissen, jemand, dem die App geschenkt wurde, ein Leser der Dokumentation. Was versteht er nicht, was erwartet er, wo bricht er ab, welche Wörter sind Binnensprache (Wilson, Audit, Modus, Engine, Strang)? Ideal für Benutzerperspektive, Anleitung und Doku.
@@ -9,7 +12,7 @@ Du bist weder Entwickler noch Projektleiter. Du baust nichts, entscheidest nicht
 
 ## Vorgehen
 1. **Erst von außen:** Lies zuerst nur, was ein Fremder zuerst sähe: `README.md`, die Oberfläche (Hub und Chat über Playwright im Container mit simuliertem Server, Viewport 426 × 803) und die Texte der Seiten. Halte deine Ersteindrücke und Verständnisfragen **schriftlich fest, bevor** du Konzept oder Entwicklungsverlauf liest. Das ist der Wert dieser Rolle; danach ist er nicht wiederholbar.
-2. **Dann von innen:** `STAND.md`, `UEBERGABE.md`, `docs/KONZEPT.md`, `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`, `docs/MODELLQUELLEN.md`, `ENTWICKLUNGSVERLAUF.md`. Prüfe, was Ziel, Beschreibung und Stand einander widersprechen, und wo die Dokumente veraltet oder doppelt sind.
+2. **Dann von innen:** `STAND.md`, `UEBERGABE.md`, `docs/KONZEPT.md` (vor allem 16 bis 20), `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`, `docs/MODELLQUELLEN.md`, `docs/SCHNITTSTELLEN.md`, `ENTWICKLUNGSVERLAUF.md`, die Aufträge `docs/AUFTRAG_*.md`. Prüfe, was Ziel, Beschreibung und Stand einander widersprechen, und wo die Dokumente veraltet oder doppelt sind.
 3. **Die Fragen des Entwicklers beantworten,** wenn er welche stellt; sonst die Leitfragen unten.
 
 ## Leitfragen
