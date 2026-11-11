@@ -1070,7 +1070,6 @@
         let generating = false;
         let currentSavedId = null, currentName = '';
         let settings = { model: 'gemma2:2b', mode: 'wilson', lang: 'en', useDefault: false, params: null, threads: {}, ownSystem: false, sysSrc: 'mode', ownPrompt: '', modesOnly: false, preload: true, fast: false, fastN: 300, provider: 'ollama', backend: 'cpu', modelByProvider: {} };
-        const DEFAULT_THREADS = 4;
 
         // ===== Speicher =====
         function lsGet(key, fallback) {
@@ -1135,8 +1134,7 @@
         function onDefaultToggle() { setParamSrc($('use-default').checked ? 'model' : (savedParams() ? 'own' : 'mode')); }
 
         function threadsFor(model) {
-            const v = settings.threads && settings.threads[model];
-            return (typeof v === 'number' && v >= 0 && v <= 8) ? v : DEFAULT_THREADS;
+            return PV.threadsFor(model, settings);   // eine Regel für alle Tools: lib/providers.js
         }
         function loadThreads() {
             const n = threadsFor($('model-select').value || settings.model);
@@ -1201,7 +1199,7 @@
         }
 
         // ===== Modell vorladen: Modell und Systemprompt im Hintergrund warm machen =====
-        const KEEP_ALIVE = '30m';
+        const KEEP_ALIVE = PV.KEEP_ALIVE;   // gemeinsam mit allen Tools (lib/providers.js)
         let preloadAbort = null, preloadTimer = null, preloadKey = '', preloadHideTimer = null;
         function preloadKeyNow() {
             return [settings.provider, $('model-select').value, settings.mode, sysSrc() + (sysSrc() === 'own' ? settings.ownPrompt.length : ''), settings.lang, !!settings.fast,
@@ -1226,12 +1224,7 @@
         }
         // Es bleibt nur das gewählte Modell im Arbeitsspeicher: sonst halten mehrere Modelle (mit 30 min keep_alive)
         // und große Kontexte den Speicher, und Android beendet Termux (Absturz am Handy 10.11.2026).
-        async function unloadOthers(model) {
-            try {
-                const others = (await PV.loaded('ollama')).filter(function (n) { return n !== model; });
-                await Promise.all(others.map(function (n) { return PV.unload('ollama', n); }));
-            } catch (e) { /* ohne Ollama nichts zu tun */ }
-        }
+        async function unloadOthers(model) { await PV.prepare('ollama', model); }
         async function preloadModel() {
             if (!settings.preload || generating || speedTesting || settings.provider !== 'ollama') return;
             const model = $('model-select').value;
@@ -1947,12 +1940,12 @@
                 if (capSendable('temperature')) o.temperature = parseFloat($('param-temp').value);
                 if (capSendable('top_p')) o.top_p = parseFloat($('param-topp').value);
                 if (capSendable('top_k')) o.top_k = parseInt($('param-topk').value, 10);
-                if (capSendable('num_ctx')) o.num_ctx = parseInt($('param-ctx').value, 10);
                 if (preset.stop && preset.stop.length && capSendable('stop')) o.stop = preset.stop.slice();
             }
-            // Threads sind Tempo, nicht Sampling: immer mitschicken (0 = Ollama-Standard, nichts senden)
-            const threads = parseInt($('param-threads').value, 10);
-            if (threads > 0 && settings.provider === 'ollama' && capSendable('num_thread')) o.num_thread = threads;
+            // Threads und Kontext sind Laufzeit, nicht Sampling: Regel gemeinsam mit allen Tools (PV.runtime), damit Ollama beim Seitenwechsel nicht neu lädt
+            const rt = PV.runtime(settings.provider, $('model-select').value || settings.model, settings);
+            if (rt.options.num_ctx && capSendable('num_ctx')) o.num_ctx = rt.options.num_ctx;
+            if (rt.options.num_thread && capSendable('num_thread')) o.num_thread = rt.options.num_thread;
             if (settings.fast && capSendable('max_tokens')) o.num_predict = settings.fastN;
             return o;
         }

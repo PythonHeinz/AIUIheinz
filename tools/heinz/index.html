@@ -211,7 +211,8 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         $('q').value = ''; autosize(); setBusy(true); renderLog(true);
         abort = new AbortController();
         var hist = msgs.slice(0, -1).map(function (m) { return { role: m.role, content: m.content }; });
-        PV.chat(S.provider, { model: S.model, messages: hist, options: Heinz.ollamaOptions(S.provider, S.model), stream: true, signal: abort.signal, onDelta: function (d) { msgs[msgs.length - 1].content += d; renderLog(true); } })
+        var rt = PV.runtime(S.provider, S.model);   // Threads, Kontext, keep_alive: gemeinsame Regel in lib/providers.js
+        PV.prepare(S.provider, S.model).then(function () { return PV.chat(S.provider, { model: S.model, messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: abort.signal, onDelta: function (d) { msgs[msgs.length - 1].content += d; renderLog(true); } }) })
             .then(function () { }, function (e) {
                 if (e && e.name === 'AbortError') { msgs[msgs.length - 1].content += (msgs[msgs.length - 1].content ? ' ' : '') + t('stopped'); return; }
                 var code = e && e.code, m = code === 'ONLINE_BLOCKED' ? t('blocked') : code === 'NO_KEY' ? t('noKey') : t('err', { m: (e && e.message) || '' });

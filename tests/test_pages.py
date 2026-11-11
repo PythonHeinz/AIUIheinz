@@ -2178,9 +2178,62 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/tools/heinz/index.html")
         page.evaluate("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'m': 3}}))")
-        self.assertEqual(page.evaluate("Heinz.ollamaOptions('ollama','m')"), {"num_thread": 3})
+        self.assertEqual(page.evaluate("HeinzProviders.runtime('ollama','m').options"), {"num_thread": 3, "num_ctx": 8192})
         for prov in ("litert", "google-native", "openai", "custom"):
-            self.assertEqual(page.evaluate("p => Heinz.ollamaOptions(p, 'm')", prov), {})
+            self.assertEqual(page.evaluate("p => HeinzProviders.runtime(p, 'm').options", prov), {})
+
+    def test_slim_chat_sends_context_and_keep_alive_and_releases_other_models_like_the_test_bench(self):
+        req, page = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 2}, params: {ctx: 4096}}))")
+        self.assertEqual(req["options"].get("num_ctx"), 4096)
+        self.assertEqual(req["options"].get("num_thread"), 2)
+        self.assertEqual(req.get("keep_alive"), "30m")
+        # model defaults chosen on the test bench (useDefault): no context sent, threads still sent
+        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({useDefault: true, threads: {'qwen2.5:3b': 2}}))")
+        self.assertNotIn("num_ctx", req["options"])
+        self.assertEqual(req["options"].get("num_thread"), 2)
+
+    def test_slim_chat_unloads_other_models_before_sending(self):
+        page = self.new_page()
+        fake = FakeOllama(page)   # the fake /api/ps always reports gemma2:2b as loaded
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.fill("#q", "Hi")
+        page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, fake.unloads)
+        self.assertNotIn({"model": "qwen2.5:3b", "keep_alive": 0}, fake.unloads, "the chosen model stays")
+
+    def test_test_bench_and_slim_chat_send_the_same_load_options_for_the_same_model(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        # values as the developer sets them on the test bench: sliders for context and threads, model qwen2.5:3b
+        page.evaluate("""() => { const m = document.getElementById('model-select'); m.value = 'qwen2.5:3b'; m.dispatchEvent(new Event('change')); }""")
+        page.wait_for_timeout(800)   # the model switch re-applies its parameter source asynchronously
+        page.evaluate("setParamSrc('own')")   # own values: the sliders are the developer's, not the mode preset's
+        page.evaluate("""() => { const c = document.getElementById('param-ctx'); c.value = 6144; onSlider(); const t = document.getElementById('param-threads'); t.value = 3; onThreads(); }""")
+        self.send(page, "Hi")
+        bench = fake.requests[-1]
+        self.assertEqual((bench["options"]["num_thread"], bench["options"]["num_ctx"]), (3, 6144))
+        self.assertEqual(bench["model"], "qwen2.5:3b")
+        # the chat page (same browser storage) must send exactly the same load options for the same model
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.fill("#q", "Hi")
+        page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        slim = fake.requests[-1]
+        self.assertIsNot(slim, bench)
+        for k in ("num_thread", "num_ctx"):
+            self.assertEqual(slim["options"].get(k), bench["options"].get(k), k)
+        self.assertEqual(slim.get("keep_alive"), bench.get("keep_alive"))
 
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
