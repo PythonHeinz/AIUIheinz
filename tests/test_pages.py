@@ -1306,6 +1306,32 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(1500)
         self.assertEqual(len(g.requests), n0, "no request with a bad value, even when start is forced")
 
+    def test_series_after_reload_shows_no_running_bar_but_keeps_every_finished_run(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
+        page.click("#sr-start")
+        page.wait_for_function("srRuns.length >= 2")
+        saved = page.evaluate("JSON.parse(localStorage.getItem('heinz_series'))")   # still running: every finished run is already saved
+        self.assertTrue(saved["unfinished"])
+        self.assertGreaterEqual(len(saved["runs"]), 2)
+        page.reload()   # the run is gone with the page; the saved rest must not look like a running test
+        self.series_open(page)
+        self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "0px")
+        self.assertIn("Nothing is running", page.inner_text("#sr-status"))
+        self.assertIn("interrupted", page.inner_text("#sr-status"))
+        self.assertTrue(page.is_visible("#sr-start"))
+        self.assertFalse(page.is_visible("#sr-stop"))
+        self.assertIn("app closed or page reloaded", page.evaluate("srExportParts().join('\\n')"), "the export says that the series was cut")
+        # a series that ended normally is saved as finished
+        self.series_fill(page, temp="0, 1")
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        self.assertFalse(page.evaluate("JSON.parse(localStorage.getItem('heinz_series')).unfinished"))
+        self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%", "a complete series shows a full bar")
+
     def test_series_start_and_stop_do_not_wait_for_a_hanging_wake_lock(self):
         page = self.new_page()
         # a wake lock that never answers (seen as a risk on the phone): the series must run and stop anyway
