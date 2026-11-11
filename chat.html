@@ -1363,32 +1363,12 @@
         }
         async function checkServer() {
             const prov = settings.provider;
-            const p = PV.get(prov);
-            if (p && !p.local) {   // Online-Engines werden nie von selbst angefragt
-                if (!PV.onlineAllowed()) ringBase = { cls: '', color: 'red', title: t('stCloudOff') };
-                else if (p.needsKey && !PV.getKey(prov)) ringBase = { cls: '', color: 'red', title: t('stCloudNoKey') };
-                else ringBase = hs[prov] ? { cls: 'status-cloud', color: 'blue', title: t('stCloudReady') } : { cls: 'status-loading', color: 'yellow', title: t('stHandshake') };
-                renderRing();
-                return;
-            }
-            if (prov !== 'ollama') {
-                const up = await PV.ping(prov);
-                if (prov !== settings.provider) return;
-                ringBase = up ? { cls: 'status-online', color: 'blue', title: t('stEngineUp') } : { cls: '', color: 'red', title: t('stOffline') };
-                renderRing();
-                return;
-            }
-            const selectedModel = $('model-select').value;
-            try {
-                const names = await PV.loaded('ollama');
-                if (prov !== settings.provider) return;
-                loadedNames = names;
-                const isLoaded = names.some(n => n.startsWith(selectedModel));
-                ringBase = isLoaded ? { cls: 'status-online', color: 'blue', title: t('stDefault') } : { cls: 'status-loading', color: 'orange', title: t('stOnline') };
-            } catch (e) {
-                loadedNames = [];
-                ringBase = { cls: '', color: 'red', title: t('stOffline') };
-            }
+            // Zustand und Farbbedeutung kommen aus lib/providers.js (PV.status), gleich für alle Tools; Online-Engines werden nie von selbst angefragt
+            const st = await PV.status(prov, $('model-select').value, { handshake: !!hs[prov] });
+            if (prov !== settings.provider) return;
+            const cls = { cloudReady: 'status-cloud', handshake: 'status-loading', asleep: 'status-loading', loaded: 'status-online', engineUp: 'status-online' }[st.code] || '';
+            loadedNames = prov === 'ollama' ? st.names : [];
+            ringBase = { cls: cls, color: st.color, title: t(st.key) };
             renderRing();
             if ($('model-sheet').classList.contains('open')) renderModelSheet();
         }

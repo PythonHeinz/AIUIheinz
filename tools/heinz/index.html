@@ -17,8 +17,6 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 .top { display: flex; align-items: center; gap: 4px; height: 56px; flex: none; }
 .top .mod { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 99px; background: var(--card); border: 1px solid var(--ol); padding: 0 14px; font-size: .9rem; cursor: pointer; color: var(--txt); }
 .top .mod span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.top .mod .on { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
-.top .mod .on.cloud { background: var(--orange); }
 #note { flex: none; margin: 0 0 8px; }
 #log { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 2px 16px; scroll-behavior: smooth; }
 .empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--sub); gap: 8px; padding: 0 24px; }
@@ -53,8 +51,8 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 <body>
 <div class="app" id="app">
     <div class="top">
-        <a class="ibtn" href="/" id="hub" aria-label="Hub"><svg class="i"><use href="/lib/icons.svg#i-arrow-l"/></svg></a>
-        <button class="mod" id="mod" type="button"><i class="on" id="mod-dot"></i><span id="mod-t">…</span><svg class="i sm"><use href="/lib/icons.svg#i-chev-d"/></svg></button>
+        <a class="ring-btn metal s-red" href="/" id="ring" aria-label="Hub"><span class="rt"><svg id="ring-logo" aria-hidden="true" viewBox="0 0 34 22" width="34" height="22"></svg></span></a>
+        <button class="mod" id="mod" type="button"><span id="mod-t">…</span><svg class="i sm"><use href="/lib/icons.svg#i-chev-d"/></svg></button>
         <button class="ibtn" id="new" type="button" aria-label="New chat"><svg class="i"><use href="/lib/icons.svg#i-plus"/></svg></button>
         <button class="ibtn" id="hist" type="button" aria-label="Chats"><svg class="i"><use href="/lib/icons.svg#i-chats"/></svg></button>
     </div>
@@ -89,10 +87,10 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 (function () {
     var PV = HeinzProviders;
     var D = {
-        en: { title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
+        en: { stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
             local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
             reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the test bench under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
-        de: { title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
+        de: { stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
             local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
             reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Prüfstand unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
     };
@@ -130,10 +128,26 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     function head() {
         var p = pv();
         $('mod-t').textContent = (S.model || t('model')) + (p.local ? '' : ' · ' + t('cloud'));
-        $('mod-dot').className = 'on' + (p.local ? '' : ' cloud');
         $('q').placeholder = t('ph');
         document.title = t('title');
+        checkStatus();
     }
+    // ---- status ring (state and colours from lib/providers.js, shared with the test bench) ----
+    var stLast = null, gotTok = false;
+    function ring() {
+        var c, k;
+        if (gen) { c = gotTok ? 'green' : 'blue'; k = gotTok ? 'stAnswering' : 'stThinking'; }
+        else if (stLast) { c = stLast.color; k = stLast.key; }
+        else { c = 'yellow'; k = 'stHandshake'; }
+        var el = $('ring'); el.className = 'ring-btn metal s-' + c;
+        el.title = t(k); el.setAttribute('aria-label', 'Hub: ' + t(k));
+    }
+    function checkStatus() {
+        var prov = S.provider, model = S.model;
+        PV.status(prov, model).then(function (st) { if (prov !== S.provider) return; stLast = st; ring(); });
+    }
+    Heinz.ringLogo($('ring-logo'));
+    setInterval(function () { if (!document.hidden && !gen) checkStatus(); }, 5000);
     function renderLog(streaming) {
         var box = $('log');
         if (!msgs.length) { box.innerHTML = '<div class="empty"><b>' + t('hello') + '</b><span>' + esc(t('sub', { m: S.model || '–' })) + '</span></div>'; return; }
@@ -146,7 +160,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     }
     function notice(kind, text) { var n = $('note'); if (!text) { n.hidden = true; return; } n.hidden = false; n.className = 'notice ' + kind; n.textContent = text; }
     function setBusy(b) {
-        gen = b;
+        gen = b; if (b) gotTok = false; ring(); if (!b) checkStatus();
         $('send').innerHTML = '<svg class="i"><use href="/lib/icons.svg#i-' + (b ? 'stop' : 'send') + '"/></svg>';
         $('send').setAttribute('aria-label', b ? 'Stop' : 'Send');
     }
@@ -212,7 +226,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         abort = new AbortController();
         var hist = msgs.slice(0, -1).map(function (m) { return { role: m.role, content: m.content }; });
         var rt = PV.runtime(S.provider, S.model);   // Threads, Kontext, keep_alive: gemeinsame Regel in lib/providers.js
-        PV.prepare(S.provider, S.model).then(function () { return PV.chat(S.provider, { model: S.model, messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: abort.signal, onDelta: function (d) { msgs[msgs.length - 1].content += d; renderLog(true); } }) })
+        PV.prepare(S.provider, S.model).then(function () { return PV.chat(S.provider, { model: S.model, messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: abort.signal, onDelta: function (d) { if (!gotTok) { gotTok = true; ring(); } msgs[msgs.length - 1].content += d; renderLog(true); } }) })
             .then(function () { }, function (e) {
                 if (e && e.name === 'AbortError') { msgs[msgs.length - 1].content += (msgs[msgs.length - 1].content ? ' ' : '') + t('stopped'); return; }
                 var code = e && e.code, m = code === 'ONLINE_BLOCKED' ? t('blocked') : code === 'NO_KEY' ? t('noKey') : t('err', { m: (e && e.message) || '' });

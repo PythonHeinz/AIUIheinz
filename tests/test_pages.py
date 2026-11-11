@@ -2235,6 +2235,56 @@ class PageTest(unittest.TestCase):
             self.assertEqual(slim["options"].get(k), bench["options"].get(k), k)
         self.assertEqual(slim.get("keep_alive"), bench.get("keep_alive"))
 
+    def test_shared_status_codes_and_colours_for_every_kind_of_engine(self):
+        page = self.new_page()
+        FakeOllama(page)   # /api/ps reports gemma2:2b as loaded
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        st = lambda js: page.evaluate("(async () => { const r = await " + js + "; return [r.code, r.color, r.key]; })()")
+        self.assertEqual(st("HeinzProviders.status('ollama', 'gemma2:2b')"), ["loaded", "blue", "stDefault"])
+        self.assertEqual(st("HeinzProviders.status('ollama', 'qwen2.5:3b')"), ["asleep", "orange", "stOnline"], "reachable but this model is not in memory")
+        # online engine: never asked, only the switch and the key decide
+        self.assertEqual(st("HeinzProviders.status('google', 'm')"), ["cloudOff", "red", "stCloudOff"])
+        page.evaluate("HeinzProviders.setOnlineAllowed(true)")
+        self.assertEqual(st("HeinzProviders.status('google', 'm')"), ["cloudNoKey", "red", "stCloudNoKey"])
+        page.evaluate("HeinzProviders.setKey('google', 'k')")
+        self.assertEqual(st("HeinzProviders.status('google', 'm')"), ["cloudReady", "blue", "stCloudReady"])
+        self.assertEqual(st("HeinzProviders.status('google', 'm', { handshake: false })"), ["handshake", "yellow", "stHandshake"])
+        # counter case: local engine not reachable
+        page.unroute("**/localhost:11434/**")
+        page.route("**/localhost:11434/**", lambda r: r.abort())
+        self.assertEqual(st("HeinzProviders.status('ollama', 'gemma2:2b')"), ["offline", "red", "stOffline"])
+
+    def test_slim_chat_ring_shows_the_connection_state_and_what_the_model_does(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        ring = lambda: page.evaluate("document.getElementById('ring').className")
+        page.wait_for_function("document.getElementById('ring').classList.contains('s-blue')")   # gemma2:2b is in memory
+        self.assertIn("Model is loaded in RAM", page.evaluate("document.getElementById('ring').title"))
+        self.assertEqual(page.evaluate("document.getElementById('ring').getAttribute('href')"), "/", "the ring leads back to the hub")
+        # another model: reachable, but asleep -> orange
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_function("document.getElementById('ring').classList.contains('s-orange')")
+        # while the model works the ring says so (answer is held back by the fake engine)
+        page.unroute("**/localhost:11434/**")
+        def slow(route):
+            if route.request.url.endswith("/api/chat"):
+                import time; time.sleep(1.5)
+            fake.handle(route)
+        page.route("**/localhost:11434/**", slow)
+        page.fill("#q", "Hi")
+        page.click("#send")
+        page.wait_for_function("document.getElementById('ring').classList.contains('s-blue') && document.getElementById('ring').title.indexOf('Thinking') >= 0")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        # engine gone: red
+        page.unroute("**/localhost:11434/**")
+        page.route("**/localhost:11434/**", lambda r: r.abort())
+        page.wait_for_function("document.getElementById('ring').classList.contains('s-red')", timeout=15000)
+        self.assertEqual(page.evaluate("document.getElementById('mod-dot')"), None, "the old dot is gone")
+
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
         FakeOllama(page, status=500)
