@@ -575,3 +575,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `lib/providers.js`: `HeinzProviders.preload(id, model[, signal])` lädt ein Ollama-Modell mit genau den `runtime()`-Werten und `prepare()` vorweg (ein Token, Antwort verworfen).
 - `tools/heinz/index.html`: Beim Öffnen und bei jeder Modellwahl wird vorgeladen (Schalter „Vorladen“ des Prüfstands, Standard an, gilt auch hier). Ring orange mit „Modell wird vorbereitet …“, danach von selbst blau.
 - Tests: 2 neue (Vorladen mit Threads, Kontext, keep_alive, Entladen anderer Modelle, Ring orange während des Ladens; Schalter aus: kein Laden); Mutation (Aufruf entfernt) erkannt. Nur simuliert.
+
+## 11.11.2026 – Gemeinsame Modellwahl für Prüfstand und Heinz Chat (Chat „AIUIheinz-Chat“)
+- Befund des Entwicklers (Qwen 2.5:3b im Chat gewählt): Beim Wechsel in den Prüfstand wurde Qwen wieder geladen. Ursache (vermutet, aus dem Code abgeleitet): Der Prüfstand lädt beim Öffnen das Modell vor, das in seiner eigenen Auswahl steht (zuvor gewählt, hier ein anderes), und entlädt dabei alle anderen; umgekehrt genauso. Nicht am Gerät nachgemessen.
+- `lib/providers.js`: `HeinzProviders.activeModel()` / `setActiveModel(provider, model)`, neuer gemeinsamer Schlüssel `heinz_active` `{provider, model}`.
+- `chat.html` (Prüfstand): übernimmt beim Öffnen einmal das gemeinsame Modell (nur bei gleicher Engine und wenn Ollama es kennt); `saveSettings` schreibt die Wahl zurück (erst nach der Übernahme, damit das Standardmodell sie nicht überschreibt). Der Modus-Preset bleibt als Systemprompt, setzt das Modell aber nur noch bei Moduswechsel.
+- `tools/heinz/index.html`: übernimmt beim Start das gemeinsame Modell; `save()` schreibt es.
+- Tests: 1 neuer (Chat wählt Qwen, Prüfstand öffnet mit Qwen und lädt es vor; Prüfstand wählt Gemma, Chat zeigt Gemma); Mutation (Übernahme entfernt) erkannt. Nur simuliert.

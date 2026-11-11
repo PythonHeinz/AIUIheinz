@@ -100,11 +100,12 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     var esc = Heinz.esc;
     var S = Heinz.lsGet('heinz_slim', null);
     if (!S) { var gs = Heinz.lsGet('heinz_settings', {}) || {}; S = { provider: gs.provider || 'ollama', model: '', chat: 0 }; }
+    (function () { var a = PV.activeModel(); if (a && a.provider === S.provider) S.model = a.model; })();   // model chosen on another page (test bench)
     var chats = Heinz.lsGet('heinz_slim_chats', []); if (!Array.isArray(chats)) chats = [];
     var cur = chats.filter(function (c) { return c.id === S.chat; })[0] || null;
     var msgs = cur ? cur.messages.slice() : [];
     var gen = false, abort = null, modelsList = [], modelsFor = '';
-    function save() { Heinz.lsSet('heinz_slim', S); Heinz.lsSet('heinz_slim_chats', chats.slice(0, 100)); }
+    function save() { PV.setActiveModel(S.provider, S.model); Heinz.lsSet('heinz_slim', S); Heinz.lsSet('heinz_slim_chats', chats.slice(0, 100)); }
 
     // ---- minimal markdown for answers (escaped first) ----
     function md(src) {

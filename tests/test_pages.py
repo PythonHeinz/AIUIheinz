@@ -2222,10 +2222,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(bench["model"], "qwen2.5:3b")
         # the chat page (same browser storage) must send exactly the same load options for the same model
         page.goto(self.srv.base + "/tools/heinz/index.html")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")   # the bench's model is taken over
         page.fill("#q", "Hi")
         page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2329,6 +2326,26 @@ class PageTest(unittest.TestCase):
         self.assertEqual((pre["options"].get("num_thread"), pre["options"].get("num_ctx"), pre["options"].get("num_predict")), (2, 6144, 1))
         self.assertEqual(pre.get("keep_alive"), "30m")
         self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, fake.unloads, "other models are released before the preload")
+
+    def test_model_choice_is_shared_between_chat_and_test_bench(self):
+        # chat picks qwen -> the test bench opens with qwen (and does not load another model); and the other way round
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_timeout(500)
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.getElementById('model-select').value === 'qwen2.5:3b'", timeout=15000)
+        page.wait_for_timeout(1500)
+        self.assertTrue(all(p_["model"] == "qwen2.5:3b" for p_ in fake.preloads[-1:]), "the bench preloads the shared model")
+        # bench changes the model -> the chat takes it over
+        page.evaluate("() => { const s = document.getElementById('model-select'); s.value = 'gemma2:2b'; s.dispatchEvent(new Event('change')); }")
+        page.wait_for_timeout(500)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
 
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()

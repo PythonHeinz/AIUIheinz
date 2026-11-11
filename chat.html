@@ -829,9 +829,15 @@
                 o.value = m; o.textContent = m;
                 sel.appendChild(o);
             });
+            if (!activeAdopted) {   // once per page load: take over the model chosen on another page (e.g. the chat)
+                activeAdopted = true;
+                const a = PV.activeModel();
+                if (a && a.provider === settings.provider && (settings.provider !== 'ollama' || MODELS.indexOf(a.model) >= 0)) settings.model = a.model;
+            }
             if (settings.provider === 'ollama' && MODELS.indexOf(settings.model) < 0) settings.model = resolveModel(MODE_PRESETS[settings.mode]);
             if (settings.provider !== 'ollama' && !settings.model) settings.model = names[0] || '';
             sel.value = settings.model;
+            PV.setActiveModel(settings.provider, settings.model);
             updateChip(); renderModelSheet();
             const mp = $('ml-pill'); if (mp) mp.hidden = settings.provider !== 'ollama' && MODELS.length > 0;
             $('eng-status').classList.toggle('tappable', MODELS.length > 0 && settings.provider !== 'ollama');
@@ -1079,7 +1085,8 @@
             try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('localStorage nicht verfügbar', e); }
         }
         function lsRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
-        function saveSettings() { lsSet('heinz_settings', settings); }
+        let activeAdopted = false;   // before the first adoption the default model must not overwrite the shared choice
+        function saveSettings() { lsSet('heinz_settings', settings); if (activeAdopted) PV.setActiveModel(settings.provider, settings.model); }
 
         function persistCurrent() {
             updateChatBar();
