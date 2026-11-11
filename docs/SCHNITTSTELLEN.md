@@ -347,3 +347,40 @@ Die Preisseite kennzeichnet bei den Gratisstufen **„Used to improve our produc
 
 ### 12.6 Offen (Sonde)
 `responseModalities` nur `IMAGE`; MIME-Typ der Bildausgabe; `:predict` aus dem Browser (CORS); `audio/webm` als Eingabe; Streaming bei TTS; Deutsch bei TTS; Preise und Gratisstufe je Bild- und Sprachmodell; ob die Interactions-API für Medien Vorteile bringt; Größe und Dauer-Grenzen je Modell (Abschnitt 10 „offen“).
+
+## 13 Sprache im Browser: Eingabe und Ausgabe (11.11.2026, Nachtrag 5, nur recherchiert, am Gerät offen)
+
+### 13.1 Spracheingabe (`SpeechRecognition` / `webkitSpeechRecognition`)
+- **Standard in Chrome: Cloud.** Der Browser schickt das Audio an einen Spracherkennungsdienst (MDN, Chrome-Dokumentation; Seitenaufbau-Analysen von 2018 nennen Google als Dienst). Das gilt auch, wenn in den Entwicklerwerkzeugen nichts zu sehen ist. Für das Versprechen „offline“ ist das **Datenschutzstufe 3** (KONZEPT 19.5), nicht 0.
+- **Neu (Drittquelle, Blink „Intent to Ship“, Chrome 139 auf dem Desktop):** `SpeechRecognition.available({langs, processLocally: true})` fragt, ob ein lokales Sprachpaket bereitsteht, `SpeechRecognition.install(...)` lädt es (auf dem Desktop rund 60 MB je Sprache), `recognition.processLocally = true` erzwingt lokale Erkennung. Nach der Quelle hängt das vom Browser und System ab.
+- **Android-Chrome: unbekannt, vermutet nicht verfügbar.** Die Drittquelle nennt die Funktion für den Desktop; für Android habe ich keinen Beleg für lokale Erkennung gefunden. Chrome auf Android nutzt den Android-Dienst (`android.speech.RecognitionService`, Drittquelle 2018), dessen Offline-Fähigkeit vom Google-App-Stand und den Sprachpaketen abhängt; Berichte reichen von „geht mit Paket“ bis „Funktion entfernt/unzuverlässig“ (Foren, widersprüchlich).
+- **Sprachpakete in den Android-Einstellungen (Gboard, Google-App) beweisen nichts für die Web-API.** Dass Diktieren in der Tastatur offline geht, sagt nicht, dass `webkitSpeechRecognition` im Chrome oder in der installierten PWA offline arbeitet.
+- **Installierte PWA:** unbekannt, ob anders als im Tab.
+- **Erkennbar in der App?** Nur über `available()` mit `processLocally` (falls vorhanden) und über Fehler `network` / `service-not-allowed` beim Versuch im Flugmodus. Eine sichere Anzeige „läuft lokal“ gibt es nicht, solange `processLocally` fehlt. Die App darf deshalb **nicht** „offline“ zusagen, sondern zeigt: „Spracheingabe: Browser-Dienst (Cloud möglich)“.
+- **Alternativen für echte Offline-Eingabe (nur Konzept):** Mikrofon aufnehmen (`MediaRecorder`) und lokal erkennen: Whisper-Modell über `whisper.cpp` in Termux, oder ein Server-Weg in `server.py` (Fundament, Chat-Strang). Das gehört in die Planung der Funktionsplätze (`speech.in`, Abschnitt 10), nicht in diese Runde.
+- **Test am Gerät (Entwickler):** Flugmodus an, Seite öffnen, Mikrofon: (1) Tab, (2) installierte PWA; Ergebnis und Fehlercode notieren. Dann mit `available()` in der Konsole abfragen.
+
+### 13.2 Sprachausgabe (`speechSynthesis`)
+- `speechSynthesis.getVoices()` liefert Stimmen; jede hat `localService` (`true` = lokal auf dem Gerät, `false` = Netzdienst). Das ist die belegte Möglichkeit, **lokale und Cloud-Stimmen zu unterscheiden**. Die Liste kann beim ersten Aufruf leer sein (Ereignis `voiceschanged` abwarten).
+- Auf Android kommen die Stimmen aus dem Text-to-Speech-Dienst des Geräts; welche lokal sind, hängt von den installierten Stimmpaketen ab (vermutet). Die App zeigt nur lokale Stimmen als „offline“ (`localService: true`) und kennzeichnet die übrigen.
+- Test am Gerät: Flugmodus, Stimmenliste mit `localService` ausgeben, je Sprache (en, de) einen Satz sprechen.
+
+## 14 Kennzeichnung KI-erzeugter Bilder (11.11.2026, Nachtrag 4, recherchiert; **keine Rechtsberatung**)
+
+Stand der Quellen: Kanzlei-Merkblätter und Fachseiten von Juni/Juli 2026; den Gesetzestext selbst habe ich nicht gelesen. Rechtliche Einordnung sollte der Entwickler vor einer Veröffentlichung in einem Store prüfen lassen.
+
+- **Rechtsgrundlage (Drittquelle, mehrfach übereinstimmend):** EU-KI-Verordnung (AI Act) **Artikel 50**, anwendbar seit **2. August 2026**. Für Systeme, die schon vor diesem Datum auf dem Markt waren, nennen die Quellen eine **Übergangsfrist bis 2. Dezember 2026** für die maschinenlesbare Kennzeichnung (Änderungspaket „Omnibus“). Eine Frist 2. Februar 2027 betrifft die Erkennbarkeit von Wasserzeichen. Daten sind aus Quellen, nicht aus dem Gesetzestext.
+- **Zwei getrennte Pflichten:**
+  1. **Art. 50(2), Anbieter** von KI-Systemen, die Bild, Ton, Video oder Text erzeugen: Ausgabe **maschinenlesbar markieren** (Metadaten, Wasserzeichen, ggf. beides), damit sie als künstlich erkennbar ist.
+  2. **Art. 50(4), Betreiber** („deployer“), die **Deepfakes** veröffentlichen: offenlegen, dass der Inhalt künstlich erzeugt oder verändert wurde. Deepfake heißt nach den Quellen: Bild, Ton oder Video, das reale Personen, Orte, Gegenstände oder Ereignisse darstellt und fälschlich echt wirken würde. KI-Text ist nur betroffen, wenn er zur Information der Öffentlichkeit über Themen von öffentlichem Interesse veröffentlicht wird. Rein künstlerische oder satirische Werke haben nach den Quellen abgeschwächte Pflichten (nicht im Einzelnen geprüft).
+- **Praxisleitfäden:** Die EU-Kommission hat am **10. Juni 2026** den **Verhaltenskodex zur Transparenz KI-erzeugter Inhalte** (freiwillig) und Leitlinien zu Artikel 50 veröffentlicht. Technisch nennen die Quellen **C2PA** (Herkunftsnachweis in den Metadaten) und **Wasserzeichen** als übliche Wege; **kein einzelnes Verfahren gilt als allein ausreichend**.
+- **Wen trifft es bei Heinz?**
+  - Erzeugt ein **Cloud-Anbieter** das Bild (Google, OpenAI usw.), liegt die Markierungspflicht bei ihm (Google nennt SynthID bei allen Bildern, Abschnitt 12.2). Die App sollte diese Markierung **nicht entfernen**: kein Neukodieren, das Metadaten verwirft, ohne dass der Nutzer es weiß; Wasserzeichen im Pixelbild bleiben ohnehin.
+  - Ein **lokaler Bildgenerator** (Heimserver, Konzept 20.4) wird von der App angeboten; ob Heinz damit als „Anbieter“ gilt, ist **unklar** und rechtlich zu klären. Auf der sicheren Seite: App speichert beim Erzeugen eine Kennzeichnung mit.
+  - **Veröffentlicht** der Nutzer das Bild, ist er als Betreiber im Sinne von 50(4) zuständig, soweit es ein Deepfake ist. Privater Gebrauch auf dem eigenen Gerät fällt nach den Quellen in der Regel nicht darunter (Annahme, zu prüfen).
+- **Vorschlag für die App (Entwurf, nichts gebaut):**
+  1. Jedes erzeugte Bild bekommt im Mediensatz (KONZEPT 20.6) die Felder `generated: true`, `engine`, `model`, `createdAt`, `promptHash` (kein Klartext).
+  2. In der Anzeige ein kleines Zeichen „KI“ am Bild; beim Teilen/Exportieren Hinweistext „Mit KI erzeugt“ als Vorgabe, abschaltbar.
+  3. Beim Export als PNG/JPEG: Hinweis in den Metadaten (PNG-Textblock) nur durch die App selbst gesetzt; C2PA-Signierung **nicht** selbst bauen (Schlüssel, Vertrauenskette), außer die Quelle liefert sie schon mit.
+  4. Anzeige vor dem Erzeugen, wenn der Anbieter Datenschutzstufe 3 hat (Abschnitt 12.5).
+- **Offen:** Wortlaut des Artikels 50 selbst lesen; ob die Pflicht für Nur-Privat-Nutzung entfällt; Behandlung von Bildern, die der Nutzer nur *bearbeiten* lässt (Eingabebild echt, Ausgabe KI).
