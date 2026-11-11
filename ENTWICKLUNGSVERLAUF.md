@@ -582,3 +582,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html` (Prüfstand): übernimmt beim Öffnen einmal das gemeinsame Modell (nur bei gleicher Engine und wenn Ollama es kennt); `saveSettings` schreibt die Wahl zurück (erst nach der Übernahme, damit das Standardmodell sie nicht überschreibt). Der Modus-Preset bleibt als Systemprompt, setzt das Modell aber nur noch bei Moduswechsel.
 - `tools/heinz/index.html`: übernimmt beim Start das gemeinsame Modell; `save()` schreibt es.
 - Tests: 1 neuer (Chat wählt Qwen, Prüfstand öffnet mit Qwen und lädt es vor; Prüfstand wählt Gemma, Chat zeigt Gemma); Mutation (Übernahme entfernt) erkannt. Nur simuliert.
+
+## 11.11.2026 – Diagnose: Was haben Prüfstand und Chat zuletzt an Ollama gesendet (Chat „AIUIheinz-Chat“)
+- Befund des Entwicklers (Handy): Qwen im Prüfstand geladen, im Chat 24 s bis zum ersten Zeichen, beim Zurückwechseln in den Prüfstand wurde das Modell komplett neu geladen (Ring orange). Im Simulator senden beide Seiten dieselben Laufzeitwerte; die Ursache am Gerät ist noch offen.
+- `lib/providers.js`: `HeinzProviders.noteRequest` merkt je Seite (Prüfstand/Chat) Modell, Threads, Kontext, Haltezeit und Uhrzeit der letzten Ollama-Anfrage (`heinz_lastreq`), `lastRequests()` liest sie.
+- `tools/heinz/index.html`: Das Modellblatt zeigt zusätzlich „Zuletzt an Ollama gesendet“ für Prüfstand und Chat.
+- Test: 1 neuer (beide Zeilen sichtbar, gleicher Kontext). Nur simuliert; die Ursache ist damit nicht behoben.

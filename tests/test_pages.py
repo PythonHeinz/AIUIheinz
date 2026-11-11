@@ -2347,6 +2347,25 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/tools/heinz/index.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
 
+    def test_model_sheet_shows_what_bench_and_chat_last_sent_to_ollama(self):
+        page = self.new_page()
+        FakeOllama(page)
+        page.add_init_script("if (!localStorage.getItem('heinz_settings')) localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}}))")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.wait_for_timeout(2500)   # the bench preloads on its own
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.wait_for_timeout(1500)   # the chat preloads too
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        txt = page.inner_text("#rt-h")
+        import re
+        b = re.search(r"Test bench gemma2:2b: threads 2, context (\d+)", txt)
+        c = re.search(r"Chat gemma2:2b: threads 2, context (\d+)", txt)
+        self.assertTrue(b and c, txt)
+        self.assertEqual(b.group(1), c.group(1), "bench and chat send the same context")
+
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()
         fake = FakeOllama(page)
