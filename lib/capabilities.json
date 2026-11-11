@@ -125,7 +125,7 @@
         "presence_penalty": { "state": "unknown", "status": "unbekannt" },
         "thinking": { "state": "on", "via": "reasoning_effort", "status": "belegt", "exclusive": "reasoning_effort must not be combined with thinking_level or thinking_budget in the same request (extra_body.google.thinking_config)" }
       },
-      "stats": { "outputIncludesReasoning": "unknown", "streamUsage": "stream_options.include_usage (already sent by the app)" },
+      "stats": { "outputIncludesReasoning": "no", "measured": "11.11.2026, gemini-3.8-flash, 4 runs: total_tokens is larger than prompt_tokens + completion_tokens by the thinking tokens; no reasoning_tokens field", "streamUsage": "stream_options.include_usage (already sent by the app)" },
       "modelList": {
         "native": "GET https://generativelanguage.googleapis.com/v1beta/models (pageSize up to 1000, pageToken)",
         "compat": "GET .../v1beta/openai/models (fields unknown, probably id only)",

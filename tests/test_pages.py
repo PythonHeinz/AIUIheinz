@@ -1080,6 +1080,25 @@ class PageTest(unittest.TestCase):
         self.assertIn("HTTP 400", txt)
         self.assertIn("Error:", txt)
 
+    def test_sliders_use_full_width_with_short_label_even_when_hints_are_shown(self):
+        # Handytest 11.11.2026: Temperatur-Regler war winzig, weil der Hinweis zwischen Name und Regler lag
+        page, g = self.google_page("gemini-3-flash")
+        self.menu(page)
+        page.evaluate("renderCaps()")
+        self.assertIn("Recommended", page.text_content("#sc-temp .cap-row"))
+        w = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
+        self.assertTrue(all(x > 100 for x in w), w)
+        self.assertLess(max(w) - min(w), 3, "all sliders are equally wide")
+        r = page.evaluate("""() => { const c = document.getElementById('sc-temp'), s = c.querySelector('input').getBoundingClientRect(), n = c.querySelector('.cap-row').getBoundingClientRect(), b = c.querySelector('b').getBoundingClientRect(); return [s.top, n.top, b.right <= s.left + 1]; }""")
+        self.assertGreater(r[1], r[0], "the note sits below the slider")
+        self.assertTrue(r[2], "the name sits to the left of the slider")
+        self.assertEqual(page.inner_text("#sc-temp b"), "T°")
+        # counter test: same widths on Ollama (no notes)
+        page.evaluate("switchProvider('ollama')"); page.wait_for_timeout(300)
+        w2 = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
+        self.assertLess(max(w2) - min(w2), 3)
+        self.assertLess(abs(w2[0] - w[0]), 3)
+
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
         page = self.new_page()

@@ -188,7 +188,7 @@
         /* Schnittstellenwissen: Regler nach Zustand (lib/capabilities.json) */
         .slidercard.cap-blocked { opacity: .45; cursor: help; }
         .slidercard input.cap-lock { pointer-events: none; }
-        .cap-row { grid-column: 1 / -1; }
+        .cap-row { grid-column: 1 / -1; order: 5; }   /* unter Name, Regler und Wert, nie dazwischen */
         .cap-tag { border: 0; background: none; padding: 2px 0; font: 600 .66rem var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
         .cap-tag.unk { color: var(--orange); }
         .cap-text { font-size: .72rem; line-height: 1.4; color: var(--sub); margin-top: 2px; }
@@ -441,7 +441,7 @@
                         <div class="seg2"><button type="button" id="seg-model" onclick="setParamSrc('model')" data-i18n="segModel">Model</button><button type="button" id="seg-mode" onclick="setParamSrc('mode')" data-i18n="segMode">Mode</button><button type="button" id="seg-own" onclick="setParamSrc('own')" data-i18n="segOwn">Mine</button></div>
                         <input type="checkbox" id="use-default" hidden onchange="onDefaultToggle()">
                         <div class="pw-sl">
-                            <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b>Temp</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b title="Temperature">T°</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
                             <div class="slidercard slider-group" id="sc-topp" data-cap-card="top_p"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
                             <div class="slidercard slider-group" id="sc-topk" data-cap-card="top_k"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
                             <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
@@ -2518,7 +2518,8 @@
                     ', visibleTokens ' + (st.visibleTokens || 0) + ', totalTokens ' + (st.totalTokens || 0) + ', source ' + (st.source || '?') + (st.approx ? ' (estimate)' : '') +
                     ', finish ' + (st.finishReason || '?') + ', tokensPerSec ' + (st.tokensPerSec || 0).toFixed(1) + ', tokensPerSecAll ' + (st.tokensPerSecAll || 0).toFixed(1);
                 const oir = d.stats && d.stats.outputIncludesReasoning;
-                if ((st.reasoningTokens || 0) > 0 && (!oir || oir === 'unknown')) o += '\nNote: outputIncludesReasoning unknown, values not comparable.';
+                if (st.reasoningDerived) o += '\nNote: outputTokens exclude the thinking tokens (total_tokens is larger than prompt + output; no reasoning_tokens field reported).';
+                else if ((st.reasoningTokens || 0) > 0 && (!oir || oir === 'unknown')) o += '\nNote: outputIncludesReasoning unknown, values not comparable.';
             }
             if (ex) {
                 o += '\n\nLast request (' + ex.provider + ', HTTP ' + ex.status + '): ' + JSON.stringify(Object.assign({}, ex.body, { messages: '[' + (ex.body.messages || []).length + ' messages]' })) +

@@ -240,3 +240,10 @@ Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Reg
 - **`usage`:** `{"completion_tokens":165,"prompt_tokens":78,"total_tokens":5563}`: **keine** `completion_tokens_details`. Prompt plus Ausgabe sind 243, die Gesamtsumme ist 5563. Die Differenz von 5320 sind Denk-Token, die nur in der Summe stecken. Die Seite leitet sie daraus ab und markiert sie.
 - **Zeiten:** erster Text nach 30 135 ms, gesamt 30 951 ms, 8 Chunks: Denken dauert, der Text kommt dann fast auf einmal. T/s (201) ist daher kein Maß für die Erzeugungsgeschwindigkeit.
 - **Folge für `outputIncludesReasoning`:** In diesem Lauf enthält `completion_tokens` die Denk-Token nicht. Ein Lauf; weitere Läufe stehen aus.
+
+### 8.5 Vierter Handytest (11.11.2026): Temperatur 1,0 gegen 0,4, Tief (gemini-3.8-flash, Frage nach Zahlenreihen)
+- Beide Anfragen liefen mit HTTP 200; `temperature` stand mit 1 bzw. 0.4 im gesendeten Body. Die Antwort war in beiden Läufen sauber (kein Schleifen-Effekt bei 0,4 beobachtet; ein Lauf je Wert, kein Qualitätsvergleich).
+- Lauf 1 (T 1,0): `usage` 73 / 352 / total 1272 → Denk-Token abgeleitet 847; erster Text nach 8,9 s, gesamt 11,4 s.
+- Lauf 2 (T 0,4): `usage` 73 / 387 / total 1423 → Denk-Token abgeleitet 963; erster Text nach 9,5 s, gesamt 12,8 s.
+- In allen vier bisher gemessenen Läufen (8.3, 8.4, 8.5) ist `total_tokens` größer als `prompt_tokens + completion_tokens`; ein Feld `reasoning_tokens` kam nie. `completion_tokens` enthält die Denk-Token demnach nicht. `capabilities.json` trägt dies für `gemini-compat` jetzt als `outputIncludesReasoning: "no"` mit Messvermerk (vorher `unknown`).
+- Die Denk-Menge schwankt stark mit der Frage (5320 bei der Primzahlfrage, rund 850 bis 960 hier).
