@@ -1290,6 +1290,22 @@ class PageTest(unittest.TestCase):
         self.series_fill(page, reps="1")
         self.assertFalse(page.is_disabled("#sr-start"))
 
+    def test_series_refuses_values_outside_the_allowed_range_before_any_request(self):
+        page, g = self.gemini_page()
+        self.series_open(page)
+        n0 = len(g.requests)
+        self.series_fill(page, temp="0", topp="2")   # the typo from the phone test: 2 belongs to temperature
+        self.assertIn("Top-p: 2", page.inner_text("#sr-plan"))
+        self.assertTrue(page.is_disabled("#sr-start"))
+        self.series_fill(page, topp="", temp="0, 2")
+        self.assertFalse(page.is_disabled("#sr-start"), "temperature goes up to 2 on Gemini")
+        self.series_fill(page, temp="0, 3")
+        self.assertIn("T\u00b0: 3", page.inner_text("#sr-plan"))
+        self.assertTrue(page.is_disabled("#sr-start"))
+        page.evaluate("srStart()"); page.evaluate("srStart()")   # the second call would confirm the cloud question
+        page.wait_for_timeout(1500)
+        self.assertEqual(len(g.requests), n0, "no request with a bad value, even when start is forced")
+
     def test_series_can_be_stopped_and_stops_after_three_errors_in_a_row(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")

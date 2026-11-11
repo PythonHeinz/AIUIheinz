@@ -106,3 +106,10 @@ Messreihe 09.11.2026: Mit Termux im Hintergrund fielen 8 Threads auf 0,2–0,3 T
 Absturz 10.11.2026: Nach Wilson, Heinz, Audit mit vorgeladenen Modellen (`keep_alive` 30 m) beendete Android Termux; Ursache vermutlich mehrere gleichzeitig geladene Modelle. Maßnahme: Seite entlädt andere Modelle; Ollama mit `OLLAMA_MAX_LOADED_MODELS=1` starten.
 
 **Tempo-Test in der App (10.11.2026, Pixel 9 Pro, `qwen2.5:3b`, Termux im Hintergrund, 32 Token):** Gen Lauf 2 in Token/s: 2 Threads 8,9; 3 Threads 3,6; 4 Threads 1,5; 8 Threads 0,3. Empfehlung des Tests: 2 Threads. Einzelmessung, Details in `docs/KONZEPT.md` 17.2.
+
+## Erste Testreihe (11.11.2026, Pixel 9 Pro, `qwen2.5:3b`, Menü „Testreihe“)
+Prompt „Name one unusual animal in one sentence.“, Temperatur 0, Top-p 1, Top-k 20, Kontext 8192, höchstens 200 Token, 4 Wiederholungen je Threadzahl, kein Systemprompt, Termux-Sichtbarkeit nicht protokolliert.
+- **Wiederholbarkeit:** Bei Temperatur 0 waren alle 8 Antworten Wort für Wort gleich (41 Token, Axolotl), obwohl kein Seed gesendet wurde.
+- **Tempo:** 2 Threads 6,2 bis 6,6 Token/s, 4 Threads 5,0 bis 5,3 Token/s (also langsamer; passt zum Tempo-Test vom 10.11.). Gesamtzeit je Lauf 7,7 bis 9,1 s bei 2 Threads, 9,1 bis 9,9 s bei 4.
+- **Threadwechsel:** Der erste Lauf mit neuer Threadzahl brauchte 8,8 s bis zum ersten Zeichen (Laden), die folgenden 1,0 bis 1,9 s.
+- Die Reihe lief vollständig durch und der Export enthielt alle 8 Läufe.
