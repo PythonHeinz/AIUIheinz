@@ -2404,11 +2404,13 @@
             ['temperature', 'top_p', 'top_k'].forEach(function (k) { if (!spec.axes[k] && capSendable(k)) srMeta.fixed[k] = { temperature: parseFloat($('param-temp').value), top_p: parseFloat($('param-topp').value), top_k: parseInt($('param-topk').value, 10) }[k]; });
             seriesRunning = true; srAbort = new AbortController();
             $('sr-start').style.display = 'none'; $('sr-stop').style.display = 'inline-flex';
-            let wake = null; try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
+            let wake = null;   // nicht abwarten: ein hängendes Wake-Lock darf den Start und den Stopp nie blockieren
+            try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { wake = w; if (!seriesRunning) { try { w.release(); } catch (e) { /* frei */ } } }, function () { wake = null; }); } catch (e) { wake = null; }
             let status = '', errRow = 0;
             try {
                 if (prov === 'ollama') await unloadOthers(model);
                 for (let i = 0; i < rows.length; i++) {
+                    if (srAbort.signal.aborted) { const ab = new Error('abort'); ab.name = 'AbortError'; throw ab; }   // Stopp zwischen zwei Läufen greift sofort
                     const row = rows[i];
                     $('sr-status').textContent = t('srRunning', { i: i + 1, n: rows.length }); srRender();
                     const opts = srOptions(row.params, maxTok);
@@ -2432,7 +2434,7 @@
                     run.answer = buf; run.firstMs = first === null ? null : Math.round(first); run.totalMs = Math.round(performance.now() - t0);
                     srRuns.push(run); srRender();
                     if (errRow >= 3) { status = t('srErrors', { m: run.error }); srMeta.stopped = 'three errors in a row'; break; }
-                    if (!pv.local && i < rows.length - 1) await sleep(1200);   // Gratisstufen haben Anfragegrenzen
+                    if (!pv.local && i < rows.length - 1) await new Promise(function (r) { const tm = setTimeout(r, 1200); srAbort.signal.addEventListener('abort', function () { clearTimeout(tm); r(); }); });   // Gratisstufen haben Anfragegrenzen
                 }
                 if (!status) status = t('srDone', { n: srRuns.length });
             } catch (e) {

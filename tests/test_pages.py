@@ -1306,6 +1306,26 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(1500)
         self.assertEqual(len(g.requests), n0, "no request with a bad value, even when start is forced")
 
+    def test_series_start_and_stop_do_not_wait_for_a_hanging_wake_lock(self):
+        page = self.new_page()
+        # a wake lock that never answers (seen as a risk on the phone): the series must run and stop anyway
+        page.add_init_script("Object.defineProperty(navigator, 'wakeLock', { value: { request: () => new Promise(() => {}) } })")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, temp="0, 1")
+        page.click("#sr-start")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        self.assertEqual(len(self.ollama.requests), 2)
+        # stop between two runs: the loop checks the signal itself
+        self.series_fill(page, temp="0, 0.2, 0.4, 0.6, 0.8, 1", reps="2")
+        page.click("#sr-start")
+        page.wait_for_function("srRuns.length >= 1")
+        page.click("#sr-stop")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
+        self.assertTrue(page.evaluate("!seriesRunning"))
+        self.assertTrue(page.is_visible("#sr-start"))
+
     def test_series_can_be_stopped_and_stops_after_three_errors_in_a_row(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
