@@ -7,7 +7,7 @@ Projektinstruktion für neue Chats: `NAECHSTER_CHAT.md` (im Projektordner, eine 
 ## Seiten
 | Datei | Zweck |
 |---|---|
-| `index.html` | Hub mit Kacheln und Ollama-Status |
+| `index.html` | Hub (Startseite der App: Chat, Werkzeuge, Einrichten, Ollama-Status, Version); `hub.html` leitet nur dorthin weiter |
 | `chat.html` | Chat mit fünf Modi (Wilson, Heinz, Audit, Code, Creative), alle Parameter manuell |
 | `lab.html` | Data Lab: Einträge einzeln vom Modell nach Regel bewerten lassen |
 | `sheet.html` | Tabelle per Befehl: Modell übersetzt nur in JSON, Code zählt und ändert |

@@ -2034,21 +2034,22 @@ class PageTest(unittest.TestCase):
     def test_hub_areas_switch_and_persist(self):
         page = self.new_page()
         page.goto(self.srv.base + "/")
-        page.wait_for_selector("a.row[data-tool]")
+        page.wait_for_selector("#main a[data-tool]")
         self.assertEqual(page.locator("#ring svg").count(), 1)
         self.assertIn("AIUI", page.inner_text(".top .ttl b"))
-        ids = page.eval_on_selector_all("#tools a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids, ["chat", "models"])
-        self.assertEqual(page.locator("#legacy a.row").count(), 2)
+        ids = page.eval_on_selector_all("#main a[data-tool]", "els => els.map(e => e.dataset.tool)")
+        self.assertEqual(ids, ["heinz", "chat", "lab", "vitals"])
         page.click("[data-area=tools]")
-        ids = page.eval_on_selector_all("#tools a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids, ["filter", "scan", "sheet", "studio"])
-        self.assertEqual(page.locator("#legacy a.row").count(), 0)
+        ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
+        self.assertEqual(set(ids), {"sheet", "filter", "scan", "studio"})
+        page.click("[data-area=setup]")
+        ids = page.eval_on_selector_all("#main a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
+        self.assertEqual(ids[:2], ["setup", "models"])
+        page.click("[data-area=tools]")
         page.reload()
         page.wait_for_selector("a.app[data-tool]")
         self.assertEqual(page.get_attribute("[data-area=tools]", "class"), "on")
-        self.assertEqual(page.locator("#tools a.app[data-tool=sheet]").count(), 1)
-        page.wait_for_function("document.querySelector('#t-ollama').textContent.includes('gemma2:2b')")
+        self.assertEqual(page.locator("#main a.app[data-tool=sheet]").count(), 1)
         self.assertEqual(self.errors, [])
 
     def test_hub_theme_button_cycles(self):
@@ -2062,9 +2063,9 @@ class PageTest(unittest.TestCase):
     def test_language_toggle_switches_hub_and_persists(self):
         page = self.new_page()
         page.goto(self.srv.base + "/")
-        page.wait_for_selector("a.row[data-tool]")
+        page.wait_for_selector("#main a[data-tool]")
         page.click("#lang-btn")
-        self.assertIn("Modelle", page.inner_text("#tools"))
+        self.assertIn("Einrichten", page.inner_text("#areas"))
         self.assertEqual(json.loads(page.evaluate("localStorage.getItem('heinz_settings')"))["lang"], "de")
         page.goto(self.srv.base + "/tools/filter/index.html")
         self.assertIn("Platzhalter", page.inner_text(".panel"))
@@ -2097,7 +2098,7 @@ class PageTest(unittest.TestCase):
     # ---- DR2 phase A: new hub, Heinz Chat, setup, mode slider ----
     def test_new_hub_groups_names_and_footer(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/hub.html")
+        page.goto(self.srv.base + "/")
         page.wait_for_selector("#main a, #main .row, #main button", timeout=5000)
         txt = page.inner_text("body")
         self.assertIn("Heinz Chat", txt)
@@ -2106,6 +2107,25 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("privacy", page.inner_text("body").lower().replace("private", ""))
         self.assertEqual(self.errors, [])
         self.assertEqual(self.external, [])
+
+    def test_start_page_is_the_new_hub_and_old_hub_url_forwards_to_it(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("#areas [data-area]")
+        self.assertEqual(page.locator("#areas [data-area]").count(), 3, "new hub: Chat, Tools, Setup")
+        self.assertEqual(page.locator(".tile, .hero").first.count(), 1)
+        self.assertNotIn("Hub (Ollama", page.content())
+        page.goto(self.srv.base + "/hub.html")
+        page.wait_for_url(self.srv.base + "/")
+        page.wait_for_selector("#areas [data-area]")
+        self.assertEqual(self.errors, [])
+
+    def test_start_page_shows_app_version_from_ping(self):
+        page = self.new_page()
+        page.route("**/api/ping", lambda r: r.fulfill(json={"ok": True, "version": "x", "app": {"version": "1.0", "commit": "abc1234", "date": "2026-11-11 12:30:00"}}))
+        page.goto(self.srv.base + "/")
+        page.wait_for_function("document.getElementById('ver').textContent.indexOf('abc1234') >= 0")
+        self.assertIn("v1.0", page.inner_text("#ver"))
 
     def test_slim_chat_sends_streams_and_picks_model_in_bottom_sheet(self):
         page = self.new_page()

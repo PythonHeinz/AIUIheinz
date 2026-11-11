@@ -12,114 +12,141 @@
 <link rel="stylesheet" href="/lib/core.css">
 <script src="/lib/core.js"></script>
 <style>
+/* Hub (DR2): start page of the app since 11.11.2026; the old hub is gone (see git history). */
 body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
-.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px; }
-.top { display: flex; align-items: center; gap: 12px; padding: 16px 0 14px; }
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px 24px; }
+.top { display: flex; align-items: center; gap: 12px; padding: 16px 0 10px; }
 .top .ttl { flex: 1; min-width: 0; line-height: 1.2; }
 .top .ttl b { font-size: 1.25rem; font-weight: 500; letter-spacing: .01em; display: block; }
 .top .ttl small { display: block; margin-top: 2px; color: var(--sub); font-family: var(--serif); font-style: italic; font-size: .85rem; }
-a.ring-btn { text-decoration: none; color: var(--txt); }
-#ring { --s: var(--edge); }
-.areas { display: flex; gap: 22px; margin: 18px 0 6px; border-bottom: 1px solid var(--line); }
+#ring { --s: var(--red); text-decoration: none; }
+#ring.s-blue { --s: var(--blue); }
+.stat { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 6px; }
+.stat span { font: 600 11px var(--mono); color: var(--sub); border: 1px solid var(--ol); border-radius: 99px; padding: 4px 10px; background: var(--card); }
+.stat span i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--red); }
+.stat span.up i { background: var(--blue); }
+.areas { display: flex; gap: 22px; margin: 14px 0 8px; border-bottom: 1px solid var(--line); }
 .areas button { background: none; border: 0; padding: 8px 0 11px; font: inherit; font-size: .95rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.areas button.on { color: var(--txt); border-bottom-color: var(--acc, var(--pri)); }
+.areas button.on { color: var(--txt); border-bottom-color: var(--pri); }
+.hero { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 22px; background: color-mix(in srgb, var(--pri) 10%, var(--surf)); border: 1px solid color-mix(in srgb, var(--pri) 50%, transparent); box-shadow: 0 0 22px color-mix(in srgb, var(--pri) 18%, transparent); text-decoration: none; color: var(--txt); margin: 12px 0 6px; }
+.hero .tile { width: 52px; height: 52px; border-radius: 16px; background: color-mix(in srgb, var(--pri) 22%, transparent); display: grid; place-items: center; color: var(--pri); flex: none; }
+.hero b { font-size: 1.15rem; display: block; } .hero small { display: block; margin-top: 3px; color: var(--sub); line-height: 1.35; }
 a.row { text-decoration: none; }
 a.row .tile { color: var(--pri); }
 .row .tag { font-size: .68rem; color: var(--sub); border: 1px solid var(--edge); border-radius: 99px; padding: 2px 8px; flex: none; }
-.drawer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 8px; padding: 18px 0 4px; }
+.row.soon { opacity: .55; pointer-events: none; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 8px; padding: 18px 0 4px; }
 .app { display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--txt); font-size: .78rem; text-align: center; }
-.app .ic { width: 68px; height: 68px; border-radius: 20px; background: var(--card); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.app .ic img { width: 100%; height: 100%; object-fit: cover; }
+.app .ic { width: 68px; height: 68px; border-radius: 20px; background: var(--card); display: flex; align-items: center; justify-content: center; }
 .app .ic .i { width: 30px; height: 30px; }
-.app.soon { opacity: .5; }
+.app.soon { opacity: .5; pointer-events: none; }
 .app:active .ic { transform: scale(.96); }
-.sr { position: absolute; left: -9999px; }
-.foot { margin: 34px 0 40px; color: var(--muted); font-size: .72rem; text-align: center; letter-spacing: .04em; }
+.sec { margin-top: 22px; }
+.foot { margin: 30px 0 10px; color: var(--muted); font-size: .76rem; text-align: center; line-height: 1.5; }
+.notice a.pill { text-decoration: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="top">
-    <a class="ring-btn" id="ring" href="/" aria-label="Heinz UI"><svg class="i"><use href="/lib/icons.svg#i-heinz"/></svg></a>
+    <a class="ring-btn metal" id="ring" href="/" aria-label="Heinz UI"><span class="rt"><svg id="ring-logo" viewBox="0 0 34 22" width="34" height="22"></svg></span></a>
     <div class="ttl"><b>AIUI<span style="color:var(--pri)">heinz</span></b><small id="sub"></small></div>
     <button class="ibtn" id="theme" type="button" aria-label="Theme"><svg class="i"><use href="/lib/icons.svg#i-contrast"/></svg></button>
     <button class="lang-btn" id="lang-btn" type="button" aria-label="EN / DE"><span data-l="en">EN</span><span data-l="de">DE</span></button>
 </div>
-<div class="sr" id="status" role="status"><span id="t-ollama">…</span> <span id="t-litert">…</span></div>
+<div class="stat" id="stat"></div>
+<div id="first"></div>
 <nav class="areas" id="areas"></nav>
-<main>
-    <div id="tools"></div>
-    <div class="caps" id="legacy-h" hidden style="margin-top:26px"></div>
-    <div id="legacy"></div>
-</main>
+<main id="main"></main>
 <div class="foot" id="foot"></div>
+<div class="foot" id="ver" title="Version"></div>
 </div>
 <script>
 (function () {
     var D = {
-        en: { sub: 'Private AI tools that work offline.', ollamaOff: 'not reachable', litertOff: 'not reachable (optional)', up: 'running', loaded: 'loaded: {m}', models: '{n} models', soon: 'placeholder', legacy: 'Old versions', foot: 'OFFLINE FIRST · NOTHING LEAVES THIS DEVICE', noTools: 'No tools found (server too old?)', aChat: 'Chats & models', aTools: 'Tools', empty: 'Nothing here yet.' },
-        de: { sub: 'Private KI-Werkzeuge, die offline laufen.', ollamaOff: 'nicht erreichbar', litertOff: 'nicht erreichbar (optional)', up: 'läuft', loaded: 'geladen: {m}', models: '{n} Modelle', soon: 'Platzhalter', legacy: 'Alte Versionen', foot: 'OFFLINE ZUERST · NICHTS VERLÄSST DIESES GERÄT', noTools: 'Keine Tools gefunden (Server zu alt?)', aChat: 'Chats & Modelle', aTools: 'Tools', empty: 'Hier ist noch nichts.' }
+        en: { sub: 'Your private AI, on your phone.', aChat: 'Chat', aTools: 'Tools', aSetup: 'Set up',
+            soon: 'planned', first: 'No local model found yet. The setup guide takes you from a fresh phone to your first answer.', firstBtn: 'Start the setup guide',
+            ollama: 'Ollama', litert: 'LiteRT-LM', up: 'running', down: 'not reachable', models: '{n} models',
+            gDev: 'Development', gOld: 'Older versions', design: 'Design building blocks', designD: 'Everything the pages are built from.', modes: 'Mode slider (mockup)', modesD: 'Try the new mode switch.',
+            foot: 'By default everything stays on this device. Only if you switch "Allow online" on, the messages of the current chat go to the engine you chose, and nothing else.' },
+        de: { sub: 'Deine private KI, auf deinem Handy.', aChat: 'Chat', aTools: 'Werkzeuge', aSetup: 'Einrichten',
+            soon: 'geplant', first: 'Noch kein lokales Modell gefunden. Die Einrichtung führt dich vom frischen Handy bis zur ersten Antwort.', firstBtn: 'Einrichtung starten',
+            ollama: 'Ollama', litert: 'LiteRT-LM', up: 'läuft', down: 'nicht erreichbar', models: '{n} Modelle',
+            gDev: 'Entwicklung', gOld: 'Ältere Versionen', design: 'Design-Bausteine', designD: 'Alles, woraus die Seiten gebaut sind.', modes: 'Modus-Schieberegler (Mockup)', modesD: 'Den neuen Modus-Schalter ausprobieren.',
+            foot: 'Standardmäßig bleibt alles auf diesem Gerät. Nur wenn du „Online erlauben" einschaltest, gehen die Nachrichten des aktuellen Chats an die gewählte Engine, sonst nichts.' }
     };
-    var AREAS = [{ id: 'chat', k: 'aChat' }, { id: 'tools', k: 'aTools' }];
-    var COL = { blue: '#4285f4', green: '#34a853', red: '#ea4335', yellow: '#fbbc05', gray: '#9aa0a6' };
+    // Logical structure of the hub (data): which tool id sits in which area and group. Unknown tools land in "Tools".
+    var AREAS = [
+        { id: 'chat', k: 'aChat', main: ['heinz'], list: ['chat'], old: ['lab', 'vitals'] },
+        { id: 'tools', k: 'aTools', grid: ['sheet', 'filter', 'scan', 'studio'] },
+        { id: 'setup', k: 'aSetup', list: ['setup', 'models'], extra: [
+            { id: 'design', entry: '/tools/design/index.html', symbol: 'i-layers', k: 'design', kd: 'designD' },
+            { id: 'modes', entry: '/tools/design/modus.html', symbol: 'i-sliders', k: 'modes', kd: 'modesD' }] }
+    ];
     var tools = null, ollama = null, litert = null, area = 'chat';
-    try { var sv = Heinz.lsGet('heinz_hub', {}).area; if (sv === 'chat' || sv === 'tools') area = sv; } catch (e) {}
+    try { var sv = Heinz.lsGet('heinz_hub2', {}).area; if (AREAS.some(function (a) { return a.id === sv; })) area = sv; } catch (e) {}
     function t(k, v) { return Heinz.t(D, k, v); }
-    function safePath(s) { return typeof s === 'string' && /^[\w.\/-]+$/.test(s) && s.indexOf('..') < 0 ? s : ''; }
+    function byId(id) { return (tools || []).filter(function (x) { return x.id === id; })[0]; }
     function sym(x) { return /^i-[a-z-]+$/.test(x.symbol || '') ? x.symbol : 'i-sparkle'; }
+    function ico(x, c) { return '<svg class="i' + (c ? ' ' + c : '') + '"><use href="/lib/icons.svg#' + sym(x) + '"/></svg>'; }
+    function nm(x) { return Heinz.esc(Heinz.pick(x.name)); }
+    function ds(x) { return Heinz.esc(Heinz.pick(x.desc)); }
+    function hero(x) {
+        return '<a class="hero" href="' + Heinz.esc(x.entry) + '" data-tool="' + x.id + '"><span class="tile">' + ico(x, 'lg') + '</span><span><b>' + nm(x) + '</b><small>' + ds(x) + '</small></span></a>';
+    }
     function row(x) {
-        return '<a class="row" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '">' +
-            '<span class="tile"><svg class="i"><use href="/lib/icons.svg#' + sym(x) + '"/></svg></span>' +
-            '<span class="tx"><b>' + Heinz.esc(Heinz.pick(x.name)) + '</b><small>' + Heinz.esc(Heinz.pick(x.desc)) + '</small></span>' +
-            (x.status === 'placeholder' ? '<span class="tag">' + t('soon') + '</span>' : '') +
-            '<svg class="i sm go"><use href="/lib/icons.svg#i-chev-r"/></svg></a>';
+        var soon = x.status === 'placeholder';
+        return '<a class="row' + (soon ? ' soon' : '') + '" href="' + Heinz.esc(x.entry) + '" data-tool="' + x.id + '"><span class="tile">' + ico(x) + '</span><span class="tx"><b>' + nm(x) + '</b><small>' + ds(x) + '</small></span>' +
+            (soon ? '<span class="tag">' + t('soon') + '</span>' : '') + '<svg class="i sm go"><use href="/lib/icons.svg#i-chev-r"/></svg></a>';
     }
     function app(x) {
-        var img = safePath(x.appicon), c = COL[x.color] || 'var(--pri)';
-        return '<a class="app' + (x.status === 'placeholder' ? ' soon' : '') + '" href="' + Heinz.esc(x.entry) + '" data-tool="' + Heinz.esc(x.id) + '" title="' + Heinz.esc(Heinz.pick(x.desc)) + '">' +
-            '<span class="ic">' + (img ? '<img src="/' + Heinz.esc(img) + '" alt="">' : '<svg class="i" style="color:' + c + '"><use href="/lib/icons.svg#' + sym(x) + '"/></svg>') + '</span>' +
-            '<span>' + Heinz.esc(Heinz.pick(x.name)) + '</span></a>';
+        var soon = x.status === 'placeholder';
+        return '<a class="app' + (soon ? ' soon' : '') + '" href="' + Heinz.esc(x.entry) + '" data-tool="' + x.id + '" title="' + ds(x) + '"><span class="ic" style="color:var(--pri)">' + ico(x) + '</span><span>' + nm(x) + '</span></a>' +
+            '';
     }
+    function pick(ids) { return ids.map(byId).filter(Boolean); }
     function render() {
         document.getElementById('sub').textContent = t('sub');
-        document.getElementById('areas').innerHTML = AREAS.map(function (a) {
-            return '<button type="button" class="' + (a.id === area ? 'on' : '') + '" data-area="' + a.id + '">' + t(a.k) + '</button>';
-        }).join('');
-        var tl = document.getElementById('tools'), lg = document.getElementById('legacy'), lh = document.getElementById('legacy-h');
+        document.getElementById('areas').innerHTML = AREAS.map(function (a) { return '<button type="button" class="' + (a.id === area ? 'on' : '') + '" data-area="' + a.id + '">' + t(a.k) + '</button>'; }).join('');
+        var A = AREAS.filter(function (a) { return a.id === area; })[0], h = '';
         if (tools) {
-            var mine = tools.filter(function (x) { return (x.area || 'tools') === area; });
-            var main = mine.filter(function (x) { return !x.legacy; }), old = mine.filter(function (x) { return x.legacy; });
-            if (!main.length) tl.innerHTML = '<p style="color:var(--sub)">' + (tools.length ? t('empty') : t('noTools')) + '</p>';
-            else if (area === 'tools') tl.innerHTML = '<div class="drawer">' + main.map(app).join('') + '</div>';
-            else tl.innerHTML = main.map(row).join('');
-            lg.innerHTML = old.map(row).join('');
-            lh.hidden = !old.length; lh.textContent = t('legacy');
+            if (A.main) h += pick(A.main).map(hero).join('');
+            if (A.list) h += '<div class="sec">' + pick(A.list).map(row).join('') + '</div>';
+            if (A.grid) h += '<div class="grid">' + pick(A.grid).map(app).join('') + '</div>';
+            if (A.extra) h += '<div class="sec"><div class="caps">' + t('gDev') + '</div>' + A.extra.map(function (x) {
+                return '<a class="row" href="' + x.entry + '" data-tool="' + x.id + '"><span class="tile">' + ico(x) + '</span><span class="tx"><b>' + t(x.k) + '</b><small>' + t(x.kd) + '</small></span><svg class="i sm go"><use href="/lib/icons.svg#i-chev-r"/></svg></a>'; }).join('') + '</div>';
+            if (A.old) { var o = pick(A.old); if (o.length) h += '<div class="sec"><div class="caps">' + t('gOld') + '</div>' + o.map(row).join('') + '</div>'; }
         }
-        var ot = document.getElementById('t-ollama');
-        if (ollama) {
-            ot.textContent = 'Ollama ' + (ollama.up ? (ollama.loaded.length ? t('loaded', { m: ollama.loaded.join(', ') }) : t('up') + ' · ' + t('models', { n: ollama.models.length })) : t('ollamaOff'));
-        }
-        if (litert) document.getElementById('t-litert').textContent = 'LiteRT-LM ' + (litert.up ? t('up') : t('litertOff'));
+        document.getElementById('main').innerHTML = h;
+        var st = '';
+        st += '<span class="' + (ollama && ollama.up ? 'up' : '') + '"><i></i>Ollama ' + (ollama ? (ollama.up ? t('up') + ' · ' + t('models', { n: ollama.models.length }) : t('down')) : '…') + '</span>';
+        st += '<span class="' + (litert && litert.up ? 'up' : '') + '"><i></i>LiteRT-LM ' + (litert ? (litert.up ? t('up') : t('down')) : '…') + '</span>';
+        document.getElementById('stat').innerHTML = st;
+        document.getElementById('ring').className = 'ring-btn metal ' + (ollama && ollama.up ? 's-blue' : 's-red');
+        var f = document.getElementById('first');
+        f.innerHTML = (ollama && !ollama.up && !(litert && litert.up)) ? '<div class="notice warn" id="first-n"><span>' + t('first') + '<br><a class="pill acc" href="/tools/setup/index.html">' + t('firstBtn') + '</a></span></div>' : '';
         document.getElementById('foot').textContent = t('foot');
         document.title = 'AIUIheinz';
     }
     document.getElementById('areas').addEventListener('click', function (e) {
         var b = e.target.closest('[data-area]'); if (!b) return;
         area = b.dataset.area;
-        try { var s = Heinz.lsGet('heinz_hub', {}); s.area = area; Heinz.lsSet('heinz_hub', s); } catch (er) {}
+        try { var s = Heinz.lsGet('heinz_hub2', {}); s.area = area; Heinz.lsSet('heinz_hub2', s); } catch (er) {}
         render();
     });
     document.getElementById('theme').onclick = function () { Heinz.setTheme(Heinz.theme === 'auto' ? 'dk' : Heinz.theme === 'dk' ? 'lt' : 'auto'); };
-    var lb = document.getElementById('lang-btn');
-    lb.onclick = Heinz.toggleLang;
+    var lb = document.getElementById('lang-btn'); lb.onclick = Heinz.toggleLang;
     function lbPaint() { Array.prototype.forEach.call(lb.querySelectorAll('span'), function (s) { s.classList.toggle('active', s.getAttribute('data-l') === Heinz.lang); }); document.documentElement.lang = Heinz.lang; }
     Heinz.onLang(function () { lbPaint(); render(); });
+    Heinz.ringLogo(document.getElementById('ring-logo'));
     lbPaint(); render();
     fetch('/api/tools').then(function (r) { return r.json(); }).then(function (j) { tools = j.tools || []; render(); }).catch(function () { tools = []; render(); });
-    function poll() {
-        Heinz.pingOllama().then(function (r) { ollama = r; render(); });
-        Heinz.pingLiteRT().then(function (r) { litert = r; render(); });
-    }
+    function poll() { Heinz.pingOllama().then(function (r) { ollama = r; render(); }); Heinz.pingLiteRT().then(function (r) { litert = r; render(); }); }
+    fetch('/api/ping').then(function (r) { return r.json(); }).then(function (j) {
+        var a = j && j.app || {}, p = [];
+        if (a.version) p.push('v' + a.version); if (a.commit) p.push(a.commit); if (a.date) p.push(String(a.date).slice(0, 16));
+        document.getElementById('ver').textContent = p.length ? p.join(' · ') : '';
+    }).catch(function () {});
     poll(); setInterval(poll, 8000);
 })();
 </script>

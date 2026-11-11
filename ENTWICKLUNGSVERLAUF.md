@@ -538,3 +538,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `tools/heinz/index.html`: `PV.chat` bekommt `options: Heinz.ollamaOptions(S.provider, S.model)`. Cloud, LiteRT-LM und eigene OpenAI-Engines senden nichts Neues.
 - Tests: 3 neue (Wert 2 im Request, Standard 4 und bei 0 nichts, andere Engines `{}`); Mutation (Zeile entfernt) erkannt. 112 Seitentests und Servertests grün, nur simuliert. Am Gerät nicht gemessen; Messwert nach dem Handytest in `docs/OLLAMA_UND_MODELLE.md` eintragen.
 - Nebenbefund (nicht gebaut, gehört in den Design-Strang): Cursor im Heinz Chat blau-violett, Farbe offen.
+
+## 11.11.2026 – Neuer Hub wird Startseite (Chat „AIUIheinz-Fix-Threads“, Freigabe des Entwicklers 12:28)
+- Anlass: Nach dem Update in der App kam weiter der alte Hub, weil der neue als `hub.html` nur ein Entwurf war. Folge: Stände (Heinz Chat, Setup) waren in der App nicht erreichbar, der Ablauf „ändern, in der App aktualisieren, prüfen“ brach.
+- `hub.html` (neuer Hub) ist jetzt `index.html`, der alte Hub ist entfernt (Git-Verlauf). `hub.html` bleibt als reine Weiterleitung auf `/`, damit alte Verweise gehen. Der neue Hub bekam Manifest, Icon und Apple-Touch-Icon des alten (Installierbarkeit), Ring und Zurück-Pfeile zeigen auf `/`.
+- Neu: Versionszeile unten im Hub aus `/api/ping` (`v1.0 · Commit · Datum`), damit man nach dem Update sofort sieht, welcher Stand läuft.
+- Tests: Hub-Tests auf den neuen Hub umgestellt, neu: Startseite ist der neue Hub und `/hub.html` leitet weiter, Versionszeile. 114 Seitentests grün, nur simuliert, am Gerät nicht geprüft.
+- Regel künftig: Neue Seiten und Tools müssen in diesem Hub (Bereiche in `AREAS`) oder per `tool.json` erreichbar sein, sonst gibt es sie für den Entwickler nicht.
