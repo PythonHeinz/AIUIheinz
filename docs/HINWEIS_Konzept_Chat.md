@@ -15,8 +15,8 @@ Stand nach Handytests am Pixel 9 Pro (Google AI Studio, `gemini-3.8-flash`). All
 ## 3 Verhalten, das erhalten bleiben soll
 - Standard offline. Online aus fällt auf Ollama zurück; Online wieder an wechselt nicht von selbst zurück zur Cloud-Engine. Ein gewähltes Modell bleibt je Engine gewählt.
 
-## 4 Offene Entwurfsfrage: Export
-Der Knopf „Werte kopieren“ wurde zum Testprotokoll (Parameter, Fähigkeiten, letzte Anfrage, rohes `usage`, Zeiten) und gibt vor und nach einer Antwort Unterschiedliches aus. Vorschlag steht im Chat; Umsetzung nach Freigabe: Protokoll als Aktion an der letzten Antwort (Momentaufnahme zum Sendezeitpunkt), „Parameter kopieren“ in den Einstellungen nur noch die Kopfparameter.
+## 4 Export (umgesetzt 11.11.2026, vom Entwickler beschlossen)
+Unter **jeder** Antwort der laufenden Sitzung steht ein Knopf „Testprotokoll dieser Antwort kopieren“ (Momentaufnahme zum Sendezeitpunkt: Parameter, Fähigkeiten, gesendeter Body ohne Nachrichtentext und Schlüssel, rohes `usage`, Zeiten, bei Fehlern Status und Meldung). Nach dem Neuladen oder Laden eines gespeicherten Chats gibt es für alte Antworten kein Protokoll mehr. „Parameter kopieren“ in den Einstellungen liefert nur noch Kopfparameter und Modelfile.
 
 ## 5 Weiteres, noch nicht gebaut
 `heinz.sh` (Server starten und stoppen), Überarbeitung des Schnellmodus (reiner Text, eigene Token-Grenze), API-Vorlagen mit Hilfetexten, `top_k` erst mit der nativen Anfrage wirksam.

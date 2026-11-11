@@ -143,6 +143,12 @@ class PageTest(unittest.TestCase):
         page.click("#model-chip")
         page.click('#model-list [data-model="%s"]' % name)
 
+    def proto(self, page, index=-1):
+        """text of the test log under the answer with this index (default: the last one)"""
+        page.evaluate("window.copyText = function (t) { window.__proto = t; return Promise.resolve(); }")
+        page.evaluate("i => { const b = document.querySelectorAll('.msg-assistant .msg-proto'); b[i < 0 ? b.length + i : i].click(); }", index)
+        return page.evaluate("window.__proto")
+
     def send(self, page, text):
         page.fill("#query", text)
         page.click("#send-btn")
@@ -899,7 +905,7 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.is_hidden("#m-think"))
         self.assertEqual(page.inner_text("#dash-think"), "40")
         self.assertEqual(page.inner_text("#dash-a-tok"), "7", "output tokens are not reduced by thinking tokens")
-        txt = page.evaluate("paramsText()")
+        txt = self.proto(page)
         self.assertIn("reasoningTokens 40", txt)
         self.assertIn("not comparable", txt)
         self.assertIn("frequency_penalty: error", txt)
@@ -970,7 +976,8 @@ class PageTest(unittest.TestCase):
         sheet = page.text_content("#model-list")
         self.assertIn("1M", sheet)
         self.assertIn("thinking", sheet)
-        self.assertIn("inputTokenLimit 1048576", page.evaluate("paramsText()"))
+        self.send(page, "Hi")
+        self.assertIn("inputTokenLimit 1048576", self.proto(page))
         # counter test: another engine never asks Google for its list
         n = len(g.native_calls)
         page.evaluate("switchProvider('ollama')"); page.wait_for_timeout(200)
@@ -1020,7 +1027,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzProviders.setKey('custom', 'AIza-secret')")
         page.evaluate("document.getElementById('param-temp').value = 0.3; onSlider()")
         self.send(page, "Hi")
-        txt = page.evaluate("paramsText()")
+        txt = self.proto(page)
         self.assertIn("Last request (custom, HTTP 200)", txt)
         self.assertIn('"temperature":0.3', txt)
         self.assertIn('"reasoning_tokens":5', txt)
@@ -1044,11 +1051,34 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.is_hidden("#m-think"))
         self.assertEqual(page.inner_text("#dash-think"), "~" + str(5000 - 21 - 7))
         self.assertEqual(page.inner_text("#dash-a-tok"), "7", "output stays as reported")
-        self.assertIn("derived", page.evaluate("paramsText()"))
+        self.assertIn("derived", self.proto(page))
         # counter test: total equals prompt + output, so no thinking tokens appear
         page2, _ = self.google_page("gemini-3-flash", total=28)
         self.send(page2, "Hi")
         self.assertTrue(page2.is_hidden("#m-think"))
+
+    def test_every_answer_has_its_own_test_log_taken_at_send_time_and_copy_values_has_no_log(self):
+        page, g = self.google_page("gemini-3-flash")
+        page.evaluate("document.getElementById('param-temp').value = 0.3; onSlider()")
+        self.send(page, "first")
+        page.evaluate("document.getElementById('param-temp').value = 0.9; onSlider()")
+        self.send(page, "second")
+        self.assertIn("temperature 0.3", self.proto(page, 0), "older answer keeps the values it was sent with")
+        self.assertIn("temperature 0.9", self.proto(page, 1))
+        self.assertIn('"temperature":0.3', self.proto(page, 0))
+        # the settings button no longer carries a log (counter test)
+        txt = page.evaluate("paramsText()")
+        self.assertNotIn("Last request", txt)
+        self.assertNotIn("Capabilities", txt)
+        self.assertIn("PARAMETER temperature 0.9", txt)
+
+    def test_test_log_of_a_failed_request_contains_status_and_error(self):
+        page, g = self.google_page("gemini-3-flash")
+        g.status = 400
+        self.send(page, "Hi")
+        txt = self.proto(page)
+        self.assertIn("HTTP 400", txt)
+        self.assertIn("Error:", txt)
 
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
