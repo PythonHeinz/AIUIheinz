@@ -75,6 +75,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         <input class="inp" id="free" type="text" hidden>
         <div class="swr"><span class="tx" id="onl-t"></span><span class="sw"><input type="checkbox" id="onl"><i></i></span></div>
         <p class="hint" id="onl-h"></p>
+        <p class="hint" id="rt-h"></p>
     </div>
 </section>
 <section class="bsheet" id="sh-hist" aria-label="Chats">
@@ -87,10 +88,10 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 (function () {
     var PV = HeinzProviders;
     var D = {
-        en: { stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
+        en: { rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the test bench, per model)', rtDef: 'default', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
             local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
             reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the test bench under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
-        de: { stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
+        de: { rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Prüfstand, je Modell)', rtDef: 'Standard', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
             local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
             reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Prüfstand unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
     };
@@ -191,8 +192,14 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 
     // ---- model sheet ----
     function engineOk(p) { return p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(p.id))); }
+    // what this chat sends to Ollama for the chosen model (same rule and same stored values as the test bench; kept on the test bench page)
+    function runtimeNote() {
+        var r = PV.runtime(S.provider, S.model), o = r.options, el = $('rt-h');
+        if (!S.model || !r.keepAlive) { el.textContent = ''; return; }
+        el.textContent = t('rtH', { n: o.num_thread || t('rtDef'), c: o.num_ctx || t('rtDef'), k: r.keepAlive });
+    }
     function renderSheet() {
-        $('sm-h').textContent = t('model'); $('onl-t').textContent = t('onl'); $('onl-h').textContent = t('onlH'); $('onl').checked = PV.onlineAllowed();
+        $('sm-h').textContent = t('model'); $('onl-t').textContent = t('onl'); $('onl-h').textContent = t('onlH'); $('onl').checked = PV.onlineAllowed(); runtimeNote();
         var ps = PV.list().filter(engineOk);
         if (!ps.some(function (p) { return p.id === S.provider; })) { S.provider = 'ollama'; }
         $('eng').innerHTML = ps.map(function (p) { return '<button type="button" class="pill' + (p.id === S.provider ? ' on' : '') + '" data-eng="' + esc(p.id) + '">' + esc(p.name) + '</button>'; }).join('');

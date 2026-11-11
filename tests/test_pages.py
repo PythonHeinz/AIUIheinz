@@ -2285,6 +2285,24 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('ring').classList.contains('s-red')", timeout=15000)
         self.assertEqual(page.evaluate("document.getElementById('mod-dot')"), None, "the old dot is gone")
 
+    def test_slim_chat_model_sheet_shows_what_it_sends_to_ollama(self):
+        page = self.new_page()
+        FakeOllama(page)
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}, params: {ctx: 6144}}))")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        txt = page.inner_text("#rt-h")
+        self.assertIn("threads 2", txt)
+        self.assertIn("context 6144", txt)
+        self.assertIn("30m", txt)
+        # another model has its own thread value: the default 4
+        page.click("[data-model='qwen2.5:3b']")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        self.assertIn("threads 4", page.inner_text("#rt-h"))
+
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
         FakeOllama(page, status=500)

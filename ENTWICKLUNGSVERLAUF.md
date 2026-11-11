@@ -568,3 +568,4 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 11.11.2026 – Auftrag Bausteinkatalog in AUFTRAG_Menu.md (Chat „AIUIheinz“, nur Doku)
 - Anlass (Entwickler): Weitere Seiten und der Chat-Ausbau sollen die vorhandenen Bausteine (Schalter, Pillen, Felder, Blätter) wiederverwenden, damit weniger umgebaut werden muss. `docs/AUFTRAG_Menu.md` hat jetzt „Phase 0: Bausteinkatalog“ vor dem Menü (Katalogseite `tools/design/index.html`, Verhalten nach `lib/core.js`, Regel „erst im Katalog nachsehen“, Tests). Nichts gebaut.
 - (11.11.2026) Gegenprobe am Handy: Oberfläche und `ollama run` liefern dieselbe Geschwindigkeit; Messwerte in `docs/OLLAMA_UND_MODELLE.md` („Gegenprobe Oberfläche gegen Ollama pur“). Nur Doku.
+- (11.11.2026) Heinz Chat: Modellblatt zeigt, was an Ollama gesendet wird (Threads, Kontext, Haltezeit; Werte aus dem Prüfstand), damit Abweichungen zum Prüfstand sichtbar sind. 1 Test.
