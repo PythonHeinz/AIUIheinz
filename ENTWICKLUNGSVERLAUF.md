@@ -564,3 +564,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html` (Prüfstand): `checkServer` ruft nur noch `PV.status`; Anzeige und Texte wie vorher.
 - `tools/heinz/index.html` (Heinz Chat): Der Pfeil zurück ist jetzt der Ring mit dem Heinz-Logo (Link zum Hub, Farbe = Status, Tooltip = Klartext); der Punkt vor dem Modellnamen entfällt. Prüfung alle 5 Sekunden und bei Modellwechsel und nach jeder Antwort; während des Sendens blau „Denkt nach …“, ab dem ersten Wort grün „Antwortet“.
 - Tests: 2 neue (Statuscodes und Farben für alle Engine-Arten inklusive Gegenfall Engine nicht erreichbar, Ring im Chat: blau, orange bei anderem Modell, blau beim Denken, rot bei ausgefallener Engine); Mutation (Modell immer „geladen“) erkannt. Nur simuliert, nicht am Gerät.
+
+## 11.11.2026 – Auftrag Bausteinkatalog in AUFTRAG_Menu.md (Chat „AIUIheinz“, nur Doku)
+- Anlass (Entwickler): Weitere Seiten und der Chat-Ausbau sollen die vorhandenen Bausteine (Schalter, Pillen, Felder, Blätter) wiederverwenden, damit weniger umgebaut werden muss. `docs/AUFTRAG_Menu.md` hat jetzt „Phase 0: Bausteinkatalog“ vor dem Menü (Katalogseite `tools/design/index.html`, Verhalten nach `lib/core.js`, Regel „erst im Katalog nachsehen“, Tests). Nichts gebaut.

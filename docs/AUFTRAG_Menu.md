@@ -8,6 +8,15 @@ Das Einstellungsmenü der Prüfstand-Seite (`chat.html`, heute Seitenblatt von r
 ## Vor dem Start lesen
 `STAND.md`, `UEBERGABE.md`, `docs/DESIGN.md`, `docs/DESIGN_DR2.md` (Zonen, Bausteine, Entscheidungen), `docs/AUFTRAG_Modi.md`, `lib/core.css` (`.bsheet`, `.notice`, `.step`, `.cmd`).
 
+## Phase 0: Bausteinkatalog (zuerst, Auftrag des Entwicklers 11.11.2026 13:25)
+Anlass: Immer mehr Seiten (Heinz Chat, Setup, Menü, später Scan und Studio) brauchen dieselben Schalter, Pillen, Felder und Blätter. Der Katalog soll die Arbeit beschleunigen und Designänderungen vermeiden. Das Menü braucht die meisten Bausteine und ist der erste Nutzer, daher gehört Phase 0 in diesen Strang (ein Chat im Fundament).
+1. **Katalogseite:** `tools/design/index.html` zeigt jeden Baustein aus `lib/core.css` (`.sw`, `.pill`, `.round`, `.ibtn`, `.row` mit `.tile`, `.slidercard`, `.notice`, `.step`, `.cmd`, `.bsheet`, `.sheet`, `.sel-pop`, `.status`/`.led`, `.caps`, `.card`, Eingabefeld) mit Klassenname, kurzer Verwendung und kopierbarem Beispiel, in beiden Themes, EN und DE. Alles, was in `chat.html` nur inline steht und wiederkehrt, wird zum benannten Baustein in `lib/core.css` (Verhalten der Seite bleibt gleich).
+2. **Verhalten nach `lib/`:** Wiederkehrende Teile als kleine Funktionen in `lib/core.js`, nicht in den Seiten: Schalter mit Speicherung, Blatt öffnen und schließen (`Heinz.sheetOpen` gibt es), Auswahlliste mit Filter, Regler mit Wertanzeige und Zustandsmarke (wirkt, ungeklärt, gesperrt, nur lokal; Legende). Zuerst prüfen, was schon da ist (`Heinz.sheetOpen`, `.sel-pop`), nichts doppelt bauen.
+3. **Regel für alle Seiten** in `UEBERGABE.md` (Designregeln) und `docs/DESIGN.md` 7: Erst im Katalog nachsehen; nur bei echter Lücke einen neuen Baustein anlegen und ihn im Katalog nachtragen. Eigene Varianten auf einer Seite sind zu vermeiden.
+4. **Tests:** Katalogseite lädt ohne Konsolenfehler, jede dort genannte Klasse existiert in `lib/core.css`, jedes benutzte Symbol im Sprite; Geometrie 426 × 803. Mutation: Klasse aus der CSS entfernen, Test wird rot.
+5. **Danach** das Menü (Aufgaben unten) mit den Bausteinen aus dem Katalog.
+- Grenzen: `lib/providers.js` und Engine-Aufrufe gehören dem Chat-Strang (bis dessen Bibliotheksarbeit fertig ist, nicht anfassen); nur `lib/core.css`, `lib/core.js`, `lib/icons.svg`, `tools/design/index.html`. Vor dem Start „Aktive Arbeit“ lesen und eigene Zeile eintragen.
+
 ## Gliederung (Vorschlag, mit dem Entwickler abstimmen)
 - **Jetzt** (oben, ein Tipp): Engine und Modell, Modus, Schnell | Tief, „Online erlauben“.
 - **Messen**: Tempo-Test, Testreihe, Parameter (Modell | Modus | Meine), Prompts.
