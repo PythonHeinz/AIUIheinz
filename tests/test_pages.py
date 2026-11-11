@@ -2130,6 +2130,38 @@ class PageTest(unittest.TestCase):
         self.assertEqual(self.errors, [])
         self.assertEqual(self.external, [])
 
+    def _slim_send_options(self, settings_js):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.add_init_script(settings_js)
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.fill("#q", "Hi")
+        page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        return fake.requests[-1], page
+
+    def test_slim_chat_sends_num_thread_like_the_test_bench(self):
+        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 2}}))")
+        self.assertEqual(req.get("options", {}).get("num_thread"), 2)
+
+    def test_slim_chat_uses_default_threads_when_none_saved_and_none_for_zero(self):
+        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({}))")
+        self.assertEqual(req.get("options", {}).get("num_thread"), 4)
+        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 0}}))")
+        self.assertNotIn("num_thread", req.get("options", {}))
+
+    def test_slim_chat_sends_no_threads_for_other_engines(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.evaluate("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'m': 3}}))")
+        self.assertEqual(page.evaluate("Heinz.ollamaOptions('ollama','m')"), {"num_thread": 3})
+        for prov in ("litert", "google-native", "openai", "custom"):
+            self.assertEqual(page.evaluate("p => Heinz.ollamaOptions(p, 'm')", prov), {})
+
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
         FakeOllama(page, status=500)

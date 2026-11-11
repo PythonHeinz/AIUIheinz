@@ -531,3 +531,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 
 ## 11.11.2026 – Repo-Adresse (Chat „AIUIheinz“, nur Doku)
 - GitHub meldet beim Push „This repository moved“: maßgeblich ist `https://github.com/PythonHeinz/AIUIheinz.git`. In `UEBERGABE.md` (Quellen & Start) vermerkt, dazu der Befehl `git remote set-url origin …` für alte Klone (Termux, Container). Projekt-Briefing um das Dokument `claude/repo-adresse.md` ergänzt.
+
+## 11.11.2026 – Fix Threads (Chat „AIUIheinz-Fix-Threads“)
+- Befund des Entwicklers: Prüfstand mit Threads 0 ist langsam wie der Heinz Chat; bestätigt die Vermutung aus `docs/AUFTRAG_Fix_Threads.md` (Heinz Chat sendete kein `num_thread`).
+- `lib/core.js`: neue gemeinsame Hilfen `Heinz.threadsFor(model)` (liest `heinz_settings.threads[Modell]`, gültig 0 bis 8, fehlend = 4 wie im Prüfstand) und `Heinz.ollamaOptions(provider, model)` (nur bei Ollama und Wert über 0 `{ num_thread }`, sonst `{}`). `chat.html` bleibt unberührt.
+- `tools/heinz/index.html`: `PV.chat` bekommt `options: Heinz.ollamaOptions(S.provider, S.model)`. Cloud, LiteRT-LM und eigene OpenAI-Engines senden nichts Neues.
+- Tests: 3 neue (Wert 2 im Request, Standard 4 und bei 0 nichts, andere Engines `{}`); Mutation (Zeile entfernt) erkannt. 112 Seitentests und Servertests grün, nur simuliert. Am Gerät nicht gemessen; Messwert nach dem Handytest in `docs/OLLAMA_UND_MODELLE.md` eintragen.
+- Nebenbefund (nicht gebaut, gehört in den Design-Strang): Cursor im Heinz Chat blau-violett, Farbe offen.
