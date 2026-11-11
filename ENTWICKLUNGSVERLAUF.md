@@ -607,3 +607,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html`: Die gemeinsame Wahl wird erst übernommen, wenn die echte Liste von der Engine da ist (`modelsReal`); nach der Übernahme werden gespeicherte Regler und Vorladen für das neue Modell angewendet. Vor der Übernahme schreibt der Prüfstand die gemeinsame Wahl nicht mehr zurück.
 - Test: 1 neuer (Modell nur in der echten Liste wird übernommen, gemeinsame Wahl bleibt erhalten); Mutation erkannt. Nur simuliert.
 - Offen (Vermutung, nicht gemessen): Im Chat kommt nach Prüfstand-Nachrichten keine Antwort innerhalb einer Minute. Wahrscheinlich liest Ollama den langen Chat-Verlauf komplett neu, weil Prüfstand-Anfragen den Zwischenspeicher ersetzen. Test am Handy: neuer, leerer Chat (+).
+
+## 11.11.2026 – Heinz Chat bietet keine Persona-Modelle an (Chat „AIUIheinz-Chat“)
+- Beschluss des Entwicklers: `heinz-fakt:latest` und `heinz-wilson:latest` (Persona und Stichprobenwerte im Modelfile, nur für die alte Heinz UI angelegt) widersprechen dem Konzept für Ton und native Modelleinstellungen und sollen im neuen Chat nicht wählbar sein. Gelesene Modelfiles: `heinz-wilson` Gemma-Vorlage, Survival-Persona, Temp 0,4, Top-P 0,8; `heinz-fakt` Qwen-Vorlage, Straßensprache mit vier Beispielen, Temp 0,2, Top-K 20, Top-P 0,4, Stoppwörter „Als KI“ und „As an AI“.
+- `tools/heinz/index.html`: Namen mit `heinz-` werden für Ollama aus der Modellliste gefiltert; ist ein solches Modell gewählt (z. B. vom Prüfstand übernommen), nimmt der Chat das erste verbleibende. In Ollama und im Prüfstand ändert sich nichts.
+- `docs/LOKALE_MODELLE.md`: neue Regel 9. Test: 1 neuer. Nur simuliert.

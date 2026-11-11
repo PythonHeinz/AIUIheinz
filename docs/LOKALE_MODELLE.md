@@ -12,7 +12,8 @@ Stand 11.11.2026, Beschluss des Entwicklers. Hintergrund: Es hat mehrere Tage ge
 6. **Seite verlassen bricht die laufende Anfrage ab.** `HeinzProviders.chat` bricht bei `pagehide` die Anfrage selbst ab, die Engine hört auf zu rechnen. Die nächste Seite findet das Modell frei und geladen vor. Eigene Seiten brauchen dafür nichts zu tun, sie dürfen `HeinzProviders.chat` nur nicht umgehen.
 7. **Verbindungsstatus über `HeinzProviders.status`.** Ring-Farben und ihre Bedeutung stehen in `lib/providers.js` (rot, gelb, orange, blau), keine eigene Statuslogik.
 8. **Der Chat schickt keinen Modus.** Der Prüfstand testet Modelle (Modus, Systemprompt, Regler). Der Heinz Chat schickt nur den Gesprächsverlauf, ohne Systemprompt, und übernimmt vom Prüfstand nur die Laufzeitwerte pro Modell.
-9. **Diagnose:** Das Modellblatt im Heinz Chat zeigt, was Prüfstand und Chat zuletzt an Ollama gesendet haben. Stehen dort unterschiedliche Threads oder Kontextwerte, ist das die Fehlerquelle. `ollama ps` am Handy zeigt, ob das Modell geladen bleibt (gleiche ID, Zeitanzeige „UNTIL“).
+9. **Keine Persona-Modelle im Heinz Chat.** Modelle mit Persona im Modelfile (`heinz-fakt`, `heinz-wilson`, allgemein alles, was mit `heinz-` beginnt) gehören zur alten Heinz UI und zum Prüfstand. Der Chat bietet sie nicht an: Ton und Verhalten kommen vom Modell selbst (native Einstellungen), und der lange Persona-Prompt (bei `heinz-fakt` rund 340 Token, etwa 11 s Lesezeit) bremst jede Anfrage. Beschluss des Entwicklers 11.11.2026. Neue Chat-Seiten halten es genauso.
+10. **Diagnose:** Das Modellblatt im Heinz Chat zeigt, was Prüfstand und Chat zuletzt an Ollama gesendet haben. Stehen dort unterschiedliche Threads oder Kontextwerte, ist das die Fehlerquelle. `ollama ps` am Handy zeigt, ob das Modell geladen bleibt (gleiche ID, Zeitanzeige „UNTIL“).
 
 ## Neue Chat-Seite in fünf Zeilen
 ```js

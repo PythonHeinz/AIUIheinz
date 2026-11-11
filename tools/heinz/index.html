@@ -231,8 +231,13 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         PV.models(id).then(function (l) {
             if (S.provider !== id) return;
             modelsList = (l || []).map(function (m) { return typeof m === 'string' ? m : (m.id || m.name || ''); }).filter(Boolean);
+            // Own persona models (heinz-fakt, heinz-wilson: system prompt and sampling in the Modelfile) belong to the old Heinz UI and the test bench;
+            // the chat is a plain conversation with a plain model, so they are not offered here.
+            if (id === 'ollama') modelsList = modelsList.filter(function (m) { return !/^heinz-/.test(m); });
             modelsFor = id;
-            if (!S.model || (modelsList.length && modelsList.indexOf(S.model) < 0 && id === 'ollama')) { S.model = modelsList[0] || S.model; save(); }
+            if (!S.model || (modelsList.length && modelsList.indexOf(S.model) < 0 && id === 'ollama')) {
+                S.model = modelsList[0] || S.model; save();
+            }
             head(); renderSheet(); renderLog(gen);
         }, function () { if (S.provider !== id) return; modelsList = []; modelsFor = id; renderSheet(); });
     }

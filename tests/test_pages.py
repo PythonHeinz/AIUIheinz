@@ -2410,16 +2410,28 @@ class PageTest(unittest.TestCase):
         self.assertEqual(res, "AbortError:true", "pagehide aborts the open request at once")
 
     def test_bench_takes_over_a_chat_model_that_only_the_real_model_list_knows(self):
-        # heinz-fakt:latest is not in the bench's fallback list; the first fill happens with that list and must not discard the chat's choice
+        # llama3.2:3b is not in the bench's fallback list; the first fill happens with that list and must not discard the chat's choice
         page = self.new_page()
-        FakeOllama(page, tags=("gemma2:2b", "qwen2.5:3b", "heinz-fakt:latest"))
-        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
+        FakeOllama(page, tags=("gemma2:2b", "qwen2.5:3b", "llama3.2:3b"))
+        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'llama3.2:3b'}))")
         page.goto(self.srv.base + "/chat.html")
-        page.wait_for_function("document.getElementById('model-select').value === 'heinz-fakt:latest'", timeout=15000)
+        page.wait_for_function("document.getElementById('model-select').value === 'llama3.2:3b'", timeout=15000)
         page.wait_for_timeout(800)
-        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "heinz-fakt:latest", "the shared choice is not overwritten")
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "llama3.2:3b", "the shared choice is not overwritten")
         page.goto(self.srv.base + "/tools/heinz/index.html")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('heinz-fakt:latest') >= 0", timeout=15000)
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('llama3.2:3b') >= 0", timeout=15000)
+
+    def test_slim_chat_does_not_offer_the_persona_models(self):
+        page = self.new_page()
+        FakeOllama(page, tags=("heinz-fakt:latest", "heinz-wilson:latest", "gemma2:2b", "qwen2.5:3b"))
+        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)   # persona model from the bench is replaced
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.wait_for_selector("#models [data-model]")
+        rows = page.eval_on_selector_all("#models [data-model]", "els => els.map(e => e.dataset.model)")
+        self.assertEqual(sorted(rows), ["gemma2:2b", "qwen2.5:3b"])
 
     def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
         page = self.new_page()
