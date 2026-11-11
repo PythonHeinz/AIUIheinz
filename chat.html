@@ -3097,6 +3097,8 @@
             settings.useDefault = !!s.useDefault;
             settings.modesOnly = !!s.modesOnly;
             settings.sysSrc = s.sysSrc === 'own' || s.sysSrc === 'model' ? s.sysSrc : (s.ownSystem ? 'model' : 'mode');
+            // Einmalig: Die Persona steckt nicht mehr im Modell (Regel 9). Ein früher gesetztes „Modell-Systemprompt“ würde Wilson/Heinz stumm schalten.
+            if (!s.personasExternal) { if (settings.sysSrc === 'model') settings.sysSrc = 'mode'; settings.personasExternal = true; }
             settings.ownSystem = settings.sysSrc === 'model'; settings.ownPrompt = typeof s.ownPrompt === 'string' ? s.ownPrompt : '';
             settings.preload = s.preload !== false;
             settings.fast = !!s.fast;

@@ -635,3 +635,8 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `chat.html` (`updateModeUI`): Das Preset-Modell wird nur noch gesetzt, wenn das gewählte Modell fehlt (Vorschlag); sonst bleibt die Wahl.
 - Befund am Handy: Im Screenshot „In 36“ Token im Heinz-Modus zeigt, dass dort noch die Fassung vor den Personas lief (Persona-Prompt rund 340 Token); nach `git pull` und Neuladen soll „In“ bei rund 350 liegen.
 - Tests: 2 neue/umgebaute (Modus behält Modell in allen fünf Modi und die gemeinsame Wahl; Preset nur Vorschlag bei fehlendem Modell); frühere Tests auf explizite Modellwahl angepasst. Nur simuliert.
+
+## 2026-11-11 – Prüfstand: altes „Modell-Systemprompt“ wird einmalig zurückgesetzt (AIUIheinz-Chat)
+- Handytest: Heinz-Modus mit nativem Qwen antwortete „no“, „In 36“. Ursache: gespeichertes `sysSrc: 'model'` (früher für heinz-fakt nötig) → keine Systemnachricht, Persona fehlt.
+- Fix: einmalige Migration beim Start (`personasExternal` in `heinz_settings`): `sysSrc 'model'` → `'mode'`. Spätere bewusste Wahl bleibt erhalten.
+- Test: `test_old_model_system_setting_is_reset_once_so_the_persona_is_sent` (simuliert; Gerätetest steht aus).

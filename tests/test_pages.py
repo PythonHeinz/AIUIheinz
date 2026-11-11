@@ -314,6 +314,20 @@ class PageTest(unittest.TestCase):
             self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", mode)
         self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "qwen2.5:3b", "the shared choice is not changed by a mode click")
 
+    def test_old_model_system_setting_is_reset_once_so_the_persona_is_sent(self):
+        page = self.new_page(tags=("gemma2:2b", "qwen2.5:3b", self.HF))
+        page.add_init_script("if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('heinz_settings', JSON.stringify({model: 'qwen2.5:3b', mode: 'heinz', sysSrc: 'model', ownSystem: true})); }")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.assertEqual(page.evaluate("settings.sysSrc"), "mode")
+        self.send(page, "Hey")
+        self.assertEqual(self.ollama.requests[0]["messages"][0]["role"], "system")
+        self.assertIn("Digger", self.ollama.requests[0]["messages"][0]["content"])
+        page.evaluate("settings.sysSrc = 'model'; saveSettings()")
+        page.reload()
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.assertEqual(page.evaluate("settings.sysSrc"), "model", "a deliberate choice afterwards is kept")
+
     def test_wilson_mode_sends_the_persona_with_its_sampling_to_the_native_gemma(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
