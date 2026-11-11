@@ -2519,6 +2519,46 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', null)")
         self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), default)
 
+    def test_apply_to_chat_hands_prompt_and_values_of_the_bench_mode_to_the_chat(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=heinz]")
+        page.evaluate("setParamSrc('mode')")
+        self.assertTrue(page.is_visible("#to-chat") or page.locator("#to-chat").count() == 1)
+        page.evaluate("document.getElementById('to-chat').click()")
+        self.assertIn("gemma2:2b", page.text_content("#to-chat-sub"))
+        self.assertTrue(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')").startswith("You are Heinz"))
+        self.assertNotIn("Respond in English", page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "the answer-language sentence stays in the bench")
+        smp = page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')")
+        self.assertEqual((smp["temperature"], smp["top_p"], smp["top_k"]), (0.2, 0.4, 20))
+        self.assertEqual(smp["stop"], ["Als KI", "As an AI"])
+        self.assertNotIn("num_ctx", smp); self.assertNotIn("num_thread", smp); self.assertNotIn("num_predict", smp)
+        # the chat sends exactly that, plus the shared runtime values
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        body = self.ollama.requests[-1]
+        self.assertTrue(body["messages"][0]["content"].startswith("You are Heinz"))
+        self.assertEqual((body["options"]["temperature"], body["options"]["top_p"], body["options"]["top_k"]), (0.2, 0.4, 20))
+        self.assertEqual(body["options"]["stop"], ["Als KI", "As an AI"])
+        self.assertIn("num_ctx", body["options"])
+        # the chat shows the values and can drop them
+        page.click("#mod"); page.wait_for_selector("#sh-model.open")
+        self.assertIn("T 0.2", page.inner_text("#smp-h"))
+        page.click("#smp-reset")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
+        self.assertTrue(page.is_hidden("#smp-reset"))
+
+    def test_apply_to_chat_with_model_defaults_clears_the_sampling_values(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("HeinzProviders.setChatSampling('gemma2:2b', {temperature: 0.9})")
+        page.evaluate("settings.useDefault = true; applyToChat()")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
+
     def test_chat_adds_the_system_text_once_and_only_when_the_messages_have_none(self):
         page = self.new_page()
         fake = FakeOllama(page)

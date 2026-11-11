@@ -640,3 +640,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Handytest: Heinz-Modus mit nativem Qwen antwortete „no“, „In 36“. Ursache: gespeichertes `sysSrc: 'model'` (früher für heinz-fakt nötig) → keine Systemnachricht, Persona fehlt.
 - Fix: einmalige Migration beim Start (`personasExternal` in `heinz_settings`): `sysSrc 'model'` → `'mode'`. Spätere bewusste Wahl bleibt erhalten.
 - Test: `test_old_model_system_setting_is_reset_once_so_the_persona_is_sent` (simuliert; Gerätetest steht aus).
+
+## 2026-11-11 – Prüfstand: „In den Chat übernehmen“ (AIUIheinz-Chat)
+- Zweck laut Auftrag: Im Prüfstand ein Modell testen und parametrieren, dann den Chat damit bereitstellen.
+- Neu: Einstellungen des Prüfstands, Gruppe „Heinz Chat“, Zeile „In den Chat übernehmen“ (`applyToChat()`). Schreibt für das gewählte Ollama-Modell (1) den Systemprompt in `heinz_chat_system` (Modus-Prompt ohne den Antwortsprache-Satz; „Mine“ = eigener Prompt; „Model“ = leer) und (2) die Sampling-Werte Temperatur, Top-P, Top-K, Stop in den neuen Schlüssel `heinz_chat_options` (`PV.setChatSampling`). Threads und Kontext teilen beide Seiten ohnehin über `PV.runtime`.
+- Heinz Chat sendet `PV.chatSamplingFor(modell)` zusätzlich zu den Laufzeitwerten; Modellblatt zeigt die übernommenen Werte und „Prüfstand-Werte entfernen“.
+- Bei „Standardwerte des Modells“ im Prüfstand werden vorhandene Chat-Werte gelöscht. Gerätetest steht aus.
