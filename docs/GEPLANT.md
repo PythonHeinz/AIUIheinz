@@ -31,6 +31,23 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 - **Claude-ermittelte Werte regelmäßig tracken:** Weboberfläche, die extern ermittelte Werte in `data/` ablegt und im Verlauf zeigt.
 - **Chat:** Chats speichern und später fortführen, Python-Code mit Farbmarkierung offline (Absicht des Entwicklers; Stand im Chat-Modul gegen `chat.html` prüfen).
 
+## Ideen vom 10./11.11.2026 (Entwickler, nicht begonnen; Stand nach Design-Review 1)
+**Entwickleroption „Brummen" (Modell-Traum-Anzeige)**
+- Haken in den Entwickleroptionen (Standard aus, nicht für den Alltag). Statt „Bereit für Eingaben…" laufen in der Mitte des Chatbereichs ständig Wörter und Wortteile, die das eingestellte Modell zufällig auswirft; gedacht als Anzeige „was im Modell passiert" im Vordergrund, im Pixel-Display-Stil.
+- Technik: Hintergrundanfrage mit leerem oder fast leerem Prompt, hohe Zufallswerte (Temperatur ca. 1,5 bis 2, top_k aus, top_p 1), neuer zufälliger Seed je Runde, kurze Runden (ca. 8 bis 20 Token), Streaming, jedes Stück einzeln anzeigen, gedrosselt (alle ein bis zwei Sekunden). Zugriff auf Gewichte oder Logits gibt es nicht, es ist echtes Sampling aus der Verteilung des Modells.
+- Läuft nur, solange die App im Vordergrund ist, der Chat leer ist und keine Bildschirmabdunklung ausgelöst wurde. Bricht sofort ab bei Tipp auf einen Modus, Öffnen des Einstellmenüs, Tipp ins Chatfenster oder Beginn einer Eingabe, damit die echte Anfrage nicht ausgebremst wird.
+- Nur lokale Engines. Bei Cloud-Modellen gesperrt (kostet Geld); eventuell als Sonderfall aktivierbar.
+- Offen: Akku und Wärme beim Handytest messen, Drosselung festlegen.
+
+**Weitere vorgemerkte Punkte (Sammlung)**
+- Mehrere eigene OpenAI-kompatible Engines, je mit eigenem Server und Schlüssel (vom Entwickler als Muss bezeichnet, nächstes größeres Feature). Dazu: Im Engine-Menü zeigt das Auswahlfeld unter „Verbindungsdaten" dieselbe Engine-Liste wie die Liste darüber; beim Umbau klären, ob das Feld bleibt.
+- Modus-Schieberegler am linken Rand (Halbkreis-Kragen, senkrechte Leiste mit farbigen Kreisen), Wichtigstes im Daumenbereich, Parameter-Schnellöffner: siehe `docs/DESIGN.md`, Abschnitt Design-Review 1, Planung für DR2.
+- Zwei Stufen „Schnell/Tief" als Pille an der Eingabe und Reasoning für Cloud-Modelle: Auftrag `docs/AUFTRAG_Modi.md`.
+- App-Sprache (Oberfläche und Vorlesen, Englisch als Rückfall), Geräte- und CPU-Listen.
+- Tempo-Test: Kerne gezielt zuweisen (zum Beispiel `taskset` über `server.py`); die Kacheln setzen heute nur die Thread-Zahl, die Farben sind ein Hinweis. Eventuell Streaming im Test für echten Fortschritt je Lauf.
+- Schwellen für T/s und Startzeit (Farben der Telemetrie) mit Handy-Messwerten abgleichen.
+- Verworfen aus dem externen Audit: Drawer-Breite 85 %, Bottom Sheet.
+
 ## Plattform
 - **Geräteprofile für die veröffentlichte Fassung (Idee des Entwicklers, 09.11.2026):** Voreinstellungen je Handy-Prozessor (Threads, Kontext, Modellvorschlag), entweder zur Auswahl oder automatisch erkannt, damit die KI auf fremden Geräten direkt schnell läuft. Grundlage: `num_thread` hat sich auf dem Pixel 9 Pro als größter Tempohebel gezeigt. Ungeklärt: ob der Browser genug Geräteinfo liefert (Kernzahl über `navigator.hardwareConcurrency`, Chipname eher nicht); Messreihe je Gerät nötig.
 - Zweites Gerät als reine Experimentierhardware für lokale Modelle (zunächst ein Pixel mit neuerem Tensor-Chip, später ein gebrauchtes Gerät mit 24 GB RAM und Snapdragon, mit Root oder alternativem System), um 4B bis 12B zu testen. Erfahrungen vom Pixel 9 Pro sollen übertragen werden.
