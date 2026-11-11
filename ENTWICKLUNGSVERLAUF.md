@@ -612,3 +612,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Beschluss des Entwicklers: `heinz-fakt:latest` und `heinz-wilson:latest` (Persona und Stichprobenwerte im Modelfile, nur für die alte Heinz UI angelegt) widersprechen dem Konzept für Ton und native Modelleinstellungen und sollen im neuen Chat nicht wählbar sein. Gelesene Modelfiles: `heinz-wilson` Gemma-Vorlage, Survival-Persona, Temp 0,4, Top-P 0,8; `heinz-fakt` Qwen-Vorlage, Straßensprache mit vier Beispielen, Temp 0,2, Top-K 20, Top-P 0,4, Stoppwörter „Als KI“ und „As an AI“.
 - `tools/heinz/index.html`: Namen mit `heinz-` werden für Ollama aus der Modellliste gefiltert; ist ein solches Modell gewählt (z. B. vom Prüfstand übernommen), nimmt der Chat das erste verbleibende. In Ollama und im Prüfstand ändert sich nichts.
 - `docs/LOKALE_MODELLE.md`: neue Regel 9. Test: 1 neuer. Nur simuliert.
+
+## 11.11.2026 – Handytest bestätigt: schneller Seitenwechsel (Chat „AIUIheinz-Chat“)
+- Entwickler (Pixel 9 Pro, Version `adf8889`): Modelle bleiben beim Wechsel zwischen Chat, Prüfstand und allen Modellen im Speicher; erste Antwort bei allen Modellen 4 bis 6 s, auf beiden Seiten gleich. Messwerte in `docs/LOKALE_MODELLE.md` und `docs/OLLAMA_UND_MODELLE.md`. Nur Doku.
