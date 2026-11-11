@@ -113,3 +113,8 @@ Prompt „Name one unusual animal in one sentence.“, Temperatur 0, Top-p 1, To
 - **Tempo:** 2 Threads 6,2 bis 6,6 Token/s, 4 Threads 5,0 bis 5,3 Token/s (also langsamer; passt zum Tempo-Test vom 10.11.). Gesamtzeit je Lauf 7,7 bis 9,1 s bei 2 Threads, 9,1 bis 9,9 s bei 4.
 - **Threadwechsel:** Der erste Lauf mit neuer Threadzahl brauchte 8,8 s bis zum ersten Zeichen (Laden), die folgenden 1,0 bis 1,9 s.
 - Die Reihe lief vollständig durch und der Export enthielt alle 8 Läufe.
+
+## Gegenprobe Oberfläche gegen Ollama pur (11.11.2026, Pixel 9 Pro, Messwerte des Entwicklers)
+- `ollama run heinz-fakt:latest "Name one animal." --verbose` in Termux (sichtbar, Standard-Threads, Kontext 4096, kalt): Laden 5,2 s, Prompt 344 Token in 11,3 s (30 Token/s), Erzeugen 4,6 Token/s (nur 6 Token, grobe Zahl), gesamt 17,8 s. `ollama ps`: 2,3 GB, 100 % CPU, Kontext 4096. Der Tempo-Test der Chat-Seite für dasselbe Modell (12:22, Termux im Hintergrund, 2 Threads, Kontext 8192, kalt) ergab 4,3 Token/s, Prompt 28,5 s, Laden 19 s. Die Oberfläche ist damit nicht langsamer als Ollama pur; die Langsamkeit des Modells stammt vom Modelfile-Prompt (rund 340 Token) und vom Prozessor.
+- Tempo-Test `qwen2.5:3b` (12:31, Termux sichtbar, kalt, 32 Token, kurzer Prompt 52 Token): Erzeugen Lauf 2 bei 2 Threads 7,4 Token/s, bei 3 Threads 3,9, bei 4 Threads 2,2 (Lauf 1: 8,0 / 6,6 / 2,8). Bestätigt: 2 Threads am schnellsten, mehr Threads langsamer. Laden 4 bis 8 s, warm 0,4 bis 0,6 s.
+- Vergleich mit früheren Reihen (siehe oben): heinz-fakt 4,2 bis 8,9 Token/s bei 2 Threads, qwen2.5:3b 8,9. Die neuen Werte liegen im selben Bereich. Der große Sprung („20-mal schneller“) war der Wechsel vom Ollama-Standard (8 Threads, im Hintergrund 0,2 bis 0,3 Token/s) auf 2 Threads.
