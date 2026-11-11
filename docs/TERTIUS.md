@@ -107,3 +107,54 @@ Daraus folgt kein Titel, aber ein **Profil**: technisch versierter Produkt- und 
 3. Wer hat die sicherheitsrelevanten Teile (`server.py`, Update-Endpunkt) geprüft außer den Agenten?
 4. Soll `README.md` den Einstieg für Dritte tragen, oder bleibt das dem Assistenten (Konzept 18.3) vorbehalten?
 5. Lizenz: Soll das Repo öffentlich nutzbar werden (z. B. MIT/Apache) oder ausdrücklich nicht?
+
+---
+
+# Durchgang 2, 11.11.2026: Produktkandidaten und Kommerzialisierung
+
+**Auftrag:** Überblicken, welche Entwicklungen des Entwicklers sich als eigene Produkte eignen. **Nachtrag zu Durchgang 1:** Hub und Chat („Heinz UI“) sind Arbeitsgrundlage und Testumgebung; die Befunde 5 und 10 und die Teile von 1 und 2, die Aufbau und Beschriftung dieser Seiten bewerten, gelten nicht als Produktbefunde. Beurteilt wird hier nur, was als eigenes Produkt gedacht ist: der spätere schlanke Chat, die Testumgebung als Werkzeug, die Nischen-Apps (INCIheinz), Convert2, das Muster „Modell übersetzt, Code rechnet“ und der Entwicklungsprozess.
+
+**Grenzen:** INCIheinz und Convert2 habe ich nur über `INDEX.md`, `STAND.md` und `KI_KONZEPT.md` gelesen, nicht gebaut oder getestet. Erlöse kann ich nicht schätzen (keine Marktzahlen recherchiert). Rechtliches ist Einschätzung, keine Rechtsberatung. Recherchierte Fakten stehen unten mit Quelle.
+
+## Maßstab (aus den Zielen des Entwicklers)
+Offline, kein Konto, keine Werbung, kein Abo; wenig Pflegeaufwand; ein Kern, mehrere Anwendungen; Zuverdienst oder Reputation, nicht sofort Lebensunterhalt.
+
+## Kandidaten
+
+| Kandidat | Reife (nach Dokumenten) | Erlösweg | Hauptrisiko | Einschätzung |
+|---|---|---|---|---|
+| **INCIheinz** (Lager, Rezeptbuch, Katalog 1053 Stoffe) | höchste: PWA, Testgruppe, KI-Import gebaut (`STAND.md` INCIheinz, 08.11.) | Einmalkauf im Store, Zuverdienst | kleiner Markt, Entdeckbarkeit; Katalog aus Fachbüchern (Rechte, Eigenformulierung); Sicherheits- und Warnhinweise (Haftung); Mehrsprachigkeit EN/ES nicht muttersprachlich geprüft | **Bestes erstes Produkt**, weil am weitesten und billig testbar (Marktbeweis vor Ausbau) |
+| **Muster „Modell übersetzt, Code rechnet“** samt Fähigkeitendaten und Testreihen-Läufer (Konzept 19 bis 21) | Konzept und Teile gebaut | Kein Eigenprodukt, sondern **gemeinsamer Kern** der Apps (KI-Import, Schnittstellenwissen, Messläufer) | Wartung der Anbieterdaten (veralten schnell) | Als Baustein behalten, nicht verkaufen |
+| **Heinz UI / Testumgebung** | Release Candidate, Gerätetests teilweise | kaum direkt; Reichweite, Reputation, Anleitung, Beratung | Wettbewerb (Apps für lokale Modelle auf dem Handy, z. B. Googles AI Edge Gallery, im Konzept selbst genannt; Wettbewerbsanalyse fehlt); Einrichtung über Termux ist für Laien eine Hürde | **Portfolio- und Reichweitenprodukt**, kein Erlösprodukt |
+| **Schlanker Chat** (geplant) | nur Konzept 18.1 | wie oben | gleicher Markt wie viele Chat-Apps; Alleinstellung unklar (offline, Wechsel Lokal/Cloud, Datenschutzstufen) | erst nach Wettbewerbsvergleich entscheiden |
+| **Convert2** (Markdown zu ePub/PDF) | Ort „noch zu verschieben“, Stand unbekannt | Gratis-Werkzeug als Türöffner, kaum Erlös | Konkurrenz durch freie Werkzeuge | Beiwerk; passt zum Open-Source-Umstieg und zu Doku-Themen |
+| **EPREL-/Label-Werkzeug** (Idee) | nur Idee, zurückgestellt | Software oder Dienstleistung | siehe „Fachlicher Befund“ unten | als **Dienstleistung oder Checkliste** prüfen, nicht als Software, solange der Quellenstand fehlt |
+| **Prozess-Playbook** (Stränge, Sperrzeile, Fundament-Regel, Review-Stufen, Tertius-Rolle, Vorlagen) | dokumentiert und im Einsatz (`UEBERGABE.md`, `STAND.md`, `AUFTRAG_*`) | Leitfaden oder Vorlagenpaket, Fallstudie, Beratung | Wirksamkeit bisher nicht gemessen; vor Veröffentlichung von Projektspezifika bereinigen | **Aussichtsreichstes Wissensprodukt**, auch für den Berufsweg (eigene Datei) |
+| **Ratgeber „Lokale KI auf dem Handy“** (aus Konzept 18.3 ableitbar) | Material vorhanden (Einrichtungsschritte, Fallstricke, Messungen) | E-Book, Blog, später Kurs | Aktualität, Probelauf auf frischem Gerät fehlt | gut machbar, kleiner bis mittlerer Ertrag |
+
+## Fachlicher Befund zum Label-Werkzeug (recherchiert)
+- Das Energielabel nach 2019/2015 gilt für **Lichtquellen**, nicht für Leuchten mit austauschbarer Lichtquelle; solche Leuchten tragen kein Label mehr, vollintegrierte Leuchten gelten als Lichtquellen. Das Labeln nicht erfasster Produkte ist unzulässig (Quellen 1, 2).
+- **Händler können das Label selbst aus EPREL herunterladen** (Quelle 1). Der Nutzen eines Werkzeugs „Daten rein, Label raus“ für kleine Händler ist damit kleiner als gedacht; Mehrwert bliebe bei Eigenmarken, Verpackungsdruck und Datenaufbereitung. Der Zuschnitt (wer genau, welcher Schritt) müsste vor jeder Software geklärt werden.
+
+## Voraussetzungen für jede Kommerzialisierung (Hygiene, kein Rechtsrat)
+1. **Lizenz** im Repo (`LICENSE` fehlt) und Klärung der Rechte an Katalogdaten und Modellen.
+2. **Google Play:** Für private Entwicklerkonten, die nach dem 13.11.2023 erstellt wurden, verlangt Google vor dem Produktionszugriff einen geschlossenen Test mit mindestens 12 Testern, die 14 Tage am Stück angemeldet waren (Quelle 3). Das ist die zeitliche Grenze für „schnell im Store“; die Tester müssen echt sein.
+3. **Marktbeweis vor Ausbau:** Landingpage mit Beschreibung, Warteliste oder Vorbestellung, Resonanz in passenden Foren, bevor weitere Nischen-Apps entstehen.
+4. **Anbieterpflichten** (Impressum, Datenschutzerklärung, Gewerbeanmeldung, Steuern) vor dem ersten Verkauf klären.
+
+## Reihenfolge (Vorschlag, der Entwickler entscheidet)
+1. INCIheinz zum Marktbeweis (Play-Test mit 12 Testern, Landingpage).
+2. Prozess-Playbook und Fallstudie (Reputation, Berufsweg).
+3. Heinz UI als offenes Projekt mit Lizenz und Einstiegsanleitung.
+4. Zurückstellen: Label-Software, Retro-Hardware, Medien/Heimserver, weitere Nischen-Apps vor dem Marktbeweis.
+
+## Offene Fragen
+1. Ist INCIheinz oder die Testumgebung das Produkt, an dem du gemessen werden willst?
+2. Welche Rechte hast du an den Katalogdaten (Quellen, Eigenformulierung)?
+3. Wo liegt Convert2, und in welchem Stand?
+4. Soll das Playbook öffentlich (Reichweite) oder als Paket (Erlös) erscheinen?
+
+## Quellen (Stand 11.11.2026)
+1. IHK Lippe-Detmold, Energieverbrauchskennzeichnung: https://www.ihk.de/lippe-detmold/system/neue-energieverbrauchkennzeichnung-4327208
+2. Ledvance, Überblick SLR/ELR: https://www.ledvance.com/00_Free_To_Use/asset-13083005_eu-gesetzgebung_-_die_elr-slr_im_uberblick.pdf
+3. Google Play Console-Hilfe, Testanforderungen für neue private Konten: https://support.google.com/googleplay/android-developer/answer/14151465?hl=de
