@@ -431,3 +431,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 11.11.2026 – Konzept 20 generative KI, Nachtrag Auftrag Modelle (Chat „AIUIheinz“, nur Dokumente)
 - `docs/KONZEPT.md` Abschnitt 20: Funktionsplätze nach dem SIM-Prinzip, Fähigkeit statt Modellname bei Abkündigungen, Orte in der App (Chat zuerst, Einlesen, Bildstudio, Sprache), Heimserver-Engine, Sprache auf zwei Wegen mit Browser-Rückfall, Medienspeicher (IndexedDB), Datenschutz, Kennzeichnung, Reihenfolge; Video ausgeschlossen (ferne Version).
 - `docs/AUFTRAG_Modelle.md`: Nachtrag mit sieben Aufgaben (Fähigkeitendaten um Ein- und Ausgabearten, Modellwechsel-Auflösung, Bild und Sprache bei Google, Kennzeichnung, Browser-Sprache, Heimserver, Medienspeicher).
+
+## 11.11.2026 – Konzept 20: Prüfung lokaler Sprache, Reihenfolge Einlesen vor Bildstudio (Chat „AIUIheinz“, nur Dokumente)
+- Beschlüsse des Entwicklers eingetragen: Einlesen vor Bildstudio, IndexedDB-Medienspeicher, App prüft, ob Sprache lokal läuft, und weist sonst hin (Konzept 20.5); Auftrag Modelle Punkt 5 entsprechend ergänzt.

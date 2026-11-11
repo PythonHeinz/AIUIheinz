@@ -422,8 +422,10 @@ Anbieter kündigen Modelle ab und ersetzen sie (Beispiel: die alten Veo-Modelle 
 - `speech.say` und `speech.hear` laufen **sowohl über die Browserfunktionen als auch über Gemini (Cloud)**. Mit Schlüssel einer nativen API und „Online erlauben“ steht der Mehrwert der Cloud bereit; ohne Schlüssel oder online gesperrt fällt die App auf die **Browserfunktion offline** zurück. Der Nutzer sieht, welcher Weg gerade arbeitet.
 - **Zu prüfen, weil es die Datenschutzzusage berührt:** Die Spracherkennung des Browsers (Web Speech API in Chrome auf Android) sendet Audio **nach meinem Wissen zur Erkennung an Google**, wenn nicht ein lokales Sprachpaket auf dem Gerät liegt. Die Sprachausgabe (`speechSynthesis`) läuft mit installierten Stimmen offline. Der Auftrag Modelle belegt das; wo „offline“ nicht stimmt, steht es in der Oberfläche, sonst gilt das Versprechen „nichts verlässt das Gerät“ für diesen Weg nicht.
 
+- **Prüfung und Hinweis in der App (Beschluss 11.11.2026):** Der Entwickler hat lokale Sprachpakete auf seinem Pixel geladen. Die App soll selbst feststellen, ob Sprache lokal läuft, und sonst hinweisen, wie man es ändert. Der Browser kann nicht in die Systemeinstellungen sehen, aber die Stimmenliste der Sprachausgabe (`speechSynthesis.getVoices()`, je Stimme `localService`) zeigt, ob Stimmen auf dem Gerät liegen oder über das Netz kommen; für die Erkennung kennen neuere Chrome-Versionen eine Verfügbarkeitsabfrage mit lokaler Verarbeitung (Stand und Version im Auftrag Modelle zu belegen, am Gerät zu prüfen). Ergebnis: Anzeige je Weg „lokal“ oder „über das Netz“ und ein Hinweis mit Anleitung (Sprachpaket in den Android-Einstellungen laden), wenn nur Netzstimmen oder keine lokale Erkennung verfügbar sind.
+
 ### 20.6 Medienspeicher (IndexedDB)
-- Bilder und Audio sind zu groß für den bisherigen Chatspeicher (`localStorage`, rund 5 MB, nur Text). Dafür ein **Medienspeicher im Browser (IndexedDB)**, der Chats nur auf Medien-IDs verweisen lässt, plus Export (Medien mit in die App-Sicherung, Größe anzeigen) und Aufräumen. Alternative `data/` über den Server ist denkbar; Entscheidung im Fundament (Strang Chat).
+- Bilder und Audio sind zu groß für den bisherigen Chatspeicher (`localStorage`, rund 5 MB, nur Text). Dafür ein **Medienspeicher im Browser (IndexedDB, vom Entwickler am 11.11.2026 beschlossen)**, der Chats nur auf Medien-IDs verweisen lässt, plus Export (Medien mit in die App-Sicherung, Größe anzeigen) und Aufräumen. Alternative `data/` über den Server ist denkbar; Entscheidung im Fundament (Strang Chat).
 - Erklärung: IndexedDB ist eine **Datenbank im Browser**, die große Daten (Bilder, Audiodateien, ganze Dokumente) als Objekte ablegt und nach Schlüsseln wieder holt. Sie ist unabhängig vom Server, bleibt beim Neuladen erhalten und fasst deutlich mehr als `localStorage` (typisch einige hundert MB, abhängig vom freien Speicher; Chrome kann sie bei Platzmangel räumen, wenn der Speicher nicht als dauerhaft angefordert ist). Zugriff nur über JavaScript (asynchron), je Adresse getrennt (`localhost:3000` und die Heimserver-Seite hätten getrennte Speicher).
 
 ### 20.7 Datenschutz und Kennzeichnung
@@ -437,8 +439,8 @@ Anbieter kündigen Modelle ab und ersetzen sie (Beispiel: die alten Veo-Modelle 
 2. **Fähigkeitendaten um Ein- und Ausgabearten und Aufrufarten erweitern** (Strang Modelle), dazu die Recherche aus dem Nachtrag in `docs/AUFTRAG_Modelle.md`.
 3. Anhang-Baustein und Bild-Eingabe im Chat; Medienspeicher.
 4. Funktionsplätze mit Wunschliste und Ersatzregel (20.1, 20.2).
-5. Einlesen-Tool.
-6. Bildausgabe im Chat mit Kennzeichnung, später Bildstudio.
+5. **Einlesen-Tool vor dem Bildstudio** (Beschluss 11.11.2026).
+6. Bildausgabe im Chat mit Kennzeichnung, danach Bildstudio.
 7. Sprache über beide Wege.
 8. Modellvergleich, Heimserver-Engine, Medien auswerten.
 
