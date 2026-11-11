@@ -528,3 +528,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 
 ## 11.11.2026 – Auftrag Fix Threads (Chat „AIUIheinz“, nur Doku)
 - Handytest: Ollama im Heinz Chat langsamer als im Prüfstand. `docs/AUFTRAG_Fix_Threads.md` angelegt (Vermutung: Heinz Chat sendet kein `num_thread`, Prüfstand immer). Nichts gebaut, nichts am Gerät geprüft.
+
+## 11.11.2026 – Repo-Adresse (Chat „AIUIheinz“, nur Doku)
+- GitHub meldet beim Push „This repository moved“: maßgeblich ist `https://github.com/PythonHeinz/AIUIheinz.git`. In `UEBERGABE.md` (Quellen & Start) vermerkt, dazu der Befehl `git remote set-url origin …` für alte Klone (Termux, Container). Projekt-Briefing um das Dokument `claude/repo-adresse.md` ergänzt.

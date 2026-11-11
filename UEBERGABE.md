@@ -94,7 +94,7 @@ Android benennt doppelte Downloads um (`server(1).py`); vor dem Kopieren mit `ls
 ## Orte
 - PC, Projektordner: `C:\Users\Andreas\Toolsbyclaude\AIUIheinz` (Projektdokumente). Jeder Chat bekommt die Desktop-Verbindung zu `C:\Users\Andreas\Toolsbyclaude`.
 - PC, Git-Repo (Offline-Kopie, nur lesen, nie von Hand ändern, wird per `git pull` aktualisiert; kein Push-Zugang): `C:\Users\Andreas\Toolsbyclaude\AIUIheinz\repo`
-- GitHub (maßgeblich, öffentlich, main; hier wird gearbeitet und gepusht): `https://github.com/PythonHeinz/AIUIheinz`, im Chat per `add_repo` (push) angehängt
+- GitHub (maßgeblich, öffentlich, main; hier wird gearbeitet und gepusht): `https://github.com/PythonHeinz/AIUIheinz` (clone-URL `https://github.com/PythonHeinz/AIUIheinz.git`; GitHub meldete am 11.11.2026 beim Push „This repository moved“, die alte Schreibweise `PythonHeinz/aiuiheinz` leitet nur um). Wer noch die alte Adresse als `origin` hat: `git remote set-url origin https://github.com/PythonHeinz/AIUIheinz.git`. Im Chat per `add_repo` (push) angehängt
 - Handy (Termux): `~/AIUIheinz` (Klon, nur lesen), Oberfläche `http://localhost:3000`, Ollama `http://localhost:11434`
 - Chatname = Projektname.
 
