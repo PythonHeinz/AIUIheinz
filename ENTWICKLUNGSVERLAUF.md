@@ -519,3 +519,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `lib/core.css/core.js`: `.notice`, `.bsheet`/`.bscrim`, `.step`, `.cmd`, `Heinz.copy`, `Heinz.sheetOpen/sheetClose`. Neue Tools haben `area: "hub2"` (alter Hub zeigt sie nicht).
 - `docs/AUFTRAG_Menu.md` (neuer Strang AIUIheinz-Menu), `docs/DESIGN_DR2.md` um Entscheidungen ergänzt.
 - Tests: 5 neue Seitentests, Servertest für die Toolliste angepasst. Nur simuliert, nicht am Gerät.
+
+
+## 11.11.2026 – Modelle: Sonde als Testreihen (Entwurf) und Ollama-Denkregeln (Chat „AIUIheinz-Modelle“, nur Doku und Daten)
+- `docs/SCHNITTSTELLEN.md` Abschnitt 18: Die Sonde wird keine eigene Seite, sondern fertige Testreihen S1 bis S8 für den Läufer (KONZEPT 21), fünf Konsolen-Proben (Speicher, Browser-Sprache, CORS der Anbieter, Heimnetz, `/api/show`), Regel für die Übernahme in die Daten (Feld `measured`), Aufwand (unter 5 600 Token je Modell), Liste der Läufer-Lücken (Achsen seed/max_tokens/stop/Penalties, Regel `same`, Fehlertext als Ergebnis, Sondenmodus). Alles dort ist Plan; gelesen wurde `lib/testreihe.js`, nichts davon ist auf dem Gerät gelaufen. Konsolen-Proben nur gegen Attrappen geprüft.
+- `lib/capabilities.json`: zwei Regeln für Ollama (`ollama-gpt-oss` Stufen, `ollama-think-toggle` an/aus nach Familiennamen) unter dem Schlüssel **`thinkingDraft`**, den die Seite nicht liest. Grund: `chatOllama` sendet `think` nicht und verwirft `message.thinking`; eine Regel `thinking` würde einen Schnell/Tief-Schalter zeigen, der nichts sendet. Umbenennen erst, wenn der Chat-Strang beides baut. Zusätzlich Block `modelsDraftNote` mit dieser Erklärung.
+- Tests: `test_ollama_think_drafts` (Namensabgleich mit Gegenfällen, kein Schlüssel `thinking`). Volle Reihe grün (simuliert).

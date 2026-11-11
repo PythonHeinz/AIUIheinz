@@ -346,6 +346,29 @@ class ProvidersTest(unittest.TestCase):
         self.assertEqual(cell("groq", "m", "num_thread")["state"], "off")
         self.assertEqual(cell("ollama", "m", "thinking")["via"], "think")
 
+    def test_ollama_think_drafts(self):
+        drafts = [m for m in CAP["models"] if m["engine"] == "ollama"]
+        self.assertTrue(drafts)
+        for m in drafts:
+            self.assertNotIn("thinking", m, m["id"])   # not read by the app until chatOllama sends think
+            t = m["thinkingDraft"]
+            self.assertIn(t["kind"], ("level", "toggle"), m["id"])
+            self.assertEqual(t["via"], "think")
+            self.assertIn(m["status"], STATUS)
+            re.compile(m["match"])
+        def rule(mid):
+            for m in drafts:
+                if re.search(m["match"], mid, re.I):
+                    return m["id"]
+        self.assertEqual(rule("gpt-oss:20b"), "ollama-gpt-oss")
+        self.assertEqual(rule("qwen3:4b"), "ollama-think-toggle")
+        self.assertEqual(rule("gemma4:e2b"), "ollama-think-toggle")
+        self.assertIsNone(rule("gemma3:1b"))
+        self.assertIsNone(rule("llama3.2:3b"))
+        lv = [m for m in drafts if m["id"] == "ollama-gpt-oss"][0]["thinkingDraft"]
+        self.assertFalse(lv["canDisable"])
+        self.assertEqual(lv["effortMap"][lv["fast"]], "low")
+
     def test_no_cloud_engine_has_thread_setting(self):
         for eid in ("openrouter", "groq", "mistral", "ollama-cloud"):
             self.assertEqual(CAP["engines"][eid]["params"]["num_thread"]["state"], "off", eid)

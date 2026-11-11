@@ -130,7 +130,7 @@ Ehrliches Fazit: Mit den Daten aus der Doku ist über die App bisher **nur Text-
 
 ---
 
-## 4 Sonde (Konzept, noch nichts gebaut)
+## 4 Sonde (Konzept, noch nichts gebaut; Entwurf als Testreihen jetzt in Abschnitt 18)
 
 Ziel: Der Entwickler prüft mit eigenem Schlüssel auf dem Handy, was die Schnittstelle tut. Ergebnis als Tabelle oder JSON **ohne Schlüssel** zum Kopieren und zum Eintragen in diese Datei.
 
@@ -458,3 +458,93 @@ Gelesen wurden Suchauszüge der Herstellerseiten (Seiten selbst sind aus dem Arb
 ### 17.7 Wirkung auf die App und offene Punkte
 - Die Seite liest die Zellen über `HeinzCaps`. Geändert hat sich: OpenRouter, Groq, Mistral haben jetzt eigene Zellen statt der allgemeinen; Ollama Cloud wird an `ollama.com` erkannt; sonst nichts. Das Verhalten der Seite wurde nicht geändert; ob die Regler wie gewünscht reagieren, prüft der Chat-Strang am Gerät. Besonders: Mistral-Seed muss `random_seed` heißen (`via`), Groq nutzt `max_completion_tokens`.
 - **Offen (Sonde):** Wirkt `top_k` bei OpenRouter für Nicht-OpenAI-Modelle sichtbar; kommt bei Groq/Mistral `reasoning` getrennt an; zählt die Ausgabezahl bei OpenRouter/Groq/Mistral die Denk-Token (`outputIncludesReasoning`); Browser-Zugriff (CORS) auf alle fünf Dienste (in `lib/providers.js` steht `cors: 'unchecked'`).
+
+## 18 Sonde: Entwurf als Testreihen (11.11.2026; nichts gebaut, nur Plan und Konsolen-Proben; ersetzt das Konzept in Abschnitt 4)
+
+### 18.1 Grundsatz
+Eine eigene Sonden-Seite wird **nicht** gebaut. KONZEPT 21 beschließt den Testreihen-Läufer (`lib/testreihe.js`, Läufer in `chat.html`) und nennt ihn ausdrücklich zugleich Sonde. Die Sonde besteht deshalb aus
+1. **fertigen Testreihen** (Prompt-Zeilen und Achsen im Format des Läufers, 18.3),
+2. **Konsolen-Proben** für alles, was kein Chat ist (Modellliste, `/api/show`, Browserzugriff, Speicher, Sprache, Heimnetz; 18.5),
+3. einer **Regel, wie Ergebnisse in `lib/capabilities.json` landen** (18.4),
+4. einer **Liste dessen, was dem Läufer noch fehlt** (18.2, Auftrag an den Chat-Strang, Fundament).
+
+### 18.2 Stand des Läufers und Lücken (gelesen in `lib/testreihe.js`, Stand 6fb7e13)
+- **Kann:** Achsen `num_thread`, `think`, `top_k`, `top_p`, `temperature`, `prompt`; höchstens **30 Läufe**; Wiederholungen; Prüfregeln `contains`, `not`, `regex`, `number`, `json`, `max`, `min` (Zeichen), `stop` (Abbruchgrund); Export als Markdown mit einer JSON-Zeile je Lauf.
+- **Fehlt für die Sonde:**
+  1. Achsen **`seed`**, **`max_tokens`**, **`stop`** (Folge), **`frequency_penalty`**, **`presence_penalty`**, später `min_p` und `repeat_penalty`.
+  2. **Fehlertext als Ergebnis**: Antwortet der Dienst mit 400, muss der Lauf „Fehler“ samt Text festhalten und weiterlaufen (der Export enthält schon Fehler je Lauf; ob die Reihe dann weiterläuft, ist nicht geprüft).
+  3. **Prüfregel `same`**: alle Wiederholungen einer Zeile liefern denselben Text (für `seed`, `top_k` = 1, Temperatur 0) und die Gegenregel `differs` über eine Zeilengruppe. Bis dahin wertet der Agent aus dem Export aus.
+  4. **Denken bei Ollama**: `think` senden und `message.thinking` lesen (Abschnitt 17.1); heute sendet `chatOllama` kein `think`.
+  5. **Roh-Export der Modellliste** und **Import/Export von Testreihen** (KONZEPT 21.4 Schritt 4).
+  6. Ein Schalter **„Sondenmodus“**: ausgegraute (`off`, `error`) und ungeklärte Zellen trotzdem senden, damit die Antwort die Zelle bestätigt oder widerlegt. Nur mit Warnhinweis; im normalen Chat bleibt die Sperre.
+- Alles davon berührt Anbieterschicht oder Chat-Seite: **Fundament, ein Chat zur Zeit** (Chat-Strang).
+
+### 18.3 Testreihen (jeweils ein Modell, Läuferformat)
+Jede Reihe nennt Zeilen: Prompt (mit `=>`-Regeln), Achsen, Wiederholungen. Alle Reihen bleiben unter 30 Läufen. Ausgabegrenze klein (Token-Grenze 64, bei Denkreihen 1500); Denken, wo möglich auf niedrig.
+
+| Reihe | Prompt (Zeile) | Achsen, Wiederholungen | Läufe | Auswertung durch den Agenten |
+|---|---|---|---|---|
+| **S1 Grundlauf** | `Antworte nur mit dem Wort OK. => contains:OK|max:40` | keine, 1 | 1 | Dienst antwortet, `usage` vorhanden, Zeiten, Modellname im Antwortkopf (Umleitung?, 11) |
+| **S2 Temperatur** | `Nenne genau eine zufällige Farbe in einem Wort. => max:30` | temperature [0, 1, 2], 3 | 9 | Anzahl verschiedener Antworten je Stufe: bei 0 sollte eine Antwort stehen; Fehler bei 2 (Bereich?) |
+| **S3 top_k** | wie S2 | top_k [1, 40, 100] bei fester Temperatur 1, 3 | 9 | bei 1 gleiche Antworten, bei 100 Streuung; sonst „keine Wirkung erkennbar“ (nicht „ignoriert“: mit 3 Wiederholungen nur ein Hinweis) |
+| **S4 top_p** | wie S2 | top_p [0.1, 1.0] bei Temperatur 1, 3 | 6 | wie S3 |
+| **S5 Denken** | `Was ist 17 mal 23? Antworte nur mit der Zahl. => number:391` | think [fast, deep], 1 | 2 | `reasoningTokens` je Stufe, Dauer, Zahl richtig; leere Antwort bei kleiner Grenze? |
+| **S6 Seed** (nach Ausbau 18.2) | wie S2 | seed [42], 3, Temperatur 1 | 3 | alle drei gleich? (Ollama ja erwartet; Google kompatibel offen; Mistral Feld `random_seed`) |
+| **S7 max/stop** (nach Ausbau) | `Zähle von 1 bis 20, durch Kommas getrennt.` | max_tokens [5], stop ["5"] | 2 | Abbruchgrund `length` gegen `stop`; Denkmodelle: leere Antwort? |
+| **S8 Penalties** (nach Ausbau) | `Schreibe zehnmal das Wort Hallo.` | frequency_penalty [0, 2], presence_penalty [2] | 3 | Wirkung sichtbar, oder Fehler 400 (Gemini 3) mit Text |
+
+Heute ausführbar: S1 bis S5 (= 27 Läufe). S6 bis S8 nach dem Ausbau.
+**Modelle je Anbieter (Vorschlag, je eines):** Ollama ein kleines Denkmodell (zum Beispiel qwen3) und ein Nicht-Denkmodell; Google `gemini-3.8-flash` (nativ und kompatibel); OpenRouter ein Nicht-OpenAI-Modell (für `top_k`) und ein OpenAI-Modell (Gegenprobe, dort „nicht verfügbar“); Groq `openai/gpt-oss-20b` und `qwen/qwen3-32b`; Mistral `mistral-small-latest` und ein Magistral-Modell; llama.cpp, falls der Entwickler einen Server hat.
+
+### 18.4 Von der Messung in die Daten
+- Der Strang Modelle wertet den Export aus und ändert **nur** Zellen in `lib/capabilities.json`; die Seite wird dafür nicht angefasst.
+- Entscheidungstabelle je Zelle:
+
+| Beobachtung | Zustand | Status |
+|---|---|---|
+| Wert angenommen und Wirkung messbar (S2 bis S4, S6 bis S8) | `on` | `belegt` (Messung) |
+| angenommen, aber keine Wirkung erkennbar (mindestens 3 Wiederholungen, zwei Läufe an verschiedenen Tagen) | `off` mit Hinweis „ohne Wirkung gemessen“ | `belegt` (Messung) |
+| nur ein Lauf ohne Wirkung | bleibt `unknown`, Hinweis „ein Lauf ohne Wirkung“ | `vermutet` |
+| Dienst antwortet mit Fehler | `error` mit gekürztem Fehlertext im Hinweis | `belegt` (Messung) |
+| Wert angenommen, Wirkung nicht prüfbar (zum Beispiel Kontext) | `on` | `vermutet` |
+
+- Jede gemessene Zelle bekommt ein Feld **`measured`**: `{ "date", "device", "series", "model", "runs" }` (Vorschlag), dazu Modell und Dienststand (Seiten ändern sich).
+- **Der Antwortkopf nennt das Modell** (`modelVersion` bei Google, `model` bei OpenAI-kompatiblen): Der Export soll es je Lauf enthalten, damit stille Umleitungen (Abschnitt 11) auffallen.
+
+### 18.5 Konsolen-Proben (Entwickler, Chrome auf dem Pixel, Seite `http://localhost:3000` offen, Konsole im Seitenmenü oder per `chrome://inspect`)
+Alle fünf sind in der Arbeitsumgebung nur gegen **Attrappen** geprüft (Syntax und Ablauf); echte Ergebnisse liefert das Gerät. A bis D senden **keinen Schlüssel**. C greift aus der Seite nach außen: das macht der Entwickler bewusst, der Schalter „Online erlauben“ gilt nur für die App selbst.
+
+**A – Speicher und Installation (Abschnitt 16)**
+```js
+(async()=>{const e=await navigator.storage.estimate();console.log(JSON.stringify({quotaMB:Math.round(e.quota/1e6),usageMB:Math.round(e.usage/1e6),persisted:await navigator.storage.persisted(),installed:matchMedia('(display-mode: standalone)').matches}))})()
+```
+**B – Sprache im Browser (Abschnitt 13)**; Stimmenliste kann beim ersten Aufruf leer sein, dann ein zweites Mal ausführen
+```js
+(async()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;const o={recognition:!!R,hasAvailable:!!(R&&R.available),voices:speechSynthesis.getVoices().map(v=>v.lang+' local='+v.localService)};if(R&&R.available){try{o.localDe=await R.available({langs:['de-DE'],processLocally:true})}catch(e){o.err=String(e)}}console.log(JSON.stringify(o))})()
+```
+**C – Erreicht der Browser die Anbieter (CORS)?** „reachable, HTTP 401“ heißt: Antwort samt Kopf kam an, also nicht von CORS blockiert (ohne Schlüssel ist 401 zu erwarten); „blocked“ heißt: CORS oder kein Netz.
+```js
+(async()=>{const u={openrouter:'https://openrouter.ai/api/v1/models',groq:'https://api.groq.com/openai/v1/models',mistral:'https://api.mistral.ai/v1/models',google:'https://generativelanguage.googleapis.com/v1beta/models',ollamaCloud:'https://ollama.com/api/tags'};const r={};for(const k in u){try{r[k]='reachable, HTTP '+(await fetch(u[k])).status}catch(e){r[k]='blocked or offline ('+e.name+')'}}console.log(JSON.stringify(r))})()
+```
+**D – Heimserver im LAN (Abschnitt 15)**; `192.168.1.50` durch die Adresse ersetzen
+```js
+(async()=>{const h='192.168.1.50';try{const x=await fetch('http://'+h+':11434/api/tags');console.log('HTTP '+x.status+' '+(await x.text()).slice(0,80))}catch(e){console.log('failed: '+e.name+' '+e.message)}})()
+```
+**E – Was jedes installierte Ollama-Modell kann (Abschnitt 17.1)**
+```js
+(async()=>{const m=await (await fetch('http://localhost:11434/api/tags')).json();const o={};for(const x of m.models){const s=await (await fetch('http://localhost:11434/api/show',{method:'POST',body:JSON.stringify({model:x.name})})).json();o[x.name]={caps:s.capabilities,thinking:s.thinking}}console.log(JSON.stringify(o,null,1))})()
+```
+E beantwortet, ob die Namensregeln in `lib/capabilities.json` (`thinkingDraft`) für die installierten Modelle stimmen.
+
+### 18.6 Aufwand, Kosten, Grenzen
+- **Anfragen:** S1 bis S5 sind 27 Läufe je Modell (1 + 9 + 9 + 6 + 2), mit S6 bis S8 35. Zwei Modelle je Anbieter: etwa 55 bis 70 Läufe.
+- **Token (Rechnung):** Reihen S1 bis S4 je Lauf höchstens 40 Eingabe und 64 Ausgabe Token, also 25 Läufe × 100 = 2 500 Token; S5 zwei Läufe mit Grenze 1 500 = 3 000 Token. Zusammen **unter 5 600 Token je Modell**. Bei einem Preis von 10 USD je Million Ausgabe-Token (Größenordnung der Google-Flash-Modelle, Abschnitt 12.3) sind das **unter 0,06 USD je Modell** (Höchstwert, Rechnung, nicht belegt); lokale Modelle kosten nichts, nur Zeit.
+- **Zeit:** Denken dauert 10 bis 35 s je Lauf (gemessen, Abschnitt 8); S5 braucht damit bis zu 70 s, der Rest je Lauf wenige Sekunden: etwa **3 bis 5 Minuten je Cloud-Modell**. Lokal auf dem Pixel deutlich länger (Termux sichtbar lassen, KONZEPT 21.3).
+- **Grenzen:** Gratisstufen haben Anfragegrenzen je Minute und Tag (Google, OpenRouter, Groq, Mistral; Zahlen nicht gelesen): der Läufer macht Pausen, Abbruchgrund `429`.
+- **Datenschutz:** Die Prompts enthalten nichts Persönliches. Bei Gratisstufen mit „Training mit Eingaben“ (Google, Mistral) kein Problem für diese Prompts; trotzdem Anzeige der Stufe vor dem Start.
+
+### 18.7 Reihenfolge und offene Entscheidungen
+1. **Zuerst (ohne Ausbau, wenige Minuten):** Proben C, E, A, B, D und S1 bis S5 für Ollama und Google (`gemini-3.8-flash` nativ und kompatibel).
+2. **Dann** S1 bis S5 für OpenRouter, Groq, Mistral; Ergebnisse in die Daten (18.4).
+3. **Nach dem Ausbau des Läufers** (18.2): S6 bis S8.
+- **An den Entwickler:** (a) Darf der Chat-Strang den Läufer um die Achsen und die Regel `same` erweitern (18.2 Nr. 1 und 3)? (b) Soll der „Sondenmodus“ (18.2 Nr. 6) kommen oder reichen ungeklärte Zellen im normalen Betrieb? (c) Welche Cloud-Dienste hat er mit Schlüssel (Google ja; OpenRouter, Groq, Mistral?).
