@@ -253,3 +253,47 @@ Der Export im Parameterfenster („Parameter kopieren“) liefert Zustand je Reg
 Neue Engine „Google AI Studio (native)“ (`google`, nur mit „Online erlauben“, eigener Schlüssel, Kopf `x-goog-api-key`). `lib/providers.js` `chatGemini`: `POST …/v1beta/models/<id>:streamGenerateContent?alt=sse`. Abbildung: Systemnachricht → `systemInstruction`; user/assistant → `contents` (user/model); `generationConfig`: `temperature`, `topP`, `topK`, `maxOutputTokens` (nur Schnellmodus), `stopSequences` (höchstens 5), `thinkingConfig` aus der Modellregel (`thinkingLevel` bei Stufenmodellen, `thinkingBudget` bei Budgetmodellen, nie beides, nie `reasoning_effort`; ohne Auswahl nichts). Antwort: `candidates[0].content.parts[].text` (Teile mit `thought` werden nicht angezeigt), `finishReason` STOP → stop, MAX_TOKENS → length; `usageMetadata`: `promptTokenCount`, `candidatesTokenCount`, `thoughtsTokenCount` (echt, ohne „~“), `totalTokenCount`.
 Daten: Engine `google` in `lib/capabilities.json` (`modelRulesFrom: gemini-compat`, die Modellregeln gelten für beide Wege). `top_k` ist dort `unknown` (gesendet, als ungeklärt markiert; Drittquelle sagt, Gemini 3 ignoriere es). Die kompatible Regel greift nur noch bei Adressen mit `…/v1beta/openai`.
 **Am Gerät zu klären:** Wird `thinkingLevel` in Kleinschreibung angenommen? Meldet `thoughtsTokenCount` die Denk-Token (und enthält `candidatesTokenCount` sie nicht)? Wirkt `topK` bei Gemini 3? Läuft CORS auch für `streamGenerateContent`?
+
+## 10 Ein- und Ausgabearten, Aufrufarten, Funktionsplätze (11.11.2026, Version 2 von `lib/capabilities.json`)
+
+Nachtrag 1 des Auftrags Modelle (KONZEPT 20). Neu in der Datei: Block `media` und Block `lifecycle`. Die bisherigen Blöcke (`engines`, `models`) sind unverändert, die Chat-Seite liest sie weiter wie bisher.
+
+**Was `media` enthält**
+- `kinds`: text, image, audio, video, vector (Einbettungsvektor).
+- `calls`: Aufrufarten mit der Google-Methode dahinter: `chat`, `generate_media` (Bild oder Mischausgabe über `generateContent` mit `responseModalities`), `imagen_predict`, `tts`, `transcribe`, `embed`, `live`, `video_long` (ausgeschlossen).
+- `methodMap`: `supportedGenerationMethods` der Modellliste → mögliche Aufrufarten. **Die Liste nennt Methoden, keine Fähigkeiten**: `generateContent` allein belegt weder Bild noch Audio. Belegt sind die Methoden `generateContent`, `streamGenerateContent`, `predict`, `predictLongRunning`, `embedContent`, `bidiGenerateContent`, `countTokens` (API-Referenz; ältere Modellliste in einem Cookbook).
+- `rules`: erste passende Regel je Modell-ID (Google), mit `in`, `out`, `call`, `chatList` und Status. Die Namen stammen aus der Abkündigungstabelle von Google (gelesen 11.11.2026): `…-tts`, `…-live`/`native-audio`, `…-transcribe`, `…embedding…`, `…-image`/`nano-banana`, `imagen-…`, `veo-…`, `lyria-…`, `robotics`, `gemini-omni`, sonst `gemini-…` als Chat. **Eingabearten der Chatmodelle (Text, Bild, Audio, Video) sind Vorwissen, Status `vermutet`**, ebenso Bildmodelle mit Text daneben; Größen- und Längengrenzen sind nicht gelesen.
+- `engineDefaults`: für Ollama, LiteRT-LM, OpenRouter, Groq, Mistral und den generischen Platz, woraus sich die Medienarten lesen lassen (Ollama `/api/show` mit `capabilities`, OpenRouter `architecture.input_modalities`, Mistral `capabilities`): alles **Vorwissen, vermutet**, Prüfung im nächsten Schritt.
+- `functions`: Funktionsplätze mit dem, was ein Modell können muss (`needs`): `chat.main`, `check.second`, `vision.read` (lokal zuerst), `image.make` (Kennzeichnungspflicht), `speech.say`, `speech.hear` (jeweils Browser als Rückfall), `embed.local`.
+- `assignmentFormat`: was die App je Platz speichert (Wunsch und Rangfolge, nie nur einen Namen), Auflösungsregel, Ergebnisse `ok`, `replaced`, `unavailable` mit Meldungstexten EN und DE.
+
+**Wichtiger Fund für die Chat-Seite:** Die Denkregeln (`models`) passen nach Namen auch auf `gemini-3.8-flash-tts` und `gemini-3.1-flash-image`. Die Modellliste enthält diese Modelle, `generateContent` kann dort auch erlaubt sein. **Darum zuerst `mediaRule` anwenden; nur Modelle mit `chatList: true` gehören in die Chat-Modellwahl und bekommen den Denkschalter.** (Test `test_thinking_rule_would_match_media_models_so_media_comes_first`.)
+
+**Auflösung eines Funktionsplatzes** (Referenz `resolve_slot` in `tests/test_capabilities.py`, der Chat-Strang baut dasselbe in JavaScript):
+1. Bedingung `online` gesetzt und „Online erlauben“ aus → `unavailable` (Grund: Online-Sperre).
+2. Rangfolge der Reihe nach. Ein Eintrag mit `model` gilt, wenn das Modell gelistet ist und `needs` des Platzes erfüllt (Aufrufart, Ein- und Ausgabearten, nicht ausgeschlossen). Ein Eintrag mit `family` und `pick: newest` nimmt das neueste passende Modell.
+3. „Neuestes“: mit `preferStable` (Standard) zuerst Stabilität (ohne `preview`/`exp` vor `preview` vor `exp`), dann die Versionszahlen der ID als Zahlenfolge; ohne `preferStable` nur die Version.
+4. Trifft nicht der erste Eintrag, ist das Ergebnis `replaced`, und die Oberfläche **sagt es**; findet sich nichts, `unavailable` mit Grund.
+Beispiel in den Daten (`image.make`): bevorzugt `gemini-3.1-flash-image`; fehlt es, fällt der Platz auf `gemini-2.5-flash-image` (stabil) statt auf ein neueres Vorschaumodell. Das ist eine Setzung, die der Entwickler ändern kann (`preferStable: false`).
+
+**Offen in diesem Abschnitt:** Eingabegrenzen je Modell (Bildgröße, Audiolänge); ob `gemini-embedding-2` Bild und Audio einbettet; Aufrufart der Lyria- und Omni-Modelle; Medienarten der übrigen Engines. Alles `vermutet` oder `unbekannt` markiert und Teil der Sonde.
+
+## 11 Modellwechsel beim Anbieter (Google, recherchiert 11.11.2026, Nachtrag 2)
+
+Anlass: Der Entwickler will nicht suchen müssen, ob ein Modell noch existiert, und den Ersatz sehen (KONZEPT 20.2). Daten im Block `lifecycle` der Datei.
+
+**Quellen für Abkündigungen**
+- **Seite `ai.google.dev/gemini-api/docs/deprecations`** (belegt, nur über Suchausschnitte gelesen): Tabelle mit den Spalten Modell, Veröffentlichung, Abschaltdatum, empfohlener Ersatz, gegliedert nach Familien (Gemini 3, 2.5, 2.0, Live, Audio, Embedding, Imagen, Veo, Lyria, Robotics). Nach Google sind die Daten der **früheste mögliche** Abschalttermin; das genaue Datum folgt mit Vorlauf. „Kein Abschaltdatum angekündigt“ kommt vor, auch mit genanntem Ersatz. **Das ist eine Webseite, kein API-Feld**: In der Modellliste fand sich kein maschinenlesbares Abkündigungskennzeichen.
+- **Abgeschaltete Modelle verschwinden nicht zuverlässig aus der Liste** (Drittquelle, Forum): `gemini-2.5-flash` stand noch in `models.list`, antwortete aber im Juli 2026 schon mit 404, obwohl die Tabelle den 16.10.2026 nannte. Die Liste allein genügt also nicht.
+- **`-latest`-Aliase** (`gemini-flash-latest`): in einer Forenantwort als nutzbar genannt (Drittquelle); `gemini-pro-latest` und `gemini-flash-lite-latest` vermutet. Ein Alias springt von selbst auf ein neues Modell: bequem, aber das Testprotokoll muss das tatsächlich antwortende Modell festhalten.
+- **Stilles Umleiten** (Drittquelle, Blog, Oktober 2026): `gemini-3.7-flash` antwortet weiter, kommt aber von `gemini-3.8-flash`. Das Protokoll sollte neben dem angefragten Modell das antwortende erfassen (Antwortfeld `modelVersion` bei `generateContent`, Vorwissen, vermutet).
+
+**Aufruf an ein abgeschaltetes Modell** (Drittquelle, Forum): HTTP 404, Status `NOT_FOUND`, Text etwa „This model models/<id> is no longer available“ (auch „… no longer available to new users“), bisweilen mit Ersatzhinweis („use models/<neu>“). Eine andere 404-Variante („is not found for API version v1beta, or is not supported for generateContent. Call ListModels …“) heißt: unbekannte ID oder falsche Methode. Muster stehen in `lifecycle.google.errorPatterns` und sind getestet; der Ersatzhinweis dient nur der Anzeige, **nie dem stillen Umschalten**.
+
+**Kleine Startliste** (`lifecycle.google.seed`, Stand 11.11.2026, aus Ausschnitten der Tabelle, von Hand zu pflegen): `gemini-2.0-flash` → `gemini-3.6-flash`, `imagen-4.0-generate-001` → `gemini-3.1-flash-image`, `gemini-2.0-flash-live-001` → `gemini-3.1-flash-live-preview`, `text-embedding-004` → `gemini-embedding-2`, `gemini-2.5-flash` → `gemini-3.6-flash` (Drittquelle). Google ändert Daten und Ersatzmodelle mehrfach (ein Bildmodell erhielt nach einem Quellenbericht 23 Tage Vorlauf; die Preisseite und die Tabelle widersprachen sich bei `gemini-2.5-flash-image`): nicht auf Daten verlassen, bei Treffern die Seite ansehen.
+
+**Entwurf für die App (Daten sind fertig, Bau im Chat-Strang)**
+1. Bei jedem Start und jedem Abruf der Modellliste jeden Funktionsplatz auflösen (Abschnitt 10).
+2. Antwortet ein Aufruf mit 404 „no longer available“, den Platz auf `unavailable` setzen, die nächste Rangfolge versuchen (`replaced`) und die Meldung zeigen; Ersatzhinweis aus dem Fehlertext anzeigen, nicht übernehmen.
+3. Startliste und Fehlermuster nur als Hinweis; die Rangfolge im Platz bleibt die Entscheidung des Nutzers.
+4. Andere Engines (OpenRouter, Groq, Mistral, Ollama): nicht recherchiert. Vorwissen, nicht geprüft: Ollama-Modelle gehören dem Nutzer lokal und verschwinden nicht; OpenRouter führt Ablösungen in der Liste. Beides in der nächsten Runde belegen.

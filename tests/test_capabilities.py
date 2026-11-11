@@ -118,5 +118,176 @@ class CapabilitiesTest(unittest.TestCase):
                 self.assertIn("effortMap", t)
 
 
+# ---- media rules and function slots (version 2 of the data file) ----
+MEDIA = CAP["media"]
+
+
+def media_rule(engine, model_id):
+    mid = re.sub(r"^models/", "", model_id or "")
+    for r in MEDIA["rules"]:
+        if r["engine"] == engine and re.search(r["match"], mid, re.I):
+            return r
+    return None
+
+
+def version_key(model_id):
+    nums = re.findall(r"\d+", re.sub(r"^models/", "", model_id))
+    return tuple(int(n) for n in nums)
+
+
+def stability(model_id):
+    if re.search(r"exp", model_id):
+        return 0
+    if re.search(r"preview", model_id):
+        return 1
+    return 2
+
+
+def resolve_slot(assignment, models, engines_up=("google",), online=True):
+    """Reference for the function-slot resolution (Chat strand must behave the same).
+    models: {engine: [model ids as listed]}. Returns (outcome, engine, model)."""
+    fn = MEDIA["functions"][assignment["function"]]
+    need = fn["needs"]
+    cond = assignment.get("conditions", {})
+    if cond.get("online") and not online:
+        return ("unavailable", None, None)
+
+    def fits(engine, mid):
+        r = media_rule(engine, mid)
+        if not r or r.get("excluded") or r["call"] not in need["calls"]:
+            return False
+        return set(need["in"]) <= set(r["in"] or []) and set(need["out"]) <= set(r["out"] or [])
+
+    for i, entry in enumerate(assignment["ranking"]):
+        eng = entry["engine"]
+        if cond.get("engineReachable") and eng not in engines_up and eng != "google":
+            continue
+        if eng not in engines_up:
+            continue
+        pool = [m for m in models.get(eng, []) if fits(eng, m)]
+        if "model" in entry:
+            if entry["model"] in pool:
+                return ("ok" if i == 0 else "replaced", eng, entry["model"])
+            if assignment.get("onMissing") == "stop":
+                return ("unavailable", None, None)
+            continue
+        if "family" in entry:
+            pool = [m for m in pool if re.search(entry["family"], m, re.I)]
+        if pool:
+            if assignment.get("preferStable", True):
+                key = lambda m: (stability(m), version_key(m), -len(m))
+            else:
+                key = lambda m: (version_key(m), stability(m), -len(m))
+            best = max(pool, key=key)
+            return ("ok" if i == 0 else "replaced", eng, best)
+    return ("unavailable", None, None)
+
+
+class MediaTest(unittest.TestCase):
+    def test_rules_are_wellformed(self):
+        kinds = set(MEDIA["kinds"])
+        for r in MEDIA["rules"]:
+            re.compile(r["match"])
+            self.assertIn(r["status"], STATUS, r["id"])
+            self.assertIn(r["engine"], CAP["engines"])
+            if r["call"] is not None:
+                self.assertIn(r["call"], MEDIA["calls"], r["id"])
+            for side in ("in", "out"):
+                if r[side] is not None:
+                    self.assertTrue(set(r[side]) <= kinds, r["id"])
+        for fid, f in MEDIA["functions"].items():
+            if fid == "note":
+                continue
+            self.assertTrue(set(f["needs"]["calls"]) <= set(MEDIA["calls"]), fid)
+            self.assertTrue(set(f["needs"]["in"] + f["needs"]["out"]) <= kinds, fid)
+        for eng, d in MEDIA["engineDefaults"].items():
+            if eng != "note":
+                # provider ids: engines without an own entry fall back to "openai" (rules.resolve)
+                self.assertTrue(eng in CAP["engines"] or eng in ("openrouter", "groq", "mistral", "custom"), eng)
+                self.assertIn(d["status"], STATUS)
+
+    def test_method_map_points_to_known_calls(self):
+        for method, calls in MEDIA["methodMap"]["google"].items():
+            for c in calls:
+                self.assertIn(c, MEDIA["calls"], method)
+
+    def test_google_model_kinds(self):
+        cases = {
+            "models/gemini-3.8-flash": ("chat", ["text"]),
+            "gemini-3.8-flash-tts": ("tts", ["audio"]),
+            "gemini-3.1-flash-tts-preview": ("tts", ["audio"]),
+            "gemini-3.1-flash-image": ("generate_media", ["text", "image"]),
+            "gemini-3-pro-image": ("generate_media", ["text", "image"]),
+            "gemini-3.1-flash-lite-image": ("generate_media", ["text", "image"]),
+            "imagen-4.0-generate-001": ("imagen_predict", ["image"]),
+            "gemini-embedding-2": ("embed", ["vector"]),
+            "gemini-3.1-flash-live-preview": ("live", ["text", "audio"]),
+            "gemini-3.8-live": ("live", ["text", "audio"]),
+            "gemini-2.5-flash-preview-native-audio-dialog": ("live", ["text", "audio"]),
+            "gemini-3.5-transcribe": ("transcribe", ["text"]),
+            "veo-3.1-generate-preview": ("video_long", ["video"]),
+        }
+        for mid, (call, out) in cases.items():
+            r = media_rule("google", mid)
+            self.assertIsNotNone(r, mid)
+            self.assertEqual(r["call"], call, mid)
+            self.assertEqual(r["out"], out, mid)
+        self.assertIsNone(media_rule("google", "some-unknown-model"))
+
+    def test_only_real_chat_models_are_in_the_chat_list(self):
+        for mid in ("gemini-3.8-flash-tts", "gemini-3.1-flash-image", "gemini-embedding-2", "gemini-3.8-live", "imagen-4.0-generate-001"):
+            self.assertFalse(media_rule("google", mid)["chatList"], mid)
+        self.assertTrue(media_rule("google", "gemini-3.6-flash")["chatList"])
+
+    def test_thinking_rule_would_match_media_models_so_media_comes_first(self):
+        # The reason for MEDIA.resolveOrder: name-based thinking rules also fit TTS and image models.
+        self.assertIsNotNone(thinking_rule("gemini-compat", "gemini-3.8-flash-tts"))
+        self.assertFalse(media_rule("google", "gemini-3.8-flash-tts")["chatList"])
+
+    def test_slot_resolution(self):
+        listed = {"google": ["gemini-3.8-flash", "gemini-3.1-flash-image", "gemini-3.1-flash-lite-image-preview",
+                             "gemini-2.5-flash-image", "imagen-4.0-generate-001", "veo-3.1-generate-preview",
+                             "gemini-3.8-flash-tts"]}
+        ex = MEDIA["assignmentFormat"]["example"]
+        # preferred model is listed
+        self.assertEqual(resolve_slot(ex, listed), ("ok", "google", "gemini-3.1-flash-image"))
+        # preferred model gone: stable beats the newer preview, and the UI must get "replaced"
+        gone = {"google": [m for m in listed["google"] if m != "gemini-3.1-flash-image"]}
+        self.assertEqual(resolve_slot(ex, gone), ("replaced", "google", "gemini-2.5-flash-image"))
+        # without the stability preference the newest wins
+        newest = dict(ex, preferStable=False)
+        self.assertEqual(resolve_slot(newest, gone), ("replaced", "google", "gemini-3.1-flash-lite-image-preview"))
+        # online lock
+        self.assertEqual(resolve_slot(ex, listed, online=False)[0], "unavailable")
+        # nothing with the ability: video models and chat models never fill image.make
+        none = {"google": ["gemini-3.8-flash", "veo-3.1-generate-preview", "gemini-3.8-flash-tts"]}
+        self.assertEqual(resolve_slot(ex, none)[0], "unavailable")
+        # onMissing stop
+        stop = dict(ex, onMissing="stop")
+        self.assertEqual(resolve_slot(stop, gone)[0], "unavailable")
+
+    def test_speech_slot_needs_tts_not_image(self):
+        a = {"function": "speech.say", "ranking": [{"engine": "google", "family": "tts", "pick": "newest"}],
+             "preferStable": True, "conditions": {"online": True}, "onMissing": "next", "ifNone": "unavailable"}
+        r = resolve_slot(a, {"google": ["gemini-3.1-flash-image", "gemini-3.8-flash-tts", "gemini-3.8-flash"]})
+        self.assertEqual(r, ("ok", "google", "gemini-3.8-flash-tts"))
+
+    def test_version_order(self):
+        self.assertGreater(version_key("gemini-3.1-flash-image"), version_key("gemini-3-pro-image"))
+        self.assertGreater(version_key("gemini-3-pro-image"), version_key("gemini-2.5-flash-image"))
+
+    def test_lifecycle_patterns(self):
+        lc = CAP["lifecycle"]["google"]
+        by = {p["kind"]: re.compile(p["regex"]) for p in lc["errorPatterns"]}
+        msg = "This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features."
+        self.assertTrue(by["gone"].search(msg))
+        self.assertEqual(by["replacement"].search(msg).group(1), "gemini-3.6-flash")
+        self.assertTrue(by["unsupported"].search("models/x is not found for API version v1beta, or is not supported for generateContent."))
+        self.assertFalse(by["gone"].search("Thinking level MINIMAL is not supported for this model"))
+        for e in lc["seed"]["entries"]:
+            self.assertIn(e["status"], STATUS)
+            self.assertRegex(e["shutdown"], r"^\d{4}-\d{2}-\d{2}$")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

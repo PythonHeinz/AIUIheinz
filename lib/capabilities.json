@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "stand": "2026-11-10",
+  "version": 2,
+  "stand": "2026-11-11",
   "note": {
     "en": "Capabilities of engines and models as data. Written by the Models strand from vendor documentation; not verified on the device. Entries marked unknown stay adjustable and are flagged so they can be tried (probe).",
     "de": "Fähigkeiten von Engines und Modellen als Daten. Vom Strang Modelle aus Anbieterdokus zusammengetragen, nicht auf dem Gerät geprüft. Einträge mit „unknown“ bleiben regelbar und werden als ungeklärt markiert, damit man sie ausprobieren kann (Sonde)."
@@ -234,6 +234,726 @@
     }
   },
 
+  "media": {
+    "note": {
+      "en": "Input and output kinds and call types per model, and the function slots built on them (KONZEPT 20). Detection: engine, model-name pattern, fields of the model list. Where the list says nothing the entry carries status 'vermutet'. First matching rule wins.",
+      "de": "Ein- und Ausgabearten und Aufrufarten je Modell sowie die Funktionsplätze darauf (KONZEPT 20). Erkennung: Engine, Namensmuster, Felder der Modellliste. Wo die Liste nichts sagt, steht Status „vermutet“. Die erste passende Regel gilt."
+    },
+    "kinds": {
+      "text": {
+        "en": "Text",
+        "de": "Text"
+      },
+      "image": {
+        "en": "Image",
+        "de": "Bild"
+      },
+      "audio": {
+        "en": "Audio",
+        "de": "Audio"
+      },
+      "video": {
+        "en": "Video",
+        "de": "Video"
+      },
+      "vector": {
+        "en": "Embedding vector",
+        "de": "Einbettungsvektor"
+      }
+    },
+    "calls": {
+      "chat": {
+        "label": {
+          "en": "Chat (text out)",
+          "de": "Chat (Text als Ausgabe)"
+        },
+        "google": "generateContent / streamGenerateContent",
+        "status": "belegt"
+      },
+      "generate_media": {
+        "label": {
+          "en": "Image or mixed output via generateContent",
+          "de": "Bild- oder Mischausgabe über generateContent"
+        },
+        "google": "generateContent with generationConfig.responseModalities (IMAGE, TEXT)",
+        "status": "belegt"
+      },
+      "imagen_predict": {
+        "label": {
+          "en": "Imagen image model (predict)",
+          "de": "Imagen-Bildmodell (predict)"
+        },
+        "google": "POST models/<id>:predict with instances and parameters",
+        "status": "belegt"
+      },
+      "tts": {
+        "label": {
+          "en": "Speech output (text to audio)",
+          "de": "Sprachausgabe (Text zu Audio)"
+        },
+        "google": "generateContent with audio response modality and speechConfig",
+        "status": "vermutet",
+        "check": {
+          "en": "Details in SCHNITTSTELLEN section 12 (to be written).",
+          "de": "Einzelheiten: SCHNITTSTELLEN Abschnitt 12 (folgt)."
+        }
+      },
+      "transcribe": {
+        "label": {
+          "en": "Transcription (audio to text)",
+          "de": "Transkription (Audio zu Text)"
+        },
+        "google": "generateContent with audio input, or a dedicated transcribe model",
+        "status": "vermutet"
+      },
+      "embed": {
+        "label": {
+          "en": "Embedding",
+          "de": "Einbettung"
+        },
+        "google": "embedContent",
+        "status": "belegt"
+      },
+      "live": {
+        "label": {
+          "en": "Live (streaming audio dialogue)",
+          "de": "Live (Audio im Dialog)"
+        },
+        "google": "bidiGenerateContent (WebSocket)",
+        "status": "belegt",
+        "note": {
+          "en": "Mentioned only; not planned.",
+          "de": "Nur vermerkt, nicht geplant."
+        }
+      },
+      "video_long": {
+        "label": {
+          "en": "Video generation (long running)",
+          "de": "Videoerzeugung (lang laufend)"
+        },
+        "google": "predictLongRunning",
+        "status": "belegt",
+        "excluded": true,
+        "note": {
+          "en": "Excluded (KONZEPT 20.9).",
+          "de": "Ausgeschlossen (KONZEPT 20.9)."
+        }
+      }
+    },
+    "methodMap": {
+      "note": {
+        "en": "Hint from models.list supportedGenerationMethods. The list names methods, not abilities: a method alone never proves image or audio support.",
+        "de": "Hinweis aus supportedGenerationMethods der Modellliste. Die Liste nennt Methoden, keine Fähigkeiten: eine Methode allein belegt weder Bild noch Audio."
+      },
+      "google": {
+        "generateContent": [
+          "chat",
+          "generate_media",
+          "tts",
+          "transcribe"
+        ],
+        "streamGenerateContent": [
+          "chat",
+          "generate_media",
+          "tts",
+          "transcribe"
+        ],
+        "predict": [
+          "imagen_predict"
+        ],
+        "predictLongRunning": [
+          "video_long"
+        ],
+        "embedContent": [
+          "embed"
+        ],
+        "bidiGenerateContent": [
+          "live"
+        ],
+        "countTokens": []
+      },
+      "status": "belegt"
+    },
+    "resolveOrder": {
+      "en": "mediaRule(engine, modelId): first rule whose match fits (case-insensitive, id without a leading 'models/'). Use it BEFORE the thinking rule: models.list also returns TTS, image and embedding models, and the thinking rules would match them by name.",
+      "de": "mediaRule(Engine, Modell-ID): die erste Regel, deren match passt (Groß-/Kleinschreibung egal, ID ohne führendes „models/“). Vor der Denkregel anwenden: Die Modellliste enthält auch TTS-, Bild- und Einbettungsmodelle, auf die die Denkregeln nach Namen passen würden."
+    },
+    "rules": [
+      {
+        "id": "google-tts",
+        "engine": "google",
+        "match": "(^|-)tts(-|$)",
+        "in": [
+          "text"
+        ],
+        "out": [
+          "audio"
+        ],
+        "call": "tts",
+        "chatList": false,
+        "status": "belegt",
+        "basis": "model names gemini-2.5-flash-preview-tts, gemini-3.1-flash-tts-preview, gemini-3.8-flash-tts, gemini-3.8-flash-lite-tts (deprecations page, read 2026-11-11)"
+      },
+      {
+        "id": "google-live",
+        "engine": "google",
+        "match": "(^|-)live(-|$)|native-audio",
+        "in": [
+          "text",
+          "audio",
+          "video"
+        ],
+        "out": [
+          "text",
+          "audio"
+        ],
+        "call": "live",
+        "chatList": false,
+        "status": "vermutet",
+        "basis": "names gemini-3.1-flash-live-preview, gemini-3.8-live, native-audio previews; method bidiGenerateContent (model list, belegt); input kinds from prior knowledge"
+      },
+      {
+        "id": "google-transcribe",
+        "engine": "google",
+        "match": "transcribe",
+        "in": [
+          "audio"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "transcribe",
+        "chatList": false,
+        "status": "vermutet",
+        "basis": "name gemini-3.5-transcribe appears in the deprecations table; call details unknown"
+      },
+      {
+        "id": "google-embedding",
+        "engine": "google",
+        "match": "embedding",
+        "in": [
+          "text"
+        ],
+        "out": [
+          "vector"
+        ],
+        "call": "embed",
+        "chatList": false,
+        "status": "belegt",
+        "basis": "embedContent in supportedGenerationMethods (model list); whether gemini-embedding-2 takes images or audio: unbekannt"
+      },
+      {
+        "id": "google-image-gemini",
+        "engine": "google",
+        "match": "-image|nano-banana",
+        "in": [
+          "text",
+          "image"
+        ],
+        "out": [
+          "text",
+          "image"
+        ],
+        "call": "generate_media",
+        "chatList": false,
+        "status": "vermutet",
+        "basis": "names gemini-2.5-flash-image, gemini-3.1-flash-image, gemini-3-pro-image, gemini-3.1-flash-lite-image (deprecations page); input kinds and text alongside the image from prior knowledge"
+      },
+      {
+        "id": "google-imagen",
+        "engine": "google",
+        "match": "^imagen-",
+        "in": [
+          "text"
+        ],
+        "out": [
+          "image"
+        ],
+        "call": "imagen_predict",
+        "chatList": false,
+        "status": "belegt",
+        "basis": "method predict exists in the API reference; names imagen-4.0-generate-001, imagen-4.0-ultra-generate-001 (deprecations page)"
+      },
+      {
+        "id": "google-veo",
+        "engine": "google",
+        "match": "^veo-",
+        "in": [
+          "text",
+          "image"
+        ],
+        "out": [
+          "video"
+        ],
+        "call": "video_long",
+        "chatList": false,
+        "excluded": true,
+        "status": "belegt",
+        "basis": "predictLongRunning; video generation is excluded (KONZEPT 20.9)"
+      },
+      {
+        "id": "google-lyria",
+        "engine": "google",
+        "match": "^lyria-",
+        "in": [
+          "text"
+        ],
+        "out": [
+          "audio"
+        ],
+        "call": null,
+        "chatList": false,
+        "status": "vermutet",
+        "basis": "names lyria-3-clip-preview, lyria-3-pro-preview, lyria-realtime-exp (deprecations page); call type unknown, music, not planned"
+      },
+      {
+        "id": "google-robotics",
+        "engine": "google",
+        "match": "robotics",
+        "in": [
+          "text",
+          "image",
+          "video"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "chatList": false,
+        "status": "vermutet",
+        "basis": "gemini-robotics-er-*-preview; special purpose, kept out of the chat list"
+      },
+      {
+        "id": "google-omni",
+        "engine": "google",
+        "match": "^gemini-omni",
+        "in": null,
+        "out": null,
+        "call": null,
+        "chatList": false,
+        "status": "unbekannt",
+        "basis": "name seen in the deprecations table (gemini-omni-1.1-flash); abilities not read"
+      },
+      {
+        "id": "google-gemini-chat",
+        "engine": "google",
+        "match": "^gemini-|^gemma-",
+        "in": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "chatList": true,
+        "status": "vermutet",
+        "basis": "prior knowledge: current Gemini chat models take text, image, audio and video; per-model limits (size, length, formats) not read; supportedGenerationMethods only says generateContent"
+      }
+    ],
+    "engineDefaults": {
+      "note": {
+        "en": "Engines other than Google: where the media kinds can be read from. All entries are prior knowledge or unread and get checked in the next research step (SCHNITTSTELLEN section 12 and later).",
+        "de": "Engines außer Google: woraus sich die Medienarten lesen lassen. Alles Vorwissen oder ungelesen; wird im nächsten Rechercheschritt geprüft (SCHNITTSTELLEN Abschnitt 12 und später)."
+      },
+      "ollama": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "vermutet",
+        "listField": "POST /api/show returns capabilities (for example completion, vision, tools, thinking, embedding) in recent versions",
+        "listStatus": "vermutet"
+      },
+      "litert": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "belegt",
+        "extra": {
+          "en": "Embedding via /v1/embeddings (documented). Image and audio via serve: unknown, to be tried.",
+          "de": "Einbettung über /v1/embeddings (dokumentiert). Bild und Audio über serve: unbekannt, wird ausprobiert."
+        },
+        "listField": null,
+        "listStatus": "unbekannt"
+      },
+      "openrouter": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "vermutet",
+        "listField": "GET /api/v1/models: architecture.input_modalities and output_modalities",
+        "listStatus": "vermutet"
+      },
+      "groq": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "vermutet",
+        "extra": {
+          "en": "Audio endpoints (transcription, speech) exist beside chat; names not read.",
+          "de": "Audio-Endpunkte (Transkription, Sprache) neben dem Chat; Namen nicht gelesen."
+        },
+        "listField": null,
+        "listStatus": "unbekannt"
+      },
+      "mistral": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "vermutet",
+        "listField": "GET /v1/models: capabilities block per model (vision and others)",
+        "listStatus": "vermutet"
+      },
+      "openai": {
+        "in": [
+          "text"
+        ],
+        "out": [
+          "text"
+        ],
+        "call": "chat",
+        "status": "vermutet",
+        "listField": null,
+        "listStatus": "unbekannt"
+      }
+    },
+    "functions": {
+      "note": {
+        "en": "Function slots (KONZEPT 20.1). A module asks for a function, never for a model. 'needs' is what a model must offer to fill the slot.",
+        "de": "Funktionsplätze (KONZEPT 20.1). Ein Modul fragt nach einer Funktion, nie nach einem Modell. „needs“ nennt, was ein Modell können muss."
+      },
+      "chat.main": {
+        "label": {
+          "en": "Main chat",
+          "de": "Haupt-Chat"
+        },
+        "needs": {
+          "in": [
+            "text"
+          ],
+          "out": [
+            "text"
+          ],
+          "calls": [
+            "chat"
+          ]
+        }
+      },
+      "check.second": {
+        "label": {
+          "en": "Second opinion",
+          "de": "Zweitprüfung"
+        },
+        "needs": {
+          "in": [
+            "text"
+          ],
+          "out": [
+            "text"
+          ],
+          "calls": [
+            "chat"
+          ]
+        }
+      },
+      "vision.read": {
+        "label": {
+          "en": "Read an image",
+          "de": "Bild lesen"
+        },
+        "needs": {
+          "in": [
+            "text",
+            "image"
+          ],
+          "out": [
+            "text"
+          ],
+          "calls": [
+            "chat"
+          ]
+        },
+        "localFirst": true,
+        "note": {
+          "en": "Local first (Gemma over LiteRT-LM or classic text recognition), cloud optional.",
+          "de": "Zuerst lokal (Gemma über LiteRT-LM oder klassische Texterkennung), Cloud zuschaltbar."
+        }
+      },
+      "image.make": {
+        "label": {
+          "en": "Make or edit an image",
+          "de": "Bild erzeugen oder bearbeiten"
+        },
+        "needs": {
+          "in": [
+            "text"
+          ],
+          "out": [
+            "image"
+          ],
+          "calls": [
+            "generate_media",
+            "imagen_predict"
+          ]
+        },
+        "mustLabel": true,
+        "note": {
+          "en": "Output must be marked as AI-generated (KONZEPT 20.7).",
+          "de": "Ausgabe ist als KI-erzeugt zu kennzeichnen (KONZEPT 20.7)."
+        }
+      },
+      "speech.say": {
+        "label": {
+          "en": "Speak a text",
+          "de": "Text sprechen"
+        },
+        "needs": {
+          "in": [
+            "text"
+          ],
+          "out": [
+            "audio"
+          ],
+          "calls": [
+            "tts"
+          ]
+        },
+        "browserFallback": "speechSynthesis"
+      },
+      "speech.hear": {
+        "label": {
+          "en": "Recognise speech",
+          "de": "Sprache erkennen"
+        },
+        "needs": {
+          "in": [
+            "audio"
+          ],
+          "out": [
+            "text"
+          ],
+          "calls": [
+            "transcribe",
+            "chat"
+          ]
+        },
+        "browserFallback": "SpeechRecognition"
+      },
+      "embed.local": {
+        "label": {
+          "en": "Embedding",
+          "de": "Einbettung"
+        },
+        "needs": {
+          "in": [
+            "text"
+          ],
+          "out": [
+            "vector"
+          ],
+          "calls": [
+            "embed"
+          ]
+        },
+        "localFirst": true
+      }
+    },
+    "assignmentFormat": {
+      "note": {
+        "en": "What the app stores per function slot (settings). A slot holds a wish and a ranking, never a bare model name.",
+        "de": "Was die App je Funktionsplatz speichert (Einstellungen). Ein Platz hält Wunsch und Rangfolge, nie nur einen Modellnamen."
+      },
+      "example": {
+        "function": "image.make",
+        "ranking": [
+          {
+            "engine": "google",
+            "model": "gemini-3.1-flash-image"
+          },
+          {
+            "engine": "google",
+            "family": "-image|nano-banana",
+            "pick": "newest"
+          },
+          {
+            "engine": "home"
+          }
+        ],
+        "preferStable": true,
+        "conditions": {
+          "online": true,
+          "engineReachable": true
+        },
+        "onMissing": "next",
+        "ifNone": "unavailable"
+      },
+      "fields": {
+        "function": "key of functions",
+        "ranking": "list, tried in order. {engine, model} names one model; {engine, family, pick:'newest'} means: of all models of that engine whose id matches the regex family and whose mediaRule fits the function's needs, the newest; {engine} alone means any model of the engine that fits.",
+        "preferStable": "true (default): rank by stability first (no 'preview' or 'exp' in the id beats preview beats exp), then by version; false: version only.",
+        "conditions": "online: needs 'Online erlauben'; engineReachable: the engine answers (home server).",
+        "onMissing": "'next' (default): continue with the next ranking entry; 'stop': report unavailable at once.",
+        "ifNone": "'unavailable': slot shows 'not available' with the reason; the tool stays usable without the function."
+      },
+      "versionOrder": "newest = highest tuple of the numbers in the id, compared piece by piece ('gemini-3.1-flash-image' gives (3,1); 'gemini-3-pro-image' gives (3,0); 'gemini-2.5-flash-image' gives (2,5)). Equal tuples: GA before preview before exp, then the longer id loses.",
+      "outcomes": {
+        "ok": {
+          "en": "Slot uses the preferred entry.",
+          "de": "Der Platz nutzt den bevorzugten Eintrag."
+        },
+        "replaced": {
+          "en": "The preferred model is gone; replaced by the next entry. The UI says it: \"{function}: {old} replaced by {new}\".",
+          "de": "Das bevorzugte Modell fehlt; der nächste Eintrag tritt ein. Die Oberfläche sagt es: „{function}: {old} ersetzt durch {new}“."
+        },
+        "unavailable": {
+          "en": "No entry fits. The UI shows 'not available' and the reason (engine offline, online lock, no model with the ability).",
+          "de": "Kein Eintrag passt. Die Oberfläche zeigt „nicht verfügbar“ mit Grund (Engine offline, Online-Sperre, kein Modell mit der Fähigkeit)."
+        }
+      },
+      "when": "At every start and after every model-list fetch; never silently, the user can change the choice."
+    }
+  },
+  "lifecycle": {
+    "note": {
+      "en": "How a model leaves the stage at the provider and how the app notices. Google researched 2026-11-11; other engines open (SCHNITTSTELLEN section 11).",
+      "de": "Wie ein Modell beim Anbieter abgelöst wird und woran die App es merkt. Google recherchiert am 11.11.2026; andere Engines offen (SCHNITTSTELLEN Abschnitt 11)."
+    },
+    "google": {
+      "signals": [
+        {
+          "id": "list-missing",
+          "text": "The model id is no longer in models.list.",
+          "status": "belegt"
+        },
+        {
+          "id": "404-gone",
+          "text": "Call returns 404 NOT_FOUND: 'This model models/<id> is no longer available' (also 'no longer available to new users'). The text sometimes names a replacement ('use models/<new>').",
+          "status": "drittquelle"
+        },
+        {
+          "id": "404-listed",
+          "text": "A model can answer 404 'no longer available' while models.list still returns it, and before the published shutdown date (reports for 2.5-flash in July 2026, shutdown date October 16, 2026).",
+          "status": "drittquelle"
+        },
+        {
+          "id": "404-unsupported",
+          "text": "404 'models/<id> is not found for API version v1beta, or is not supported for generateContent. Call ListModels ...' means unknown id or wrong method.",
+          "status": "drittquelle"
+        },
+        {
+          "id": "silent-reroute",
+          "text": "A deprecated id can keep answering while the provider routes it to a newer model (reported for gemini-3.7-flash to gemini-3.8-flash, October 2026). The response then comes from another model than the one asked for.",
+          "status": "drittquelle"
+        }
+      ],
+      "errorPatterns": [
+        {
+          "kind": "gone",
+          "regex": "no longer available",
+          "status": "drittquelle"
+        },
+        {
+          "kind": "unsupported",
+          "regex": "is not found for API version|is not supported for",
+          "status": "drittquelle"
+        },
+        {
+          "kind": "replacement",
+          "regex": "use (?:models/)?([A-Za-z0-9._-]+)",
+          "group": 1,
+          "status": "drittquelle",
+          "note": "Optional hint for the UI; never switch on it without telling the user."
+        }
+      ],
+      "table": {
+        "url": "https://ai.google.dev/gemini-api/docs/deprecations",
+        "columns": [
+          "Model",
+          "Release date",
+          "Shutdown date",
+          "Recommended replacement"
+        ],
+        "semantics": "Published dates are the earliest possible shutdown; the exact date follows with notice (vendor wording, paraphrased). 'No shutdown date announced' means none yet. A table row can name a replacement before any date exists. It is a web page, not an API field: no machine-readable deprecation flag was found in models.list.",
+        "status": "belegt"
+      },
+      "aliases": [
+        {
+          "alias": "gemini-flash-latest",
+          "status": "drittquelle",
+          "note": "Seen in a forum answer as supported on v1beta; which model it points to changes over time."
+        },
+        {
+          "alias": "gemini-pro-latest",
+          "status": "vermutet"
+        },
+        {
+          "alias": "gemini-flash-lite-latest",
+          "status": "vermutet"
+        }
+      ],
+      "recordModelInReport": "Record the model that actually answered next to the model asked for (generateContent response field modelVersion, prior knowledge, vermutet) in the test report, so silent rerouting becomes visible.",
+      "seed": {
+        "asOf": "2026-11-11",
+        "note": "Small starting list for the replacement hint, read from search excerpts of the vendor table; refresh by hand. Never used to switch a model silently.",
+        "entries": [
+          {
+            "id": "gemini-2.0-flash",
+            "shutdown": "2026-06-01",
+            "replacement": "gemini-3.6-flash",
+            "status": "belegt"
+          },
+          {
+            "id": "imagen-4.0-generate-001",
+            "shutdown": "2026-08-17",
+            "replacement": "gemini-3.1-flash-image",
+            "status": "belegt",
+            "note": "Excerpt, row layout slightly unclear."
+          },
+          {
+            "id": "gemini-2.0-flash-live-001",
+            "shutdown": "2025-12-09",
+            "replacement": "gemini-3.1-flash-live-preview",
+            "status": "belegt"
+          },
+          {
+            "id": "text-embedding-004",
+            "shutdown": "2026-01-14",
+            "replacement": "gemini-embedding-2",
+            "status": "belegt"
+          },
+          {
+            "id": "gemini-2.5-flash",
+            "shutdown": "2026-10-16",
+            "replacement": "gemini-3.6-flash",
+            "status": "drittquelle",
+            "note": "Replacement named in an error text reported in a forum; answers 404 earlier than the date."
+          }
+        ]
+      }
+    }
+  },
   "sources": {
     "S1": "https://ai.google.dev/gemini-api/docs/openai",
     "S2": "https://ai.google.dev/api/models",
