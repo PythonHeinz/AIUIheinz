@@ -857,7 +857,7 @@ class PageTest(unittest.TestCase):
         return page, g
 
     def test_blocked_controls_are_greyed_out_and_not_sent_while_unknown_ones_stay_active_with_tag(self):
-        page, g = self.google_page("gemini-3-flash")
+        page, g = self.google_page("gemini-2.5-flash")   # top_k is only measured off on Gemini 3
         self.assertEqual(page.evaluate("document.getElementById('sc-ctx').dataset.capState"), "fixed")
         self.assertTrue(page.evaluate("document.getElementById('sc-ctx').classList.contains('cap-blocked')"))
         self.assertTrue(page.evaluate("document.querySelector('#sc-ctx input').disabled"))
@@ -1160,7 +1160,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(hdr.get("x-goog-api-key"), "AIza-native")
         gc = body["generationConfig"]
         self.assertEqual(gc["temperature"], 0.4)
-        self.assertIn("topK", gc, "top_k is sent on the native route")
+        self.assertNotIn("topK", gc, "top_k is measured without effect on gemini-3.8-flash: not sent")
         self.assertIn("topP", gc)
         for k in ("num_ctx", "num_thread", "max_tokens", "reasoning_effort", "messages", "stream"):
             self.assertNotIn(k, body)
@@ -1170,6 +1170,10 @@ class PageTest(unittest.TestCase):
         self.assertIn("systemInstruction", body, "the system prompt goes to systemInstruction")
         self.assertEqual(page.inner_text(".msg-assistant"), "Hi there")
         self.assertEqual(self.external and [u for u in self.external if "AIza" in u], [])
+        # counter test: Gemini 2.5 is not measured, top_k stays active and is sent
+        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; onModelChange()")
+        self.send(page, "again")
+        self.assertIn("topK", g.requests[-1][2]["generationConfig"])
 
     def test_native_google_thinking_level_and_budget_never_both_and_real_thought_tokens(self):
         page, g = self.gemini_page(thoughts=40)
@@ -1227,8 +1231,9 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("HeinzCaps.engineFor('custom', 'https://generativelanguage.googleapis.com/v1beta/openai')"), "gemini-compat", "compatible route unchanged")
         self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-3.8-flash', 'frequency_penalty').state"), "error", "model rules are shared")
         self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-2.5-flash', 'frequency_penalty').state"), "unknown")
-        self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-3.8-flash', 'top_k').state"), "unknown")
-        self.assertEqual(page.evaluate("document.getElementById('sc-topk').dataset.capState"), "unknown")
+        self.assertEqual(page.evaluate("HeinzCaps.cell('google', 'https://generativelanguage.googleapis.com/v1beta', 'models/gemini-3.8-flash', 'top_k').state"), "off", "measured 11.11.2026")
+        self.assertEqual(page.evaluate("document.getElementById('sc-topk').dataset.capState"), "off")
+        self.assertTrue(page.evaluate("document.getElementById('sc-topk').classList.contains('cap-blocked')"))
         self.assertEqual(page.evaluate("document.getElementById('sc-ctx').dataset.capState"), "fixed")
         txt = None
         self.send(page, "Hi")

@@ -29,7 +29,7 @@ Google empfiehlt selbst, den nativen Weg zu nehmen, wenn man keine OpenAI-Biblio
 |---|---|---|---|
 | Temperatur | `temperature` | `temperature` | belegt. Bereich je Modell: 0 bis `maxTemperature` (aus Modellliste). **Gemini 3:** Google rät dringend, bei 1.0 zu bleiben; niedrigere Werte können zu Schleifen und schlechterer Leistung führen (belegt, Gemini-3-Leitfaden). Eine Firebase-Referenz markiert für 3.x `temperature` und `topK` als „wird ignoriert“; Auszug nicht eindeutig lesbar (Drittquelle). **Sonde.** |
 | top_p | `top_p` | `topP` | belegt (Feld in der Modellliste), Wirkung bei 3.x wie oben unklar |
-| top_k | nicht Teil von OpenAI; vermutet ignoriert | `topK` | Modellliste nennt `topK`-Vorgabe (belegt). Im kompatiblen Weg **unbekannt**: vermutlich ignoriert oder nur über `extra_body`. Sonde |
+| top_k | nicht Teil von OpenAI; vermutet ignoriert | `topK` | Modellliste nennt `topK`-Vorgabe (belegt). Im kompatiblen Weg **unbekannt**: vermutlich ignoriert oder nur über `extra_body`. **Gemessen 11.11.2026 (gemini-3.8-flash, nativ, Temperatur 2): `topK` 1 ergab drei verschiedene Antworten, der Wert wirkt bei Gemini 3 nicht** (wird akzeptiert, HTTP 200). |
 | max. Token | `max_tokens`, `max_completion_tokens` (Drittquelle) | `maxOutputTokens` | Obergrenze je Modell `outputTokenLimit` in der Modellliste (belegt). **Bei Denkmodellen zählen Denk-Token vermutlich mit** (Vorwissen, nicht geprüft): zu kleiner Wert kann eine leere Antwort ergeben. Sonde |
 | Stoppsequenzen | `stop` (Drittquelle) | `stopSequences` (bis 5, Firebase-Referenz) | belegt für nativ, Drittquelle für kompatibel |
 | Seed | vermutet ja | `seed` | nativ belegt (Vertex-Doku: „bestmöglich gleich, nicht garantiert“). Kompatibel unbekannt |

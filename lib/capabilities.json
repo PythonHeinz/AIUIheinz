@@ -164,6 +164,7 @@
       "status": "belegt",
       "params": {
         "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "top_k": { "state": "unknown", "status": "drittquelle", "hint": { "en": "topK had no effect on gemini-3.8-flash (measured 11.11.2026); assumed the same for the other Gemini 3 models, not checked.", "de": "topK blieb bei gemini-3.8-flash ohne Wirkung (gemessen 11.11.2026); für die anderen Gemini-3-Modelle angenommen, nicht geprüft." } },
         "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
         "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
       },
@@ -176,6 +177,7 @@
       "status": "belegt",
       "params": {
         "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "top_k": { "state": "unknown", "status": "drittquelle", "hint": { "en": "topK had no effect on gemini-3.8-flash (measured 11.11.2026); assumed the same for the other Gemini 3 models, not checked.", "de": "topK blieb bei gemini-3.8-flash ohne Wirkung (gemessen 11.11.2026); für die anderen Gemini-3-Modelle angenommen, nicht geprüft." } },
         "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
         "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
       },
@@ -188,6 +190,7 @@
       "status": "belegt",
       "params": {
         "temperature": { "state": "on", "recommended": 1.0, "status": "belegt", "hint": { "en": "Google strongly recommends 1.0 for Gemini 3; lower values can cause loops and worse answers.", "de": "Google rät bei Gemini 3 dringend zu 1,0; niedrigere Werte können Schleifen und schlechtere Antworten auslösen." } },
+        "top_k": { "state": "off", "status": "belegt", "hint": { "en": "Measured on the device 11.11.2026 (gemini-3.8-flash, native route, temperature 2): three answers with topK 1 were three different animals, so the value has no effect. Not sent.", "de": "Am Gerät gemessen 11.11.2026 (gemini-3.8-flash, nativ, Temperatur 2): drei Antworten mit topK 1 waren drei verschiedene Tiere, der Wert wirkt also nicht. Wird nicht gesendet." } },
         "frequency_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } },
         "presence_penalty": { "state": "error", "status": "drittquelle", "hint": { "en": "Gemini 3 rejects this field with error 400 (Firebase reference).", "de": "Gemini 3 lehnt dieses Feld mit Fehler 400 ab (Firebase-Referenz)." } }
       },

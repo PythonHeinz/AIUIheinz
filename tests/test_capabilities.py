@@ -85,6 +85,14 @@ class CapabilitiesTest(unittest.TestCase):
         self.assertEqual(cell("gemini-compat", "gemini-2.5-flash", "frequency_penalty")["state"], "unknown")
         self.assertNotIn("recommended", cell("gemini-compat", "gemini-2.5-flash", "temperature"))
 
+    def test_top_k_is_measured_off_on_gemini_3_flash_native_and_open_elsewhere(self):
+        self.assertEqual(cell("google", "models/gemini-3.8-flash", "top_k")["state"], "off")
+        self.assertEqual(cell("google", "models/gemini-3.8-flash", "top_k")["status"], "belegt")
+        # not measured: flash-lite and pro stay open, Gemini 2.5 keeps the engine cell
+        self.assertEqual(cell("google", "models/gemini-3.1-flash-lite", "top_k")["state"], "unknown")
+        self.assertEqual(cell("google", "models/gemini-3-pro-preview", "top_k")["state"], "unknown")
+        self.assertEqual(cell("google", "models/gemini-2.5-flash", "top_k")["state"], "unknown")
+
     def test_thinking_rule_order(self):
         # flash-lite must win over flash, pro must have no "minimal"
         self.assertEqual(thinking_rule("gemini-compat", "models/gemini-3.1-flash-lite-preview")["default"], "minimal")
