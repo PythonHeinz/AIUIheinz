@@ -1396,6 +1396,64 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.evaluate("JSON.parse(localStorage.getItem('heinz_series')).unfinished"))
         self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%", "a complete series shows a full bar")
 
+    def test_series_estimate_uses_history_per_thinking_level_and_defaults_without(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        rows = "[{params:{think:'fast'}},{params:{think:'deep'}},{params:{think:'deep'}}]"
+        hist = "[{params:{think:'fast'},totalMs:2000},{params:{think:'deep'},totalMs:10000},{params:{think:'deep'},totalMs:20000},{params:{think:'deep'},totalMs:99000,error:'x'},{params:{think:'fast'},totalMs:99000,aborted:true}]"
+        r = page.evaluate("HeinzSeries.estimateSec(" + rows + "," + hist + ",{local:true})")
+        self.assertAlmostEqual(r["sec"], 2 + 15 + 15, places=3, msg="mean per level; errors and aborted runs do not count")
+        self.assertTrue(r["fromHistory"])
+        r = page.evaluate("HeinzSeries.estimateSec(" + rows + ",[],{local:true})")   # counter case: no history
+        self.assertAlmostEqual(r["sec"], 4 + 12 + 12, places=3)
+        self.assertFalse(r["fromHistory"])
+        r = page.evaluate("HeinzSeries.estimateSec(" + rows + "," + hist + ",{cloud:true})")
+        self.assertAlmostEqual(r["sec"], 32 + 3 * 1.2, places=3, msg="cloud adds the pause between runs")
+
+    def test_series_resume_runs_only_the_missing_runs_after_stop_and_after_reload(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.assertFalse(page.is_visible("#sr-resume"), "nothing to resume yet")
+        self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
+        page.click("#sr-start")
+        page.wait_for_function("srRuns.length >= 2")
+        page.click("#sr-stop")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
+        self.assertTrue(page.is_visible("#sr-resume"))
+        self.assertRegex(page.inner_text("#sr-resume"), r"Resume \(\d+ open\)")
+        page.reload()   # also works after the page was closed: spec and fixed values are saved with the series
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.assertTrue(page.is_visible("#sr-resume"))
+        page.fill("#sr-temp", "1")   # changed form must not change the resumed series
+        before = len(self.ollama.requests)
+        kept = page.evaluate("srRuns.filter(r => !r.aborted && !r.error).length")
+        page.click("#sr-resume")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
+        self.assertEqual(len(self.ollama.requests) - before, 20 - kept, "only the open runs are requested")
+        self.assertEqual(page.evaluate("srRuns.map(r => r.n)"), list(range(1, 21)), "no duplicates, no gaps")
+        self.assertTrue(page.evaluate("srRuns.every(r => !r.aborted && !r.error)"))
+        self.assertEqual(page.evaluate("srRuns.map(r => r.params.temperature)"), [i / 20 for i in range(20)])
+        self.assertFalse(page.is_visible("#sr-resume"), "complete series: nothing left")
+        self.assertEqual(page.evaluate("srMeta.stopped"), "")
+
+    def test_series_resume_is_hidden_when_the_model_was_changed(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self.series_open(page)
+        self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
+        page.click("#sr-start")
+        page.wait_for_function("srRuns.length >= 1")
+        page.click("#sr-stop")
+        page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
+        self.assertTrue(page.is_visible("#sr-resume"))
+        other = page.evaluate("[...document.querySelectorAll('#model-select option')].map(o => o.value).find(v => v !== srMeta.model)")
+        page.evaluate("(m) => { const e = document.getElementById('model-select'); e.value = m; e.dispatchEvent(new Event('change')); srRender(); srResumeBtn(); }", other)
+        self.assertFalse(page.is_visible("#sr-resume"), "another model: results would be mixed")
+
     def test_series_start_and_stop_do_not_wait_for_a_hanging_wake_lock(self):
         page = self.new_page()
         # a wake lock that never answers (seen as a risk on the phone): the series must run and stop anyway

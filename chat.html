@@ -537,6 +537,7 @@
                 <div id="sr-plan" class="help" style="min-height:16px"></div>
                 <div class="st-btns">
                     <button class="pill acc" id="sr-start" type="button" onclick="srStart()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
+                    <button class="pill" id="sr-resume" type="button" onclick="srStart(true)" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="srResume">Resume</span></button>
                     <button class="pill danger" id="sr-stop" type="button" onclick="srStop()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
                 </div>
                 <div id="sr-status" class="help" style="min-height:16px"></div>
@@ -964,7 +965,7 @@
                 aborted: '(generation aborted)', error: 'Error:', noAnswer: 'No answer from Ollama. Is the server running?',
                 updTitle: 'Version of this app (GitHub commit and date). Tap to check for updates.', updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}', updBusy: 'Wait until the answer or the test is finished.',
                 reloadTitle: 'Reload page (chat and settings are kept)', startTitle: 'Time until the first word: model load + prompt processing',
-                rSeries: 'Test series', rSeriesSub: 'Run many settings, export for an agent', srNote: 'Runs one prompt under many settings, one after the other, and collects the data. No system prompt, no chat history. An empty field keeps the slider value.', srPromptLbl: 'Prompts', srValues: 'Values to try (separate with commas)', srThreads: 'Threads', srReps: 'Repeats', srMaxTok: 'Max. answer tokens', srAnswers: 'Answer texts in the export', srPlan: 'Runs: {n} (limit {max})', srPlanTime: ', about {m} min', srTooMany: '{n} runs are too many (limit {max}). Remove values or repeats.', srNoPrompt: 'Write a prompt first.', srCloud: 'This sends {n} requests to {e}. Tap again to confirm.', srConfirm: 'Confirm and start', srRunning: 'Run {i} of {n} …', srDone: 'Done: {n} runs.', srStopped: 'Stopped. {n} runs kept (the last one may be incomplete).', srErrors: 'Stopped after three errors in a row: {m}', srCopy: 'Copy export', srCopyPart: 'Copy part {i} of {n}', srLast: 'Last series: {n} of {m} runs saved{x}. Nothing is running.', srLastCut: ' (interrupted: app closed or page reloaded)', srPromptHelp: 'One prompt per line. Optional checks after "=>", separated by "|": contains:text, not:text, number:16, regex:pattern, json, min:20, max:200, stop. Example: How many primes are below 100? => number:25', srChecks: 'Checks: {p} of {n} runs passed.', srErrUnknown: 'Unknown check "{a}" in prompt {n}.', srErrValue: 'Check "{a}" needs a value (prompt {n}).', srErrRegex: 'Bad regular expression in prompt {n}.', srErrNumber: 'Check "{a}" needs a number (prompt {n}).', srBlocked: 'locked for this model', srLocked: 'locked', srRange: '{p}: {v} is outside the allowed range {a} to {b}. Fix the value.', srBusy: 'Wait until the answer is finished.', srNoModel: 'Choose a model first.', srOnlineOff: 'Online is off.', srCol: 'Settings', speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
+                rSeries: 'Test series', rSeriesSub: 'Run many settings, export for an agent', srNote: 'Runs one prompt under many settings, one after the other, and collects the data. No system prompt, no chat history. An empty field keeps the slider value.', srPromptLbl: 'Prompts', srValues: 'Values to try (separate with commas)', srThreads: 'Threads', srReps: 'Repeats', srMaxTok: 'Max. answer tokens', srAnswers: 'Answer texts in the export', srPlan: 'Runs: {n} (limit {max})', srPlanTime: ', about {m} min', srTooMany: '{n} runs are too many (limit {max}). Remove values or repeats.', srNoPrompt: 'Write a prompt first.', srCloud: 'This sends {n} requests to {e}. Tap again to confirm.', srConfirm: 'Confirm and start', srRunning: 'Run {i} of {n} …', srDone: 'Done: {n} runs.', srStopped: 'Stopped. {n} runs kept (the last one may be incomplete).', srErrors: 'Stopped after three errors in a row: {m}', srCopy: 'Copy export', srCopyPart: 'Copy part {i} of {n}', srLast: 'Last series: {n} of {m} runs saved{x}. Nothing is running.', srLastCut: ' (interrupted: app closed or page reloaded)', srPromptHelp: 'One prompt per line. Optional checks after "=>", separated by "|": contains:text, not:text, number:16, regex:pattern, json, min:20, max:200, stop. Example: How many primes are below 100? => number:25', srChecks: 'Checks: {p} of {n} runs passed.', srErrUnknown: 'Unknown check "{a}" in prompt {n}.', srErrValue: 'Check "{a}" needs a value (prompt {n}).', srErrRegex: 'Bad regular expression in prompt {n}.', srErrNumber: 'Check "{a}" needs a number (prompt {n}).', srResume: 'Resume', srResumeN: 'Resume ({n} open)', srPlanTimeH: ', about {m} min (from the last series)', srPlanTok: ', at most {t} answer tokens', srBlocked: 'locked for this model', srLocked: 'locked', srRange: '{p}: {v} is outside the allowed range {a} to {b}. Fix the value.', srBusy: 'Wait until the answer is finished.', srNoModel: 'Choose a model first.', srOnlineOff: 'Online is off.', srCol: 'Settings', speedTitle: 'Speed test', stNote: 'Fixed prompt, temperature 0, 32 tokens, model and context as set above. Run 1 = after unload or change, run 2 = warm (its prompt is mostly cached). Takes a few minutes; leave the phone alone meanwhile.',
                 stShort: 'Short prompt (~20 tokens)', stLong: 'Long prompt (~300 tokens)', stTermuxHidden: 'Termux in the background', stTermuxVisible: 'Termux visible (split screen)',
                 stCold: 'Unload model first (measures real load time)', stStart: 'Start test', stStop: 'Stop', stCopy: 'Copy results',
                 stRunning: 'Threads {n}, run {r}/2 ... {s} s', stDone: 'Done.', stStopped: 'Stopped.', stErr: 'Error: {m}', stNone: 'Select at least one thread value.',
@@ -1013,7 +1014,7 @@
                 aborted: '(Generierung abgebrochen)', error: 'Fehler:', noAnswer: 'Keine Antwort von Ollama. Läuft der Server?',
                 updTitle: 'Version dieser App (GitHub-Commit und Datum). Tippen sucht nach Updates.', updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}', updBusy: 'Warte, bis die Antwort oder der Test fertig ist.',
                 reloadTitle: 'Seite neu laden (Chat und Einstellungen bleiben erhalten)', startTitle: 'Zeit bis zum ersten Wort: Modell laden + Prompt verarbeiten',
-                rSeries: 'Testreihe', rSeriesSub: 'Viele Einstellungen durchlaufen, Export für einen Agenten', srNote: 'Schickt einen Prompt nacheinander mit vielen Einstellungen und sammelt die Daten. Kein Systemprompt, kein Chatverlauf. Ein leeres Feld lässt den Reglerwert stehen.', srPromptLbl: 'Prompt', srValues: 'Werte zum Ausprobieren (mit Komma trennen)', srThreads: 'Threads', srReps: 'Wiederholungen', srMaxTok: 'Max. Antwort-Token', srAnswers: 'Antworttexte im Export', srPlan: 'Läufe: {n} (Grenze {max})', srPlanTime: ', etwa {m} Min.', srTooMany: '{n} Läufe sind zu viel (Grenze {max}). Werte oder Wiederholungen streichen.', srNoPrompt: 'Erst einen Prompt schreiben.', srCloud: 'Das schickt {n} Anfragen an {e}. Zum Bestätigen noch einmal tippen.', srConfirm: 'Bestätigen und starten', srRunning: 'Lauf {i} von {n} …', srDone: 'Fertig: {n} Läufe.', srStopped: 'Gestoppt. {n} Läufe gespeichert (der letzte kann unvollständig sein).', srErrors: 'Nach drei Fehlern in Folge gestoppt: {m}', srCopy: 'Export kopieren', srCopyPart: 'Teil {i} von {n} kopieren', srLast: 'Letzte Reihe: {n} von {m} Läufen gespeichert{x}. Es läuft nichts.', srLastCut: ' (unterbrochen: App geschlossen oder Seite neu geladen)', srPromptHelp: 'Ein Prompt pro Zeile. Optionale Prüfungen nach "=>", getrennt mit "|": contains:Text, not:Text, number:16, regex:Muster, json, min:20, max:200, stop. Beispiel: Wie viele Primzahlen gibt es unter 100? => number:25', srChecks: 'Prüfungen: {p} von {n} Läufen bestanden.', srErrUnknown: 'Unbekannte Prüfung "{a}" in Prompt {n}.', srErrValue: 'Die Prüfung "{a}" braucht einen Wert (Prompt {n}).', srErrRegex: 'Ungültiger regulärer Ausdruck in Prompt {n}.', srErrNumber: 'Die Prüfung "{a}" braucht eine Zahl (Prompt {n}).', srBlocked: 'für dieses Modell gesperrt', srLocked: 'gesperrt', srRange: '{p}: {v} liegt außerhalb des erlaubten Bereichs {a} bis {b}. Wert korrigieren.', srBusy: 'Warte, bis die Antwort fertig ist.', srNoModel: 'Erst ein Modell wählen.', srOnlineOff: 'Online ist aus.', srCol: 'Einstellung', speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
+                rSeries: 'Testreihe', rSeriesSub: 'Viele Einstellungen durchlaufen, Export für einen Agenten', srNote: 'Schickt einen Prompt nacheinander mit vielen Einstellungen und sammelt die Daten. Kein Systemprompt, kein Chatverlauf. Ein leeres Feld lässt den Reglerwert stehen.', srPromptLbl: 'Prompt', srValues: 'Werte zum Ausprobieren (mit Komma trennen)', srThreads: 'Threads', srReps: 'Wiederholungen', srMaxTok: 'Max. Antwort-Token', srAnswers: 'Antworttexte im Export', srPlan: 'Läufe: {n} (Grenze {max})', srPlanTime: ', etwa {m} Min.', srTooMany: '{n} Läufe sind zu viel (Grenze {max}). Werte oder Wiederholungen streichen.', srNoPrompt: 'Erst einen Prompt schreiben.', srCloud: 'Das schickt {n} Anfragen an {e}. Zum Bestätigen noch einmal tippen.', srConfirm: 'Bestätigen und starten', srRunning: 'Lauf {i} von {n} …', srDone: 'Fertig: {n} Läufe.', srStopped: 'Gestoppt. {n} Läufe gespeichert (der letzte kann unvollständig sein).', srErrors: 'Nach drei Fehlern in Folge gestoppt: {m}', srCopy: 'Export kopieren', srCopyPart: 'Teil {i} von {n} kopieren', srLast: 'Letzte Reihe: {n} von {m} Läufen gespeichert{x}. Es läuft nichts.', srLastCut: ' (unterbrochen: App geschlossen oder Seite neu geladen)', srPromptHelp: 'Ein Prompt pro Zeile. Optionale Prüfungen nach "=>", getrennt mit "|": contains:Text, not:Text, number:16, regex:Muster, json, min:20, max:200, stop. Beispiel: Wie viele Primzahlen gibt es unter 100? => number:25', srChecks: 'Prüfungen: {p} von {n} Läufen bestanden.', srErrUnknown: 'Unbekannte Prüfung "{a}" in Prompt {n}.', srErrValue: 'Die Prüfung "{a}" braucht einen Wert (Prompt {n}).', srErrRegex: 'Ungültiger regulärer Ausdruck in Prompt {n}.', srErrNumber: 'Die Prüfung "{a}" braucht eine Zahl (Prompt {n}).', srResume: 'Fortsetzen', srResumeN: 'Fortsetzen ({n} offen)', srPlanTimeH: ', etwa {m} Min. (nach der letzten Reihe)', srPlanTok: ', höchstens {t} Antwort-Token', srBlocked: 'für dieses Modell gesperrt', srLocked: 'gesperrt', srRange: '{p}: {v} liegt außerhalb des erlaubten Bereichs {a} bis {b}. Wert korrigieren.', srBusy: 'Warte, bis die Antwort fertig ist.', srNoModel: 'Erst ein Modell wählen.', srOnlineOff: 'Online ist aus.', srCol: 'Einstellung', speedTitle: 'Tempo-Test', stNote: 'Fester Prompt, Temperatur 0, 32 Token, Modell und Kontext wie oben eingestellt. Lauf 1 = nach Entladen oder Änderung, Lauf 2 = warm (Prompt dort meist aus dem Zwischenspeicher). Dauert einige Minuten; das Handy solange in Ruhe lassen.',
                 stShort: 'Kurzer Prompt (~20 Token)', stLong: 'Langer Prompt (~300 Token)', stTermuxHidden: 'Termux im Hintergrund', stTermuxVisible: 'Termux sichtbar (Splitscreen)',
                 stCold: 'Modell vorher entladen (misst echte Ladezeit)', stStart: 'Test starten', stStop: 'Stopp', stCopy: 'Ergebnis kopieren',
                 stRunning: 'Threads {n}, Lauf {r}/2 ... {s} s', stDone: 'Fertig.', stStopped: 'Gestoppt.', stErr: 'Fehler: {m}', stNone: 'Mindestens einen Thread-Wert wählen.',
@@ -2318,6 +2319,7 @@
             });
             $('sr-thr-box').hidden = settings.provider !== 'ollama';
             $('sr-think-box').hidden = !thinkRule();
+            srResumeBtn();
         }
         // Werte außerhalb des erlaubten Bereichs würden die Engine mit HTTP 400 ablehnen: vor dem Start melden
         function srPromptError() {
@@ -2337,22 +2339,27 @@
             srConfirmed = false; srGate();
             const n = HeinzSeries.count(srSpec()), box = $('sr-plan'), start = $('sr-start');
             let m = '';
-            const perRun = settings.provider === 'ollama' ? 8 : (thinkRule() ? 15 : 4);
-            m = t('srPlanTime', { m: Math.max(1, Math.round(n * perRun / 60)) });
+            const spc = srSpec(), pvx = PV.get(settings.provider) || PV.get('ollama');
+            const hist = srMeta && srMeta.providerId === settings.provider && srMeta.model === ($('model-select').value || settings.model) ? srRuns : [];
+            const est = HeinzSeries.estimateSec(HeinzSeries.expand(spc).slice(0, HeinzSeries.MAX_RUNS), hist, { local: !!pvx.local, cloud: !pvx.local });
+            m = t(est.fromHistory ? 'srPlanTimeH' : 'srPlanTime', { m: Math.max(1, Math.ceil(est.sec / 60)) });
+            const mt = parseInt($('sr-max').value, 10) || 0;
+            if (!pvx.local && mt > 0) m += t('srPlanTok', { t: (n * mt).toLocaleString(settings.lang === 'de' ? 'de-DE' : 'en-US') });
             const bad = srPromptError() || srRangeError(srSpec());
             box.textContent = bad ? bad : n > HeinzSeries.MAX_RUNS ? t('srTooMany', { n: n, max: HeinzSeries.MAX_RUNS }) : t('srPlan', { n: n, max: HeinzSeries.MAX_RUNS }) + m;
             start.disabled = !!bad || n > HeinzSeries.MAX_RUNS;
             $('sr-start').querySelector('span').textContent = t('stStart');
         }
-        function srOptions(params, maxTok) {
-            const o = {};
-            const num = function (v, d) { return v === undefined ? d : v; };
-            if (capSendable('temperature')) o.temperature = num(params.temperature, parseFloat($('param-temp').value));
-            if (capSendable('top_p')) o.top_p = num(params.top_p, parseFloat($('param-topp').value));
-            if (capSendable('top_k')) o.top_k = num(params.top_k, parseInt($('param-topk').value, 10));
-            if (capSendable('num_ctx')) o.num_ctx = parseInt($('param-ctx').value, 10);
+        // fixed = Werte, die bei Start gesichert wurden (meta.fixed): so setzt „Fortsetzen“ mit denselben Werten fort, auch wenn die Regler inzwischen anders stehen
+        function srOptions(params, maxTok, fixed) {
+            const o = {}, f = fixed || {};
+            const num = function (v, k, d) { return v !== undefined ? v : (f[k] !== undefined && f[k] !== null ? f[k] : d); };
+            if (capSendable('temperature')) o.temperature = num(params.temperature, 'temperature', parseFloat($('param-temp').value));
+            if (capSendable('top_p')) o.top_p = num(params.top_p, 'top_p', parseFloat($('param-topp').value));
+            if (capSendable('top_k')) o.top_k = num(params.top_k, 'top_k', parseInt($('param-topk').value, 10));
+            if (capSendable('num_ctx')) o.num_ctx = num(undefined, 'num_ctx', parseInt($('param-ctx').value, 10));
             if (settings.provider === 'ollama' && capSendable('num_thread')) {
-                const th = num(params.num_thread, parseInt($('param-threads').value, 10));
+                const th = num(params.num_thread, 'num_thread', parseInt($('param-threads').value, 10));
                 if (th > 0) o.num_thread = th;
             }
             if (maxTok > 0 && capSendable('max_tokens')) o.num_predict = maxTok;
@@ -2385,47 +2392,76 @@
                 .then(function () { setTimeout(function () { sp.textContent = old; }, 1500); });
         });
         function srStop() { if (srAbort) srAbort.abort(); }
-        async function srStart() {
+        // Fortsetzen ist möglich, wenn dieselbe Engine und dasselbe Modell gewählt sind und noch Läufe fehlen.
+        // Fehlgeschlagene und abgebrochene Läufe zählen als fehlend und werden wiederholt.
+        function srPending() {
+            if (!srMeta || !srMeta.spec || seriesRunning) return null;
+            if (srMeta.providerId !== settings.provider || srMeta.model !== ($('model-select').value || settings.model)) return null;
+            const kept = {}; srRuns.forEach(function (r) { if (!r.error && !r.aborted) kept[r.n] = true; });
+            const todo = HeinzSeries.expand(srMeta.spec).filter(function (r) { return !kept[r.n]; });
+            return todo.length ? todo : null;
+        }
+        function srResumeBtn() {
+            const b = $('sr-resume'); if (!b) return;
+            const todo = srPending();
+            b.style.display = todo && !seriesRunning ? 'inline-flex' : 'none';
+            if (todo) b.querySelector('span').textContent = t('srResumeN', { n: todo.length });
+        }
+        async function srStart(resume) {
             if (seriesRunning) return;
             if (generating || speedTesting) { $('sr-status').textContent = t('srBusy'); return; }
-            const pp = HeinzSeries.parsePrompts($('sr-prompt').value), model = $('model-select').value || settings.model;
-            if (!pp.prompts.length) { $('sr-status').textContent = t('srNoPrompt'); return; }
-            if (pp.error) { $('sr-status').textContent = srPromptError(); return; }
+            let pp, model, spec, rows, maxTok, todo;
+            if (resume) {
+                todo = srPending(); if (!todo) return;
+                pp = { prompts: srMeta.prompts }; model = srMeta.model; spec = srMeta.spec; maxTok = srMeta.maxTok || 0;
+            } else {
+                pp = HeinzSeries.parsePrompts($('sr-prompt').value); model = $('model-select').value || settings.model;
+                if (!pp.prompts.length) { $('sr-status').textContent = t('srNoPrompt'); return; }
+                if (pp.error) { $('sr-status').textContent = srPromptError(); return; }
+                if (!model) { $('sr-status').textContent = t('srNoModel'); return; }
+                spec = srSpec(); rows = HeinzSeries.expand(spec);
+                if (rows.length > HeinzSeries.MAX_RUNS || srRangeError(spec)) return;
+                maxTok = parseInt($('sr-max').value, 10) || 0; todo = rows;
+            }
             const byId = {}; pp.prompts.forEach(function (q) { byId[q.id] = q; });
-            if (!model) { $('sr-status').textContent = t('srNoModel'); return; }
             const prov = settings.provider, pv = PV.get(prov) || PV.get('ollama');
             if (!pv.local && !pv.custom && !PV.onlineAllowed()) { $('sr-status').textContent = t('srOnlineOff'); return; }
-            const spec = srSpec(), rows = HeinzSeries.expand(spec);
-            if (rows.length > HeinzSeries.MAX_RUNS || srRangeError(spec)) return;
             if (!pv.local && !srConfirmed) {   // Cloud: Anzahl nennen, zweites Tippen bestätigt
                 srConfirmed = true;
-                $('sr-status').textContent = t('srCloud', { n: rows.length, e: pv.name });
-                $('sr-start').querySelector('span').textContent = t('srConfirm');
+                $('sr-status').textContent = t('srCloud', { n: todo.length, e: pv.name });
+                $(resume ? 'sr-resume' : 'sr-start').querySelector('span').textContent = t('srConfirm');
                 return;
             }
             srConfirmed = false; $('sr-start').querySelector('span').textContent = t('stStart');
-            const maxTok = parseInt($('sr-max').value, 10) || 0;
-            let app = '?';
-            try { app = (await (await fetch('VERSION.txt', { cache: 'no-store' })).text()).trim().split('\n')[0]; } catch (e) { /* offline: Version unbekannt */ }
-            srRuns = [];
-            srMeta = { name: '', date: new Date().toISOString().slice(0, 16).replace('T', ' '), app: app, device: (navigator.platform || '?') + ' ' + innerWidth + 'x' + innerHeight,
-                engine: pv.name + ' (' + pv.id + ')', model: model, prompt: pp.prompts[0].text, prompts: pp.prompts, axes: spec.axes, reps: spec.reps, planned: rows.length,
-                fixed: { num_predict: maxTok || null, num_ctx: capSendable('num_ctx') ? parseInt($('param-ctx').value, 10) : null }, seed: 'not sent', caps: capsStates().trim(), stopped: '' };
-            ['temperature', 'top_p', 'top_k'].forEach(function (k) { if (!spec.axes[k] && capSendable(k)) srMeta.fixed[k] = { temperature: parseFloat($('param-temp').value), top_p: parseFloat($('param-topp').value), top_k: parseInt($('param-topk').value, 10) }[k]; });
+            if (resume) {
+                srRuns = srRuns.filter(function (r) { return !r.error && !r.aborted; });   // die zu wiederholenden Läufe ersetzen die alten
+                srMeta.stopped = ''; srMeta.resumed = (srMeta.resumed || 0) + 1;
+            } else {
+                let app = '?';
+                try { app = (await (await fetch('VERSION.txt', { cache: 'no-store' })).text()).trim().split('\n')[0]; } catch (e) { /* offline: Version unbekannt */ }
+                srRuns = [];
+                srMeta = { name: '', date: new Date().toISOString().slice(0, 16).replace('T', ' '), app: app, device: (navigator.platform || '?') + ' ' + innerWidth + 'x' + innerHeight,
+                    engine: pv.name + ' (' + pv.id + ')', providerId: prov, model: model, prompt: pp.prompts[0].text, prompts: pp.prompts, axes: spec.axes, spec: spec, maxTok: maxTok, reps: spec.reps, planned: todo.length,
+                    fixed: { num_predict: maxTok || null, num_ctx: capSendable('num_ctx') ? parseInt($('param-ctx').value, 10) : null }, seed: 'not sent', caps: capsStates().trim(), stopped: '' };
+                const sl = { temperature: parseFloat($('param-temp').value), top_p: parseFloat($('param-topp').value), top_k: parseInt($('param-topk').value, 10) };
+                ['temperature', 'top_p', 'top_k'].forEach(function (k) { if (!spec.axes[k] && capSendable(k)) srMeta.fixed[k] = sl[k]; });
+                const thr = parseInt($('param-threads').value, 10);
+                if (prov === 'ollama' && !spec.axes.num_thread && thr > 0) srMeta.fixed.num_thread = thr;
+            }
             seriesRunning = true; srAbort = new AbortController();
-            $('sr-start').style.display = 'none'; $('sr-stop').style.display = 'inline-flex';
+            $('sr-start').style.display = 'none'; $('sr-resume').style.display = 'none'; $('sr-stop').style.display = 'inline-flex';
             let wake = null;   // nicht abwarten: ein hängendes Wake-Lock darf den Start und den Stopp nie blockieren
             try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { wake = w; if (!seriesRunning) { try { w.release(); } catch (e) { /* frei */ } } }, function () { wake = null; }); } catch (e) { wake = null; }
             let status = '', errRow = 0;
             try {
                 if (prov === 'ollama') await unloadOthers(model);
-                for (let i = 0; i < rows.length; i++) {
+                for (let i = 0; i < todo.length; i++) {
                     if (srAbort.signal.aborted) { const ab = new Error('abort'); ab.name = 'AbortError'; throw ab; }   // Stopp zwischen zwei Läufen greift sofort
-                    const row = rows[i];
-                    $('sr-status').textContent = t('srRunning', { i: i + 1, n: rows.length }); srRender();
+                    const row = todo[i];
+                    $('sr-status').textContent = t('srRunning', { i: srRuns.length + 1, n: srMeta.planned }); srRender();
                     const pr = byId[row.params.prompt] || pp.prompts[0];
                     const params = Object.assign({}, row.params); delete params.prompt;
-                    const opts = srOptions(params, maxTok);
+                    const opts = srOptions(params, maxTok, srMeta.fixed);
                     const th = row.params.think;
                     const eff = th ? thinkEffortFor(th === 'default' ? '' : th) : '', snd = th ? thinkSendFor(th === 'default' ? '' : th) : null;
                     const run = { n: row.n, row: row.row, rep: row.rep, prompt: pr.id, params: params, answer: '', sent: { options: opts, reasoningEffort: eff || undefined, thinking: snd || undefined }, at: new Date().toISOString() };
@@ -2445,9 +2481,9 @@
                     }
                     run.answer = buf; run.firstMs = first === null ? null : Math.round(first); run.totalMs = Math.round(performance.now() - t0);
                     if (!run.error && pr.rules.length) run.checks = HeinzSeries.check(pr.rules, { answer: buf, finish: run.stats && run.stats.finishReason });
-                    srRuns.push(run); srRender(); srSave(true);   // jeder Lauf wird sofort gesichert: ein Neuladen oder Schließen verliert nichts
+                    srRuns.push(run); srRuns.sort(function (a, b) { return a.n - b.n; }); srRender(); srSave(true);   // jeder Lauf wird sofort gesichert: ein Neuladen oder Schließen verliert nichts
                     if (errRow >= 3) { status = t('srErrors', { m: run.error }); srMeta.stopped = 'three errors in a row'; break; }
-                    if (!pv.local && i < rows.length - 1) await new Promise(function (r) { const tm = setTimeout(r, 1200); srAbort.signal.addEventListener('abort', function () { clearTimeout(tm); r(); }); });   // Gratisstufen haben Anfragegrenzen
+                    if (!pv.local && i < todo.length - 1) await new Promise(function (r) { const tm = setTimeout(r, 1200); srAbort.signal.addEventListener('abort', function () { clearTimeout(tm); r(); }); });   // Gratisstufen haben Anfragegrenzen
                 }
                 if (!status) {
                     status = t('srDone', { n: srRuns.length });
@@ -2461,7 +2497,7 @@
                 seriesRunning = false; srAbort = null;
                 try { if (wake) wake.release(); } catch (e) { /* schon frei */ }
                 $('sr-start').style.display = 'inline-flex'; $('sr-stop').style.display = 'none';
-                $('sr-status').textContent = status; srRender();
+                $('sr-status').textContent = status; srRender(); srResumeBtn();
                 srSave(false);
             }
         }
@@ -2474,7 +2510,7 @@
                 srMeta = d.meta; srRuns = d.runs;
                 if (d.unfinished) srMeta.stopped = 'app closed or page reloaded during the series';
                 $('sr-status').textContent = t('srLast', { n: d.runs.length, m: d.meta.planned || d.runs.length, x: d.unfinished ? t('srLastCut') : '' });
-                srRender();
+                srRender(); srResumeBtn();
             }
         }
 

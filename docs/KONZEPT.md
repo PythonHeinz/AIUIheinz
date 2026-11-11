@@ -488,5 +488,7 @@ Anlass: Der Entwickler kopiert Testläufe bisher von Hand zwischen App und Chat 
 
 - **Zweite Google-Reihe am Gerät (11.11.2026, `gemini-3.8-flash` nativ, Schnell und Tief, Temperatur 0,15, Top-p 0,3, höchstens 1000 Token, Prüfregeln):** 4 von 4 Läufen bestanden. Primzahlfrage (1000 bis 1100, richtig 16): **Schnell** (`thinkingLevel` low) dachte trotzdem 259 Token und brauchte 3,7 s, **Tief** 959 Token und 9,3 s; beide antworteten 16. Tierfrage (ein Wort): Schnell 0 Denk-Token, 1,5 s; Tief 242 Denk-Token, 7,1 s. Schnell heißt bei Gemini 3 also „wenig“, nicht „kein“ Denken, und Tief denkt auch bei Trivialfragen. Bei diesen Aufgaben kein Qualitätsunterschied; die Frage ist zu leicht, um Schnell und Tief zu trennen. Zeit bis zum ersten Zeichen gleich Gesamtzeit (Burst nach dem Denken), Tempo wird bei Antworten unter 5 Token nicht berechnet.
 
+- Schritt 3 (11.11.2026, simuliert): Reihe nach Abbruch oder Neuladen fortsetzen (nur gleiche Engine und gleiches Modell, gesicherte Werte, offene Läufe wiederholt) und Zeitschätzung aus dem Verlauf der letzten Reihe. Offen: Schritt 4 (Dateien) und 5 (Vergleich nur auf Wunsch).
+
 ### 21.5 Offen
 Format und Länge des Export-Blocks, wie viele Läufe in einen Chat passen, Obergrenze für die Matrix (Zeilen mal Wiederholungen), ob Testreihen im Repo (`data/` ist ignoriert) oder nur im Browser liegen, Name des Menüpunkts.
