@@ -569,3 +569,9 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Anlass (Entwickler): Weitere Seiten und der Chat-Ausbau sollen die vorhandenen Bausteine (Schalter, Pillen, Felder, Blätter) wiederverwenden, damit weniger umgebaut werden muss. `docs/AUFTRAG_Menu.md` hat jetzt „Phase 0: Bausteinkatalog“ vor dem Menü (Katalogseite `tools/design/index.html`, Verhalten nach `lib/core.js`, Regel „erst im Katalog nachsehen“, Tests). Nichts gebaut.
 - (11.11.2026) Gegenprobe am Handy: Oberfläche und `ollama run` liefern dieselbe Geschwindigkeit; Messwerte in `docs/OLLAMA_UND_MODELLE.md` („Gegenprobe Oberfläche gegen Ollama pur“). Nur Doku.
 - (11.11.2026) Heinz Chat: Modellblatt zeigt, was an Ollama gesendet wird (Threads, Kontext, Haltezeit; Werte aus dem Prüfstand), damit Abweichungen zum Prüfstand sichtbar sind. 1 Test.
+
+## 11.11.2026 – Heinz Chat lädt das gewählte Modell vor (Chat „AIUIheinz-Chat“)
+- Befund des Entwicklers: Der Ring im Heinz Chat wurde erst nach dem ersten Prompt blau, die Wartezeit lag dann beim Laden. Ursache: Nur der Prüfstand lud Modelle vor; der Chat nie, der Ring blieb orange („Modell schläft“), bis die erste Frage das Modell lud.
+- `lib/providers.js`: `HeinzProviders.preload(id, model[, signal])` lädt ein Ollama-Modell mit genau den `runtime()`-Werten und `prepare()` vorweg (ein Token, Antwort verworfen).
+- `tools/heinz/index.html`: Beim Öffnen und bei jeder Modellwahl wird vorgeladen (Schalter „Vorladen“ des Prüfstands, Standard an, gilt auch hier). Ring orange mit „Modell wird vorbereitet …“, danach von selbst blau.
+- Tests: 2 neue (Vorladen mit Threads, Kontext, keep_alive, Entladen anderer Modelle, Ring orange während des Ladens; Schalter aus: kein Laden); Mutation (Aufruf entfernt) erkannt. Nur simuliert.

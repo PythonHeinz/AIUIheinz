@@ -2303,6 +2303,45 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("#sh-model.open")
         self.assertIn("threads 4", page.inner_text("#rt-h"))
 
+    def test_slim_chat_preloads_the_chosen_model_with_the_shared_runtime_and_shows_it_in_the_ring(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 2}, params: {ctx: 6144}}))")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
+        # pick another model; the preload is slow so the ring has to say "preparing"
+        page.unroute("**/localhost:11434/**")
+        def slow(route):
+            if route.request.url.endswith("/api/chat"):
+                import time; time.sleep(1.5)
+            fake.handle(route)
+        page.route("**/localhost:11434/**", slow)
+        n = len(fake.preloads)
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') >= 0 && document.getElementById('ring').classList.contains('s-orange')")
+        page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
+        self.assertGreater(len(fake.preloads), n)
+        pre = fake.preloads[-1]
+        self.assertEqual(pre["model"], "qwen2.5:3b")
+        self.assertEqual((pre["options"].get("num_thread"), pre["options"].get("num_ctx"), pre["options"].get("num_predict")), (2, 6144, 1))
+        self.assertEqual(pre.get("keep_alive"), "30m")
+        self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, fake.unloads, "other models are released before the preload")
+
+    def test_slim_chat_does_not_preload_when_the_test_bench_switch_is_off(self):
+        page = self.new_page()
+        fake = FakeOllama(page)
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({preload: false}))")
+        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.click("#mod")
+        page.wait_for_selector("#sh-model.open")
+        page.click("[data-model='qwen2.5:3b']")
+        page.wait_for_timeout(800)
+        self.assertEqual(fake.preloads, [], "switch off: the ring stays as it is, nothing is loaded")
+
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
         FakeOllama(page, status=500)
