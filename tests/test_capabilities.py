@@ -289,5 +289,30 @@ class MediaTest(unittest.TestCase):
             self.assertRegex(e["shutdown"], r"^\d{4}-\d{2}-\d{2}$")
 
 
+class MediaGoogleTest(unittest.TestCase):
+    def test_numbers_are_present_and_consistent(self):
+        g = CAP["mediaGoogle"]
+        self.assertIn("image/png", g["image_in"]["mime"])
+        self.assertEqual(g["image_in"]["inlineRequestMaxBytes"], 20 * 1024 * 1024)
+        self.assertEqual(g["audio_in"]["inlineRequestMaxBytes"], 20 * 1024 * 1024)
+        self.assertNotIn("audio/webm", g["audio_in"]["mime"])  # browser default recording format is not accepted
+        self.assertIn("webm", g["audio_in"]["browserRecordingWarning"])
+        self.assertEqual(g["image_out_imagen"]["parameters"]["sampleCount"]["max"], 4)
+        self.assertIn("16:9", g["image_out_gemini"]["aspectRatio"])
+        self.assertIn("pcm", g["speech_out"]["response"].lower())
+
+    def test_calls_exist_and_pricing_status_is_known(self):
+        g = CAP["mediaGoogle"]
+        for key in ("image_out_gemini", "image_out_imagen", "speech_out", "transcribe", "live"):
+            self.assertIn(g[key]["call"], MEDIA["calls"], key)
+        for item in g["pricing"]["items"]:
+            self.assertIn(item["status"], STATUS, item["id"])
+
+    def test_cost_example_for_speech_is_about_three_cents_per_minute(self):
+        g = CAP["mediaGoogle"]["speech_out"]
+        usd_per_minute = g["outputTokensPerSecond"]["value"] * 60 * 20.0 / 1_000_000
+        self.assertAlmostEqual(usd_per_minute, 0.03, places=3)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

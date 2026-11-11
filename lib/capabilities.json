@@ -835,6 +835,254 @@
       "when": "At every start and after every model-list fetch; never silently, the user can change the choice."
     }
   },
+  "mediaGoogle": {
+    "note": {
+      "en": "Google media interfaces in numbers (research 2026-11-11, vendor docs read mostly via search excerpts). Used for attachment checks, request building and cost display; everything not 'belegt' must be shown as unverified. See SCHNITTSTELLEN section 12.",
+      "de": "Googles Medienschnittstellen in Zahlen (Recherche 11.11.2026, Anbieterdoku überwiegend über Suchausschnitte gelesen). Für Anhangsprüfung, Anfrageaufbau und Kostenanzeige; was nicht „belegt“ ist, wird als ungeprüft gezeigt. Siehe SCHNITTSTELLEN Abschnitt 12."
+    },
+    "image_in": {
+      "mime": [
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+      ],
+      "inlineRequestMaxBytes": 20971520,
+      "inlineRule": "The 20 MB cap is the TOTAL request (prompt, system text and all inline files, base64 adds about a third): resize before sending (KONZEPT 20.7).",
+      "filesApi": {
+        "maxBytes": 2147483648,
+        "status": "drittquelle",
+        "note": "Separate upload endpoint; not needed for phone photos once they are resized."
+      },
+      "tokensPerImage": {
+        "value": 258,
+        "status": "drittquelle",
+        "note": "Older rule (768 px tile); newer models may use media_resolution. Do not compute costs from it."
+      },
+      "status": "belegt (formats, cap); drittquelle (rest)"
+    },
+    "audio_in": {
+      "mime": [
+        "audio/wav",
+        "audio/mp3",
+        "audio/aiff",
+        "audio/aac",
+        "audio/ogg",
+        "audio/flac"
+      ],
+      "inlineRequestMaxBytes": 20971520,
+      "maxHours": 9.5,
+      "tokensPerSecond": {
+        "value": 32,
+        "status": "belegt",
+        "note": "An older page version said 25."
+      },
+      "downsample": "16 kbit/s, channels mixed to mono",
+      "browserRecordingWarning": "Chrome on Android records audio/webm (Opus) by default. webm is NOT in the list: encode to WAV in the browser or test whether the API accepts it (probe).",
+      "status": "belegt"
+    },
+    "image_out_gemini": {
+      "call": "generate_media",
+      "request": "generationConfig.responseModalities, generationConfig.imageConfig",
+      "responseModalities": {
+        "values": [
+          [
+            "IMAGE"
+          ],
+          [
+            "TEXT",
+            "IMAGE"
+          ]
+        ],
+        "note": "Older docs required TEXT and IMAGE together; a newer reference allows IMAGE alone (drittquelle). Probe.",
+        "status": "drittquelle"
+      },
+      "aspectRatio": [
+        "1:1",
+        "3:2",
+        "2:3",
+        "3:4",
+        "4:3",
+        "4:5",
+        "5:4",
+        "9:16",
+        "16:9",
+        "21:9"
+      ],
+      "aspectRatioExtra": {
+        "values": [
+          "1:4",
+          "4:1",
+          "1:8",
+          "8:1"
+        ],
+        "models": "gemini-3.1-flash-image",
+        "status": "drittquelle"
+      },
+      "imageSize": {
+        "values": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "models": "Gemini 3 image models; not 2.5",
+        "status": "drittquelle"
+      },
+      "response": "candidates[0].content.parts[]: text parts and inlineData {mimeType, data (base64)}. Read mimeType from the response (reported default JPEG, drittquelle).",
+      "watermark": "SynthID on all generated images (vendor wording)",
+      "editing": "Send source images as inlineData with the prompt; URLs are not accepted for editing (drittquelle).",
+      "status": "belegt (call, SynthID); drittquelle (parameter lists)"
+    },
+    "image_out_imagen": {
+      "call": "imagen_predict",
+      "endpoint": "POST models/<id>:predict",
+      "body": {
+        "instances": [
+          {
+            "prompt": "string"
+          }
+        ],
+        "parameters": "see below"
+      },
+      "parameters": {
+        "sampleCount": {
+          "min": 1,
+          "max": 4,
+          "default": 4,
+          "note": "named numberOfImages in the SDK"
+        },
+        "aspectRatio": [
+          "1:1",
+          "3:4",
+          "4:3",
+          "9:16",
+          "16:9"
+        ],
+        "imageSize": {
+          "values": [
+            "1K",
+            "2K"
+          ],
+          "models": "Standard and Ultra only"
+        },
+        "personGeneration": [
+          "dont_allow",
+          "allow_adult",
+          "allow_all"
+        ]
+      },
+      "promptLanguage": "English only (vendor wording, older page)",
+      "response": "predictions[] with bytesBase64Encoded and mimeType; images blocked by the safety filter are missing",
+      "watermark": "SynthID by default",
+      "status": "belegt",
+      "caution": "Deprecations table lists imagen-4.0-generate-001 for shutdown with gemini-3.1-flash-image as replacement; check the model list before building a slot on Imagen."
+    },
+    "speech_out": {
+      "call": "tts",
+      "request": "generationConfig.responseModalities ['AUDIO'], generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName; multi-speaker: speechConfig.multiSpeakerVoiceConfig.speakerVoiceConfigs[] (at most 2 speakers)",
+      "optional": "speechConfig.languageCode (shown in the Firebase reference; language is detected automatically otherwise)",
+      "response": "candidates[0].content.parts[0].inlineData.data: base64 raw PCM, 24 kHz, 16 bit, mono, mime audio/pcm. NOT a playable file: wrap in a WAV header or play through Web Audio.",
+      "voices": {
+        "prebuilt": 30,
+        "examples": [
+          "Kore",
+          "Puck",
+          "Charon",
+          "Zephyr",
+          "Aoede",
+          "Fenrir",
+          "Leda",
+          "Orus"
+        ],
+        "default": {
+          "value": "Puck",
+          "status": "drittquelle"
+        }
+      },
+      "style": "Natural-language direction in the prompt and audio tags such as [whispers] (3.x); no SSML (drittquelle)",
+      "contextTokens": 32000,
+      "languages": {
+        "note": "24 languages (2.5), 70+ (3.1), 130 (3.8, drittquelle); language detected automatically"
+      },
+      "streaming": {
+        "value": "streamGenerateContent for gemini-3.1-flash-tts-preview since June 2026 (drittquelle); an older guide said no streaming",
+        "status": "drittquelle"
+      },
+      "extended": "3.8 TTS adds a voice library (GET /v1beta/voices), voice design and consent-gated voice replication (drittquelle). Not planned.",
+      "outputTokensPerSecond": {
+        "value": 25,
+        "status": "drittquelle"
+      },
+      "status": "belegt (request, PCM, 30 voices); drittquelle (rest)"
+    },
+    "transcribe": {
+      "call": "transcribe",
+      "how": "generateContent with an audio part and a text instruction ('Transcribe this audio'); timestamps by prompt ('from 02:30 to 03:29'). A dedicated model name gemini-3.5-transcribe appears in the deprecations table; its interface is unread.",
+      "status": "belegt (generic way); unbekannt (dedicated model)"
+    },
+    "live": {
+      "call": "live",
+      "how": "bidiGenerateContent over WebSocket; audio in and out in real time",
+      "status": "belegt",
+      "note": "Mentioned only, not planned."
+    },
+    "pricing": {
+      "asOf": "2026-11-11",
+      "note": "Prices change; show 'about' and the date. The code computes, the model never does.",
+      "items": [
+        {
+          "id": "image.gemini-2.5-flash-image",
+          "per": "image (1024 px)",
+          "usd": 0.039,
+          "status": "belegt",
+          "note": "about 1290 output tokens at 30 USD per million; model nears shutdown"
+        },
+        {
+          "id": "image.imagen-4",
+          "per": "image",
+          "usd": {
+            "fast": 0.02,
+            "standard": 0.04,
+            "ultra": 0.06
+          },
+          "status": "drittquelle"
+        },
+        {
+          "id": "tts.3.1-flash",
+          "per": "million tokens",
+          "usd": {
+            "in": 1.0,
+            "out": 20.0
+          },
+          "freeTier": "yes (drittquelle)",
+          "status": "drittquelle",
+          "derived": "audio out 25 tokens per second gives about 0.03 USD per minute"
+        },
+        {
+          "id": "tts.2.5",
+          "per": "million tokens",
+          "usd": {
+            "flash": {
+              "in": 0.5,
+              "out": 10.0
+            },
+            "pro": {
+              "in": 1.0,
+              "out": 20.0
+            }
+          },
+          "freeTier": "no",
+          "status": "belegt"
+        },
+        {
+          "id": "audio.in",
+          "per": "million tokens",
+          "usd": "about 1.00 for Flash class",
+          "status": "drittquelle"
+        }
+      ],
+      "freeTierPrivacy": "On Google's pricing page the free tier is marked 'Used to improve our products: Yes', the paid tier 'No' (belegt, older page version). Relevant for the privacy level of images and audio (KONZEPT 19.5, Stufe 3)."
+    }
+  },
   "lifecycle": {
     "note": {
       "en": "How a model leaves the stage at the provider and how the app notices. Google researched 2026-11-11; other engines open (SCHNITTSTELLEN section 11).",

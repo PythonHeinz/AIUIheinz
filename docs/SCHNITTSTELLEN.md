@@ -297,3 +297,53 @@ Anlass: Der Entwickler will nicht suchen müssen, ob ein Modell noch existiert, 
 2. Antwortet ein Aufruf mit 404 „no longer available“, den Platz auf `unavailable` setzen, die nächste Rangfolge versuchen (`replaced`) und die Meldung zeigen; Ersatzhinweis aus dem Fehlertext anzeigen, nicht übernehmen.
 3. Startliste und Fehlermuster nur als Hinweis; die Rangfolge im Platz bleibt die Entscheidung des Nutzers.
 4. Andere Engines (OpenRouter, Groq, Mistral, Ollama): nicht recherchiert. Vorwissen, nicht geprüft: Ollama-Modelle gehören dem Nutzer lokal und verschwinden nicht; OpenRouter führt Ablösungen in der Liste. Beides in der nächsten Runde belegen.
+
+## 12 Bild und Sprache bei Google (11.11.2026, Nachtrag 3; Zahlen auch maschinenlesbar in `lib/capabilities.json` Block `mediaGoogle`)
+
+Quellen: Anbieterseiten ai.google.dev (Bilderzeugung, Imagen, Sprachausgabe, Audio, Bildverständnis, Preise, Abkündigungen), fast nur über Suchausschnitte gelesen; Ergänzungen aus Firebase-Referenz und Drittseiten sind als Drittquelle markiert. **Nichts davon ist am Gerät geprüft.** Alle Wege laufen über dieselbe Adresse `generativelanguage.googleapis.com`; dass der Browser sie direkt erreicht, ist für `streamGenerateContent` am Gerät bestätigt (Abschnitt 8.3, 9), für `:predict` und die Datei-Schnittstelle **unbekannt** (Sonde).
+
+**Hinweis zur Anbindung:** Googles Abkündigungsseite nennt die neue Interactions-API inzwischen „allgemein verfügbar“ und empfiehlt sie für alle neuen Funktionen (Ausschnitt). Ich habe sie nicht gelesen; für Bild und Sprache gilt hier weiter `generateContent`. Ob die App später auf Interactions umsteigt, ist eine Entscheidung für den Entwickler und eigene Recherche.
+
+### 12.1 Bild lesen (Eingabe, Aufruf `chat`)
+- **Wege:** Bild als `inlineData` (Base64) in der Anfrage, oder über die Datei-Schnittstelle hochladen (belegt).
+- **Grenze:** Inline gilt **20 MB für die ganze Anfrage** (Prompt, Systemtext und alle Anhänge zusammen; Base64 macht Bilder rund ein Drittel größer, belegt). Darüber nur über die Datei-Schnittstelle (Drittquelle: bis 2 GB je Datei, 48 Stunden Aufbewahrung). **Folgerung:** Handyfotos vor dem Senden verkleinern (Konzept 20.7); die Datei-Schnittstelle brauchen wir nicht.
+- **Formate:** PNG, JPEG, WebP (belegt). Andere (GIF, SVG, TIFF) nach Drittquellen nicht. Eine Firebase-Seite nennt, dass größere Bilder auf höchstens 3072 × 3072 verkleinert werden und es keine Pixelgrenze gibt; bis zu 3000 Bilder je Anfrage (Firebase) bzw. 3600 (Drittquelle).
+- **Kosten in Token:** Ältere Regel 258 Token je Bild (Drittquelle). Neuere Modelle haben eine Auflösungsstufe (`media_resolution`); **nicht ausrechnen**, die Antwort meldet `usageMetadata`.
+- Welche Chatmodelle Bilder lesen: Vorwissen, alle aktuellen Gemini-Chatmodelle (`vermutet`, Abschnitt 10).
+
+### 12.2 Bild erzeugen
+**A) Gemini-Bildmodelle (`generateContent`, Aufruf `generate_media`)** – Namen laut Abkündigungstabelle: `gemini-2.5-flash-image`, `gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-3.1-flash-lite-image`.
+- Anfrage: `generationConfig.responseModalities` (`["TEXT","IMAGE"]`; ältere Seiten verlangten beides, eine neuere Referenz erlaubt `["IMAGE"]` allein, Drittquelle) und `generationConfig.imageConfig` mit `aspectRatio` und `imageSize`.
+- Seitenverhältnisse: 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9 (Drittquelle); bei `gemini-3.1-flash-image` zusätzlich 1:4, 4:1, 1:8, 8:1 (Bericht). `imageSize`: 1K, 2K, 4K nur bei den Gemini-3-Bildmodellen (Drittquelle).
+- Antwort: `candidates[0].content.parts[]` mit Textteilen und `inlineData` (`mimeType`, Base64). **Format aus `mimeType` lesen**; eine Drittquelle berichtet JPEG als Vorgabe.
+- Bearbeiten: Ausgangsbild als `inlineData` plus Anweisung; URLs gehen nicht (Drittquelle). Mehrere Runden im Gespräch möglich (belegt).
+- **Wasserzeichen:** Alle erzeugten Bilder tragen ein unsichtbares **SynthID**-Wasserzeichen (Anbieterwortlaut, belegt).
+
+**B) Imagen (`:predict`, Aufruf `imagen_predict`)**
+- `POST …/models/<id>:predict` mit `instances: [{prompt}]` und `parameters` (belegt). Kopf `x-goog-api-key`.
+- Parameter: `sampleCount` (1 bis 4, Vorgabe 4), `aspectRatio` (1:1, 3:4, 4:3, 9:16, 16:9), `imageSize` (1K oder 2K, nur Standard und Ultra), `personGeneration` (`dont_allow`, `allow_adult`, `allow_all`). Prompts nur Englisch (älterer Seitenstand). Antwort `predictions[]` mit `bytesBase64Encoded` und `mimeType`; vom Sicherheitsfilter blockierte Bilder fehlen einfach. SynthID standardmäßig.
+- **Vorsicht:** Die Abkündigungstabelle führt `imagen-4.0-generate-001` mit Abschaltdatum und `gemini-3.1-flash-image` als Ersatz; der Imagen-Seitenstand rät selbst zum Wechsel auf Gemini-Bildmodelle. **Empfehlung: `image.make` zuerst auf `generateContent` bauen, Imagen nur als Zusatz.**
+
+**Preise (Drittquelle bis auf die Zeile 2.5, die Zahl der Preisseite):** `gemini-2.5-flash-image` etwa 0,039 USD je Bild (rund 1290 Ausgabe-Token), Imagen 4 Fast 0,02 / Standard 0,04 / Ultra 0,06 USD je Bild. **Gratisstufe für Bildmodelle: Quellen widersprechen sich** (Preisseitenausschnitt nennt „Free of charge“ neben dem Bildpreis, ein Preisvergleich nennt für 2.5 Flash Image und 3 Pro Image keine). Klärt die Sonde, ohne Schlüssel mit Guthaben wird es teuer genug, dass die App **vor** dem Lauf den Preis zeigen sollte.
+
+### 12.3 Sprache ausgeben (Aufruf `tts`)
+- Modelle: `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts`, `gemini-3.1-flash-tts-preview`, `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts` (Abkündigungstabelle und Drittseiten). Die Modellliste enthält sie; sie gehören nicht in die Chat-Modellwahl.
+- Anfrage `generateContent` (belegt): `generationConfig.responseModalities: ["AUDIO"]` und `generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName` (zum Beispiel `Kore`). Mehrere Sprecher: `speechConfig.multiSpeakerVoiceConfig.speakerVoiceConfigs[]`, **höchstens zwei**, Namen wie im Text. Optional `languageCode` (Firebase-Referenz); sonst erkennt das Modell die Sprache selbst.
+- **Antwort:** `candidates[0].content.parts[0].inlineData.data` ist Base64 von **rohem PCM, 24 kHz, 16 Bit, mono** (`audio/pcm`). **Das ist keine abspielbare Datei:** die Seite muss einen WAV-Kopf davorsetzen oder über die Web-Audio-Schnittstelle abspielen (belegt: Dokumentation nutzt ffmpeg `-f s16le -ar 24000 -ac 1`).
+- Stimmen: 30 vorgefertigte (Kore „fest“, Puck „fröhlich“, Charon, Zephyr, Aoede und weitere); Vorgabestimme Puck (Drittquelle). Stil über Sätze im Prompt („Sag fröhlich: …“) und bei 3.x über Tags wie `[whispers]`; **kein SSML** (Drittquelle). Eine Sitzung fasst 32 000 Token. Sprachenzahl wächst je Modell (24, über 70, 130 laut Drittseiten); Deutsch ist nach Drittquellen dabei, **nicht für unser Modell geprüft**.
+- Streaming: `streamGenerateContent` laut Drittquelle seit Juni 2026 für `gemini-3.1-flash-tts-preview`; ein älterer Leitfaden sagte, TTS streame nicht. **Unbekannt, Sonde.**
+- Neu bei 3.8 (Drittquelle): Stimmenbibliothek `GET /v1beta/voices`, Stimm-Entwurf und Stimm-Nachbildung mit Einwilligung. **Nicht geplant.**
+- **Preis:** 2.5 Flash 0,50 / 10 USD je Million Eingabe-/Ausgabe-Token, 2.5 Pro 1 / 20 USD, ohne Gratisstufe (Preisseite). 3.1 Flash TTS 1 / 20 USD mit Gratisstufe (Drittquelle). Ausgabe rund 25 Token je Sekunde (Drittquelle) ergibt **etwa 0,03 USD je Minute Sprache** bei 20 USD (Rechnung, nicht belegt).
+
+### 12.4 Sprache verstehen und mitschreiben (Aufruf `transcribe` oder `chat`)
+- Zwei Wege wie bei Bildern: Datei hochladen oder **inline** (belegt). Inline zählt wieder die ganze Anfrage mit **20 MB**.
+- Formate (belegt): **WAV, MP3, AIFF, AAC, OGG (Vorbis), FLAC.** Audio wird auf 16 kbit/s heruntergerechnet und zu Mono gemischt. Länge bis 9,5 Stunden je Anfrage. **Je Sekunde 32 Token** (aktuelle Seite; ältere Fassung 25).
+- **Stolperstein für die App:** Chrome auf Android nimmt mit `MediaRecorder` standardmäßig **`audio/webm` (Opus)** auf. WebM steht **nicht** in der Formatliste. Entweder in der Seite zu WAV umrechnen (Web Audio, kostet Datenmenge: 16 kHz mono, 16 Bit sind rund 1,9 MB je Minute) oder die Sonde prüft, ob `audio/webm` angenommen wird (**unbekannt**).
+- Transkription ist „Audio plus Anweisung“ („Schreibe dieses Audio auf“), Zeitabschnitte per Prompt („von 02:30 bis 03:29“). Die Abkündigungstabelle nennt ein eigenes Modell `gemini-3.5-transcribe`; seine Schnittstelle habe ich nicht gelesen (**unbekannt**).
+- Echtzeit-Dialog (Live-Schnittstelle, `bidiGenerateContent`, WebSocket): nur vermerkt, nicht geplant.
+
+### 12.5 Datenschutz (belegt, älterer Seitenstand der Preisseite)
+Die Preisseite kennzeichnet bei den Gratisstufen **„Used to improve our products: Yes“**, bei der bezahlten Stufe „No“. Bilder und Audio gehen also in der Gratisstufe möglicherweise in Googles Verbesserung ein: das ist Datenschutzstufe 3 (KONZEPT 19.5) und gehört vor jedem Cloud-Aufruf mit Medien in die Anzeige (Konzept 20.7). Der aktuelle Seitenstand ist zu prüfen.
+
+### 12.6 Offen (Sonde)
+`responseModalities` nur `IMAGE`; MIME-Typ der Bildausgabe; `:predict` aus dem Browser (CORS); `audio/webm` als Eingabe; Streaming bei TTS; Deutsch bei TTS; Preise und Gratisstufe je Bild- und Sprachmodell; ob die Interactions-API für Medien Vorteile bringt; Größe und Dauer-Grenzen je Modell (Abschnitt 10 „offen“).

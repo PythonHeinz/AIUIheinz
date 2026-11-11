@@ -475,3 +475,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `thinkEffort`/`thinkSend` haben jetzt Varianten mit Stufe (`thinkEffortFor`, `thinkSendFor`); Verhalten des Chats unverändert.
 - Zahlen: Dezimalpunkt, Komma trennt Werte („0, 0.5“). Tempo-Test bleibt unverändert als eigener Weg.
 - Tests: 5 neue (Logik, Matrix mit Ollama, Threads außen und Grenze 30, Stopp und drei Fehler, natives Google mit Denkstufen, gesperrtem Top-k und Bestätigung); Mutation (gesperrte Achse nicht ausgenommen) erkannt. 95 Seitentests grün, nur simuliert, nicht am Gerät geprüft.
+
+## 11.11.2026 – Strang AIUIheinz-Modelle: Nachtrag 3, Google Bild und Sprache (nur Recherche, Daten, Doku)
+- `docs/SCHNITTSTELLEN.md` Abschnitt 12: Bild lesen (inline 20 MB für die ganze Anfrage, PNG/JPEG/WebP), Bild erzeugen (Gemini-Bildmodelle über `generateContent`, Imagen über `:predict`, SynthID), Sprache ausgeben (`responseModalities AUDIO`, `speechConfig`, Ausgabe ist rohes PCM 24 kHz, kein abspielbares Format), Audio verstehen (WAV, MP3, AIFF, AAC, OGG, FLAC, 20 MB inline), Preise, Datenschutz der Gratisstufe, offene Sondenfragen.
+- `lib/capabilities.json`: neuer Block `mediaGoogle` mit denselben Zahlen für Anhangsprüfung und Kostenanzeige.
+- Stolperstein: Chrome-Aufnahmen (`audio/webm`) stehen nicht in der Formatliste von Google; Umrechnung zu WAV oder Sonde nötig.
+- Hinweis: Google nennt die Interactions-API jetzt allgemein verfügbar (nicht gelesen); Entscheidung über einen Umstieg offen.
+- Tests: 3 neue (`MediaGoogleTest`). Alles simuliert, Quellen überwiegend Suchausschnitte und Drittseiten, nichts am Gerät.
