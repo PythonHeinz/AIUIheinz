@@ -277,25 +277,53 @@ class PageTest(unittest.TestCase):
         self.send(page, "four")
         self.assertNotIn("options", self.ollama.requests[-1])
 
-    def test_model_list_comes_from_ollama_and_heinz_mode_prefers_heinz_fakt(self):
-        page = self.new_page(tags=("qwen2.5:3b", "heinz-fakt:latest", "nomic-embed-text:latest", "gemma2:2b"))
+    HF = "hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M"
+
+    def test_model_list_comes_from_ollama_and_heinz_mode_uses_the_native_abliterated_model_with_the_persona_prompt(self):
+        page = self.new_page(tags=("qwen2.5:3b", self.HF, "nomic-embed-text:latest", "gemma2:2b"))
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         opts = page.eval_on_selector_all("#model-select option", "els => els.map(e => e.value)")
-        self.assertIn("heinz-fakt:latest", opts)
+        self.assertIn(self.HF, opts)
         self.assertNotIn("nomic-embed-text:latest", opts, "embedding models are not chat models")
         page.click("#mode-bar [data-mode=heinz]")
-        self.assertEqual(page.input_value("#model-select"), "heinz-fakt:latest")
+        self.assertEqual(page.input_value("#model-select"), self.HF)
         self.assertFalse(page.is_disabled("#model-chip"), "model stays selectable in every mode")
-        if page.is_checked("#use-default"):
-            page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change'))")
+        page.evaluate("setParamSrc('mode')")
         self.send(page, "Hey")
         body = self.ollama.requests[0]
-        self.assertEqual(body["model"], "heinz-fakt:latest")
-        self.assertEqual(body["options"]["stop"], ["As an AI", "Als KI"])
+        self.assertEqual(body["model"], self.HF)
+        self.assertEqual(body["options"]["stop"], ["Als KI", "As an AI"])
+        self.assertEqual((body["options"]["temperature"], body["options"]["top_p"], body["options"]["top_k"]), (0.2, 0.4, 20))
+        self.assertEqual(body["messages"][0]["role"], "system")
+        self.assertTrue(body["messages"][0]["content"].startswith("You are Heinz: completely unfiltered"), "persona text from lib/personas.js, sent with the request")
+        self.assertIn("Start strictly with 'Dude,'", body["messages"][0]["content"])
 
-    def test_heinz_mode_falls_back_when_heinz_fakt_is_not_installed(self):
-        page = self.new_page()   # default tags: no heinz-fakt
+    def test_wilson_mode_sends_the_persona_with_its_sampling_to_the_native_gemma(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=creative]")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.input_value("#model-select"), "gemma2:2b")
+        page.evaluate("setParamSrc('mode')")
+        self.send(page, "Hey")
+        body = self.ollama.requests[0]
+        self.assertTrue(body["messages"][0]["content"].startswith("You are Wilson, an unfiltered"))
+        self.assertEqual((body["options"]["temperature"], body["options"]["top_p"]), (0.4, 0.8))
+
+    def test_personas_live_outside_the_models(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("typeof HeinzPersonas !== 'undefined'")
+        self.assertEqual(page.evaluate("HeinzPersonas.list()"), ["wilson", "heinz"])
+        p = page.evaluate("HeinzPersonas.get('heinz')")
+        self.assertEqual((p["model"], p["alt"], p["stop"]), (self.HF, ["qwen2.5:3b"], ["Als KI", "As an AI"]))
+        page.evaluate("HeinzPersonas.get('heinz').system = 'changed'")
+        self.assertTrue(page.evaluate("HeinzPersonas.get('heinz').system").startswith("You are Heinz"), "get returns a copy")
+
+    def test_heinz_mode_falls_back_to_qwen_when_the_abliterated_model_is_not_installed(self):
+        page = self.new_page()   # default tags: no abliterated model
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
@@ -579,7 +607,7 @@ class PageTest(unittest.TestCase):
         self.menu(page)
         self.assertNotIn("temperature", self.ollama.requests[-1]["options"], "model view sends nothing")
         page.click("#seg-mode")
-        self.assertEqual(page.inner_text("#val-temp"), "0.75")
+        self.assertEqual(page.inner_text("#val-temp"), "0.4")
         self.assertTrue(page.is_disabled("#param-temp"))
         page.click("#seg-own")
         page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input'))")
@@ -599,7 +627,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.input_value("#param-temp"), "0.3")
         self.menu(page)
         page.click("#seg-mode")
-        self.assertEqual(page.input_value("#param-temp"), "0.75", "the mode preset is always recoverable")
+        self.assertEqual(page.input_value("#param-temp"), "0.4", "the mode preset is always recoverable")
 
     def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
         page = self.new_page()
@@ -658,7 +686,7 @@ class PageTest(unittest.TestCase):
         req = self.ollama.requests[-1]
         self.assertIn("Wilson", req["messages"][0]["content"])
         self.assertNotIn("MY PROMPT", json.dumps(req))
-        self.assertEqual(req["options"]["temperature"], 0.75)
+        self.assertEqual(req["options"]["temperature"], 0.4)
         self.assertEqual(req["options"]["num_thread"], 3, "threads stay a model setting")
 
     def test_backup_roundtrip_leaves_keys_out_unless_asked(self):

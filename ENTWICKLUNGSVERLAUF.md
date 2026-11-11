@@ -622,3 +622,10 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - `tools/heinz/index.html`: Modellblatt mit Feld „Systemprompt (dieses Modell)“ und „Auf Standard zurücksetzen“ (EN/DE); der Chat sendet `system: chatSystemFor(S.model)`.
 - `docs/LOKALE_MODELLE.md`: Regeln 10 (Systemprompts frei, kurz, stabil, eigene Stelle im Tool, kein Vorladen mit Prompt) und 11 (Chat-Standardprompt); Regel 8 angepasst; `UEBERGABE.md` angepasst.
 - Tests: 2 neue (Standardprompt wird gesendet, je Modell änderbar, leer, zurücksetzen; `chat` fügt den Text einmal ein und nur ohne vorhandene Systemnachricht); Mutation erkannt. Nur simuliert; Wirkung auf die Antworten (z. B. Sprache beim abliterierten Qwen) am Handy offen.
+
+## 11.11.2026 – Personas aus den Modellen nach lib/personas.js (Chat „AIUIheinz-Chat“)
+- Beschluss des Entwicklers: Lokale Modelle kommen nativ; was einen Modell-Systemprompt überschreibt, darf nicht ins Modell. `heinz-wilson` und `heinz-fakt` sollen aus Ollama gelöscht werden, ihre Wirkung im Prüfstand soll in den Modi Wilson und Heinz bleiben. Anlass: Im Heinz-Modus antwortete das native abliterierte Qwen nur noch „no“ (Modus-Prompt + enge Werte, ohne Persona aus dem Modelfile).
+- Neu `lib/personas.js` (`HeinzPersonas.get/list`): Texte der beiden Modelfiles unverändert, Sampling (Wilson 0,4/0,8; Heinz 0,2/0,4/Top-K 20), Stoppwörter, bevorzugtes natives Modell.
+- `chat.html`: Modus-Prompts Wilson und Heinz (EN und DE) sind die Persona-Texte (Sprachregel steht im Text); Presets Wilson (`gemma2:2b`, Temp 0,4, Top-P 0,8) und Heinz (nativ `hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M`, sonst `qwen2.5:3b`; Temp 0,2, Top-P 0,4, Top-K 20, Stopp „Als KI“/„As an AI“).
+- Regel 9 in `docs/LOKALE_MODELLE.md`, Abschnitt in `docs/OLLAMA_UND_MODELLE.md` (inkl. `ollama rm`), `UEBERGABE.md`.
+- Tests: 3 neue/umgebaute (Heinz-Modus, Wilson-Modus, Personas als Daten mit Kopie); alter heinz-fakt-Test ersetzt. Nur simuliert; der Vergleich der Antworten mit früher am Handy steht aus. Löschen der Modelle macht der Entwickler am Handy.

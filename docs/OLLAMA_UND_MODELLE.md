@@ -122,3 +122,9 @@ Prompt „Name one unusual animal in one sentence.“, Temperatur 0, Top-p 1, To
 ## Seitenwechsel Heinz Chat und Prüfstand (Handy, 11.11.2026)
 - Mit gemeinsamer Modellwahl (`heinz_active`), gleichen Laufzeitwerten (Threads 2, Kontext 8192, Haltezeit 30 m) und ohne Vorladen bei schon geladenem Modell: Das Modell bleibt beim Wechsel im Speicher (`ollama ps`: gleiche ID), erste Antwort bei allen getesteten Modellen 4 bis 6 s, auf beiden Seiten gleich. Regeln: `docs/LOKALE_MODELLE.md`.
 - Vorher: Chat 24 bis über 60 s bis zum ersten Zeichen, Prüfstand lud nach dem Wechsel neu (Qwen und `heinz-fakt`). Ursachen laut Code: getrennte Modellwahl je Seite und Vorlade-Anfragen, die Ollamas Zwischenspeicher ersetzen (Prompt-Verarbeitung rund 30 Token/s, langer Verlauf kostet dann Sekunden bis Minuten).
+
+## Personas nicht mehr als Ollama-Modelle (11.11.2026)
+- Beschluss des Entwicklers: Lokale Modelle kommen nativ. `heinz-wilson` (Persona auf Gemma 2 2B) und `heinz-fakt` (Persona auf dem abliterierten Qwen 2.5 3B von Rademacher) werden aus Ollama gelöscht. Ihre Texte und Werte (Modelfiles, am Handy mit `ollama show … --modelfile` gelesen) stehen unverändert in `lib/personas.js` und werden mit der Anfrage gesendet (Prüfstand: Modi Wilson und Heinz).
+- Löschen am Handy (Termux): `ollama rm heinz-wilson:latest heinz-fakt:latest`. Die Gewichte des Rademacher-Modells bleiben, weil es ein eigenes Modell ist (`hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M`); `ollama list` danach prüfen.
+- Werte aus den Modelfiles: Wilson Temperatur 0,4, Top-P 0,8; Heinz Temperatur 0,2, Top-K 20, Top-P 0,4, Stopp „Als KI“ und „As an AI“. Der Heinz-Prompt (rund 340 Token mit vier Beispielen) wird bei der ersten Anfrage gelesen (rund 11 s kalt bei 30 Token/s), danach liegt er im Zwischenspeicher.
+- Noch nicht am Gerät geprüft: ob die Antworten im Prüfstand in den Modi Wilson und Heinz denen von früher entsprechen.
