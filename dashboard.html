@@ -289,19 +289,19 @@
     <div class="app">
         <div class="top">
             <a id="status-dot" class="ring-btn metal status-dot s-red" href="index.html" data-i18n-title="serverStatus" title="Server status"><span class="rt"><svg id="ring-logo" aria-label="Heinz UI" viewBox="0 0 34 22" width="34" height="22"></svg></span></a>
-            <button id="model-chip" class="chip" type="button" onclick="openModels()">
+            <button id="model-chip" class="chip" type="button" data-click="openModels">
                 <canvas id="chip-led" aria-hidden="true"></canvas>
                 <span class="hid"><small id="chip-engine">Ollama</small><b id="chip-model">–</b></span>
             </button>
-            <button id="lang-btn" class="lang-btn" onclick="toggleLang()" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
-            <button class="ibtn burger-btn" type="button" onclick="openMenu()" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
+            <button id="lang-btn" class="lang-btn" data-click="toggleLang" data-i18n-title="langTitle" title="Switch language: prompts, answer language, speech input and read-aloud"><span data-l="en">EN</span><span data-l="de">DE</span></button>
+            <button class="ibtn burger-btn" type="button" data-click="openMenu" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
         </div>
         <div class="srow"><i class="sdot" id="st-dot"></i><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas><div id="st-log" hidden></div></div>
         <div id="store-note" class="notice warn" role="status" hidden></div>
-        <select id="model-select" onchange="onModelChange()" aria-hidden="true" tabindex="-1"></select>
+        <select id="model-select" data-change="onModelChange" aria-hidden="true" tabindex="-1"></select>
 
         <div class="modes" id="mode-bar" role="tablist">
-            <select id="mode-select" onchange="updateModeUI()" aria-hidden="true" tabindex="-1">
+            <select id="mode-select" data-change="updateModeUI" aria-hidden="true" tabindex="-1">
                 <option value="wilson" data-i18n="m_wilson">Wilson (Companion)</option>
                 <option value="heinz" data-i18n="m_heinz">Heinz (Facts &amp; Slang)</option>
                 <option value="audit" data-i18n="m_audit">Audit &amp; Text Tool</option>
@@ -311,13 +311,13 @@
         </div>
 
         <div class="bar">
-            <button id="chats-open" class="ibtn" type="button" onclick="openDrawer()" data-i18n-title="chatsTitle" title="Chats"><svg class="i"><use href="lib/icons.svg#i-chats"/></svg><span id="chats-count" class="cnt"></span></button>
+            <button id="chats-open" class="ibtn" type="button" data-click="openDrawer" data-i18n-title="chatsTitle" title="Chats"><svg class="i"><use href="lib/icons.svg#i-chats"/></svg><span id="chats-count" class="cnt"></span></button>
             <div class="ttlbox"><small class="ttl-l" data-i18n="chatLbl">CHAT</small><div id="chat-title" class="ttl"></div></div>
-            <button class="ibtn chat-edit" type="button" onclick="renameCurrent()" data-i18n-title="renameTitle" title="Rename chat"><svg class="i"><use href="lib/icons.svg#i-pencil"/></svg></button>
-            <button class="ibtn chat-copy" type="button" onclick="copyWholeChat(this)" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="i"><use href="lib/icons.svg#i-copy"/></svg></button>
-            <button class="ibtn new-btn" type="button" onclick="newChat(true)" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="i"><use href="lib/icons.svg#i-plus"/></svg></button>
+            <button class="ibtn chat-edit" type="button" data-click="renameCurrent" data-i18n-title="renameTitle" title="Rename chat"><svg class="i"><use href="lib/icons.svg#i-pencil"/></svg></button>
+            <button class="ibtn chat-copy" type="button" data-click="copyWholeChat" data-i18n-title="copyChatTitle" title="Copy whole chat"><svg class="i"><use href="lib/icons.svg#i-copy"/></svg></button>
+            <button class="ibtn new-btn" type="button" data-click="newChat" data-arg="true" data-i18n-title="newChatTitle" title="New chat (the current chat is saved in the list)"><svg class="i"><use href="lib/icons.svg#i-plus"/></svg></button>
         </div>
-        <div class="cwrap"><div class="chat-wrapper" id="chat-container"></div><button class="jump" id="jump-bottom" type="button" onclick="jumpBottom()" hidden aria-label="Scroll to end"><svg class="i"><use href="lib/icons.svg#i-chev-d"/></svg></button></div>
+        <div class="cwrap"><div class="chat-wrapper" id="chat-container"></div><button class="jump" id="jump-bottom" type="button" data-click="jumpBottom" hidden aria-label="Scroll to end"><svg class="i"><use href="lib/icons.svg#i-chev-d"/></svg></button></div>
 
         <div class="metrics" id="dashboard">
             <span class="m m1" title="Input tokens (prompt)"><i>In</i> <b id="dash-p-tok">0</b></span>
@@ -328,45 +328,45 @@
         </div>
         <div class="think" id="think-row" hidden>
             <span class="caps" data-i18n="thinkLbl">Thinking</span>
-            <div class="seg2"><button type="button" id="think-fast" onclick="setThink('fast')" data-i18n="thinkFast">Fast</button><button type="button" id="think-deep" onclick="setThink('deep')" data-i18n="thinkDeep">Deep</button></div>
+            <div class="seg2"><button type="button" id="think-fast" data-click="setThink" data-arg="fast" data-i18n="thinkFast">Fast</button><button type="button" id="think-deep" data-click="setThink" data-arg="deep" data-i18n="thinkDeep">Deep</button></div>
             <small id="think-note"></small>
         </div>
 
         <div class="prompt" id="prompt-wrap">
             <textarea id="query" rows="1" data-i18n-ph="queryPh" placeholder="What should Heinz do?"></textarea>
-            <button class="ibtn xp" type="button" onclick="toggleFull('prompt-wrap')" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button>
+            <button class="ibtn xp" type="button" data-click="toggleFull" data-arg="prompt-wrap" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button>
             <span class="pbtns">
-                <button class="round voice-btn" type="button" onclick="startListening()" data-i18n-title="micTitle" title="Speech input"><svg class="i"><use href="lib/icons.svg#i-mic"/></svg></button>
-                <button class="round acc" id="send-btn" type="button" onclick="askGemma()" data-i18n-title="send" title="Send"><svg class="i"><use href="lib/icons.svg#i-send"/></svg></button>
+                <button class="round voice-btn" type="button" data-click="startListening" data-i18n-title="micTitle" title="Speech input"><svg class="i"><use href="lib/icons.svg#i-mic"/></svg></button>
+                <button class="round acc" id="send-btn" type="button" data-click="askGemma" data-i18n-title="send" title="Send"><svg class="i"><use href="lib/icons.svg#i-send"/></svg></button>
             </span>
         </div>
         <div class="ctx" id="context-wrapper">
             <div class="ctx-h"><span class="caps" id="ctx-label">Context · optional</span><small id="ctx-count"></small>
-                <button class="ibtn" type="button" onclick="toggleFull('context-wrapper')" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button></div>
-            <textarea id="context" rows="1" placeholder="Optional context / raw text (included with every request)..." oninput="persistCurrent(); this.classList.remove('req-warn'); updateCtxCount()"></textarea>
+                <button class="ibtn" type="button" data-click="toggleFull" data-arg="context-wrapper" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button></div>
+            <textarea id="context" rows="1" placeholder="Optional context / raw text (included with every request)..." data-input="onContextInput"></textarea>
         </div>
     </div>
 
-    <div id="scrim" class="scrim" onclick="closeAll()"></div>
+    <div id="scrim" class="scrim" data-click="closeAll"></div>
 
     <!-- Chatliste (von links) -->
     <aside id="drawer" class="drawer" aria-label="Chats">
-        <div class="dh"><h3 data-i18n="chatsTitle">Chats</h3><button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
+        <div class="dh"><h3 data-i18n="chatsTitle">Chats</h3><button class="ibtn" type="button" data-click="closeAll" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
         <div class="dtools">
-            <button id="chats-scope" class="lang-btn" type="button" onclick="toggleChatScope()"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" id="scope-all">All</span></button>
-            <button id="chats-sort" class="lang-btn" type="button" onclick="toggleChatSort()"><span data-s="time" data-i18n="sortTime">Latest</span><span data-s="az" data-i18n="sortAz">A–Z</span></button>
-            <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" oninput="renderSavedList()">
+            <button id="chats-scope" class="lang-btn" type="button" data-click="toggleChatScope"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" id="scope-all">All</span></button>
+            <button id="chats-sort" class="lang-btn" type="button" data-click="toggleChatSort"><span data-s="time" data-i18n="sortTime">Latest</span><span data-s="az" data-i18n="sortAz">A–Z</span></button>
+            <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" data-input="renderSavedList">
         </div>
         <div id="saved-list"></div>
-        <div id="sel-bar" class="selbar" hidden><span id="sel-count"></span><button class="pill danger" id="sel-del" type="button" onclick="selDelete()"></button><button class="ibtn" id="sel-x" type="button" onclick="selEnd()"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
+        <div id="sel-bar" class="selbar" hidden><span id="sel-count"></span><button class="pill danger" id="sel-del" type="button" data-click="selDelete"></button><button class="ibtn" id="sel-x" type="button" data-click="selEnd"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
     </aside>
 
     <!-- Modellwahl -->
     <section id="model-sheet" class="sheet" aria-label="Model">
         <div class="grab"></div>
-        <div class="sh-head"><h3 id="ms-title" data-i18n="modelsTitle">Model</h3><button class="ibtn" type="button" onclick="loadModels()" data-i18n-title="modelsReload" title="Reload list"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button><button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
+        <div class="sh-head"><h3 id="ms-title" data-i18n="modelsTitle">Model</h3><button class="ibtn" type="button" data-click="loadModels" data-i18n-title="modelsReload" title="Reload list"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button><button class="ibtn" type="button" data-click="closeAll" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
         <div class="sh-body">
-            <input id="model-search" class="inp" type="search" style="margin:0 0 6px" data-i18n-ph="modelSearchPh" placeholder="Filter models" oninput="renderModelSheet()" hidden>
+            <input id="model-search" class="inp" type="search" style="margin:0 0 6px" data-i18n-ph="modelSearchPh" placeholder="Filter models" data-input="renderModelSheet" hidden>
             <div id="model-list"></div>
             <div id="model-empty" class="help" style="padding:10px 4px"></div>
         </div>
@@ -376,137 +376,137 @@
     <section id="menu-sheet" class="sheet" aria-label="Menu">
         <div class="grab"></div>
         <div class="sh-head">
-            <button class="ibtn" id="q-reload" type="button" onclick="location.reload()" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)" aria-label="Reload page"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button>
-            <button id="sh-back" class="ibtn" type="button" onclick="showPage('main')" data-i18n-title="back" title="Back" hidden><svg class="i"><use href="lib/icons.svg#i-arrow-l"/></svg></button>
+            <button class="ibtn" id="q-reload" type="button" data-click="reload" data-i18n-title="reloadTitle" title="Reload page (chat and settings are kept)" aria-label="Reload page"><svg class="i"><use href="lib/icons.svg#i-refresh"/></svg></button>
+            <button id="sh-back" class="ibtn" type="button" data-click="showPage" data-arg="main" data-i18n-title="back" title="Back" hidden><svg class="i"><use href="lib/icons.svg#i-arrow-l"/></svg></button>
             <h3 id="sh-title">Menu</h3>
-            <button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button>
+            <button class="ibtn" type="button" data-click="closeAll" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button>
         </div>
         <div class="sh-body">
 
             <div class="pg on" data-pg="main">
                 <div class="quick" id="quick">
-                    <button class="bigbtn eng" type="button" id="q-engine" data-go="engine" onclick="showPage('engine')"><small data-i18n="engine">Engine</small><b id="q-engine-val"></b></button>
-                    <button class="bigbtn mod" type="button" id="q-model" onclick="openModelsFromPanel()"><small data-i18n="modelsTitle">Model</small><b id="q-model-val"></b></button>
+                    <button class="bigbtn eng" type="button" id="q-engine" data-go="engine" data-click="showPage" data-arg="engine"><small data-i18n="engine">Engine</small><b id="q-engine-val"></b></button>
+                    <button class="bigbtn mod" type="button" id="q-model" data-click="openModelsFromPanel"><small data-i18n="modelsTitle">Model</small><b id="q-model-val"></b></button>
 
                     <div class="pwin">
-                        <div class="pw-tabs"><button type="button" class="on" data-pw="params" onclick="pwTab('params')"><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden style="display:none"></i></button><button type="button" data-pw="prompts" onclick="pwTab('prompts')" data-i18n="tPrompts">Prompts</button></div>
+                        <div class="pw-tabs"><button type="button" class="on" data-pw="params" data-click="pwTab" data-arg="params"><span data-i18n="rParams">Parameters</span><i class="qdot" id="q-dirty" hidden style="display:none"></i></button><button type="button" data-pw="prompts" data-click="pwTab" data-arg="prompts" data-i18n="tPrompts">Prompts</button></div>
                         <div id="pw-prompts" hidden>
-                            <div class="seg2"><button type="button" id="ps-mode" onclick="setSysSrc('mode')" data-i18n="segMode">Mode</button><button type="button" id="ps-model" onclick="setSysSrc('model')" data-i18n="segModel">Model</button><button type="button" id="ps-own" onclick="setSysSrc('own')" data-i18n="segOwn">Mine</button></div>
-                            <textarea id="ps-text" class="inp" rows="7" spellcheck="false" oninput="onOwnPromptInput()" data-i18n-ph="psPh" placeholder="Paste or write your system prompt here …"></textarea>
+                            <div class="seg2"><button type="button" id="ps-mode" data-click="setSysSrc" data-arg="mode" data-i18n="segMode">Mode</button><button type="button" id="ps-model" data-click="setSysSrc" data-arg="model" data-i18n="segModel">Model</button><button type="button" id="ps-own" data-click="setSysSrc" data-arg="own" data-i18n="segOwn">Mine</button></div>
+                            <textarea id="ps-text" class="inp" rows="7" spellcheck="false" data-input="onOwnPromptInput" data-i18n-ph="psPh" placeholder="Paste or write your system prompt here …"></textarea>
                             <div class="ps-meta"><small id="ps-count"></small></div>
-                            <div class="q-btns"><button class="pill" type="button" id="ps-copy" onclick="copySysPrompt()"><span data-i18n="psCopy">Copy system prompt</span></button><button class="pill" type="button" id="ps-seed" onclick="seedOwnPrompt()" data-i18n="psSeed">Edit a copy</button></div>
+                            <div class="q-btns"><button class="pill" type="button" id="ps-copy" data-click="copySysPrompt"><span data-i18n="psCopy">Copy system prompt</span></button><button class="pill" type="button" id="ps-seed" data-click="seedOwnPrompt" data-i18n="psSeed">Edit a copy</button></div>
                             <small class="help" id="ps-note"></small>
                         </div>
                         <div id="pw-params">
-                        <div class="seg2"><button type="button" id="seg-model" onclick="setParamSrc('model')" data-i18n="segModel">Model</button><button type="button" id="seg-mode" onclick="setParamSrc('mode')" data-i18n="segMode">Mode</button><button type="button" id="seg-own" onclick="setParamSrc('own')" data-i18n="segOwn">Mine</button></div>
-                        <input type="checkbox" id="use-default" hidden onchange="onDefaultToggle()">
+                        <div class="seg2"><button type="button" id="seg-model" data-click="setParamSrc" data-arg="model" data-i18n="segModel">Model</button><button type="button" id="seg-mode" data-click="setParamSrc" data-arg="mode" data-i18n="segMode">Mode</button><button type="button" id="seg-own" data-click="setParamSrc" data-arg="own" data-i18n="segOwn">Mine</button></div>
+                        <input type="checkbox" id="use-default" hidden data-change="onDefaultToggle">
                         <div class="pw-sl">
-                            <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b title="Temperature">T°</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group" id="sc-topp" data-cap-card="top_p"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group" id="sc-topk" data-cap-card="top_k"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" oninput="onSlider()"></div>
-                            <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" oninput="onSlider()"></div>
+                            <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b title="Temperature">T°</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" data-input="onSlider"></div>
+                            <div class="slidercard slider-group" id="sc-topp" data-cap-card="top_p"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" data-input="onSlider"></div>
+                            <div class="slidercard slider-group" id="sc-topk" data-cap-card="top_k"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" data-input="onSlider"></div>
+                            <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" data-input="onSlider"></div>
                         </div>
                         <div class="q-btns" id="q-btn-row">
-                            <button class="pill" type="button" id="q-reset" onclick="resetParams()" data-i18n="qReset">Reset</button>
-                            <button class="pill" type="button" id="q-save" onclick="saveModelDefault()" data-i18n="qSave">Save</button>
-                            <button class="pill" type="button" id="q-copy" onclick="copyParams()" data-i18n-title="qCopyTip" title="Copies only the settings above"><span data-i18n="qCopy">Copy values</span></button>
+                            <button class="pill" type="button" id="q-reset" data-click="resetParams" data-i18n="qReset">Reset</button>
+                            <button class="pill" type="button" id="q-save" data-click="saveModelDefault" data-i18n="qSave">Save</button>
+                            <button class="pill" type="button" id="q-copy" data-click="copyParams" data-i18n-title="qCopyTip" title="Copies only the settings above"><span data-i18n="qCopy">Copy values</span></button>
                         </div>
                         <small class="help" id="q-note"></small>
                             <div class="thr"><div class="caps" id="thr-title" style="margin:12px 0 2px"></div>
-                            <div class="slidercard param-group" id="sc-threads" data-cap-card="num_thread" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" oninput="onThreads()"></div>
+                            <div class="slidercard param-group" id="sc-threads" data-cap-card="num_thread" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" data-input="onThreads"></div>
                                 <small class="help" id="thr-note"></small></div>
                         </div>
                     </div>
 
                     <div class="grpbox">
-                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-terminal"/></svg></span><span class="tx"><b data-i18n="swModes">Mode presets only</b><small data-i18n="swModesSub">Ignores my values, my prompt and model settings</small></span><span class="sw"><input type="checkbox" id="modes-only" onchange="onModesOnly()"><i></i></span></label>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-terminal"/></svg></span><span class="tx"><b data-i18n="swModes">Mode presets only</b><small data-i18n="swModesSub">Ignores my values, my prompt and model settings</small></span><span class="sw"><input type="checkbox" id="modes-only" data-change="onModesOnly"><i></i></span></label>
                     </div>
                     <div class="grpbox">
-                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" onchange="onFast()"><i></i></span></label>
-<button class="row" type="button" id="fastn-toggle" onclick="var c=document.getElementById('fastn-card');c.hidden=!c.hidden;this.classList.toggle('open',!c.hidden)"><span class="tx"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b></span><output id="fastn-val" class="mono"></output><svg class="i sm go"><use href="lib/icons.svg#i-chev-d"/></svg></button>
-                <div class="slidercard" id="fastn-card" data-cap-card="max_tokens" hidden><div class="sc-top"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="300" onchange="onFast()" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" data-change="onFast"><i></i></span></label>
+<button class="row" type="button" id="fastn-toggle" data-click="toggleFastCard"><span class="tx"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b></span><output id="fastn-val" class="mono"></output><svg class="i sm go"><use href="lib/icons.svg#i-chev-d"/></svg></button>
+                <div class="slidercard" id="fastn-card" data-cap-card="max_tokens" hidden><div class="sc-top"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b><input type="number" id="param-fastn" class="inp" min="16" max="1024" step="16" value="300" data-change="onFast" style="width:96px;margin:0;height:38px;text-align:right;font-family:var(--mono)"></div><small data-i18n="fastHelp">Asks for a brief answer without Markdown, caps its length and shows it as plain text. Fewer tokens = shorter wait.</small></div>
                     </div>
                 </div>
 
                 <div class="sep"></div>
                 <div class="caps grp"><span data-i18n="gToChat">Heinz Chat</span></div>
-                <button class="row" type="button" id="to-chat" onclick="applyToChat()"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="toChat">Apply to chat</b><small id="to-chat-sub" data-i18n="toChatSub">Prompt and values for this model go to the Heinz Chat</small></span></button>
+                <button class="row" type="button" id="to-chat" data-click="applyToChat"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="toChat">Apply to chat</b><small id="to-chat-sub" data-i18n="toChatSub">Prompt and values for this model go to the Heinz Chat</small></span></button>
                 <div class="sep"></div>
                 <div class="caps grp"><span data-i18n="gPerf">Performance</span></div>
-                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" onchange="onPreloadToggle()"><i></i></span></label>
-                <button class="row" type="button" data-go="speed" onclick="showPage('speed')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i18n="rSpeed">Speed test</b><small data-i18n="rSpeedSub">Find the best thread count</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
-                <button class="row" type="button" data-go="series" onclick="showPage('series')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="rSeries">Test series</b><small data-i18n="rSeriesSub">Run many settings, export for an agent</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <label class="row param-group"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-rocket"/></svg></span><span class="tx"><b data-i18n="swPre">Preload model</b><small data-i18n="swPreSub">Loads in the background</small></span><span class="sw"><input type="checkbox" id="preload-on" data-change="onPreloadToggle"><i></i></span></label>
+                <button class="row" type="button" data-go="speed" data-click="showPage" data-arg="speed"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i18n="rSpeed">Speed test</b><small data-i18n="rSpeedSub">Find the best thread count</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="series" data-click="showPage" data-arg="series"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="rSeries">Test series</b><small data-i18n="rSeriesSub">Run many settings, export for an agent</small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
                 <div class="caps grp"><span data-i18n="gPrivacy">Privacy</span></div>
-                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" onchange="onOnlineToggle()"><i></i></span></label>
+                <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-cloud"/></svg></span><span class="tx"><b data-i18n="swOnline">Allow online</b><small data-i18n="swOnlineSub">Off: nothing leaves this device</small></span><span class="sw"><input type="checkbox" id="online-on" data-change="onOnlineToggle"><i></i></span></label>
                 <div class="caps grp"><span data-i18n="gApp">App</span></div>
-                <button class="row" type="button" data-go="look" onclick="showPage('look')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="rLook">Appearance</b><small id="menu-theme"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
-                <button class="row" type="button" data-go="update" onclick="showPage('update')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="rUpdate">Update &amp; info</b><small id="menu-ver"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="look" data-click="showPage" data-arg="look"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="rLook">Appearance</b><small id="menu-theme"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
+                <button class="row" type="button" data-go="update" data-click="showPage" data-arg="update"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-download"/></svg></span><span class="tx"><b data-i18n="rUpdate">Update &amp; info</b><small id="menu-ver"></small></span><svg class="i sm go"><use href="lib/icons.svg#i-chev-r"/></svg></button>
             </div>
 
             <div class="pg" data-pg="engine" id="engine-box">
-                <div id="q-lock" class="lockbox" hidden><span id="q-lock-txt"></span><button class="pill acc" type="button" onclick="unlockOnline()" data-i18n="qAllow">Allow online</button></div>
+                <div id="q-lock" class="lockbox" hidden><span id="q-lock-txt"></span><button class="pill acc" type="button" data-click="unlockOnline" data-i18n="qAllow">Allow online</button></div>
                 <div id="q-eng-list"></div>
-                <div class="st-btns"><button class="pill" id="eng-add" type="button" onclick="addEngine()"><svg class="i sm"><use href="lib/icons.svg#i-plus"/></svg><span data-i18n="engAdd">Add own engine</span></button></div>
+                <div class="st-btns"><button class="pill" id="eng-add" type="button" data-click="addEngine"><svg class="i sm"><use href="lib/icons.svg#i-plus"/></svg><span data-i18n="engAdd">Add own engine</span></button></div>
                 <div class="caps grp"><span data-i18n="rConn">Connection details</span><span id="eng-conn-name"></span></div>
                 <div id="eng-name" hidden>
                     <label class="fld" data-i18n="engName">Name</label>
-                    <input type="text" id="prov-name" class="inp" onchange="onEngineName()" style="margin-top:4px">
+                    <input type="text" id="prov-name" class="inp" data-change="onEngineName" style="margin-top:4px">
                 </div>
-                <select id="provider-select" onchange="onProvider()" hidden aria-hidden="true" tabindex="-1"></select>
+                <select id="provider-select" data-change="onProvider" hidden aria-hidden="true" tabindex="-1"></select>
                 <div id="eng-backend" hidden>
                     <label class="fld" data-i18n="backend">Backend (LiteRT-LM)</label>
-                    <select id="backend-select" class="sel" onchange="onBackend()" style="margin-top:4px"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
+                    <select id="backend-select" class="sel" data-change="onBackend" style="margin-top:4px"><option value="cpu">CPU</option><option value="gpu">GPU</option></select>
                 </div>
                 <div id="eng-url" hidden>
                     <label class="fld" data-i18n="engineUrl">Endpoint address (…/v1)</label>
-                    <input type="text" id="prov-url" class="inp" onchange="onProviderUrl()" placeholder="http://127.0.0.1:8080/v1" style="margin-top:4px">
+                    <input type="text" id="prov-url" class="inp" data-change="onProviderUrl" placeholder="http://127.0.0.1:8080/v1" style="margin-top:4px">
                 </div>
                 <div id="eng-key" hidden>
                     <label class="fld" data-i18n="apiKey">API key (stays in this browser)</label>
-                    <input type="text" id="prov-key" class="inp" onchange="onProviderKey()" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="k-heinz" data-lpignore="true" data-1p-ignore data-form-type="other" style="margin-top:4px;-webkit-text-security:disc;text-security:disc">
+                    <input type="text" id="prov-key" class="inp" data-change="onProviderKey" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="k-heinz" data-lpignore="true" data-1p-ignore data-form-type="other" style="margin-top:4px;-webkit-text-security:disc;text-security:disc">
                     <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" class="help" style="color:var(--pri)" data-i18n="getKey">Get a key</a>
                 </div>
                 <div id="eng-model" hidden>
                     <label class="fld" data-i18n="modelId">Model name (if the list stays empty)</label>
-                    <input type="text" id="model-free" class="inp" onchange="onModelFree()" style="margin-top:4px">
-                    <div class="st-btns" id="ml-pill"><button class="pill" type="button" onclick="loadModels()"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
+                    <input type="text" id="model-free" class="inp" data-change="onModelFree" style="margin-top:4px">
+                    <div class="st-btns" id="ml-pill"><button class="pill" type="button" data-click="loadModels"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
                 </div>
-                <div class="st-btns" id="eng-del-row" hidden><button class="pill danger" id="eng-del" type="button" onclick="removeEngineTap()"><svg class="i sm"><use href="lib/icons.svg#i-trash"/></svg><span data-i18n="engDel">Remove this engine</span></button></div>
+                <div class="st-btns" id="eng-del-row" hidden><button class="pill danger" id="eng-del" type="button" data-click="removeEngineTap"><svg class="i sm"><use href="lib/icons.svg#i-trash"/></svg><span data-i18n="engDel">Remove this engine</span></button></div>
                 <small id="eng-note" class="help"></small>
-                <div id="eng-status" class="status-line" style="cursor:pointer" onclick="if (MODELS.length) openModelsFromPanel()"></div>
+                <div id="eng-status" class="status-line" style="cursor:pointer" data-click="openModelsFromPanelIfAny"></div>
                 <small class="help" data-i18n="onlineHelp">Off: nothing leaves this device. On: online engines appear; only the current chat messages are sent to the engine you pick, never other chats or data.</small>
             </div>
 
             <div class="pg" data-pg="series">
                 <small class="help" style="margin-top:0" data-i18n="srNote">Runs one prompt under many settings, one after the other, and collects the data. No system prompt, no chat history. Empty field = the slider value stays.</small>
                 <div class="caps grp"><span data-i18n="srPromptLbl">Prompt</span></div>
-                <textarea id="sr-prompt" class="inp" rows="3" oninput="srPlan()">Name one unusual animal in one sentence.</textarea>
+                <textarea id="sr-prompt" class="inp" rows="3" data-input="srPlan">Name one unusual animal in one sentence.</textarea>
                 <small class="help" data-i18n="srPromptHelp">Several prompts: one per line.</small>
                 <div class="caps grp"><span data-i18n="srValues">Values to try (separate with commas)</span></div>
                 <div class="sr-grid">
-                    <label data-sr="temperature"><b title="Temperature">T°</b><input id="sr-temp" class="inp" inputmode="decimal" placeholder="0, 0.5" oninput="srPlan()"></label>
-                    <label data-sr="top_p"><b>Top-p</b><input id="sr-topp" class="inp" inputmode="decimal" placeholder="1" oninput="srPlan()"></label>
-                    <label data-sr="top_k"><b>Top-k</b><input id="sr-topk" class="inp" inputmode="numeric" placeholder="1, 64" oninput="srPlan()"></label>
-                    <label data-sr="num_thread" id="sr-thr-box"><b data-i18n="srThreads">Threads</b><input id="sr-thr" class="inp" inputmode="numeric" placeholder="2, 4" oninput="srPlan()"></label>
+                    <label data-sr="temperature"><b title="Temperature">T°</b><input id="sr-temp" class="inp" inputmode="decimal" placeholder="0, 0.5" data-input="srPlan"></label>
+                    <label data-sr="top_p"><b>Top-p</b><input id="sr-topp" class="inp" inputmode="decimal" placeholder="1" data-input="srPlan"></label>
+                    <label data-sr="top_k"><b>Top-k</b><input id="sr-topk" class="inp" inputmode="numeric" placeholder="1, 64" data-input="srPlan"></label>
+                    <label data-sr="num_thread" id="sr-thr-box"><b data-i18n="srThreads">Threads</b><input id="sr-thr" class="inp" inputmode="numeric" placeholder="2, 4" data-input="srPlan"></label>
                 </div>
                 <div id="sr-think-box">
                     <div class="caps grp"><span data-i18n="thinkLbl">Thinking</span></div>
                     <div class="st-chips" id="sr-think">
-                        <label class="tile" data-c="v"><input type="checkbox" value="default" onchange="srPlan()"><span data-i18n="thinkDefault">model default</span></label>
-                        <label class="tile" data-c="b"><input type="checkbox" value="fast" onchange="srPlan()"><span data-i18n="thinkFast">Fast</span></label>
-                        <label class="tile" data-c="g"><input type="checkbox" value="deep" onchange="srPlan()"><span data-i18n="thinkDeep">Deep</span></label>
+                        <label class="tile" data-c="v"><input type="checkbox" value="default" data-change="srPlan"><span data-i18n="thinkDefault">model default</span></label>
+                        <label class="tile" data-c="b"><input type="checkbox" value="fast" data-change="srPlan"><span data-i18n="thinkFast">Fast</span></label>
+                        <label class="tile" data-c="g"><input type="checkbox" value="deep" data-change="srPlan"><span data-i18n="thinkDeep">Deep</span></label>
                     </div>
                 </div>
                 <div class="sr-grid">
-                    <label><b data-i18n="srReps">Repeats</b><input id="sr-reps" class="inp" inputmode="numeric" value="1" oninput="srPlan()"></label>
-                    <label><b data-i18n="srMaxTok">Max. answer tokens</b><input id="sr-max" class="inp" inputmode="numeric" value="200" oninput="srPlan()"></label>
+                    <label><b data-i18n="srReps">Repeats</b><input id="sr-reps" class="inp" inputmode="numeric" value="1" data-input="srPlan"></label>
+                    <label><b data-i18n="srMaxTok">Max. answer tokens</b><input id="sr-max" class="inp" inputmode="numeric" value="200" data-input="srPlan"></label>
                 </div>
                 <label class="chkrow"><input type="checkbox" id="sr-answers" checked><span data-i18n="srAnswers">Answer texts in the export</span></label>
                 <div id="sr-plan" class="help" style="min-height:16px"></div>
                 <div class="st-btns">
-                    <button class="pill acc" id="sr-start" type="button" onclick="srStart()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
-                    <button class="pill" id="sr-resume" type="button" onclick="srStart(true)" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="srResume">Resume</span></button>
-                    <button class="pill danger" id="sr-stop" type="button" onclick="srStop()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
+                    <button class="pill acc" id="sr-start" type="button" data-click="srStart"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
+                    <button class="pill" id="sr-resume" type="button" data-click="srStart" data-arg="true" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="srResume">Resume</span></button>
+                    <button class="pill danger" id="sr-stop" type="button" data-click="srStop" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
                 </div>
                 <div id="sr-status" class="help" style="min-height:16px"></div>
                 <div class="st-prog"><i id="sr-prog-i"></i></div>
@@ -533,34 +533,34 @@
                 <label class="chkrow"><input type="checkbox" id="st-termux"><span data-i18n="stTermuxVisible">Termux visible (split screen)</span></label>
                 <label class="chkrow"><input type="checkbox" id="st-cold" checked><span data-i18n="stCold">Unload model first (measures real load time)</span></label>
                 <div class="st-btns">
-                    <button class="pill acc" id="st-start" type="button" onclick="startSpeedTest()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
-                    <button class="pill danger" id="st-stop" type="button" onclick="stopSpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
+                    <button class="pill acc" id="st-start" type="button" data-click="startSpeedTest"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
+                    <button class="pill danger" id="st-stop" type="button" data-click="stopSpeedTest" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
                 </div>
                 <div id="st-status" class="help" style="min-height:16px"></div>
                 <div id="st-bars"></div>
                 <details class="st-det"><summary data-i18n="stTable">Table</summary><div id="st-table"></div></details>
                 <div id="st-best" class="help" style="color:var(--pri)"></div>
                 <div class="st-btns st-sticky">
-                    <button class="pill" id="st-apply" type="button" onclick="applyBestThreads()" style="display:none"></button>
-                    <button class="pill" id="st-copy" type="button" onclick="copySpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span data-i18n="stCopy">Copy results</span></button>
+                    <button class="pill" id="st-apply" type="button" data-click="applyBestThreads" style="display:none"></button>
+                    <button class="pill" id="st-copy" type="button" data-click="copySpeedTest" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-copy"/></svg><span data-i18n="stCopy">Copy results</span></button>
                 </div>
             </div>
 
             <div class="pg" data-pg="look">
-                <button class="row" type="button" id="th-auto" onclick="setTheme('auto')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="thAuto">Automatic (system)</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
-                <button class="row" type="button" id="th-lt" onclick="setTheme('lt')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i18n="thLt">Light</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
-                <button class="row" type="button" id="th-dk" onclick="setTheme('dk')"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="thDk">Dark</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
+                <button class="row" type="button" id="th-auto" data-click="setTheme" data-arg="auto"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i18n="thAuto">Automatic (system)</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
+                <button class="row" type="button" id="th-lt" data-click="setTheme" data-arg="lt"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i18n="thLt">Light</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
+                <button class="row" type="button" id="th-dk" data-click="setTheme" data-arg="dk"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i18n="thDk">Dark</b></span><svg class="i ck"><use href="lib/icons.svg#i-check"/></svg></button>
             </div>
 
             <div class="pg" data-pg="update">
                 <span id="upd-ver" class="sr-only"></span>
-                <button class="pill upd-pill" id="upd-btn" type="button" onclick="doUpdate()" data-i18n-title="updTitle" title="Tap to check for updates" data-i18n="updBtn">UPDATE</button>
+                <button class="pill upd-pill" id="upd-btn" type="button" data-click="doUpdate" data-i18n-title="updTitle" title="Tap to check for updates" data-i18n="updBtn">UPDATE</button>
                 <div class="led updled" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
                 <div id="upd-status" class="help" style="min-height:16px"></div>
                 <div class="caps grp" style="margin-top:22px"><span data-i18n="bkTitle">Backup</span></div>
                 <label class="chkrow"><input type="checkbox" id="bk-keys"><span data-i18n="bkKeys">Include API keys (keep the file safe)</span></label>
-                <div class="st-btns"><button class="pill" type="button" onclick="exportBackup()"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span data-i18n="bkExport">Export backup</span></button><button class="pill" type="button" onclick="$('bk-file').click()"><svg class="i sm"><use href="lib/icons.svg#i-save"/></svg><span data-i18n="bkImport">Import backup</span></button></div>
-                <input type="file" id="bk-file" accept="application/json,.json" hidden onchange="importBackup(this)">
+                <div class="st-btns"><button class="pill" type="button" data-click="exportBackup"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span data-i18n="bkExport">Export backup</span></button><button class="pill" type="button" data-click="pickBackupFile"><svg class="i sm"><use href="lib/icons.svg#i-save"/></svg><span data-i18n="bkImport">Import backup</span></button></div>
+                <input type="file" id="bk-file" accept="application/json,.json" hidden data-change="importBackup">
                 <div id="bk-status" class="help" style="min-height:16px"></div>
                 <div id="store-status" class="help" style="min-height:16px"></div>
             </div>
@@ -596,6 +596,7 @@
     <script src="lib/dashboard/pixelbar.js"></script>
     <script src="lib/dashboard/quick.js"></script>
     <script src="lib/dashboard/caps.js"></script>
+    <script src="lib/dashboard/actions.js"></script>
     <script>
         // ===== Zugriff für Tests: HeinzDashboard (Fassade) =====
         // Tests und Werkzeuge greifen nur hierüber auf den Zustand der Seite zu, nie über freie Globalnamen.

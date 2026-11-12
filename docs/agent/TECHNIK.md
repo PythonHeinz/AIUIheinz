@@ -79,3 +79,13 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - Im Strang-Container mit Playwright und der vorinstallierten Chromium-Version; Ollama wird mit `page.route('**/localhost:11434/**', …)` simuliert (Pfade der Installation vor Gebrauch prüfen). `node --check` für die Skriptblöcke.
 - Server mit curl prüfen: fehlender Header, fremder Origin, `../` im Namen, ungültige Endung, Löschen nach `_trash`, `/server.py` und `/data` müssen 404 liefern.
 - Echte Modelle laufen nur auf dem Handy. Nach jeder Änderung sagen, was der Entwickler dort prüfen soll. Nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief.
+
+## Bedienelemente des Dashboards: `data-click`, `data-input`, `data-change`
+- **Keine Inline-Handler** (`onclick=…`, `oninput=…`, `onchange=…`) in `dashboard.html`. Jedes Element nennt seine Aktion als `data-click="name"` (oder `data-input`, `data-change`), ein Zusatzwert steht in `data-arg="text"`. Die Tabelle `ACTIONS` in `lib/dashboard/actions.js` ordnet den Namen die Funktionen zu; ein Test (`test_rules.py`) prüft, dass jeder Name in der Tabelle steht und kein Eintrag überzählig ist.
+- Ein Listener je Ereignisart auf dem Dokument, er läuft vom Ziel nach oben wie ein weitergereichtes Ereignis. **Ereignisse, die Skripte oder Tests selbst auslösen, müssen `bubbles: true` tragen** (`new Event('change', { bubbles: true })`), sonst sieht die Tabelle sie nicht. Echte Eingaben und Playwright (`click`, `select_option`, `dispatch_event`) sind in Ordnung.
+- Skripte setzen die Aktion eines Knopfes mit `setAttribute('data-click', …)`; Tests suchen Knöpfe über `button[data-click='newChat']` statt über das alte `onclick`.
+- Nach dem Neuladen baut sich die Seite erst nach dem Laden ihrer Daten auf: Tests warten auf `HeinzDashboard.ready` (die Wrapper `goto` und `reload` tun das; nach einer Navigation, die die Seite selbst auslöst, `page.wait_for_function(...)` selbst aufrufen). Das war die Ursache des unregelmäßigen Tests zum Update-Knopf.
+
+## Tests laufen parallel
+- `bash tests/run_all.sh` startet die kleinen Testdateien und die Seitentests in Teilen (`HEINZ_SHARD=i/n`, Anzahl über `HEINZ_SHARDS`, Standard Anzahl Kerne, höchstens 4) gleichzeitig. Jeder Teil startet seinen eigenen Server auf freiem Port; Tests dürfen keinen gemeinsamen Zustand teilen.
+- `bash tests/run_all.sh <Wort>` führt nur Tests aus, deren Name das Wort enthält.

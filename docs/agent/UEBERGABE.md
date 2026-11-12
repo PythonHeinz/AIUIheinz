@@ -13,7 +13,7 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 ## Routine (jede Änderung)
 1. **Vor der ersten Änderung:** `git pull --rebase`; „Aktive Arbeit“ in `docs/agent/STAND.md` lesen. Steht dort eine Zeile eines anderen Strangs unter 24 Stunden, oder wird ein fremdes Modul oder das Fundament berührt: den Entwickler fragen.
 2. **Eigene Zeile eintragen und sofort pushen** (Datum, Strangname, Vorhaben, berührte Dateien).
-3. Arbeiten. Neue Funktionen bekommen Tests; `bash tests/run_all.sh` muss grün sein.
+3. Arbeiten. Neue Funktionen bekommen Tests. Beim Arbeiten nur die betroffenen Tests laufen lassen: `bash tests/run_all.sh <Wort>` (Teil des Testnamens, zum Beispiel `update` oder `mode`, dauert Sekunden). Vor jedem Push einmal der volle Lauf `bash tests/run_all.sh` (läuft parallel in Teilen, etwa 2 Minuten); er muss grün sein.
 4. **Abschluss:** `git pull --rebase`, dann `ENTWICKLUNGSVERLAUF.md` (was, Dateien und Funktionen, welche Tests, was offen), `STAND.md` (Stand je Modul, Zeile unter „Aktive Arbeit“ entfernen, Stränge und Nächste Aufgaben anpassen) und bei neuen Fallstricken `TECHNIK.md` im Repo ergänzen; nach `main` pushen.
 5. Dem Entwickler sagen, was er auf dem Handy prüfen soll (`git pull`, `bash start.sh`, ggf. `litert-lm serve --cors-origin http://localhost:3000`) und was nur simuliert getestet ist.
 

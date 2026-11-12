@@ -15,7 +15,7 @@ DIRECT = re.compile(r"/api/(chat|generate|embed|embeddings)\b|num_thread\s*:|kee
 class RuleTest(unittest.TestCase):
     def test_new_pages_use_the_shared_runtime_only(self):
         files = (glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "tools", "**", "*.html"), recursive=True)
-                 + glob.glob(os.path.join(ROOT, "lib", "bench", "*.js")))
+                 + glob.glob(os.path.join(ROOT, "lib", "dashboard", "*.js")))
         bad = []
         for f in files:
             rel = os.path.relpath(f, ROOT).replace(os.sep, "/")
@@ -41,6 +41,23 @@ class RuleTest(unittest.TestCase):
         if r.returncode not in (0, 1):
             self.skipTest("not a git checkout")
         self.assertEqual(r.stdout.split(), [], "These files are ignored by .gitignore and would be missing after git pull")
+
+    def test_every_control_of_the_dashboard_has_an_action_and_no_inline_handler_remains(self):
+        # inline handlers (onclick=...) are replaced by data-click/data-input/data-change plus the table in lib/dashboard/actions.js (12.11.2026)
+        with open(os.path.join(ROOT, "dashboard.html"), encoding="utf-8") as fh:
+            html = fh.read()
+        self.assertEqual(re.findall(r"\son(?:click|input|change|submit|keydown)=", html), [], "use data-click / data-input / data-change")
+        with open(os.path.join(ROOT, "lib", "dashboard", "actions.js"), encoding="utf-8") as fh:
+            js = fh.read()
+        table = js[js.index("const ACTIONS = {"):js.index("// One listener per event kind")]
+        known = set(re.findall(r"\b(\w+): \(", table))
+        used = set(re.findall(r"data-(?:click|input|change)=\"(\w+)\"", html))
+        for f in glob.glob(os.path.join(ROOT, "lib", "dashboard", "*.js")):   # names set from script, e.g. the send button
+            with open(f, encoding="utf-8") as fh:
+                for pair in re.findall(r"data-click', \w+ \? '(\w+)' : '(\w+)'", fh.read()):
+                    used |= set(pair)
+        self.assertEqual(sorted(used - known), [], "These names have no entry in ACTIONS (lib/dashboard/actions.js)")
+        self.assertEqual(sorted(known - used), [], "Unused entries in ACTIONS: remove them")
 
     def test_the_rule_document_exists_and_is_linked(self):
         self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "LOKALE_MODELLE.md")))

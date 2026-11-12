@@ -89,3 +89,5 @@ Nachtrag: Der Textumzug der Blöcke 2 bis 20 nach `lib/dashboard/*.js` ist erfol
 ## 7 Nicht auf dem Gerät geprüft
 
 Diese Inventur ist gelesen, nicht gelaufen. Nach dem Umbau gilt weiter: simuliert getestet ist nicht am Handy bestätigt.
+
+Nachtrag (12.11.2026, Schritt 6): Die Inline-Handler sind ersetzt (`data-click`, `data-input`, `data-change`, Tabelle `ACTIONS` in `lib/dashboard/actions.js`). Es fehlt nur noch die Umstellung auf ES-Module mit ausdrücklichem Zustand.
