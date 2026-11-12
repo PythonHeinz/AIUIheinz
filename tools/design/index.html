@@ -7,7 +7,6 @@
 <title>Heinz UI – Design catalog</title>
 <link rel="stylesheet" href="../../lib/core.css">
 <script src="../../lib/core.js"></script>
-<script src="../../lib/pixel.js"></script>
 <style>
 /* Catalog of the building blocks. Rule for every page: look here first (docs/DESIGN.md 7). Only this page may style itself freely. */
 body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--font)}
@@ -90,6 +89,7 @@ p.note{color:var(--sub);font-size:.85rem;margin:6px 0 0;line-height:1.45}
 <div class="bs-b"><p class="note" data-t="bsheetP"></p></div></div>
 
 <script type="module">
+import '../../lib/pixel.js';   // adds Heinz.Pixel
 Heinz.iconBase = '../../lib/';
 /* ---- texts of the page itself ---- */
 var T = {

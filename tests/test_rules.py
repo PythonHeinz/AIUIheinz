@@ -88,9 +88,11 @@ class RuleTest(unittest.TestCase):
                 if name != "base.js" and re.search(r"window\.Heinz(?!Dashboard\b)\w*", text):
                     problems.append(name + ": reads a window.Heinz* library directly (use " + folder + "/base.js)")
                 for spec in re.findall(r"""(?:from|import)\s+['"]([^'"]+)['"]""", text):
-                    if not (spec.startswith("./") and spec.endswith(".js")):
+                    if not ((spec.startswith("./") or spec.startswith("../")) and spec.endswith(".js")):
                         problems.append("%s: import path %s (relative, with .js)" % (name, spec))
-                    elif not os.path.exists(os.path.join(ROOT, folder, spec[2:])):
+                    elif spec.startswith("../") and (name != "base.js" or spec.count("../") != 1):
+                        problems.append("%s: only base.js reaches the libraries in lib/ (%s)" % (name, spec))
+                    elif not os.path.exists(os.path.normpath(os.path.join(ROOT, folder, spec))):
                         problems.append("%s: imports missing file %s" % (name, spec))
             self.assertEqual(problems, [], page)
 
@@ -109,6 +111,30 @@ class RuleTest(unittest.TestCase):
                     problems.append(page + ": classic script " + src)
             if re.search(r"\son(?:click|input|change|submit|keydown)=", html):
                 problems.append(page + ": inline handler (use a listener in the module)")
+        self.assertEqual(problems, [])
+
+    def test_libraries_are_modules_and_no_page_loads_them_as_classic_scripts(self):
+        # step 4 (12.11.2026): lib/*.js export their object (window.X stays for tests and console); only lib/core.js is classic
+        problems = []
+        for f in sorted(glob.glob(os.path.join(ROOT, "lib", "*.js"))):
+            name = os.path.basename(f)
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            if name == "core.js":
+                if re.search(r"^(import|export)\b", text, re.M):
+                    problems.append("core.js is the classic head script (theme and language before the first paint)")
+                continue
+            if not re.search(r"^export const \w+ = ", text, re.M):
+                problems.append(name + ": no export")
+            if re.search(r"^import\b", text, re.M):
+                problems.append(name + ": libraries import nothing (they are leaves)")
+        pages = ["index.html", "hub.html", "dashboard.html", "chat.html"] + sorted(os.path.relpath(f, ROOT).replace(os.sep, "/") for f in glob.glob(os.path.join(ROOT, "tools", "*", "*.html")))
+        for page in pages:
+            with open(os.path.join(ROOT, page), encoding="utf-8") as fh:
+                html = fh.read()
+            for src in re.findall(r'<script(?![^>]*type="module")[^>]*src="([^"]+)"', html):
+                if not src.endswith("lib/core.js") and not src.endswith("lib/dashboard/failsafe.js"):
+                    problems.append(page + ": classic script " + src)
         self.assertEqual(problems, [])
 
     def test_every_control_of_heinz_chat_has_an_action(self):
