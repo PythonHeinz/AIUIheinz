@@ -4,13 +4,12 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
-Aktuell:
-- 12.11.2026 15:25, AIUIheinz-Aufraeumen: Ablageorte und Regeln (Doppelablage beenden, Dokumente entschlacken, neue Projektanweisung); berührt `docs/agent/*`, `docs/archiv/*`, `docs/KONZEPT.md` (Abschnitte 1 bis 14 ins Archiv), `README.md`, `tests/test_rules.py` (nur Pfad); alle anderen Stränge gestoppt (Entwickler).
+Aktuell: keine.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
 ## Reihenfolge (Beschluss `docs/KONZEPT.md` 22, nacheinander)
-1. **AIUIheinz-Aufraeumen** (läuft, endet mit der neuen Projektanweisung).
+1. ~~AIUIheinz-Aufraeumen~~ (fertig 12.11.2026; neue Projektanweisung liegt in `PROJEKTANWEISUNG.md`, der Entwickler setzt sie ein).
 2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog, dann Menü des Prüfstands (Fundament).
 3. **AIUIheinz-Pruefstand:** `chat.html` in ES-Module, Prüfprozeduren als Daten.
 4. **AIUIheinz-Speicher:** IndexedDB für Unterhaltungen und Testreihen mit Migration.
@@ -22,7 +21,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | Strang | Inhalt, Auftrag | Stand |
 |---|---|---|
 | AIUIheinz (Root) | Konzept (`docs/KONZEPT.md`), Querprüfung, neue Aufträge | Konzept nachgeführt bis Abschnitt 22 (Beschlüsse zur Struktur, 12.11.) |
-| AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | läuft (12.11.2026) |
+| AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | fertig (12.11.2026): Doppelablage beendet, Dokumente neu geordnet, Anweisungen geschrieben; Abweichungen in `AUFTRAG_Aufraeumen.md` |
 | AIUIheinz-Menu | Bausteinkatalog, Menü des Prüfstands (DR2 Phase B); `AUFTRAG_Menu.md` | Auftrag bereit, Fundament nur nach Rückfrage |
 | AIUIheinz-Pruefstand | Schlankes Web-UI: `chat.html` zerlegen, Prüfprozeduren als Daten; `AUFTRAG_Pruefstand_Schlank.md` | startet nach Menu |
 | AIUIheinz-Speicher | IndexedDB; `AUFTRAG_Speicher.md` | startet nach Pruefstand |
@@ -49,7 +48,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | Start | `start.sh` | läuft | – |
 
 ## Nächste Aufgaben (Reihenfolge nach Wunsch des Entwicklers)
-1. Reihenfolge der Stränge siehe oben (Aufraeumen, Menu, Pruefstand, Speicher).
+1. Reihenfolge der Stränge siehe oben (Menu, Pruefstand, Speicher).
 2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, Knopf „In den Chat übernehmen“, Abbruch der Antwort beim Verlassen der Seite, `ollama rm heinz-wilson:latest heinz-fakt:latest`.
 3. Strang Chat danach: Sonden-Reihen S1 bis S8 und Testreihe Google Teil 2 wiederholen, Testreihen Schritt 4 und 5 (`docs/KONZEPT.md` 21.5a), danach Bild-Ein/Ausgabe.
 4. Strang Modelle: Denkregeln und CORS der neuen Anbieter prüfen.

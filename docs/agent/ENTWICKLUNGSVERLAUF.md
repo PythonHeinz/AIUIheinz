@@ -496,3 +496,11 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ## 12.11.2026 – Begriffe im Auftrag Aufräumen (Chat „AIUIheinz“, nur Doku)
 - `docs/AUFTRAG_Aufraeumen.md` Schritt 4a: Das Wort „Chat“ (Strang, Heinz Chat, Prüfstand, Unterhaltung, Chatmenü) wird in den Dokumenten vereinheitlicht, mit Tabelle `docs/agent/BEGRIFFE.md`. Nur Doku, Oberfläche unberührt.
+
+## 12.11.2026 – Aufräumen: eine Ablage, neue Ordnung (Strang AIUIheinz-Aufraeumen)
+- Doppelablage PC-Ordner + Repo beendet: alle Steuerdateien liegen nur noch im Repo unter `docs/agent/` (STAND, UEBERGABE, TECHNIK, BEGRIFFE, ENTWICKLUNGSVERLAUF, NAECHSTER_CHAT, PROJEKTANWEISUNG, ARBEITSANWEISUNG_ENTWICKLER, alle `AUFTRAG_*.md`). Kein PC-Abgleich und kein `cmp` mehr.
+- UEBERGABE.md nur noch Prozess, neu `TECHNIK.md` (Fallstricke, Strukturen, Designregeln, Tests), neu `BEGRIFFE.md` (Strang, Heinz Chat, Heinz Prüfstand, Unterhaltung, Chatmenü).
+- Archiv `docs/archiv/` (unverändert, nichts gelöscht): Verlauf bis 09.11., KONZEPT Abschnitte 1 bis 14 (`KONZEPT_v1_entwurf.md`), alter STAND, alter Startprompt. `docs/KONZEPT.md` behält Abschnitte 15 bis 22.
+- Abweichungen vom Auftrag: Archivdatei heißt `_bis_2026-11-09`; Sicherung als Branch `sicherung/vor-aufraeumen-2026-11-12` (Tag-Push blockiert vom Git-Proxy).
+- `tests/test_rules.py`: nur Pfad zu UEBERGABE.md angepasst. Tests aus frischem Klon: 20 + 24 + 2 + 137 = 183 grün (nur simuliert, nicht auf dem Handy).
+- PC-Ordner: alte Dateien nach `archiv_vor_2026-11-12\`, Hinweisdateien, neue README, `INDEX.md` angepasst; Sicherung `_Sicherung_vor_Aufraeumen_2026-11-12\`.
