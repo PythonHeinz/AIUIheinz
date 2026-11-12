@@ -1,16 +1,16 @@
-# AUFTRAG Prüfstand schlank (Strang AIUIheinz-Pruefstand)
+# AUFTRAG Dashboard schlank (Strang AIUIheinz-Dashboard)
 
-Neuer Strang, angelegt 12.11.2026 im Root-Strang. Strangname: **AIUIheinz-Pruefstand**. Startet **nach** AIUIheinz-Menu (beide ändern `chat.html`), **vor** AIUIheinz-Speicher.
+Neuer Strang, angelegt 12.11.2026 im Root-Strang. Strangname: **AIUIheinz-Dashboard**. Startet **nach** AIUIheinz-Menu (beide ändern `dashboard.html`), **vor** AIUIheinz-Speicher.
 
 ## Dogma (Beschluss des Entwicklers 12.11.2026, steht in `docs/KONZEPT.md` 22)
-**Schlankes Web-UI: Die Seite zeigt an und bedient. Sie enthält keine Datenbanken, keine Prüfprozeduren-Texte und keine Ergebnisse.** Definitionen (Prompts, Prüfregeln, Parametermatrizen, Modellregeln) liegen als Daten im Repo, Nutzdaten und Ergebnisse im Speicher des Browsers (nächster Strang: IndexedDB) und gehen per Export nach außen. Eine neue Prüfprozedur ist eine neue Datendatei, nicht eine neue Funktion in `chat.html`.
+**Schlankes Web-UI: Die Seite zeigt an und bedient. Sie enthält keine Datenbanken, keine Prüfprozeduren-Texte und keine Ergebnisse.** Definitionen (Prompts, Prüfregeln, Parametermatrizen, Modellregeln) liegen als Daten im Repo, Nutzdaten und Ergebnisse im Speicher des Browsers (nächster Strang: IndexedDB) und gehen per Export nach außen. Eine neue Prüfprozedur ist eine neue Datendatei, nicht eine neue Funktion in `dashboard.html`.
 
 ## Ausgangslage
-`chat.html` ist auf über 3000 Zeilen gewachsen: Unterhaltung, Menü, Tempo-Test, Testreihen, Modus- und Modellwerte, Texte in EN/DE. Neue Prüfverfahren und Ergebnisse landen im Skript. Das kostet beim Lesen und Ändern viele Token und erzeugt Regressionen.
+`dashboard.html` ist auf über 3000 Zeilen gewachsen: Unterhaltung, Menü, Tempo-Test, Testreihen, Modus- und Modellwerte, Texte in EN/DE. Neue Prüfverfahren und Ergebnisse landen im Skript. Das kostet beim Lesen und Ändern viele Token und erzeugt Regressionen.
 
 ## Phase 1 – Inventur und Vorschlag (kein Code)
-1. `chat.html` in Blöcke gliedern: Anzeige (Markup, Stile), Bedienlogik, Engine- und Messlogik, Prüfverfahren, eingebettete Daten (Texte, Standardprompts, Regeln), Speicherzugriffe. Je Block Zeilenzahl, Abhängigkeiten, Ziel (Modul, Datendatei, bleibt).
-2. Vorschlag für die Aufteilung mit **ES-Modulen ohne Build** (`<script type="module">`, Dateien unter `lib/` oder `lib/bench/`), Testreihen- und Prüfdefinitionen als **JSON** (zum Beispiel `lib/series/*.json`), Texte EN/DE aus dem Wörterbuch. Reihenfolge der Umzüge so, dass nach **jedem** Schritt alle Tests grün sind und das Verhalten gleich bleibt.
+1. `dashboard.html` in Blöcke gliedern: Anzeige (Markup, Stile), Bedienlogik, Engine- und Messlogik, Prüfverfahren, eingebettete Daten (Texte, Standardprompts, Regeln), Speicherzugriffe. Je Block Zeilenzahl, Abhängigkeiten, Ziel (Modul, Datendatei, bleibt).
+2. Vorschlag für die Aufteilung mit **ES-Modulen ohne Build** (`<script type="module">`, Dateien unter `lib/` oder `lib/dashboard/`), Testreihen- und Prüfdefinitionen als **JSON** (zum Beispiel `lib/series/*.json`), Texte EN/DE aus dem Wörterbuch. Reihenfolge der Umzüge so, dass nach **jedem** Schritt alle Tests grün sind und das Verhalten gleich bleibt.
 3. Dem Entwickler vorlegen und **auf seine Freigabe warten**. Nichts bauen vorher.
 
 ## Phase 2 – Umbau (nach Freigabe, in kleinen Schritten, je ein Commit)

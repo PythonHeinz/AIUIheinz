@@ -8,7 +8,7 @@ import re
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LEGACY = {"lib/bench/speedtest.js", "lib/bench/series.js", "sheet.html", "lab.html", "vitals.html"}   # speed test and series of the test bench measure directly on purpose
+LEGACY = {"lib/dashboard/speedtest.js", "lib/dashboard/series.js", "sheet.html", "lab.html", "vitals.html"}   # speed test and series of the dashboard measure directly on purpose
 DIRECT = re.compile(r"/api/(chat|generate|embed|embeddings)\b|num_thread\s*:|keep_alive\s*:")   # reading rt.options.num_thread for display is fine; setting values is not
 
 

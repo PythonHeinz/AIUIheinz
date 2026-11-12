@@ -1,18 +1,18 @@
 {
   "id": "chat",
   "name": {
-    "en": "Heinz Test Bench",
-    "de": "Heinz Prüfstand"
+    "en": "Heinz Chat",
+    "de": "Heinz Chat"
   },
   "desc": {
-    "en": "Try models and settings: five modes, parameters, speed test, test series, engines.",
-    "de": "Modelle und Einstellungen ausprobieren: fünf Modi, Parameter, Tempo-Test, Testreihe, Engines."
+    "en": "Just talk: a calm chat with the model of your choice, local or online. No settings, no tests.",
+    "de": "Einfach reden: ein ruhiger Chat mit dem Modell deiner Wahl, lokal oder online. Keine Einstellungen, keine Tests."
   },
-  "icon": "💬",
+  "icon": "•",
   "entry": "chat.html",
   "color": "blue",
   "status": "ready",
-  "order": 10,
-  "area": "chat",
-  "symbol": "i-heinz"
+  "order": 5,
+  "area": "hub2",
+  "symbol": "i-chats"
 }

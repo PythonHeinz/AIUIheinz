@@ -19,7 +19,7 @@
     "status": {
       "belegt": "read in the vendor documentation",
       "drittquelle": "third-party source, vendor wording not seen",
-      "code": "taken from our own code (lib/providers.js, chat.html), simulated tests only",
+      "code": "taken from our own code (lib/providers.js, dashboard.html), simulated tests only",
       "vermutet": "inferred",
       "unbekannt": "not found"
     },
@@ -252,7 +252,7 @@
     }
   },
 
-  "modelsDraftNote": { "en": "Entries with thinkingDraft are NOT read by the app yet. lib/providers.js chatOllama does not send think and drops message.thinking; until the Chat strand adds both, a rule named thinking would show a Fast/Deep switch that sends nothing. When that is built, rename thinkingDraft to thinking (kind toggle needs support in chat.html: fast = think false, deep = think true).", "de": "Einträge mit thinkingDraft liest die App noch NICHT. lib/providers.js chatOllama sendet think nicht und verwirft message.thinking; bis der Chat-Strang beides baut, würde eine Regel namens thinking einen Schnell/Tief-Schalter zeigen, der nichts sendet. Dann thinkingDraft in thinking umbenennen (Art toggle braucht Unterstützung in chat.html: Schnell = think false, Tief = think true)." },
+  "modelsDraftNote": { "en": "Entries with thinkingDraft are NOT read by the app yet. lib/providers.js chatOllama does not send think and drops message.thinking; until the Chat strand adds both, a rule named thinking would show a Fast/Deep switch that sends nothing. When that is built, rename thinkingDraft to thinking (kind toggle needs support in dashboard.html: fast = think false, deep = think true).", "de": "Einträge mit thinkingDraft liest die App noch NICHT. lib/providers.js chatOllama sendet think nicht und verwirft message.thinking; bis der Chat-Strang beides baut, würde eine Regel namens thinking einen Schnell/Tief-Schalter zeigen, der nichts sendet. Dann thinkingDraft in thinking umbenennen (Art toggle braucht Unterstützung in dashboard.html: Schnell = think false, Tief = think true)." },
   "models": [
     {"id": "ollama-gpt-oss", "engine": "ollama", "match": "^gpt-oss", "status": "belegt", "thinkingDraft": {"kind": "level", "levels": ["low", "medium", "high"], "default": "medium", "canDisable": false, "fast": "low", "deep": "high", "effortMap": {"low": "low", "medium": "medium", "high": "high"}, "via": "think", "hint": {"en": "gpt-oss takes only the levels low/medium/high in think; true/false is ignored and the trace cannot be switched off (Ollama documentation).", "de": "gpt-oss nimmt in think nur die Stufen low/medium/high; true/false wird ignoriert und die Denkspur lässt sich nicht abschalten (Ollama-Dokumentation)."}}},
     {"id": "ollama-think-toggle", "engine": "ollama", "match": "^(qwen3|qwq|deepseek-r1|deepseek-v3\\.1|gemma-?4|magistral|phi4-reasoning)", "status": "drittquelle", "thinkingDraft": {"kind": "toggle", "values": [false, true], "default": true, "canDisable": true, "fast": false, "deep": true, "via": "think", "hint": {"en": "Models of these families take think true/false (documentation names qwen3, deepseek-r1, deepseek-v3.1, qwq; gemma 4 binary per a third-party report; the others are a guess by name). The reliable answer is POST /api/show of the installed model: capabilities contains \"thinking\" when it can think.", "de": "Modelle dieser Familien nehmen think true/false (Dokumentation nennt qwen3, deepseek-r1, deepseek-v3.1, qwq; Gemma 4 binär nach einem Fremdbericht; die übrigen sind eine Namensvermutung). Verlässlich ist POST /api/show des installierten Modells: capabilities enthält \"thinking\", wenn es denken kann."}}},
@@ -1310,6 +1310,6 @@
     "S6": "https://ai.google.dev/edge/litert-lm/cli/configuration",
     "S7": "https://ai.google.dev/edge/litert-lm/cli/openai_server",
     "S8": "output of `litert-lm serve --help` on the developer's phone, 2026-11-10",
-    "S9": "lib/providers.js, chat.html (own code)"
+    "S9": "lib/providers.js, dashboard.html (own code)"
   }
 }

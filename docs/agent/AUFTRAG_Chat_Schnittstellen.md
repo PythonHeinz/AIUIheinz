@@ -6,9 +6,9 @@
 - **Nächste Schritte dieses Strangs** (Reihenfolge nach `docs/KONZEPT.md` 20.8, jeder Schritt nur nach Rückfrage, weil Fundament):
   1. Offene Gerätetests abschließen, Befunde nachtragen.
   1a. **Testreihen** (`docs/KONZEPT.md` Abschnitt 21, Beschluss 11.11.2026): Läufer für viele Parameterkombinationen mit einem Modell, Protokoll je Lauf, Export für Agenten, Tempo-Test als Sonderfall. Vorrang vor Schritt 2, weil er die Messmethode liefert; Rückfrage vor Beginn (Fundament).
-  2. **Anhang-Baustein und Bild-Eingabe** im Prüfstand, **Medienspeicher** (IndexedDB, Unterhaltungen verweisen auf Medien-IDs, Export und Aufräumen). Wartet auf die erweiterten Fähigkeitendaten (Ein- und Ausgabearten) aus dem Strang Modelle.
+  2. **Anhang-Baustein und Bild-Eingabe** im Dashboard, **Medienspeicher** (IndexedDB, Unterhaltungen verweisen auf Medien-IDs, Export und Aufräumen). Wartet auf die erweiterten Fähigkeitendaten (Ein- und Ausgabearten) aus dem Strang Modelle.
   3. **Funktionsplätze** mit Wunschliste und Ersatzregel (20.1, 20.2), Datenformat aus dem Strang Modelle.
-  4. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss laut Entwickler), LiteRT-Konfiguration über `server.py` (19.4), später Bildausgabe im Prüfstand mit Kennzeichnung (20.7), Sprache auf zwei Wegen (20.5).
+  4. Mehrere eigene OpenAI-kompatible Engines mit je Server und Schlüssel (Muss laut Entwickler), LiteRT-Konfiguration über `server.py` (19.4), später Bildausgabe im Dashboard mit Kennzeichnung (20.7), Sprache auf zwei Wegen (20.5).
 - Der Heinz Chat (schlanke Seite) als zweiter Hub-Eintrag (`docs/KONZEPT.md` 18.1) ist **nicht** Teil dieses Strangs; Zuständigkeit offen.
 
 Angelegt 10.11.2026 (nachts) im Strang „AIUIheinz-Modelle“ auf Wunsch des Entwicklers. Der Strang AIUIheinz-Chat setzt um, was Modelle recherchiert hat, damit die Werte **auf dem Handy testbar** werden. Der Strang startet mit dem Strangnamen **AIUIheinz-Chat** und diesem Auftrag.

@@ -32,7 +32,7 @@ Arbeitsweise:
 - Testen im Container mit Playwright und simulierten Servern (Ollama: Route '**/localhost:11434/**'), den Server mit curl. Echte Modelle laufen nur auf meinem Handy: behaupte nie, etwas sei auf dem Gerät getestet, was nur simuliert lief. Messwerte vom Handy trägst du in docs/KONZEPT.md oder docs/OLLAMA_UND_MODELLE.md ein.
 - Alles Nötige muss im Repo liegen (data/ bleibt in .gitignore). Nach größeren Änderungen einmal aus einem frischen Klon testen.
 - STAND.md bleibt kurz und nach Bereichen geordnet, ohne feste Commit-Nummern (nur „Stand: Datum, Commit siehe git log -1“); ENTWICKLUNGSVERLAUF.md behält die letzten rund 10 Tage, Älteres geht nach docs/archiv/. Abschnittsnummern in KONZEPT.md nie ändern.
-- Begriffe: „Strang“ (ein Agent-Chat), „Heinz Chat“ (Seite tools/heinz), „Heinz Prüfstand“ (chat.html), „Unterhaltung“ (gespeicherter Gesprächsverlauf in der App), „Chatmenü“ (Menü des Prüfstands). Nutze sie in Dokumenten, nie „Chat“ allein.
+- Begriffe: „Strang“ (ein Agent-Chat), „Heinz Chat“ (Seite tools/chat), „Heinz Dashboard“ (dashboard.html), „Unterhaltung“ (gespeicherter Gesprächsverlauf in der App), „Chatmenü“ (Menü des Dashboards). Nutze sie in Dokumenten, nie „Chat“ allein.
 - Keine Pfade mit Benutzernamen in Dateien schreiben (Windows: %USERPROFILE%\Toolsbyclaude).
 - Git-Tags lassen sich aus dem Container nicht pushen; Sicherungspunkte als Branch sicherung/<name>.
 - Sag mir vor jedem Umbau in kurzen Sätzen, was du vorhast.

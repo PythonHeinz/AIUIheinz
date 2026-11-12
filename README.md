@@ -8,8 +8,8 @@ Arbeitsweise, Stand und Regeln für Entwicklung mit Claude-Strängen: `docs/agen
 | Datei | Zweck |
 |---|---|
 | `index.html` | Hub (Startseite der App: Chat, Werkzeuge, Einrichten, Ollama-Status, Version); `hub.html` leitet nur dorthin weiter |
-| `tools/heinz/index.html` | Heinz Chat: ruhige Seite für Gespräche mit dem gewählten Modell |
-| `chat.html` | Heinz Prüfstand: Modi, alle Parameter manuell, Tempo-Test, Testreihen |
+| `chat.html` | Heinz Chat: ruhige Seite für Gespräche mit dem gewählten Modell |
+| `dashboard.html` | Heinz Dashboard: Modi, alle Parameter manuell, Tempo-Test, Testreihen |
 | `lab.html` | Data Lab: Einträge einzeln vom Modell nach Regel bewerten lassen |
 | `sheet.html` | Tabelle per Befehl: Modell übersetzt nur in JSON, Code zählt und ändert |
 | `vitals.html` | Akku, Temperatur, RAM, Verlauf, Ollama-Tempotest |
@@ -22,7 +22,7 @@ Weitere Werkzeuge liegen unter `tools/` (Setup, Modelle, Filter, Scan, Studio, D
     git clone https://github.com/PythonHeinz/AIUIheinz.git ~/AIUIheinz     # einmalig
     cd ~/AIUIheinz && bash start.sh      # dann http://localhost:3000
 
-Aktualisieren: `cd ~/AIUIheinz && git pull`, Server neu starten (oder im Prüfstand ☰ → „Nach Updates suchen“). Der Ordner `data/` (Tabellen, Messwerte) ist nicht im Repo und bleibt beim Pull unberührt.
+Aktualisieren: `cd ~/AIUIheinz && git pull`, Server neu starten (oder im Dashboard ☰ → „Nach Updates suchen“). Der Ordner `data/` (Tabellen, Messwerte) ist nicht im Repo und bleibt beim Pull unberührt.
 
 ## Tests
 Server und Seiten werden ohne Ollama getestet (Ollama wird simuliert). Einmalig `pip install playwright && playwright install chromium`, dann `bash tests/run_all.sh`. Echte Modelle laufen nur auf dem Handy.

@@ -48,7 +48,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
             s4t: 'Install and start Ollama', s4: 'Ollama runs the models. Install it in Termux; the start script starts it for you.', s4c: 'Ollama:', s4ok: 'Ollama is running', s4no: 'Ollama is not reachable yet',
             s5t: 'Keep Termux alive', s5: 'Android stops background apps. Set battery for Termux to "Unrestricted" and keep Termux visible (split screen) while a model works, otherwise it gets slow or is closed.',
             s6t: 'Choose a model', s6: 'Start small: a model of about 2 to 3 billion parameters fits most phones. Install one in Termux, later the app will do this for you.', s6c: 'Models:', s6ok: '{n} installed', s6no: 'none installed yet',
-            s7t: 'Say hello', s7: 'Open Heinz Chat and write something. For speed and settings use the test bench.', s7a: 'Open Heinz Chat', s7b: 'Test bench' },
+            s7t: 'Say hello', s7: 'Open Heinz Chat and write something. For speed and settings use the dashboard.', s7a: 'Open Heinz Chat', s7b: 'Dashboard' },
         de: { h: 'Einrichtung', lead: 'Vom frischen Handy bis zur ersten Antwort eines Modells, das auf dem Handy selbst läuft. Sieben Schritte; einige kann die App für dich prüfen.',
             warn: 'Entwurf: Die Schritte und Befehle wurden noch nicht auf einem frischen Handy ausprobiert. Wenn ein Schritt scheitert, muss der Text besser werden, nicht du.',
             copy: 'Kopieren', copied: 'Kopiert', ok: 'erledigt', todo: 'noch nicht geprüft', open: 'Öffnen',
@@ -58,7 +58,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
             s4t: 'Ollama installieren und starten', s4: 'Ollama führt die Modelle aus. Installiere es in Termux; das Startskript startet es für dich.', s4c: 'Ollama:', s4ok: 'Ollama läuft', s4no: 'Ollama ist noch nicht erreichbar',
             s5t: 'Termux am Leben halten', s5: 'Android beendet Hintergrund-Apps. Stelle den Akku für Termux auf „Nicht eingeschränkt“ und lass Termux sichtbar (Splitscreen), solange ein Modell arbeitet, sonst wird es langsam oder beendet.',
             s6t: 'Modell wählen', s6: 'Fang klein an: Ein Modell mit etwa 2 bis 3 Milliarden Parametern passt auf die meisten Handys. Installiere eins in Termux, später übernimmt das die App.', s6c: 'Modelle:', s6ok: '{n} installiert', s6no: 'noch keins installiert',
-            s7t: 'Hallo sagen', s7: 'Öffne Heinz Chat und schreibe etwas. Für Tempo und Einstellungen nimm den Prüfstand.', s7a: 'Heinz Chat öffnen', s7b: 'Prüfstand' }
+            s7t: 'Hallo sagen', s7: 'Öffne Heinz Chat und schreibe etwas. Für Tempo und Einstellungen nimm das Dashboard.', s7a: 'Heinz Chat öffnen', s7b: 'Dashboard' }
     };
     var CMD3 = 'pkg update -y && pkg install -y git python && git clone ' + REPO + ' ~/AIUIheinz && cd ~/AIUIheinz && bash start.sh';
     var CMD4 = 'pkg install -y ollama';
@@ -79,7 +79,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         h += step(4, oOk ? 'ok' : (st.ollama === false ? 'warn' : 'todo'), t('s4t'), t('s4'), cmd(CMD4), t('s4c') + ' ' + (oOk ? t('s4ok') : t('s4no')));
         h += step(5, 'todo', t('s5t'), t('s5'));
         h += step(6, mOk ? 'ok' : 'todo', t('s6t'), t('s6'), cmd(CMD6), t('s6c') + ' ' + (mOk ? t('s6ok', { n: st.models }) : t('s6no')));
-        h += step(7, 'todo', t('s7t'), t('s7'), '<a class="pill acc" href="/tools/heinz/index.html">' + t('s7a') + '</a> <a class="pill" href="/chat.html">' + t('s7b') + '</a>');
+        h += step(7, 'todo', t('s7t'), t('s7'), '<a class="pill acc" href="/chat.html">' + t('s7a') + '</a> <a class="pill" href="/dashboard.html">' + t('s7b') + '</a>');
         document.getElementById('steps').innerHTML = h;
         var done = (sOk ? 1 : 0) + (oOk ? 1 : 0) + (mOk ? 1 : 0);
         document.getElementById('pg').style.width = Math.round(done / 3 * 100) + '%';

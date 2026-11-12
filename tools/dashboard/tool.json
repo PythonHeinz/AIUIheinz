@@ -1,0 +1,18 @@
+{
+  "id": "dashboard",
+  "name": {
+    "en": "Heinz Dashboard",
+    "de": "Heinz Dashboard"
+  },
+  "desc": {
+    "en": "Try models and settings: five modes, parameters, speed test, test series, engines.",
+    "de": "Modelle und Einstellungen ausprobieren: fünf Modi, Parameter, Tempo-Test, Testreihe, Engines."
+  },
+  "icon": "💬",
+  "entry": "dashboard.html",
+  "color": "blue",
+  "status": "ready",
+  "order": 10,
+  "area": "chat",
+  "symbol": "i-heinz"
+}

@@ -9,7 +9,7 @@
 Für einen neuen Strang. Vorher lesen: `docs/agent/STAND.md`, `docs/agent/UEBERGABE.md`, `docs/KONZEPT.md`, `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`. Fundament (lib/, server.py, gemeinsame localStorage-Schlüssel, Engine-Aufrufe) nur nach Rückfrage ändern.
 
 ## Stand der Modi
-Fünf Modi in `chat.html` (`MODE_PRESETS`, Prompts in den i18n-Blöcken `sys`): Wilson (Begleiter, freier Ton, kein Kontext), Heinz (Fakten & Slang, kalte Parameter, Stoppsequenzen), Audit (Texte prüfen, Kontext Pflicht, `ctxInSystem`), Code, Creative (warm, hoher top_k). Je Modus: temp, top_p, top_k, bevorzugtes Modell, Ersatzmodelle, Stoppsequenzen, Kontextregel, eigene Farbe (`color`/`on`, eigene Palette, bewusst nicht Statusgelb).
+Fünf Modi in `dashboard.html` (`MODE_PRESETS`, Prompts in den i18n-Blöcken `sys`): Wilson (Begleiter, freier Ton, kein Kontext), Heinz (Fakten & Slang, kalte Parameter, Stoppsequenzen), Audit (Texte prüfen, Kontext Pflicht, `ctxInSystem`), Code, Creative (warm, hoher top_k). Je Modus: temp, top_p, top_k, bevorzugtes Modell, Ersatzmodelle, Stoppsequenzen, Kontextregel, eigene Farbe (`color`/`on`, eigene Palette, bewusst nicht Statusgelb).
 Bedienung heute: Parameter in drei Ansichten (Modell | Modus | Meine, je Modell und Modus gespeichert), Prompts-Tab (Modus | Modell | Meine), Schalter „Nur Modus-Vorgaben" (ignoriert alle Nutzerwerte, Threads bleiben Modellsache), Schnellmodus (kurze reine Textantwort, `fastN` Standard 300, nur im Schnellmodus), Tempo-Test (Threads je Modell), Export/Sicherung unter Info.
 
 ## Zielbild

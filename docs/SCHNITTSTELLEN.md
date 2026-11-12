@@ -462,7 +462,7 @@ Gelesen wurden Suchauszüge der Herstellerseiten (Seiten selbst sind aus dem Arb
 ## 18 Sonde: Entwurf als Testreihen (11.11.2026; nichts gebaut, nur Plan und Konsolen-Proben; ersetzt das Konzept in Abschnitt 4)
 
 ### 18.1 Grundsatz
-Eine eigene Sonden-Seite wird **nicht** gebaut. KONZEPT 21 beschließt den Testreihen-Läufer (`lib/testreihe.js`, Läufer in `chat.html`) und nennt ihn ausdrücklich zugleich Sonde. Die Sonde besteht deshalb aus
+Eine eigene Sonden-Seite wird **nicht** gebaut. KONZEPT 21 beschließt den Testreihen-Läufer (`lib/testreihe.js`, Läufer in `dashboard.html`) und nennt ihn ausdrücklich zugleich Sonde. Die Sonde besteht deshalb aus
 1. **fertigen Testreihen** (Prompt-Zeilen und Achsen im Format des Läufers, 18.3),
 2. **Konsolen-Proben** für alles, was kein Chat ist (Modellliste, `/api/show`, Browserzugriff, Speicher, Sprache, Heimnetz; 18.5),
 3. einer **Regel, wie Ergebnisse in `lib/capabilities.json` landen** (18.4),

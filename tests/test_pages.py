@@ -11,7 +11,7 @@ import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/hub.html", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/tools/heinz/index.html", "/tools/setup/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
+PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
 
 
 def missing_classes(css, classes):
@@ -177,16 +177,16 @@ class PageTest(unittest.TestCase):
         def goto_ready(url, *a, **k):   # the bench loads its data files before it starts: wait until it is built
             wait = k.pop("ready", True)
             r = goto(url, *a, **k)
-            if wait and url.split("?")[0].endswith("/chat.html"):
-                page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
+            if wait and url.split("?")[0].endswith("/dashboard.html"):
+                page.wait_for_function("window.HeinzDashboard && HeinzDashboard.ready === true", timeout=15000)
             return r
         page.goto = goto_ready
         reload = page.reload
 
         def reload_ready(*a, **k):
             r = reload(*a, **k)
-            if page.url.split("?")[0].endswith("/chat.html"):
-                page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
+            if page.url.split("?")[0].endswith("/dashboard.html"):
+                page.wait_for_function("window.HeinzDashboard && HeinzDashboard.ready === true", timeout=15000)
             return r
         page.reload = reload_ready
         page.route("**/127.0.0.1:9379/**", lambda route: route.abort())   # LiteRT-LM not running in tests
@@ -221,10 +221,10 @@ class PageTest(unittest.TestCase):
         page = ctx.new_page()
         page.route("**/localhost:11434/**", lambda route: route.abort())
         page.route("**/lib/data/modes.json", lambda route: route.fulfill(status=404, body=""))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_selector("#init-error", timeout=8000)
         self.assertIn("modes.json", page.inner_text("#init-error"))
-        self.assertFalse(page.evaluate("HeinzBench.ready"))
+        self.assertFalse(page.evaluate("HeinzDashboard.ready"))
         self.assertEqual(page.inner_text("#init-error button >> nth=0"), "Update", "a way out of the error: update, reload, close")
         page.click("#init-error button >> nth=2")
         self.assertEqual(page.locator("#init-error").count(), 0, "the message can be closed so the menu is reachable")
@@ -239,7 +239,7 @@ class PageTest(unittest.TestCase):
 
     def test_chat_streams_answer_and_badges(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi there")
         self.assertEqual(page.inner_text(".msg-assistant").replace("📋", "").strip(), "Hello world")
         # every bubble has its own copy button (user and assistant)
@@ -258,7 +258,7 @@ class PageTest(unittest.TestCase):
 
     def test_language_switch_changes_system_prompt(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.click("#lang-btn")
         self.send(page, "Hallo")
         self.assertIn("Antworte auf Deutsch.", self.ollama.requests[0]["messages"][0]["content"])
@@ -268,7 +268,7 @@ class PageTest(unittest.TestCase):
 
     def test_mode_switch_sets_prompt_and_params_for_the_chosen_model(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         if page.is_checked("#use-default"):
             page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change'))")
         self.pick_model(page, "qwen2.5:3b")
@@ -284,7 +284,7 @@ class PageTest(unittest.TestCase):
 
     def test_http_error_is_shown_and_question_removed_from_history(self):
         page = self.new_page(status=404)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         self.assertIn("404", page.inner_text(".msg-assistant"))
         self.ollama.status = 200   # next attempt succeeds
@@ -296,7 +296,7 @@ class PageTest(unittest.TestCase):
     # ---- Chat-Strang, Schritt 1 ----
     def test_num_thread_is_sent_saved_per_model_and_survives_default_values(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.send(page, "one")
         self.assertEqual(self.ollama.requests[0]["options"]["num_thread"], 4, "default is 4")
@@ -324,7 +324,7 @@ class PageTest(unittest.TestCase):
 
     def test_model_list_comes_from_ollama_and_heinz_mode_uses_the_native_abliterated_model_with_the_persona_prompt(self):
         page = self.new_page(tags=("qwen2.5:3b", self.HF, "nomic-embed-text:latest", "gemma2:2b"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         opts = page.eval_on_selector_all("#model-select option", "els => els.map(e => e.value)")
         self.assertIn(self.HF, opts)
@@ -333,7 +333,7 @@ class PageTest(unittest.TestCase):
         page.click("#mode-bar [data-mode=heinz]")
         self.assertEqual(page.input_value("#model-select"), self.HF, "the mode keeps the chosen model")
         self.assertFalse(page.is_disabled("#model-chip"), "model stays selectable in every mode")
-        page.evaluate("HeinzBench.setParamSrc('mode')")
+        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.send(page, "Hey")
         body = self.ollama.requests[0]
         self.assertEqual(body["model"], self.HF)
@@ -345,7 +345,7 @@ class PageTest(unittest.TestCase):
 
     def test_changing_the_mode_keeps_the_chosen_model(self):
         page = self.new_page(tags=("gemma2:2b", "qwen2.5:3b", self.HF))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", "qwen2.5:3b")
         for mode in ("heinz", "wilson", "audit", "creative", "code"):
@@ -356,26 +356,26 @@ class PageTest(unittest.TestCase):
     def test_old_model_system_setting_is_reset_once_so_the_persona_is_sent(self):
         page = self.new_page(tags=("gemma2:2b", "qwen2.5:3b", self.HF))
         page.add_init_script("if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('heinz_settings', JSON.stringify({model: 'qwen2.5:3b', mode: 'heinz', sysSrc: 'model', ownSystem: true})); }")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzBench.settings.sysSrc"), "mode")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.sysSrc"), "mode")
         self.send(page, "Hey")
         self.assertEqual(self.ollama.requests[0]["messages"][0]["role"], "system")
         self.assertIn("Digger", self.ollama.requests[0]["messages"][0]["content"])
-        page.evaluate("HeinzBench.settings.sysSrc = 'model'; HeinzBench.saveSettings()")
+        page.evaluate("HeinzDashboard.settings.sysSrc = 'model'; HeinzDashboard.saveSettings()")
         page.reload()
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzBench.settings.sysSrc"), "model", "a deliberate choice afterwards is kept")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.sysSrc"), "model", "a deliberate choice afterwards is kept")
 
     def test_wilson_mode_sends_the_persona_with_its_sampling_to_the_native_gemma(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("(m) => { const s = document.getElementById('model-select'); s.value = m; s.dispatchEvent(new Event('change')); }", "gemma2:2b")
         page.click("#mode-bar [data-mode=creative]")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.input_value("#model-select"), "gemma2:2b")
-        page.evaluate("HeinzBench.setParamSrc('mode')")
+        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.send(page, "Hey")
         body = self.ollama.requests[0]
         self.assertTrue(body["messages"][0]["content"].startswith("You are Wilson, an unfiltered"))
@@ -383,7 +383,7 @@ class PageTest(unittest.TestCase):
 
     def test_personas_live_outside_the_models(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("typeof HeinzPersonas !== 'undefined'")
         self.assertEqual(page.evaluate("HeinzPersonas.list()"), ["wilson", "heinz"])
         p = page.evaluate("HeinzPersonas.get('heinz')")
@@ -393,16 +393,16 @@ class PageTest(unittest.TestCase):
 
     def test_preset_model_is_only_a_suggestion_for_a_missing_model(self):
         page = self.new_page()   # default tags: no abliterated model
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.evaluate("HeinzBench.settings.model = 'not-installed:1b'; document.getElementById('model-select').value = 'gemma2:2b'")
+        page.evaluate("HeinzDashboard.settings.model = 'not-installed:1b'; document.getElementById('model-select').value = 'gemma2:2b'")
         page.click("#mode-bar [data-mode=heinz]")
         self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", "chosen model gone: the mode's alternative is suggested")
 
     def test_own_system_prompt_sends_no_system_message(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("HeinzBench.setSysSrc('model')")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("HeinzDashboard.setSysSrc('model')")
         page.click("#mode-bar [data-mode=heinz]")
         page.fill("#context", "Some context")
         self.send(page, "Hey")
@@ -429,7 +429,7 @@ class PageTest(unittest.TestCase):
 
     def test_model_is_preloaded_with_same_options_and_not_twice(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.wait_preloads(page, 1)
         pre = self.ollama.preloads[0]
         self.assertEqual(pre["messages"][0]["role"], "system")
@@ -449,17 +449,17 @@ class PageTest(unittest.TestCase):
         # gemma2:2b is reported as loaded; the chat has just sent it with threads 2, context 8192: the bench must not send a preload
         page = self.new_page()
         page.add_init_script("if (!localStorage.getItem('heinz_settings')) { localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}})); localStorage.setItem('heinz_lastreq', JSON.stringify({chat: {model: 'gemma2:2b', threads: 2, ctx: 8192, keep: '30m', preload: false, ts: Date.now()}})); }")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.wait_for_timeout(2500)
         self.assertEqual(self.ollama.preloads, [], "loaded with the same options: no preload request")
         # different threads: the model would be reloaded, so the preload still runs
-        page.evaluate("() => { const t = document.getElementById('param-threads'); t.value = 3; HeinzBench.onThreads(); }")
+        page.evaluate("() => { const t = document.getElementById('param-threads'); t.value = 3; HeinzDashboard.onThreads(); }")
         self.wait_preloads(page, 1)
 
     def test_preload_follows_mode_threads_and_can_be_switched_off(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.wait_preloads(page, 1)
         page.click("#mode-bar [data-mode=audit]")
         self.pick_model(page, "qwen2.5:3b")
@@ -476,7 +476,7 @@ class PageTest(unittest.TestCase):
 
     def test_context_changes_do_not_change_system_prompt(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.click("#mode-bar [data-mode=code]")
         self.send(page, "One")
         page.fill("#context", "Background text")
@@ -488,7 +488,7 @@ class PageTest(unittest.TestCase):
 
     def test_fast_mode_limits_tokens_asks_for_plain_text_and_shows_raw_text(self):
         page = self.new_page(chunks=("**bold** and", " <b>tag</b>"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("var c=document.getElementById('fast-mode'); c.checked=true; c.dispatchEvent(new Event('change'))")
         page.evaluate("var n=document.getElementById('param-fastn'); n.value=96; n.dispatchEvent(new Event('change'))")
         self.send(page, "Hi")
@@ -509,7 +509,7 @@ class PageTest(unittest.TestCase):
 
     def test_mode_bar_switches_modes_follows_language_and_waits_while_generating(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         pills = page.query_selector_all("#mode-bar .mode-pill")
         self.assertEqual([p.get_attribute("data-mode") for p in pills], ["wilson", "heinz", "audit", "code", "creative"])
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "wilson")
@@ -531,17 +531,17 @@ class PageTest(unittest.TestCase):
 
     def test_mode_bar_ignores_taps_while_an_answer_is_running(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("HeinzBench.generating = true")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("HeinzDashboard.generating = true")
         page.click("#mode-bar [data-mode=code]")
-        self.assertEqual(page.evaluate("HeinzBench.settings.mode"), "wilson")
-        page.evaluate("HeinzBench.generating = false")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "wilson")
+        page.evaluate("HeinzDashboard.generating = false")
         page.click("#mode-bar [data-mode=code]")
-        self.assertEqual(page.evaluate("HeinzBench.settings.mode"), "code")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "code")
 
     def test_only_the_selected_model_stays_loaded(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.wait_preloads(page, 1)
         self.assertEqual(self.ollama.unloads, [], "the model in memory is the selected one: nothing to unload")
         page.click("#mode-bar [data-mode=audit]")
@@ -556,7 +556,7 @@ class PageTest(unittest.TestCase):
 
     def test_saved_chats_are_listed_per_mode_and_load_into_their_own_mode(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Wilson question")
         page.click("#mode-bar [data-mode=code]")        # saves the Wilson chat
         self.send(page, "Code question")
@@ -570,13 +570,13 @@ class PageTest(unittest.TestCase):
         page.click("#chats-scope")                       # all modes
         self.assertEqual(sorted(titles()), ["Code question", "Wilson question"])
         page.click("#saved-list .saved-item .load >> text=Code question")
-        self.assertEqual(page.evaluate("HeinzBench.settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "code", "loading from the full list jumps into the chat's own mode")
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "code")
 
     def test_chat_list_action_pills_of_the_last_entry_stay_fully_visible(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("var l=[]; for (let i=0;i<14;i++){ l.push({id:2000+i,title:'Chat '+i,mode:'wilson',messages:[],pinned:false,ts:'',model:'m'}); } HeinzBench.lsSet('heinz_chats', l)")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("var l=[]; for (let i=0;i<14;i++){ l.push({id:2000+i,title:'Chat '+i,mode:'wilson',messages:[],pinned:false,ts:'',model:'m'}); } HeinzDashboard.lsSet('heinz_chats', l)")
         page.click("#chats-open")
         page.click("#saved-list .saved-item >> nth=-1 >> .more")
         page.wait_for_timeout(600)
@@ -585,7 +585,7 @@ class PageTest(unittest.TestCase):
 
     def test_select_opens_a_themed_popup_not_wider_than_the_field(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("openPanel && 0")  if False else None
         page.evaluate("document.body.insertAdjacentHTML('beforeend','<select id=tsel class=sel style=\"position:fixed;top:100px;left:20px;width:200px\"><option value=a>A</option><option value=b>B</option></select>')")
         page.click("#tsel")
@@ -597,8 +597,8 @@ class PageTest(unittest.TestCase):
 
     def test_selects_use_our_own_popup_with_the_width_of_the_select(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("HeinzBench.openMenu(); HeinzBench.showPage('speed')")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("HeinzDashboard.openMenu(); HeinzDashboard.showPage('speed')")
         page.wait_for_timeout(400)
         sel = page.evaluate("(function(){var s=document.getElementById('st-prompt');var r=s.getBoundingClientRect();return [r.width, s.options.length, s.value, s.options[s.options.length-1].value]})()")
         page.evaluate("document.getElementById('st-prompt').click()")
@@ -611,10 +611,10 @@ class PageTest(unittest.TestCase):
 
     def test_several_own_engines_each_with_own_address_and_key(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("HeinzBench.openMenu(); HeinzBench.showPage('engine')")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("HeinzDashboard.openMenu(); HeinzDashboard.showPage('engine')")
         page.click("#eng-add")
-        a = page.evaluate("HeinzBench.settings.provider")
+        a = page.evaluate("HeinzDashboard.settings.provider")
         self.assertTrue(a.startswith("u"))
         page.fill("#prov-name", "Home server")
         page.press("#prov-name", "Tab")
@@ -623,14 +623,14 @@ class PageTest(unittest.TestCase):
         page.fill("#prov-key", "key-A")
         page.press("#prov-key", "Tab")
         page.click("#eng-add")
-        b = page.evaluate("HeinzBench.settings.provider")
+        b = page.evaluate("HeinzDashboard.settings.provider")
         self.assertNotEqual(a, b)
         self.assertEqual(page.input_value("#prov-url"), "", "a new engine starts empty")
         page.fill("#prov-url", "http://10.0.0.9:1234/v1")
         page.press("#prov-url", "Tab")
         page.fill("#prov-key", "key-B")
         page.press("#prov-key", "Tab")
-        page.evaluate("HeinzBench.pickEngine('" + a + "')")
+        page.evaluate("HeinzDashboard.pickEngine('" + a + "')")
         self.assertEqual(page.input_value("#prov-url"), "http://192.168.1.5:8080/v1")
         self.assertEqual(page.input_value("#prov-key"), "key-A")
         self.assertEqual(page.input_value("#prov-name"), "Home server")
@@ -641,18 +641,18 @@ class PageTest(unittest.TestCase):
         page.click("#eng-del")
         self.assertEqual(page.evaluate("HeinzProviders.userEngines().length"), 1)
         self.assertEqual(page.evaluate("HeinzProviders.getKey('" + a + "')"), "", "key removed with the engine")
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         self.assertEqual(page.locator("#provider-select").is_visible(), False, "no second engine picker under Connection details")
 
     def test_rename_chat_in_the_title_bar_and_pin_in_the_list(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi there")
         page.click(".chat-edit")
         page.fill(".bar .inline-edit", "Projekt A / Notizen")
         page.press(".bar .inline-edit", "Enter")
         self.assertEqual(page.inner_text("#chat-title"), "Projekt A / Notizen")
-        page.evaluate("HeinzBench.saveChatNow()")
+        page.evaluate("HeinzDashboard.saveChatNow()")
         saved = page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))")
         self.assertEqual(saved[0]["title"], "Projekt A / Notizen")
         page.reload()
@@ -661,20 +661,20 @@ class PageTest(unittest.TestCase):
         page.click("#saved-list .saved-item .more")
         page.click("#saved-list .acts2 button:has-text('Pin')")
         self.assertEqual(page.locator("#saved-list .pinned").count(), 1)
-        page.evaluate("var l=HeinzBench.getSaved(); for (let i=0;i<6;i++){ l.push({id:1000+i,title:'x'+i,mode:'wilson',messages:[],pinned:i<4,ts:'',model:'m'}); } HeinzBench.lsSet('heinz_chats', l)")
-        page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzBench.togglePin(1004); HeinzBench.togglePin(1005)")
+        page.evaluate("var l=HeinzDashboard.getSaved(); for (let i=0;i<6;i++){ l.push({id:1000+i,title:'x'+i,mode:'wilson',messages:[],pinned:i<4,ts:'',model:'m'}); } HeinzDashboard.lsSet('heinz_chats', l)")
+        page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzDashboard.togglePin(1004); HeinzDashboard.togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
 
     def test_three_parameter_views_model_mode_mine_per_model_and_mode(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.menu(page)
         page.click("#seg-model")
         page.wait_for_function("document.getElementById('val-topk').innerText == '64'")
         self.assertEqual(page.inner_text("#val-temp"), "1")
         self.assertTrue(page.is_disabled("#param-temp"), "model values are locked")
-        page.evaluate("HeinzBench.closeAll()")
+        page.evaluate("HeinzDashboard.closeAll()")
         self.send(page, "native")
         self.menu(page)
         self.assertNotIn("temperature", self.ollama.requests[-1]["options"], "model view sends nothing")
@@ -689,11 +689,11 @@ class PageTest(unittest.TestCase):
         self.assertTrue(page.is_disabled("#q-reset"))
         page.reload()
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzBench.paramSrc()"), "own", "saved values come back after a reload")
+        self.assertEqual(page.evaluate("HeinzDashboard.paramSrc()"), "own", "saved values come back after a reload")
         self.assertEqual(page.input_value("#param-temp"), "0.3")
-        page.evaluate("HeinzBench.closeAll()")
+        page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=creative]")
-        self.assertEqual(page.evaluate("HeinzBench.paramSrc()"), "mode", "own values belong to model + mode")
+        self.assertEqual(page.evaluate("HeinzDashboard.paramSrc()"), "mode", "own values belong to model + mode")
         self.assertEqual(page.input_value("#param-temp"), "0.75")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.input_value("#param-temp"), "0.3")
@@ -703,20 +703,20 @@ class PageTest(unittest.TestCase):
 
     def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.wait_for_function("HeinzBench.stLog.length >= 1")
-        page.evaluate("HeinzBench.stLog.unshift({txt: 'a', color: 'blue', at: new Date()}); HeinzBench.stLog.unshift({txt: 'b', color: 'orange', at: new Date()}); HeinzBench.stLog.unshift({txt: 'c', color: 'green', at: new Date()}); HeinzBench.stLog.length = 3")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("HeinzDashboard.stLog.length >= 1")
+        page.evaluate("HeinzDashboard.stLog.unshift({txt: 'a', color: 'blue', at: new Date()}); HeinzDashboard.stLog.unshift({txt: 'b', color: 'orange', at: new Date()}); HeinzDashboard.stLog.unshift({txt: 'c', color: 'green', at: new Date()}); HeinzDashboard.stLog.length = 3")
         page.click("#eq-led")
         self.assertTrue(page.is_visible("#st-log"))
         self.assertEqual(page.locator("#st-log > div").count(), 3)
         page.mouse.click(200, 500)
         self.assertFalse(page.is_visible("#st-log"))
-        page.evaluate("var l=HeinzBench.getSaved(); for (let i=0;i<4;i++){ l.push({id:2000+i,title:'y'+i,mode:i<2?'wilson':'code',messages:[],ts:'',model:'m'}); } HeinzBench.lsSet('heinz_chats', l); HeinzBench.updateChatBar()")
+        page.evaluate("var l=HeinzDashboard.getSaved(); for (let i=0;i<4;i++){ l.push({id:2000+i,title:'y'+i,mode:i<2?'wilson':'code',messages:[],ts:'',model:'m'}); } HeinzDashboard.lsSet('heinz_chats', l); HeinzDashboard.updateChatBar()")
         self.assertIn("4", page.text_content("#scope-all"))
 
     def test_own_system_prompt_is_sent_as_written_and_can_be_copied(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click(".burger-btn")
         page.click("[data-pw=prompts]")
@@ -725,12 +725,12 @@ class PageTest(unittest.TestCase):
         page.click("#ps-own")
         self.assertTrue(page.is_disabled("#ps-copy"), "nothing to copy while mine is empty")
         page.fill("#ps-text", "You are a test agent.")
-        page.evaluate("HeinzBench.closeAll()")
+        page.evaluate("HeinzDashboard.closeAll()")
         self.send(page, "Hi")
         self.assertEqual(self.ollama.requests[-1]["messages"][0], {"role": "system", "content": "You are a test agent."})
         page.reload()
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzBench.settings.ownPrompt"), "You are a test agent.", "one own prompt is kept")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), "You are a test agent.", "one own prompt is kept")
         page.click(".burger-btn")
         page.click("[data-pw=prompts]")
         page.click("#ps-model")
@@ -739,7 +739,7 @@ class PageTest(unittest.TestCase):
 
     def test_status_text_tap_expands_in_place_without_covering_the_page(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.getElementById('preload-status').textContent.length > 3")
         before = page.locator("#model-chip").bounding_box()
         page.click("#preload-status")
@@ -750,9 +750,9 @@ class PageTest(unittest.TestCase):
 
     def test_mode_presets_only_ignores_my_values_prompt_and_model_but_keeps_threads(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.evaluate("HeinzBench.settings.ownPrompt = 'MY PROMPT'; HeinzBench.setSysSrc('own'); HeinzBench.settings.modelParams = {}; HeinzBench.settings.modelParams[HeinzBench.modelKey()] = {temp: 0.2, topp: 0.5, topk: 11, ctx: 4096}; HeinzBench.setParamSrc('own'); var th = document.getElementById('param-threads'); th.value = 3; HeinzBench.onThreads()")
+        page.evaluate("HeinzDashboard.settings.ownPrompt = 'MY PROMPT'; HeinzDashboard.setSysSrc('own'); HeinzDashboard.settings.modelParams = {}; HeinzDashboard.settings.modelParams[HeinzDashboard.modelKey()] = {temp: 0.2, topp: 0.5, topk: 11, ctx: 4096}; HeinzDashboard.setParamSrc('own'); var th = document.getElementById('param-threads'); th.value = 3; HeinzDashboard.onThreads()")
         page.evaluate("var c=document.getElementById('modes-only'); c.checked=true; c.dispatchEvent(new Event('change'))")
         self.send(page, "Hi")
         req = self.ollama.requests[-1]
@@ -763,16 +763,16 @@ class PageTest(unittest.TestCase):
 
     def test_backup_roundtrip_leaves_keys_out_unless_asked(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("HeinzBench.lsSet('heinz_keys', {custom: 'SECRET'}); HeinzBench.lsSet('heinz_chats', [{id: 1, title: 'Backed up', mode: 'wilson', messages: [], ts: '', model: 'm'}])")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("HeinzDashboard.lsSet('heinz_keys', {custom: 'SECRET'}); HeinzDashboard.lsSet('heinz_chats', [{id: 1, title: 'Backed up', mode: 'wilson', messages: [], ts: '', model: 'm'}])")
         self.menu(page, "update")
         page.evaluate("window._dl = null; URL.createObjectURL = function (b) { window._blob = b; return 'blob:x'; }; HTMLAnchorElement.prototype.click = function () {}")
-        page.evaluate("HeinzBench.exportBackup()")
+        page.evaluate("HeinzDashboard.exportBackup()")
         txt = page.evaluate("window._blob.text()")
         self.assertIn("Backed up", txt)
         self.assertNotIn("SECRET", txt, "API keys stay out by default")
         page.check("#bk-keys")
-        page.evaluate("HeinzBench.exportBackup()")
+        page.evaluate("HeinzDashboard.exportBackup()")
         self.assertIn("SECRET", page.evaluate("window._blob.text()"))
         page.evaluate("localStorage.removeItem('heinz_chats'); window.confirm = function () { return true; }; window.location.reload = function () {}")
         page.evaluate("var r = JSON.parse(%s); Object.keys(r.data).forEach(function (k) { localStorage.setItem(k, r.data[k]); })" % json.dumps(txt))
@@ -780,7 +780,7 @@ class PageTest(unittest.TestCase):
 
     def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.assertEqual(page.locator(".msg-read").count(), 0)
         self.send(page, "Hi there")
         self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-read").count(), 1, "read aloud sits under the last answer")
@@ -788,29 +788,29 @@ class PageTest(unittest.TestCase):
         self.assertEqual(acts.count(), 1, "copy/download row sits at the end of the answer")
         self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-copy").count(), 1)
         self.assertEqual(page.locator(".msg-assistant > .msg-acts .msg-dl").count(), 1)
-        page.evaluate("for (let i = 0; i < 40; i++) { const d = document.createElement('div'); d.className = 'msg msg-user'; d.textContent = 'filler ' + i; HeinzBench.chatBox.appendChild(d); } HeinzBench.jumpBottom()")
-        page.evaluate("HeinzBench.chatBox.scrollTop = 0")
+        page.evaluate("for (let i = 0; i < 40; i++) { const d = document.createElement('div'); d.className = 'msg msg-user'; d.textContent = 'filler ' + i; HeinzDashboard.chatBox.appendChild(d); } HeinzDashboard.jumpBottom()")
+        page.evaluate("HeinzDashboard.chatBox.scrollTop = 0")
         page.wait_for_function("document.getElementById('jump-bottom').hidden === false")
-        page.evaluate("HeinzBench.stickBottom()")
-        self.assertEqual(page.evaluate("HeinzBench.chatBox.scrollTop"), 0, "live output must not pull the view down while reading above")
+        page.evaluate("HeinzDashboard.stickBottom()")
+        self.assertEqual(page.evaluate("HeinzDashboard.chatBox.scrollTop"), 0, "live output must not pull the view down while reading above")
         page.click("#jump-bottom")
-        self.assertTrue(page.evaluate("HeinzBench.chatBox.scrollHeight - HeinzBench.chatBox.scrollTop - HeinzBench.chatBox.clientHeight < 5"))
+        self.assertTrue(page.evaluate("HeinzDashboard.chatBox.scrollHeight - HeinzDashboard.chatBox.scrollTop - HeinzDashboard.chatBox.clientHeight < 5"))
 
     def test_status_ring_red_without_engine_blue_when_ready_green_while_answering(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.getElementById('status-dot').classList.contains('status-online')")
         self.assertIn("s-blue", page.evaluate("document.getElementById('status-dot').className"), "engine answers: blue")
-        page.evaluate("HeinzBench.generating = true; HeinzBench.gotToken = false; HeinzBench.renderRing()")
+        page.evaluate("HeinzDashboard.generating = true; HeinzDashboard.gotToken = false; HeinzDashboard.renderRing()")
         self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-blue') && document.getElementById('status-dot').classList.contains('status-active')"), "waiting for the first token: blue")
-        page.evaluate("HeinzBench.gotToken = true; HeinzBench.renderRing()")
+        page.evaluate("HeinzDashboard.gotToken = true; HeinzDashboard.renderRing()")
         self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-green') && document.getElementById('status-dot').classList.contains('status-active')"), "answering: green")
-        page.evaluate("HeinzBench.generating = false; HeinzBench.renderRing()")
-        page.evaluate("HeinzBench.preloadAbort = new AbortController(); HeinzBench.renderRing()")
+        page.evaluate("HeinzDashboard.generating = false; HeinzDashboard.renderRing()")
+        page.evaluate("HeinzDashboard.preloadAbort = new AbortController(); HeinzDashboard.renderRing()")
         self.assertTrue(page.evaluate("document.getElementById('status-dot').classList.contains('s-orange')"), "model loading: orange")
-        page.evaluate("HeinzBench.preloadAbort = null; HeinzBench.renderRing()")
+        page.evaluate("HeinzDashboard.preloadAbort = null; HeinzDashboard.renderRing()")
         page.route("**/localhost:11434/**", lambda r: r.abort())   # server gone: red
-        page.evaluate("HeinzBench.checkServer()")
+        page.evaluate("HeinzDashboard.checkServer()")
         page.wait_for_function("document.getElementById('status-dot').classList.contains('s-red')")
         self.assertEqual(page.get_attribute("#status-dot", "href"), "index.html", "the ring leads to the hub")
 
@@ -822,12 +822,12 @@ class PageTest(unittest.TestCase):
 
     def pick_engine(self, page, engine):
         self.menu(page, "engine")
-        page.evaluate("HeinzBench.pickEngine(\'" + engine + "\')")
+        page.evaluate("HeinzDashboard.pickEngine(\'" + engine + "\')")
         page.keyboard.press("Escape")
 
     def test_online_is_off_by_default_nothing_leaves_and_online_engines_are_hidden(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         opts = page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)")
         self.assertEqual(opts, ["ollama", "litert", "custom"])
         self.assertFalse(page.evaluate("HeinzProviders.onlineAllowed()"))
@@ -839,7 +839,7 @@ class PageTest(unittest.TestCase):
     def test_litert_engine_models_backend_stats_and_traffic_light(self):
         page = self.new_page()
         lit = FakeOpenAI(page, "**/127.0.0.1:9379/**", models=("gemma4-e2b", "other"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.pick_engine(page, "litert")
         page.wait_for_function("document.querySelectorAll('#model-select option').length === 2")
         self.assertEqual(page.input_value("#model-select"), "gemma4-e2b")
@@ -866,7 +866,7 @@ class PageTest(unittest.TestCase):
     def test_online_engine_needs_switch_and_key_and_sends_only_the_current_chat(self):
         page = self.new_page()
         orr = FakeOpenAI(page, "https://openrouter.ai/**", models=("meta/free-model:free",))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Private earlier question")      # an Ollama chat that must never reach the provider
         page.click("#mode-bar [data-mode=heinz]")        # saves it to the chat list
         page.click(".burger-btn")
@@ -875,7 +875,7 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.locator("#q-eng-list [data-eng=openrouter]").evaluate("e => e.classList.contains('locked')"), "online engine unlocked in the engine list")
         opts = page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)")
         self.assertIn("openrouter", opts)
-        page.evaluate("HeinzBench.pickEngine(\'" + "openrouter" + "\')")
+        page.evaluate("HeinzDashboard.pickEngine(\'" + "openrouter" + "\')")
         self.assertIn("API key", page.inner_text("#eng-key"))
         page.fill("#model-free", "meta/free-model:free")
         page.dispatch_event("#model-free", "change")
@@ -903,13 +903,13 @@ class PageTest(unittest.TestCase):
         # switching online off returns to Ollama
         page.click(".burger-btn")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         self.assertNotIn("openrouter", page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)"))
 
     def test_online_errors_are_explained(self):
         page = self.new_page()
         orr = FakeOpenAI(page, "https://openrouter.ai/**", status=401)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('openrouter', 'bad')")
         page.reload()
         self.pick_engine(page, "openrouter")
@@ -923,7 +923,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         loc = FakeOpenAI(page, "http://127.0.0.1:8080/**", models=("local-model",))
         remote = FakeOpenAI(page, "https://example.test/**")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.pick_engine(page, "custom")
         self.menu(page, "engine")
         page.fill("#prov-url", "http://127.0.0.1:8080/v1"); page.dispatch_event("#prov-url", "change")
@@ -941,13 +941,13 @@ class PageTest(unittest.TestCase):
     def test_speed_test_is_ollama_only_and_online_chat_opens_locally_when_online_is_off(self):
         page = self.new_page()
         orr = FakeOpenAI(page, "https://openrouter.ai/**")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('openrouter', 'k')")
         page.reload()
         self.pick_engine(page, "openrouter")
         self.set_free_model(page, "m")
         self.send(page, "Online chat")
-        page.evaluate("HeinzBench.saveChatNow()")
+        page.evaluate("HeinzDashboard.saveChatNow()")
         self.menu(page, "speed")
         self.assertTrue(page.is_disabled("#st-start"), "speed test is greyed out for cloud engines")
         self.assertTrue(page.is_disabled("#st-termux"))
@@ -957,13 +957,13 @@ class PageTest(unittest.TestCase):
         page.click("#chats-scope")
         self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))[0].provider"), "openrouter")
         page.click("#saved-list .saved-item .load")
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama", "an online chat opens locally while online is off")
-        self.assertEqual(page.evaluate("HeinzBench.chatHistory.length"), 2)
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama", "an online chat opens locally while online is off")
+        self.assertEqual(page.evaluate("HeinzDashboard.chatHistory.length"), 2)
 
     def test_openai_stream_without_usage_is_marked_approximate(self):
         page = self.new_page()
         FakeOpenAI(page, "**/127.0.0.1:9379/**", chunks=("a", "b", "c"), usage=False)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         r = page.evaluate("""async () => { const x = await HeinzProviders.chat('litert', {model:'m', messages:[{role:'user',content:'hi'}]}); return [x.text, x.stats.outputTokens, x.stats.approx]; }""")
         self.assertEqual(r, ["abc", 3, True])
 
@@ -972,7 +972,7 @@ class PageTest(unittest.TestCase):
         # Denk-Modelle zählen Denk-Token zur Grenze; die Seite muss den Abbruchgrund (finish_reason) zeigen.
         page = self.new_page()
         FakeOpenAI(page, "**/127.0.0.1:9379/**", chunks=("Ye",), finish="length", reasoning=90)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         r = page.evaluate("""async () => { const x = await HeinzProviders.chat('litert', {model:'m', messages:[{role:'user',content:'hi'}]}); return [x.stats.finishReason, x.stats.reasoningTokens]; }""")
         self.assertEqual(r, ["length", 90])
         self.pick_engine(page, "litert")
@@ -981,7 +981,7 @@ class PageTest(unittest.TestCase):
         page.click("#send-btn")
         page.wait_for_function("document.querySelector('.msg-assistant') && document.querySelector('.msg-assistant').innerText.includes('cut off')")
         self.assertIn("Ye", page.inner_text(".msg-assistant"))
-        self.assertEqual(page.evaluate("HeinzBench.chatHistory[HeinzBench.chatHistory.length-1].content"), "Ye", "the note is not stored in the history")
+        self.assertEqual(page.evaluate("HeinzDashboard.chatHistory[HeinzDashboard.chatHistory.length-1].content"), "Ye", "the note is not stored in the history")
 
     # ===== Schnittstellenwissen (docs/AUFTRAG_Chat_Schnittstellen.md): Regler nach Zustand, Denken =====
     GOOGLE = "https://generativelanguage.googleapis.com/v1beta/openai"
@@ -990,7 +990,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", models=(model, "gemini-2.5-flash"), **fake)
         self.g_native_default = None
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true)")
         page.reload()
         self.pick_engine(page, "custom")
@@ -998,9 +998,9 @@ class PageTest(unittest.TestCase):
         page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
         page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
         page.keyboard.press("Escape")
-        page.evaluate("m => { document.getElementById('model-free').value = m; HeinzBench.onModelFree(); }", model)
+        page.evaluate("m => { document.getElementById('model-free').value = m; HeinzDashboard.onModelFree(); }", model)
         page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
-        page.evaluate("HeinzBench.renderCaps(); HeinzBench.renderThink()")
+        page.evaluate("HeinzDashboard.renderCaps(); HeinzDashboard.renderThink()")
         return page, g
 
     def test_blocked_controls_are_greyed_out_and_not_sent_while_unknown_ones_stay_active_with_tag(self):
@@ -1016,7 +1016,7 @@ class PageTest(unittest.TestCase):
         # tapping a blocked card shows the reason
         page.evaluate("document.getElementById('sc-ctx').click()")
         self.assertIn("Fixed per model", page.inner_text("#sc-ctx .cap-text"))
-        opts = page.evaluate("HeinzBench.buildOptions(HeinzBench.MODE_PRESETS[HeinzBench.settings.mode])")
+        opts = page.evaluate("HeinzDashboard.buildOptions(HeinzDashboard.MODE_PRESETS[HeinzDashboard.settings.mode])")
         self.assertNotIn("num_ctx", opts)
         self.assertNotIn("num_thread", opts)
         self.assertIn("temperature", opts)
@@ -1026,10 +1026,10 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("num_ctx", body)
         self.assertNotIn("num_thread", body)
         # counter test: the same controls are active and sent on Ollama
-        page.evaluate("HeinzBench.switchProvider('ollama')")
+        page.evaluate("HeinzDashboard.switchProvider('ollama')")
         page.wait_for_timeout(200)
         self.assertFalse(page.evaluate("document.getElementById('sc-ctx').classList.contains('cap-blocked')"))
-        self.assertIn("num_ctx", page.evaluate("HeinzBench.buildOptions(HeinzBench.MODE_PRESETS[HeinzBench.settings.mode])"))
+        self.assertIn("num_ctx", page.evaluate("HeinzDashboard.buildOptions(HeinzDashboard.MODE_PRESETS[HeinzDashboard.settings.mode])"))
 
     def test_thinking_switch_sends_reasoning_effort_never_with_thinking_level(self):
         page, g = self.google_page("gemini-3-flash")
@@ -1051,11 +1051,11 @@ class PageTest(unittest.TestCase):
         # state is saved per model and survives a reload
         page.reload()
         page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
-        self.assertEqual(page.evaluate("HeinzBench.thinkStage()"), "fast")
+        self.assertEqual(page.evaluate("HeinzDashboard.thinkStage()"), "fast")
         # tapping the active stage again goes back to the model default
-        page.evaluate("HeinzBench.renderThink()")
+        page.evaluate("HeinzDashboard.renderThink()")
         page.click("#think-fast")
-        self.assertEqual(page.evaluate("HeinzBench.thinkEffort()"), "")
+        self.assertEqual(page.evaluate("HeinzDashboard.thinkEffort()"), "")
 
     def test_model_without_thinking_rule_shows_no_switch_and_sends_no_effort(self):
         page, g = self.google_page("some-unknown-model")
@@ -1063,7 +1063,7 @@ class PageTest(unittest.TestCase):
         self.send(page, "Hi")
         self.assertNotIn("reasoning_effort", g.requests[-1][1])
         # counter test: Ollama has no thinking switch either
-        page.evaluate("HeinzBench.switchProvider('ollama')")
+        page.evaluate("HeinzDashboard.switchProvider('ollama')")
         page.wait_for_timeout(200)
         self.assertTrue(page.is_hidden("#think-row"))
 
@@ -1073,13 +1073,13 @@ class PageTest(unittest.TestCase):
         self.assertNotEqual(before, 1.0)
         self.assertIn("Recommended: 1", page.inner_text("#sc-temp .cap-row"))
         self.assertEqual(page.evaluate("parseFloat(document.getElementById('param-temp').value)"), before, "nothing set silently")
-        presets = page.evaluate("JSON.stringify(HeinzBench.MODE_PRESETS)")
+        presets = page.evaluate("JSON.stringify(HeinzDashboard.MODE_PRESETS)")
         page.evaluate("document.querySelector('#sc-temp [data-cap-apply]').click()")
         self.assertEqual(page.evaluate("parseFloat(document.getElementById('param-temp').value)"), 1.0)
-        self.assertEqual(page.evaluate("JSON.stringify(HeinzBench.MODE_PRESETS)"), presets, "mode presets untouched")
+        self.assertEqual(page.evaluate("JSON.stringify(HeinzDashboard.MODE_PRESETS)"), presets, "mode presets untouched")
         self.assertEqual(page.locator("#sc-temp [data-cap-apply]").count(), 0, "button gone once applied")
         # counter test: a model without a recommendation shows no button
-        page.evaluate("HeinzBench.settings.model='gemini-2.5-flash'; document.getElementById('model-select').value='gemini-2.5-flash'; HeinzBench.renderCaps()")
+        page.evaluate("HeinzDashboard.settings.model='gemini-2.5-flash'; document.getElementById('model-select').value='gemini-2.5-flash'; HeinzDashboard.renderCaps()")
         self.assertEqual(page.locator("[data-cap-apply]").count(), 0)
 
     def test_reasoning_tokens_shown_separately_and_estimate_marked(self):
@@ -1105,16 +1105,16 @@ class PageTest(unittest.TestCase):
     def test_capabilities_load_failure_keeps_all_controls_active(self):
         page = self.new_page()
         page.route("**/lib/capabilities.json", lambda route: route.fulfill(status=404, body=""))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_timeout(300)
         self.assertEqual(page.locator(".cap-blocked").count(), 0)
         self.assertTrue(page.is_hidden("#think-row"))
-        self.assertIn("num_ctx", page.evaluate("HeinzBench.buildOptions(HeinzBench.MODE_PRESETS[HeinzBench.settings.mode])"))
+        self.assertIn("num_ctx", page.evaluate("HeinzDashboard.buildOptions(HeinzDashboard.MODE_PRESETS[HeinzDashboard.settings.mode])"))
 
     def test_online_off_sends_nothing_and_chosen_model_stays_per_engine(self):
         page = self.new_page()
         g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", models=("a", "b"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true)")
         page.reload()
         self.pick_engine(page, "custom")
@@ -1122,24 +1122,24 @@ class PageTest(unittest.TestCase):
         page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
         page.wait_for_function("document.querySelectorAll('#model-select option').length >= 2")
         page.keyboard.press("Escape")
-        page.evaluate("document.getElementById('model-free').value = 'gemini-3-flash'; HeinzBench.onModelFree()")
-        self.assertEqual(page.evaluate("HeinzBench.settings.model"), "gemini-3-flash")
+        page.evaluate("document.getElementById('model-free').value = 'gemini-3-flash'; HeinzDashboard.onModelFree()")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.model"), "gemini-3-flash")
         # a list that does not contain the chosen model does not replace it
-        page.evaluate("HeinzBench.loadModels()")
+        page.evaluate("HeinzDashboard.loadModels()")
         page.wait_for_timeout(300)
-        self.assertEqual(page.evaluate("HeinzBench.settings.model"), "gemini-3-flash")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.model"), "gemini-3-flash")
         # engine and model survive a reload as a pair
         page.reload()
         page.wait_for_timeout(400)
-        self.assertEqual(page.evaluate("[HeinzBench.settings.provider, HeinzBench.settings.model]"), ["custom", "gemini-3-flash"])
+        self.assertEqual(page.evaluate("[HeinzDashboard.settings.provider, HeinzDashboard.settings.model]"), ["custom", "gemini-3-flash"])
         # online off: back to local, no request to Google
         n = len(g.requests)
         page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
         page.reload()
         self.send(page, "Hi")
         self.assertEqual(len(g.requests), n)
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
-        self.assertNotIn("gemini", page.evaluate("HeinzBench.settings.model"), "no cloud model on a local engine")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
+        self.assertNotIn("gemini", page.evaluate("HeinzDashboard.settings.model"), "no cloud model on a local engine")
 
     NATIVE = [
         {"name": "models/gemini-3.8-flash", "displayName": "Gemini 3.8 Flash", "inputTokenLimit": 1048576, "outputTokenLimit": 65536, "thinking": True, "supportedGenerationMethods": ["generateContent", "countTokens"]},
@@ -1149,13 +1149,13 @@ class PageTest(unittest.TestCase):
 
     def test_google_native_model_list_filters_to_chat_models_and_shows_limits(self):
         page, g = self.google_page("models/gemini-3.8-flash", native=self.NATIVE)
-        page.evaluate("HeinzProviders.setKey('custom', 'AIza-test'); HeinzBench.loadModels()")
-        page.wait_for_function("HeinzBench.MODELS.length === 2")
-        self.assertEqual(page.evaluate("HeinzBench.MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "no embedding model, newest first")
+        page.evaluate("HeinzProviders.setKey('custom', 'AIza-test'); HeinzDashboard.loadModels()")
+        page.wait_for_function("HeinzDashboard.MODELS.length === 2")
+        self.assertEqual(page.evaluate("HeinzDashboard.MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "no embedding model, newest first")
         url, hdr = g.native_calls[-1]
         self.assertNotIn("AIza", url, "the key never appears in the URL")
         self.assertEqual(hdr.get("x-goog-api-key"), "AIza-test")
-        page.evaluate("HeinzBench.renderModelSheet()")
+        page.evaluate("HeinzDashboard.renderModelSheet()")
         sheet = page.text_content("#model-list")
         self.assertIn("1M", sheet)
         self.assertIn("thinking", sheet)
@@ -1163,26 +1163,26 @@ class PageTest(unittest.TestCase):
         self.assertIn("inputTokenLimit 1048576", self.proto(page))
         # counter test: another engine never asks Google for its list
         n = len(g.native_calls)
-        page.evaluate("HeinzBench.switchProvider('ollama')"); page.wait_for_timeout(200)
+        page.evaluate("HeinzDashboard.switchProvider('ollama')"); page.wait_for_timeout(200)
         self.assertEqual(len(g.native_calls), n)
 
     def test_google_native_list_failure_is_reported_and_compatible_list_is_used(self):
         page = self.new_page()
         g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/v1beta/openai/**", models=("models/a", "models/b"))
         page.route("https://generativelanguage.googleapis.com/v1beta/models**", lambda r: r.abort())   # e.g. CORS: no workaround
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true)")
         page.reload()
         self.pick_engine(page, "custom")
         self.menu(page, "engine")
         page.fill("#prov-url", self.GOOGLE); page.dispatch_event("#prov-url", "change")
-        page.wait_for_function("HeinzBench.MODELS.length === 2")
+        page.wait_for_function("HeinzDashboard.MODELS.length === 2")
         self.assertIn("Native Google list not readable", page.text_content("#eng-status"))
 
     def test_google_native_list_is_not_requested_while_online_is_off(self):
         page = self.new_page()
         g = FakeOpenAI(page, "https://generativelanguage.googleapis.com/**", native=self.NATIVE)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         code = page.evaluate("""async () => { HeinzProviders.setCustomUrl('https://generativelanguage.googleapis.com/v1beta/openai'); try { await HeinzProviders.models('custom'); return 'sent'; } catch (e) { return e.code; } }""")
         self.assertEqual(code, "ONLINE_BLOCKED")
         self.assertEqual(g.native_calls, [])
@@ -1195,10 +1195,10 @@ class PageTest(unittest.TestCase):
         self.assertEqual(g.requests[-1][1].get("reasoning_effort"), "low")
         # all Gemini 3 flash versions use low (the user's rule from 11.11.2026); flash-lite keeps its own rule
         for m in ("models/gemini-3-flash-preview", "models/gemini-3.5-flash", "models/gemini-3.7-flash"):
-            page.evaluate("m => { HeinzBench.settings.model = m; document.getElementById('model-select').value = m; }", m)
-            self.assertEqual(page.evaluate("HeinzBench.thinkRule().fast"), "low", m)
-        page.evaluate("HeinzBench.settings.model='models/gemini-3.1-flash-lite'; document.getElementById('model-select').value='models/gemini-3.1-flash-lite'")
-        self.assertEqual(page.evaluate("HeinzBench.thinkRule().fast"), "minimal", "counter test: flash-lite is not changed")
+            page.evaluate("m => { HeinzDashboard.settings.model = m; document.getElementById('model-select').value = m; }", m)
+            self.assertEqual(page.evaluate("HeinzDashboard.thinkRule().fast"), "low", m)
+        page.evaluate("HeinzDashboard.settings.model='models/gemini-3.1-flash-lite'; document.getElementById('model-select').value='models/gemini-3.1-flash-lite'")
+        self.assertEqual(page.evaluate("HeinzDashboard.thinkRule().fast"), "minimal", "counter test: flash-lite is not changed")
 
     def test_very_short_answers_show_no_speed(self):
         page, g = self.google_page("gemini-3-flash", chunks=("OK",), usage=False)
@@ -1208,7 +1208,7 @@ class PageTest(unittest.TestCase):
     def test_export_contains_last_request_body_and_raw_usage_without_key(self):
         page, g = self.google_page("gemini-3-flash", reasoning=5)
         page.evaluate("HeinzProviders.setKey('custom', 'AIza-secret')")
-        page.evaluate("document.getElementById('param-temp').value = 0.3; HeinzBench.onSlider()")
+        page.evaluate("document.getElementById('param-temp').value = 0.3; HeinzDashboard.onSlider()")
         self.send(page, "Hi")
         txt = self.proto(page)
         self.assertIn("Last request (custom, HTTP 200)", txt)
@@ -1222,10 +1222,10 @@ class PageTest(unittest.TestCase):
         # Entwicklerbeschluss 11.11.2026: Standard ist offline; nach Online aus und wieder an bleibt die lokale Engine
         page, g = self.google_page("gemini-3-flash")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change'))")
         page.wait_for_timeout(200)
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
 
     def test_thinking_tokens_are_derived_from_total_when_not_reported_separately(self):
         # Handytest 11.11.2026: Google meldet total_tokens 5563 bei Prompt 78 und Ausgabe 165, aber keine reasoning_tokens
@@ -1242,15 +1242,15 @@ class PageTest(unittest.TestCase):
 
     def test_every_answer_has_its_own_test_log_taken_at_send_time_and_copy_values_has_no_log(self):
         page, g = self.google_page("gemini-3-flash")
-        page.evaluate("document.getElementById('param-temp').value = 0.3; HeinzBench.onSlider()")
+        page.evaluate("document.getElementById('param-temp').value = 0.3; HeinzDashboard.onSlider()")
         self.send(page, "first")
-        page.evaluate("document.getElementById('param-temp').value = 0.9; HeinzBench.onSlider()")
+        page.evaluate("document.getElementById('param-temp').value = 0.9; HeinzDashboard.onSlider()")
         self.send(page, "second")
         self.assertIn("temperature 0.3", self.proto(page, 0), "older answer keeps the values it was sent with")
         self.assertIn("temperature 0.9", self.proto(page, 1))
         self.assertIn('"temperature":0.3', self.proto(page, 0))
         # the settings button no longer carries a log (counter test)
-        txt = page.evaluate("HeinzBench.paramsText()")
+        txt = page.evaluate("HeinzDashboard.paramsText()")
         self.assertNotIn("Last request", txt)
         self.assertNotIn("Capabilities", txt)
         self.assertIn("PARAMETER temperature 0.9", txt)
@@ -1267,7 +1267,7 @@ class PageTest(unittest.TestCase):
         # Handytest 11.11.2026: Temperatur-Regler war winzig, weil der Hinweis zwischen Name und Regler lag
         page, g = self.google_page("gemini-3-flash")
         self.menu(page)
-        page.evaluate("HeinzBench.renderCaps()")
+        page.evaluate("HeinzDashboard.renderCaps()")
         self.assertIn("Recommended", page.text_content("#sc-temp .cap-row"))
         w = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
         self.assertTrue(all(x > 100 for x in w), w)
@@ -1277,7 +1277,7 @@ class PageTest(unittest.TestCase):
         self.assertTrue(r[2], "the name sits to the left of the slider")
         self.assertEqual(page.inner_text("#sc-temp b"), "T°")
         # counter test: same widths on Ollama (no notes)
-        page.evaluate("HeinzBench.switchProvider('ollama')"); page.wait_for_timeout(300)
+        page.evaluate("HeinzDashboard.switchProvider('ollama')"); page.wait_for_timeout(300)
         w2 = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
         self.assertLess(max(w2) - min(w2), 3)
         self.assertLess(abs(w2[0] - w[0]), 3)
@@ -1286,20 +1286,20 @@ class PageTest(unittest.TestCase):
     def gemini_page(self, model="models/gemini-3.8-flash", **fake):
         page = self.new_page()
         g = FakeGemini(page, **fake)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzProviders.setOnlineAllowed(true); HeinzProviders.setKey('google', 'AIza-native')")
         page.reload()
         self.pick_engine(page, "google")
-        page.wait_for_function("HeinzBench.MODELS.length >= 1")
-        page.evaluate("m => { document.getElementById('model-select').value = m; HeinzBench.onModelChange(); }", model)
+        page.wait_for_function("HeinzDashboard.MODELS.length >= 1")
+        page.evaluate("m => { document.getElementById('model-select').value = m; HeinzDashboard.onModelChange(); }", model)
         page.wait_for_function("window.HeinzCaps && HeinzCaps.ready()")
-        page.evaluate("HeinzBench.renderCaps(); HeinzBench.renderThink()")
+        page.evaluate("HeinzDashboard.renderCaps(); HeinzDashboard.renderThink()")
         return page, g
 
     def test_native_google_sends_generation_config_with_top_k_and_key_only_in_header(self):
         page, g = self.gemini_page()
-        self.assertEqual(page.evaluate("HeinzBench.MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "embedding model filtered")
-        page.evaluate("document.getElementById('param-temp').value = 0.4; HeinzBench.onSlider()")
+        self.assertEqual(page.evaluate("HeinzDashboard.MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "embedding model filtered")
+        page.evaluate("document.getElementById('param-temp').value = 0.4; HeinzDashboard.onSlider()")
         self.send(page, "Hi there")
         url, hdr, body = g.requests[-1]
         self.assertIn("/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse", url)
@@ -1318,7 +1318,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text(".msg-assistant"), "Hi there")
         self.assertEqual(self.external and [u for u in self.external if "AIza" in u], [])
         # counter test: Gemini 2.5 is not measured, top_k stays active and is sent
-        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; HeinzBench.onModelChange()")
+        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; HeinzDashboard.onModelChange()")
         self.send(page, "again")
         self.assertIn("topK", g.requests[-1][2]["generationConfig"])
 
@@ -1332,7 +1332,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.inner_text("#dash-think"), "40", "real value, no tilde")
         self.assertEqual(page.inner_text("#dash-a-tok"), "7")
         # budget kind for Gemini 2.5 (counter test: not a level)
-        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; HeinzBench.onModelChange()")
+        page.evaluate("document.getElementById('model-select').value = 'models/gemini-2.5-flash'; HeinzDashboard.onModelChange()")
         page.click("#think-fast")
         self.send(page, "fast")
         tc = g.requests[-1][2]["generationConfig"]["thinkingConfig"]
@@ -1342,17 +1342,17 @@ class PageTest(unittest.TestCase):
     def test_native_google_temperature_goes_up_to_two_while_local_engine_stays_at_one(self):
         page, g = self.gemini_page()
         self.assertEqual(page.evaluate("document.getElementById('param-temp').max"), "2")
-        page.evaluate("document.getElementById('param-temp').value = 2; HeinzBench.onSlider()")
+        page.evaluate("document.getElementById('param-temp').value = 2; HeinzDashboard.onSlider()")
         self.send(page, "hot")
         self.assertEqual(g.requests[-1][2]["generationConfig"]["temperature"], 2)
         # honest labels for the native route
         page.click("#think-deep")
         self.assertEqual(page.inner_text("#think-note"), "sends thinkingLevel high")
-        self.assertIn("-> thinkingLevel high", page.evaluate("HeinzBench.capsStates()"))
-        self.assertNotIn("reasoning_effort", page.evaluate("HeinzBench.capsStates()"))
+        self.assertIn("-> thinkingLevel high", page.evaluate("HeinzDashboard.capsStates()"))
+        self.assertNotIn("reasoning_effort", page.evaluate("HeinzDashboard.capsStates()"))
         # counter test: the local engine keeps the old limit
         page2 = self.new_page(); FakeOllama(page2)
-        page2.goto(self.srv.base + "/chat.html")
+        page2.goto(self.srv.base + "/dashboard.html")
         self.assertEqual(page2.evaluate("document.getElementById('param-temp').max"), "1.0")
 
     # ---------- test series (docs/KONZEPT.md 21, lib/testreihe.js) ----------
@@ -1366,7 +1366,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_logic_parses_lists_expands_cross_product_threads_outermost_and_splits_export(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.assertEqual(page.evaluate("HeinzSeries.parseList('0, 0.5; 1 x 1', 'float')"), [0, 0.5, 1])
         self.assertEqual(page.evaluate("HeinzSeries.parseList('2 4 4 abc', 'int')"), [2, 4])
         rows = page.evaluate("HeinzSeries.expand({ axes: { temperature: [0, 1], top_k: [1, 64], num_thread: [2, 4] }, reps: 2 })")
@@ -1388,7 +1388,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_runs_the_matrix_without_system_prompt_and_history_and_exports_runs(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, prompt="Name one animal.", temp="0, 1", topk="1, 64", reps="1", max="50")
@@ -1403,7 +1403,7 @@ class PageTest(unittest.TestCase):
             self.assertEqual(r["options"]["num_predict"], 50)
         got = sorted((r["options"]["temperature"], r["options"]["top_k"]) for r in reqs)
         self.assertEqual(got, [(0, 1), (0, 64), (1, 1), (1, 64)])
-        self.assertEqual(page.evaluate("HeinzBench.chatHistory.length"), 0)
+        self.assertEqual(page.evaluate("HeinzDashboard.chatHistory.length"), 0)
         self.assertEqual(page.locator("#chat-box .msg-assistant").count(), 0, "the chat stays untouched")
         self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%")
         self.assertEqual(page.locator("#sr-table tr").count(), 5)
@@ -1423,7 +1423,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_threads_axis_outermost_and_too_many_runs_block_the_start(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, temp="0, 1", thr="2, 4", reps="1")
@@ -1449,13 +1449,13 @@ class PageTest(unittest.TestCase):
         self.series_fill(page, temp="0, 3")
         self.assertIn("T\u00b0: 3", page.inner_text("#sr-plan"))
         self.assertTrue(page.is_disabled("#sr-start"))
-        page.evaluate("HeinzBench.srStart()"); page.evaluate("HeinzBench.srStart()")   # the second call would confirm the cloud question
+        page.evaluate("HeinzDashboard.srStart()"); page.evaluate("HeinzDashboard.srStart()")   # the second call would confirm the cloud question
         page.wait_for_timeout(1500)
         self.assertEqual(len(g.requests), n0, "no request with a bad value, even when start is forced")
 
     def test_series_checks_parse_and_evaluate_by_code_with_counter_cases(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         pp = page.evaluate("HeinzSeries.parsePrompts('How many? => number:16 | max:20\\n\\nSecond one')")
         self.assertEqual([q["id"] for q in pp["prompts"]], ["p1", "p2"])
         self.assertEqual([r["type"] for r in pp["prompts"][0]["rules"]], ["number", "max"])
@@ -1488,7 +1488,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_runs_several_prompts_with_checks_and_reports_pass_and_fail(self):
         page = self.new_page(chunks=("Hello", " world"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         page.fill("#sr-prompt", "Say hello. => contains:hello | not:bye\nSay xyz. => contains:xyz | max:5\nPlain prompt without checks")
@@ -1513,13 +1513,13 @@ class PageTest(unittest.TestCase):
         page.fill("#sr-prompt", "Say hello. => nonsense:1")
         self.assertIn("Unknown check", page.inner_text("#sr-plan"))
         self.assertTrue(page.is_disabled("#sr-start"))
-        page.evaluate("HeinzBench.srStart()")
+        page.evaluate("HeinzDashboard.srStart()")
         page.wait_for_timeout(500)
         self.assertEqual(len(self.ollama.requests), n)
 
     def test_series_after_reload_shows_no_running_bar_but_keeps_every_finished_run(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
@@ -1535,7 +1535,7 @@ class PageTest(unittest.TestCase):
         self.assertIn("interrupted", page.inner_text("#sr-status"))
         self.assertTrue(page.is_visible("#sr-start"))
         self.assertFalse(page.is_visible("#sr-stop"))
-        self.assertIn("app closed or page reloaded", page.evaluate("HeinzBench.srExportParts().join('\\n')"), "the export says that the series was cut")
+        self.assertIn("app closed or page reloaded", page.evaluate("HeinzDashboard.srExportParts().join('\\n')"), "the export says that the series was cut")
         # a series that ended normally is saved as finished
         self.series_fill(page, temp="0, 1")
         page.click("#sr-start")
@@ -1545,7 +1545,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_estimate_uses_history_per_thinking_level_and_defaults_without(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         rows = "[{params:{think:'fast'}},{params:{think:'deep'}},{params:{think:'deep'}}]"
         hist = "[{params:{think:'fast'},totalMs:2000},{params:{think:'deep'},totalMs:10000},{params:{think:'deep'},totalMs:20000},{params:{think:'deep'},totalMs:99000,error:'x'},{params:{think:'fast'},totalMs:99000,aborted:true}]"
         r = page.evaluate("HeinzSeries.estimateSec(" + rows + "," + hist + ",{local:true})")
@@ -1559,7 +1559,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_resume_runs_only_the_missing_runs_after_stop_and_after_reload(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.assertFalse(page.is_visible("#sr-resume"), "nothing to resume yet")
@@ -1588,7 +1588,7 @@ class PageTest(unittest.TestCase):
 
     def test_series_resume_is_hidden_when_the_model_was_changed(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
@@ -1598,14 +1598,14 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertTrue(page.is_visible("#sr-resume"))
         other = page.evaluate("[...document.querySelectorAll('#model-select option')].map(o => o.value).find(v => v !== srMeta.model)")
-        page.evaluate("(m) => { const e = document.getElementById('model-select'); e.value = m; e.dispatchEvent(new Event('change')); HeinzBench.srRender(); HeinzBench.srResumeBtn(); }", other)
+        page.evaluate("(m) => { const e = document.getElementById('model-select'); e.value = m; e.dispatchEvent(new Event('change')); HeinzDashboard.srRender(); HeinzDashboard.srResumeBtn(); }", other)
         self.assertFalse(page.is_visible("#sr-resume"), "another model: results would be mixed")
 
     def test_series_start_and_stop_do_not_wait_for_a_hanging_wake_lock(self):
         page = self.new_page()
         # a wake lock that never answers (seen as a risk on the phone): the series must run and stop anyway
         page.add_init_script("Object.defineProperty(navigator, 'wakeLock', { value: { request: () => new Promise(() => {}) } })")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, temp="0, 1")
@@ -1618,12 +1618,12 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("srRuns.length >= 1")
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
-        self.assertTrue(page.evaluate("!HeinzBench.seriesRunning"))
+        self.assertTrue(page.evaluate("!HeinzDashboard.seriesRunning"))
         self.assertTrue(page.is_visible("#sr-start"))
 
     def test_series_can_be_stopped_and_stops_after_three_errors_in_a_row(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.series_open(page)
         self.series_fill(page, temp="0, 0.5, 1", topk="1, 2, 3", reps="1")
@@ -1640,7 +1640,7 @@ class PageTest(unittest.TestCase):
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertEqual(page.evaluate("srMeta.stopped"), "by user")
-        self.assertIn('"aborted":true', page.evaluate("HeinzBench.srExportParts().join('\\n')"), "an interrupted run is marked, not shown as ok")
+        self.assertIn('"aborted":true', page.evaluate("HeinzDashboard.srExportParts().join('\\n')"), "an interrupted run is marked, not shown as ok")
         self.assertEqual(page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)")[-1], "\u2013")
         self.assertLess(page.evaluate("srRuns.length"), 9)
 
@@ -1669,7 +1669,7 @@ class PageTest(unittest.TestCase):
         for r in g.requests[n0:]:
             self.assertEqual(len(r[2]["contents"]), 1)
         self.assertNotIn("top_k", page.evaluate("srMeta.axes"), "a locked parameter is not part of the matrix")
-        txt = page.evaluate("HeinzBench.srExportParts().join('\\n')")
+        txt = page.evaluate("HeinzDashboard.srExportParts().join('\\n')")
         self.assertNotIn("AIza", txt)
         self.assertIn("thinkingLevel", txt)
         # online off: no request
@@ -1689,7 +1689,7 @@ class PageTest(unittest.TestCase):
         # online off: nothing is requested any more
         n = len(g.requests)
         page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change'))")
-        self.assertEqual(page.evaluate("HeinzBench.settings.provider"), "ollama")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         code = page.evaluate("""async () => { try { await HeinzProviders.chat('google', {model:'x', messages:[{role:'user',content:'hi'}]}); return 'sent'; } catch (e) { return e.code; } }""")
         self.assertEqual(code, "ONLINE_BLOCKED")
         self.assertEqual(len(g.requests), n)
@@ -1716,24 +1716,24 @@ class PageTest(unittest.TestCase):
     def test_model_list_only_newest_request_counts_and_shows_progress(self):
         # Handytest 10.11.2026: Modellliste mal 5, mal 15 Einträge – ein älterer, langsamerer Abruf überschrieb den neueren.
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("""() => {
             window.__res = [];
             HeinzProviders.models = () => new Promise(r => window.__res.push(r));
-            HeinzBench.settings.provider = 'litert';
-            window.__a = HeinzBench.loadModels();
-            window.__b = HeinzBench.loadModels();
+            HeinzDashboard.settings.provider = 'litert';
+            window.__a = HeinzDashboard.loadModels();
+            window.__b = HeinzDashboard.loadModels();
         }""")
         self.assertIn("Loading", page.text_content("#eng-status"))
         page.evaluate("window.__res[1](['n1','n2','n3'])")      # newer request answers first
         page.evaluate("window.__res[0](['old'])")               # older, slower request answers last
         page.evaluate("Promise.all([window.__a, window.__b])")
-        self.assertEqual(page.evaluate("HeinzBench.MODELS"), ["n1", "n2", "n3"])
+        self.assertEqual(page.evaluate("HeinzDashboard.MODELS"), ["n1", "n2", "n3"])
         self.assertIn("3", page.text_content("#eng-status"))
 
     def test_copy_whole_chat_labels_follow_language(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         page.evaluate("window.copyText = function (t) { window.__copied = t; return Promise.resolve(); }")
         page.click("button[onclick^='copyWholeChat']")
@@ -1744,7 +1744,7 @@ class PageTest(unittest.TestCase):
 
     def test_tap_outside_closes_menu_values_stay_and_reload_keeps_chat(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         page.click(".burger-btn")
         self.assertTrue(page.evaluate("document.getElementById('menu-sheet').classList.contains('open')"))
@@ -1767,7 +1767,7 @@ class PageTest(unittest.TestCase):
 
     def test_new_chat_button_and_copy_button_sit_in_the_chat_bar(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         self.assertEqual(page.locator("button[onclick='newChat(true)'] svg").count(), 1, "line icon, not an emoji")
         bar = page.locator(".bar").bounding_box()
@@ -1786,18 +1786,18 @@ class PageTest(unittest.TestCase):
 
     def test_model_chip_is_a_pixel_display_with_token_pulse(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertGreater(page.evaluate("document.querySelector('#chip-led').width"), 150)
-        self.assertGreater(page.evaluate("HeinzBench.chipPx.buf.filter(Boolean).length"), 80, "mode, engine and model are drawn")
+        self.assertGreater(page.evaluate("HeinzDashboard.chipPx.buf.filter(Boolean).length"), 80, "mode, engine and model are drawn")
         self.assertEqual(page.inner_text("#chip-model"), "gemma2:2b")
         self.send(page, "Hi there")
-        self.assertGreater(page.evaluate("HeinzBench.pulse.e"), -1)
+        self.assertGreater(page.evaluate("HeinzDashboard.pulse.e"), -1)
         self.assertEqual(self.errors, [])
 
     def test_speed_test_runs_threads_cold_and_warm_and_copies_table(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.menu(page, "speed")
         page.evaluate("var e=document.getElementById('param-threads'); e.value=3; e.dispatchEvent(new Event('input'))")
@@ -1848,7 +1848,7 @@ class PageTest(unittest.TestCase):
 
     def test_speed_test_needs_a_thread_value_and_can_be_stopped(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.menu(page, "speed")
         page.evaluate("document.querySelectorAll('#st-threads input').forEach(i => i.checked = false)")
         page.click("#st-start")
@@ -1861,7 +1861,7 @@ class PageTest(unittest.TestCase):
         answers = [
             (200, {"ok": True, "changed": False, "files": [], "restarting": False, "from": "abc1234", "to": "abc1234"}),
             (409, {"ok": False, "error": "git pull failed", "output": "Could not resolve host"}),
-            (200, {"ok": True, "changed": True, "files": ["chat.html"], "restarting": False, "from": "abc1234", "to": "def5678"}),
+            (200, {"ok": True, "changed": True, "files": ["dashboard.html"], "restarting": False, "from": "abc1234", "to": "def5678"}),
         ]
         def handle(route):
             calls.append((route.request.method, route.request.headers.get("x-heinz")))
@@ -1870,7 +1870,7 @@ class PageTest(unittest.TestCase):
         page.route("**/api/update", handle)
         page.route("**/api/ping", lambda route: route.fulfill(status=200, content_type="application/json",
                    body=json.dumps({"ok": True, "version": "1", "app": {"version": "1.0", "commit": "abc1234", "date": "2026-11-09"}})))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         self.menu(page, "update")
         page.wait_for_function("document.getElementById('upd-ver').textContent.includes('abc1234')")
@@ -1890,14 +1890,14 @@ class PageTest(unittest.TestCase):
 
     def test_pull_to_refresh_is_disabled(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.assertEqual(page.evaluate("getComputedStyle(document.body).overscrollBehaviorY"), "none")
         self.assertEqual(page.evaluate("getComputedStyle(document.documentElement).overscrollBehaviorY"), "none")
 
     # ---- Design-Strang: neues Layout, Themes, Bausteine ----
     def test_header_has_ring_model_chip_language_toggle_and_burger_in_one_row(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         boxes = {k: page.locator(sel).bounding_box() for k, sel in
                  (("ring", "#status-dot"), ("chip", "#model-chip"), ("lang", "#lang-btn"), ("burger", ".burger-btn"))}
@@ -1913,7 +1913,7 @@ class PageTest(unittest.TestCase):
 
     def test_model_picker_lists_models_without_emoji_and_selects(self):
         page = self.new_page(tags=("qwen2.5:3b", "heinz-fakt:latest", "gemma2:2b"))
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#model-chip")
         self.assertTrue(page.is_visible("#model-sheet"))
@@ -1926,11 +1926,11 @@ class PageTest(unittest.TestCase):
         page.click('#model-list [data-model="qwen2.5:3b"]')
         self.assertFalse(page.evaluate("document.getElementById('model-sheet').classList.contains('open')"), "sheet closes after the choice")
         self.assertEqual(page.inner_text("#chip-model"), "qwen2.5:3b")
-        self.assertEqual(page.evaluate("HeinzBench.settings.model"), "qwen2.5:3b")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.model"), "qwen2.5:3b")
 
     def test_metric_chips_stay_on_one_line_and_prompt_grows(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         tops = page.eval_on_selector_all("#dashboard .m:not([hidden])", "els => els.map(e => Math.round(e.getBoundingClientRect().top))")
         self.assertEqual(len(tops), 4)
@@ -1951,7 +1951,7 @@ class PageTest(unittest.TestCase):
 
     def test_context_card_sits_below_the_prompt_and_only_exists_in_modes_with_context(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.assertFalse(page.is_visible("#context-wrapper"), "Wilson has no context")
         page.click("#mode-bar [data-mode=audit]")
         self.assertTrue(page.is_visible("#context-wrapper"))
@@ -1974,7 +1974,7 @@ class PageTest(unittest.TestCase):
 
     def test_mode_colour_is_the_one_accent_of_the_page(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         acc = lambda: page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()")
         self.assertEqual(acc(), "#00acc1")
         page.click("#mode-bar [data-mode=creative]")
@@ -1991,7 +1991,7 @@ class PageTest(unittest.TestCase):
         page.on("pageerror", lambda e: self.errors.append(str(e)))
         FakeOllama(page)
         page.route("**/127.0.0.1:9379/**", lambda route: route.abort())
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         bg = lambda: page.evaluate("getComputedStyle(document.body).backgroundColor")
         self.assertEqual(page.evaluate("document.documentElement.dataset.theme"), "auto")
         self.assertEqual(bg(), "rgb(0, 0, 0)", "auto follows the system: dark here")
@@ -2016,13 +2016,13 @@ class PageTest(unittest.TestCase):
         page = ctx.new_page()
         self.addCleanup(ctx.close)
         FakeOllama(page)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.assertEqual(page.evaluate("getComputedStyle(document.body).backgroundColor"), "rgb(244, 246, 248)")
         self.assertEqual(page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--ol').trim()"), "transparent", "light: no outlines on controls")
 
     def test_menu_pages_back_arrow_and_groups(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.click(".burger-btn")
         self.assertEqual(page.inner_text("#sh-title"), "Settings")
         self.assertFalse(page.is_visible("#sh-back"))
@@ -2040,7 +2040,7 @@ class PageTest(unittest.TestCase):
 
     def test_language_switch_stays_in_the_chat_header_and_retries_in_the_other_language(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hallo")
         page.click("#lang-btn")
         self.assertTrue(page.is_visible("#lang-btn"))
@@ -2052,7 +2052,7 @@ class PageTest(unittest.TestCase):
 
     def test_chat_drawer_opens_from_the_left_filters_and_deletes(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Alpha question")
         page.click("button[onclick='newChat(true)']")
         self.send(page, "Beta question")
@@ -2072,22 +2072,22 @@ class PageTest(unittest.TestCase):
 
     def test_read_aloud_button_turns_into_stop_reading(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         self.assertIn("i-volume", page.get_attribute(".msg-read use", "href"))
-        page.evaluate("HeinzBench.updateReadBtn(true)")
+        page.evaluate("HeinzDashboard.updateReadBtn(true)")
         self.assertIn("i-stop", page.get_attribute(".msg-read use", "href"))
-        page.evaluate("HeinzBench.updateReadBtn(false)")
+        page.evaluate("HeinzDashboard.updateReadBtn(false)")
         self.assertIn("i-volume", page.get_attribute(".msg-read use", "href"))
-        page.evaluate("HeinzBench.setGenerating(true)")
+        page.evaluate("HeinzDashboard.setGenerating(true)")
         self.assertFalse(page.is_visible(".msg-assistant:last-child .msg-acts"), "actions appear only when the output is finished")
         self.assertIn("i-stop", page.get_attribute("#send-btn use", "href"), "stop replaces send while answering")
-        page.evaluate("HeinzBench.setGenerating(false)")
+        page.evaluate("HeinzDashboard.setGenerating(false)")
         self.assertIn("i-send", page.get_attribute("#send-btn use", "href"))
 
     def test_every_symbol_used_exists_in_the_sprite_and_no_emoji_icons_remain(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
         page.click("#chats-open"); page.keyboard.press("Escape")
         page.click("#model-chip"); page.keyboard.press("Escape")
@@ -2107,7 +2107,7 @@ class PageTest(unittest.TestCase):
         page = ctx.new_page()
         self.addCleanup(ctx.close)
         FakeOllama(page)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.click("#mode-bar [data-mode=audit]")
         page.focus("#query")
         page.wait_for_function("document.body.classList.contains('kbd')")
@@ -2124,7 +2124,7 @@ class PageTest(unittest.TestCase):
 
     def test_context_field_is_one_line_until_focused_and_telemetry_labels(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.click("#mode-bar [data-mode=audit]")
         h0 = page.evaluate("document.getElementById('context').getBoundingClientRect().height")
         self.assertLessEqual(h0, 28)
@@ -2136,11 +2136,11 @@ class PageTest(unittest.TestCase):
 
     def test_telemetry_colours_follow_performance_thresholds(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
-        page.evaluate("document.getElementById('dash-speed').textContent='22.0'; document.getElementById('dash-start').textContent='12.0'; HeinzBench.perfColors()")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("document.getElementById('dash-speed').textContent='22.0'; document.getElementById('dash-start').textContent='12.0'; HeinzDashboard.perfColors()")
         self.assertEqual(page.evaluate("document.getElementById('dash-speed').style.color"), "var(--green)")
         self.assertEqual(page.evaluate("document.getElementById('dash-start').style.color"), "var(--orange)")
-        page.evaluate("document.getElementById('dash-speed').textContent='3.0'; HeinzBench.perfColors()")
+        page.evaluate("document.getElementById('dash-speed').textContent='3.0'; HeinzDashboard.perfColors()")
         self.assertEqual(page.evaluate("document.getElementById('dash-speed').style.color"), "var(--orange)")
 
     def test_hub_areas_switch_and_persist(self):
@@ -2150,7 +2150,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#ring svg").count(), 1)
         self.assertIn("AIUI", page.inner_text(".top .ttl b"))
         ids = page.eval_on_selector_all("#main a[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids, ["heinz", "chat", "lab", "vitals"])
+        self.assertEqual(ids, ["chat", "dashboard", "lab", "vitals"])
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(set(ids), {"sheet", "filter", "scan", "studio"})
@@ -2296,7 +2296,7 @@ class PageTest(unittest.TestCase):
         self.assertIsNone(re.search(r"(?<![\w-])\.chk(?![\w-])", css), ".chk belongs to the setup page (status text), the checkbox row is .chkrow")
         self.assertIsNone(re.search(r"(?<![\w-])\.sel(?![\w-])", css), "a bare .sel would restyle .row.sel in the Heinz Chat; the field is select.sel")
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_selector(".burger-btn")
         style = "s => getComputedStyle(document.querySelector(s))"
         self.assertEqual(page.evaluate(style + ".position", "#chats-open .cnt"), "absolute")
@@ -2340,7 +2340,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_sends_streams_and_picks_model_in_bottom_sheet(self):
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2364,7 +2364,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.add_init_script(settings_js)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2386,7 +2386,7 @@ class PageTest(unittest.TestCase):
 
     def test_slim_chat_sends_no_threads_for_other_engines(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.evaluate("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'m': 3}}))")
         self.assertEqual(page.evaluate("HeinzProviders.runtime('ollama','m').options"), {"num_thread": 3, "num_ctx": 8192})
         for prov in ("litert", "google-native", "openai", "custom"):
@@ -2397,7 +2397,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(req["options"].get("num_ctx"), 4096)
         self.assertEqual(req["options"].get("num_thread"), 2)
         self.assertEqual(req.get("keep_alive"), "30m")
-        # model defaults chosen on the test bench (useDefault): no context sent, threads still sent
+        # model defaults chosen on the dashboard (useDefault): no context sent, threads still sent
         req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({useDefault: true, threads: {'qwen2.5:3b': 2}}))")
         self.assertNotIn("num_ctx", req["options"])
         self.assertEqual(req["options"].get("num_thread"), 2)
@@ -2405,7 +2405,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_unloads_other_models_before_sending(self):
         page = self.new_page()
         fake = FakeOllama(page)   # the fake /api/ps always reports gemma2:2b as loaded
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2419,19 +2419,19 @@ class PageTest(unittest.TestCase):
     def test_test_bench_and_slim_chat_send_the_same_load_options_for_the_same_model(self):
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        # values as the developer sets them on the test bench: sliders for context and threads, model qwen2.5:3b
+        # values as the developer sets them on the dashboard: sliders for context and threads, model qwen2.5:3b
         page.evaluate("""() => { const m = document.getElementById('model-select'); m.value = 'qwen2.5:3b'; m.dispatchEvent(new Event('change')); }""")
         page.wait_for_timeout(800)   # the model switch re-applies its parameter source asynchronously
-        page.evaluate("HeinzBench.setParamSrc('own')")   # own values: the sliders are the developer's, not the mode preset's
-        page.evaluate("""() => { const c = document.getElementById('param-ctx'); c.value = 6144; HeinzBench.onSlider(); const t = document.getElementById('param-threads'); t.value = 3; HeinzBench.onThreads(); }""")
+        page.evaluate("HeinzDashboard.setParamSrc('own')")   # own values: the sliders are the developer's, not the mode preset's
+        page.evaluate("""() => { const c = document.getElementById('param-ctx'); c.value = 6144; HeinzDashboard.onSlider(); const t = document.getElementById('param-threads'); t.value = 3; HeinzDashboard.onThreads(); }""")
         self.send(page, "Hi")
         bench = fake.requests[-1]
         self.assertEqual((bench["options"]["num_thread"], bench["options"]["num_ctx"]), (3, 6144))
         self.assertEqual(bench["model"], "qwen2.5:3b")
         # the chat page (same browser storage) must send exactly the same load options for the same model
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")   # the bench's model is taken over
         page.fill("#q", "Hi")
         page.click("#send")
@@ -2445,7 +2445,7 @@ class PageTest(unittest.TestCase):
     def test_shared_status_codes_and_colours_for_every_kind_of_engine(self):
         page = self.new_page()
         FakeOllama(page)   # /api/ps reports gemma2:2b as loaded
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         st = lambda js: page.evaluate("(async () => { const r = await " + js + "; return [r.code, r.color, r.key]; })()")
         self.assertEqual(st("HeinzProviders.status('ollama', 'gemma2:2b')"), ["loaded", "blue", "stDefault"])
         self.assertEqual(st("HeinzProviders.status('ollama', 'qwen2.5:3b')"), ["asleep", "orange", "stOnline"], "reachable but this model is not in memory")
@@ -2464,7 +2464,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_ring_shows_the_connection_state_and_what_the_model_does(self):
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         ring = lambda: page.evaluate("document.getElementById('ring').className")
         page.wait_for_function("document.getElementById('ring').classList.contains('s-blue')")   # gemma2:2b is in memory
@@ -2496,7 +2496,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}, params: {ctx: 6144}}))")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2514,7 +2514,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 2}, params: {ctx: 6144}}))")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
         # pick another model; the preload is slow so the ring has to say "preparing"
@@ -2538,33 +2538,33 @@ class PageTest(unittest.TestCase):
         self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, fake.unloads, "other models are released before the preload")
 
     def test_model_choice_is_shared_between_chat_and_test_bench(self):
-        # chat picks qwen -> the test bench opens with qwen (and does not load another model); and the other way round
+        # chat picks qwen -> the dashboard opens with qwen (and does not load another model); and the other way round
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
         page.click("[data-model='qwen2.5:3b']")
         page.wait_for_timeout(500)
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.getElementById('model-select').value === 'qwen2.5:3b'", timeout=15000)
         page.wait_for_timeout(1500)
         self.assertTrue(all(p_["model"] == "qwen2.5:3b" for p_ in fake.preloads[-1:]), "the bench preloads the shared model")
         # bench changes the model -> the chat takes it over
         page.evaluate("() => { const s = document.getElementById('model-select'); s.value = 'gemma2:2b'; s.dispatchEvent(new Event('change')); }")
         page.wait_for_timeout(500)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
 
     def test_model_sheet_shows_what_bench_and_chat_last_sent_to_ollama(self):
         page = self.new_page()
         FakeOllama(page)
         page.add_init_script("if (!localStorage.getItem('heinz_settings')) localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}}))")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.wait_for_timeout(2500)   # the bench preloads on its own
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hi")   # the chat has no preload of its own here (the bench just loaded the model): it sends a real message
         page.click("#send")
@@ -2573,7 +2573,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("#sh-model.open")
         txt = page.inner_text("#rt-h")
         import re
-        b = re.search(r"Test bench gemma2:2b: threads 2, context (\d+)", txt)
+        b = re.search(r"Dashboard gemma2:2b: threads 2, context (\d+)", txt)
         c = re.search(r"Chat gemma2:2b: threads 2, context (\d+)", txt)
         self.assertTrue(b and c, txt)
         self.assertEqual(b.group(1), c.group(1), "bench and chat send the same context")
@@ -2582,7 +2582,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.add_init_script("if (!localStorage.getItem('heinz_settings')) { localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}})); localStorage.setItem('heinz_lastreq', JSON.stringify({bench: {model: 'gemma2:2b', threads: 2, ctx: 8192, keep: '30m', preload: false, ts: Date.now()}})); }")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.wait_for_timeout(1500)
         self.assertEqual(fake.preloads, [], "loaded with the same options: the chat must not overwrite Ollama's cache with a preload")
@@ -2595,7 +2595,7 @@ class PageTest(unittest.TestCase):
 
     def test_leaving_the_page_cancels_the_running_request(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("typeof HeinzProviders !== 'undefined'")
         page.unroute("**/localhost:11434/**")
         page.route("**/localhost:11434/**", lambda route: None)   # never answers: the request stays open
@@ -2612,18 +2612,18 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         FakeOllama(page, tags=("gemma2:2b", "qwen2.5:3b", "llama3.2:3b"))
         page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'llama3.2:3b'}))")
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.getElementById('model-select').value === 'llama3.2:3b'", timeout=15000)
         page.wait_for_timeout(800)
         self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "llama3.2:3b", "the shared choice is not overwritten")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('llama3.2:3b') >= 0", timeout=15000)
 
     def test_slim_chat_does_not_offer_the_persona_models(self):
         page = self.new_page()
         FakeOllama(page, tags=("heinz-fakt:latest", "heinz-wilson:latest", "gemma2:2b", "qwen2.5:3b"))
         page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)   # persona model from the bench is replaced
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2634,7 +2634,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_sends_the_default_system_prompt_and_it_can_be_changed_per_model(self):
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         default = page.evaluate("HeinzProviders.DEFAULT_CHAT_SYSTEM")
         page.fill("#q", "Hi"); page.click("#send")
@@ -2658,10 +2658,10 @@ class PageTest(unittest.TestCase):
 
     def test_apply_to_chat_hands_prompt_and_values_of_the_bench_mode_to_the_chat(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
-        page.evaluate("HeinzBench.setParamSrc('mode')")
+        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.assertTrue(page.is_visible("#to-chat") or page.locator("#to-chat").count() == 1)
         page.evaluate("document.getElementById('to-chat').click()")
         self.assertIn("gemma2:2b", page.text_content("#to-chat-sub"))
@@ -2672,7 +2672,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(smp["stop"], ["Als KI", "As an AI"])
         self.assertNotIn("num_ctx", smp); self.assertNotIn("num_thread", smp); self.assertNotIn("num_predict", smp)
         # the chat sends exactly that, plus the shared runtime values
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hi"); page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2690,16 +2690,16 @@ class PageTest(unittest.TestCase):
 
     def test_apply_to_chat_with_model_defaults_clears_the_sampling_values(self):
         page = self.new_page()
-        page.goto(self.srv.base + "/chat.html")
+        page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("HeinzProviders.setChatSampling('gemma2:2b', {temperature: 0.9})")
-        page.evaluate("HeinzBench.settings.useDefault = true; HeinzBench.applyToChat()")
+        page.evaluate("HeinzDashboard.settings.useDefault = true; HeinzDashboard.applyToChat()")
         self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
 
     def test_chat_adds_the_system_text_once_and_only_when_the_messages_have_none(self):
         page = self.new_page()
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("typeof HeinzProviders !== 'undefined'")
         page.evaluate("""async () => {
             await HeinzProviders.chat('ollama', { model: 'gemma2:2b', system: 'S1', messages: [{ role: 'user', content: 'a' }], stream: true, onDelta: () => {} });
@@ -2712,7 +2712,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({preload: false}))")
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2723,7 +2723,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_error_keeps_text_and_shows_notice(self):
         page = self.new_page()
         FakeOllama(page, status=500)
-        page.goto(self.srv.base + "/tools/heinz/index.html")
+        page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hello?")
         page.click("#send")

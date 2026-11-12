@@ -536,3 +536,9 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Ursache: `.gitignore` enthielt `data/` und schloss damit `lib/data/` aus; `lib/data/*.json` waren nie committet. Meine Tests liefen gegen den Arbeitsordner, nicht gegen das Repo, und blieben deshalb grün.
 - Behoben: `.gitignore` auf `/data/`, die drei Dateien committet, neuer Test `test_no_file_of_the_app_is_hidden_from_git`, Startfehler werden auf der Seite angezeigt (Test dazu), Tests aus frischem Klon: 20 + 24 + 3 + 145 grün (nur simuliert). Regel in `TECHNIK.md`.
 
+
+## 12.11.2026 – Umbenennung: Prüfstand heißt Dashboard (Strang AIUIheinz-Dashboard)
+- Auf Wunsch des Entwicklers nach bestandenem Handytest: `chat.html` (bisher Prüfstand) ist jetzt `dashboard.html`; der Heinz Chat (bisher `tools/heinz/index.html`) liegt unter `chat.html`. `index.html` bleibt Startseite. Der Strang und sein Befehl heißen „Dashboard“.
+- Ordner und Namen: `tools/chat` → `tools/dashboard`, `tools/heinz` → `tools/chat` (Hub-Kennungen `chat` und `dashboard`), `lib/bench/` → `lib/dashboard/`, `lib/benchdata.js` → `lib/dashboarddata.js`, `HeinzBench` → `HeinzDashboard`, `lib/data/pruefstand.i18n.json` → `dashboard.i18n.json`, `bench.json` → `dashboard.json`, Auftrag und Inventur umbenannt. Archiv und dieser Verlauf behalten die alten Namen.
+- Fundament berührt: Hub (AREAS), `tool.json`, Setup-Seite, Servertest. Nutzerdaten bleiben (localStorage hängt am Ursprung, nicht am Seitennamen). Alte Lesezeichen auf `/chat.html` öffnen jetzt den Heinz Chat.
+- Beim Test fiel ein vergessener Dateiname (`bench.json` in `dashboarddata.js`) auf; behoben. Alle Tests grün (simuliert, nicht am Gerät).

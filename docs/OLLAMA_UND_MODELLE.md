@@ -37,7 +37,7 @@ Speicher: Datenträger 109 GB, frei 25 GB, `~/.ollama` 7,2 GB. Gemessen mit dem 
 
 Bei geladenem `gemma2:2b` fiel der freie RAM von rund 3,4 GB auf unter 1 GB (Gesamt 15,6 GB, Beobachtung 26.10.2026).
 
-## Modi und Presets (chat.html)
+## Modi und Presets (dashboard.html)
 | Modus | Temperatur | Top-P | Top-K | Modell | Modell wählbar | Kontext |
 |---|---|---|---|---|---|---|
 | wilson | 0.75 | 0.90 | 40 | gemma2:2b | nein | keiner |
@@ -119,12 +119,12 @@ Prompt „Name one unusual animal in one sentence.“, Temperatur 0, Top-p 1, To
 - Tempo-Test `qwen2.5:3b` (12:31, Termux sichtbar, kalt, 32 Token, kurzer Prompt 52 Token): Erzeugen Lauf 2 bei 2 Threads 7,4 Token/s, bei 3 Threads 3,9, bei 4 Threads 2,2 (Lauf 1: 8,0 / 6,6 / 2,8). Bestätigt: 2 Threads am schnellsten, mehr Threads langsamer. Laden 4 bis 8 s, warm 0,4 bis 0,6 s.
 - Vergleich mit früheren Reihen (siehe oben): heinz-fakt 4,2 bis 8,9 Token/s bei 2 Threads, qwen2.5:3b 8,9. Die neuen Werte liegen im selben Bereich. Der große Sprung („20-mal schneller“) war der Wechsel vom Ollama-Standard (8 Threads, im Hintergrund 0,2 bis 0,3 Token/s) auf 2 Threads.
 
-## Seitenwechsel Heinz Chat und Prüfstand (Handy, 11.11.2026)
+## Seitenwechsel Heinz Chat und Dashboard (Handy, 11.11.2026)
 - Mit gemeinsamer Modellwahl (`heinz_active`), gleichen Laufzeitwerten (Threads 2, Kontext 8192, Haltezeit 30 m) und ohne Vorladen bei schon geladenem Modell: Das Modell bleibt beim Wechsel im Speicher (`ollama ps`: gleiche ID), erste Antwort bei allen getesteten Modellen 4 bis 6 s, auf beiden Seiten gleich. Regeln: `docs/LOKALE_MODELLE.md`.
-- Vorher: Chat 24 bis über 60 s bis zum ersten Zeichen, Prüfstand lud nach dem Wechsel neu (Qwen und `heinz-fakt`). Ursachen laut Code: getrennte Modellwahl je Seite und Vorlade-Anfragen, die Ollamas Zwischenspeicher ersetzen (Prompt-Verarbeitung rund 30 Token/s, langer Verlauf kostet dann Sekunden bis Minuten).
+- Vorher: Chat 24 bis über 60 s bis zum ersten Zeichen, Dashboard lud nach dem Wechsel neu (Qwen und `heinz-fakt`). Ursachen laut Code: getrennte Modellwahl je Seite und Vorlade-Anfragen, die Ollamas Zwischenspeicher ersetzen (Prompt-Verarbeitung rund 30 Token/s, langer Verlauf kostet dann Sekunden bis Minuten).
 
 ## Personas nicht mehr als Ollama-Modelle (11.11.2026)
-- Beschluss des Entwicklers: Lokale Modelle kommen nativ. `heinz-wilson` (Persona auf Gemma 2 2B) und `heinz-fakt` (Persona auf dem abliterierten Qwen 2.5 3B von Rademacher) werden aus Ollama gelöscht. Ihre Texte und Werte (Modelfiles, am Handy mit `ollama show … --modelfile` gelesen) stehen unverändert in `lib/personas.js` und werden mit der Anfrage gesendet (Prüfstand: Modi Wilson und Heinz).
+- Beschluss des Entwicklers: Lokale Modelle kommen nativ. `heinz-wilson` (Persona auf Gemma 2 2B) und `heinz-fakt` (Persona auf dem abliterierten Qwen 2.5 3B von Rademacher) werden aus Ollama gelöscht. Ihre Texte und Werte (Modelfiles, am Handy mit `ollama show … --modelfile` gelesen) stehen unverändert in `lib/personas.js` und werden mit der Anfrage gesendet (Dashboard: Modi Wilson und Heinz).
 - Löschen am Handy (Termux): `ollama rm heinz-wilson:latest heinz-fakt:latest`. Die Gewichte des Rademacher-Modells bleiben, weil es ein eigenes Modell ist (`hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M`); `ollama list` danach prüfen.
 - Werte aus den Modelfiles: Wilson Temperatur 0,4, Top-P 0,8; Heinz Temperatur 0,2, Top-K 20, Top-P 0,4, Stopp „Als KI“ und „As an AI“. Der Heinz-Prompt (rund 340 Token mit vier Beispielen) wird bei der ersten Anfrage gelesen (rund 11 s kalt bei 30 Token/s), danach liegt er im Zwischenspeicher.
-- Noch nicht am Gerät geprüft: ob die Antworten im Prüfstand in den Modi Wilson und Heinz denen von früher entsprechen.
+- Noch nicht am Gerät geprüft: ob die Antworten im Dashboard in den Modi Wilson und Heinz denen von früher entsprechen.

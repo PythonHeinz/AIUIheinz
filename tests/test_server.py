@@ -35,7 +35,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(json.loads(self.req("GET", "/api/ping")[1])["app"]["version"], v)
 
     def test_pages_served(self):
-        for p in ("/", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/lib/core.js", "/lib/core.css", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png", "/tools/models/index.html", "/tools/filter/index.html"):
+        for p in ("/", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/lib/core.js", "/lib/core.css", "/manifest.webmanifest", "/sw.js", "/icons/icon-192.png", "/tools/models/index.html", "/tools/filter/index.html"):
             st, _ = self.req("GET", p)
             self.assertEqual(st, 200, p)
 
@@ -48,7 +48,7 @@ class ServerTest(unittest.TestCase):
         st, data = self.req("GET", "/api/tools")
         self.assertEqual(st, 200)
         ids = [t["id"] for t in json.loads(data)["tools"]]
-        self.assertEqual(ids, ["heinz", "chat", "models", "filter", "scan", "setup", "sheet", "studio", "lab", "vitals"])
+        self.assertEqual(ids, ["chat", "dashboard", "models", "filter", "scan", "setup", "sheet", "studio", "lab", "vitals"])
 
     def test_tools_apps_json_and_invalid_entries(self):
         d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "zz-bad")

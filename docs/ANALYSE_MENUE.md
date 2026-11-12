@@ -1,6 +1,6 @@
 # Analyse: Menüstruktur aus Sicht des Anwenders
 
-Stand 10.11.2026, Strang „AIUIheinz-Design“. Nur Analyse, es wurde nichts umgebaut. Grundlage: `chat.html` im Commit nach dem Rückbau der Pixeldisplays.
+Stand 10.11.2026, Strang „AIUIheinz-Design“. Nur Analyse, es wurde nichts umgebaut. Grundlage: `dashboard.html` im Commit nach dem Rückbau der Pixeldisplays.
 
 ## 1 Der Anwendungsfall
 Der Anwender testet ein lokales Modell: (1) Quelle und Modell wählen, (2) mit den Standardwerten fragen, (3) bei zu viel Halluzination so lange an den Parametern drehen, bis es passt, (4) die Werte notieren oder in der App als eigenen Standard behalten, (5) prüfen, ob es schnell genug läuft.

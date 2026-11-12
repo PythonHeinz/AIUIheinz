@@ -29,7 +29,7 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 - **Sensor-Dashboards über Termux:API:** Akku, Temperatur, Luftdruck, Bewegung im Verlauf (Grundlage ist der Vitals-Logger).
 - **Spotify-Tempo neben Schlafzeiten:** Die Spotify-Audioanalyse-Schnittstelle wurde 2024 eingeschränkt (nicht neu geprüft); Schlafdaten sind aus Termux vermutlich nicht erreichbar (nicht geprüft).
 - **Claude-ermittelte Werte regelmäßig tracken:** Weboberfläche, die extern ermittelte Werte in `data/` ablegt und im Verlauf zeigt.
-- **Chat:** Chats speichern und später fortführen, Python-Code mit Farbmarkierung offline (Absicht des Entwicklers; Stand im Chat-Modul gegen `chat.html` prüfen).
+- **Chat:** Chats speichern und später fortführen, Python-Code mit Farbmarkierung offline (Absicht des Entwicklers; Stand im Chat-Modul gegen `dashboard.html` prüfen).
 
 ## Ideen vom 10./11.11.2026 (Entwickler, nicht begonnen; Stand nach Design-Review 1)
 **Entwickleroption „Brummen" (Modell-Traum-Anzeige)**

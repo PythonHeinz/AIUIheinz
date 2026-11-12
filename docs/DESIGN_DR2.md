@@ -55,7 +55,7 @@ Hinweisband (Info, Warnung, Fehler), Bestätigungsblatt, Zustandsmarke, Schrittk
 
 ## 5 Vorschlag für Ablauf und Regeln
 1. **Phase A (Entwurf, kein Fundament):** Bausteine aus 4 als Beispielseite in `tools/design/` bauen und vom Entwickler auf dem Handy ansehen lassen; Modus-Schieberegler als Prototyp auf der Beispielseite.
-2. **Phase B (Gliederung):** Menü nach 3 neu ordnen. Das ändert Hauptmenü und Navigation von `chat.html`, also Fundament: **ein Chat auf einmal**, nach den laufenden Strängen (Chat: Schnittstellen und Testreihen, Modelle: Daten). Vorher Freigabe.
+2. **Phase B (Gliederung):** Menü nach 3 neu ordnen. Das ändert Hauptmenü und Navigation von `dashboard.html`, also Fundament: **ein Chat auf einmal**, nach den laufenden Strängen (Chat: Schnittstellen und Testreihen, Modelle: Daten). Vorher Freigabe.
 3. **Phase C (Schlanker Chat, Hub, Assistent):** neue Seiten auf den Bausteinen; Texte von Tertius und Modi.
 4. **Phase D (Medien, Funktionen):** erst wenn Chat und Modelle die Daten und den Anhang liefern; Gestaltung liegt dann fertig vor.
 Regeln wie bisher: kein Umbau ohne Absprache, nur simuliert getestet bleibt gekennzeichnet, jede neue Zeichenfolge EN und DE.
@@ -68,9 +68,9 @@ Regeln wie bisher: kein Umbau ohne Absprache, nur simuliert getestet bleibt geke
 5. Namen der Hub-Einträge und Funktionsplätze (offen in Konzept 18.4 und 20.10).
 
 ## Stand 11.11.2026, Phase A (Entscheidungen vom Entwickler, 05:10)
-- **Neuer Hub** `hub.html` (alter `index.html` bleibt bis zur Freigabe). Tabs: **Chat | Werkzeuge | Einrichten** (EN: Chat | Tools | Set up). Namen: **Heinz Chat** (schlanker Text, `tools/heinz/index.html`), **Heinz Prüfstand / Heinz Test Bench** (bisherige Heinz UI, `chat.html`), **Einlesen / Read in** und **Bildstudio / Image studio** (Platzhalter), **Einrichtungsassistent / Setup guide** (`tools/setup/index.html`).
-- **Schnellblatt von unten** (`.bsheet`) für den neuen Chat (Modell, Chats); das Seitenblatt von rechts bleibt nur im Prüfstand.
+- **Neuer Hub** `hub.html` (alter `index.html` bleibt bis zur Freigabe). Tabs: **Chat | Werkzeuge | Einrichten** (EN: Chat | Tools | Set up). Namen: **Heinz Chat** (schlanker Text, `chat.html`), **Heinz Dashboard / Heinz Dashboard** (bisherige Heinz UI, `dashboard.html`), **Einlesen / Read in** und **Bildstudio / Image studio** (Platzhalter), **Einrichtungsassistent / Setup guide** (`tools/setup/index.html`).
+- **Schnellblatt von unten** (`.bsheet`) für den neuen Chat (Modell, Chats); das Seitenblatt von rechts bleibt nur im Dashboard.
 - **Fußzeile des Hubs sachlich**, kein Datenschutzversprechen mit Bezug auf Richtlinien oder Verordnungen.
-- **Modus-Schieberegler**: bedienbares Mockup `tools/design/modus.html` (Kragen am linken Rand, senkrechte Leiste, Rahmen ziehen, Akzentfarbe live). Noch nicht im Prüfstand.
+- **Modus-Schieberegler**: bedienbares Mockup `tools/design/modus.html` (Kragen am linken Rand, senkrechte Leiste, Rahmen ziehen, Akzentfarbe live). Noch nicht im Dashboard.
 - **Phase B (Menü umbauen)** wird eigener Strang **AIUIheinz-Menu**, Auftrag `docs/agent/AUFTRAG_Menu.md`.
 - Neue Bausteine in `lib/core.css`/`core.js`: `.notice`, `.bsheet`/`.bscrim`, `.step`, `.cmd`, `Heinz.copy`, `Heinz.sheetOpen/Close`. Nur simuliert getestet, nicht am Gerät.

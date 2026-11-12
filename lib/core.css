@@ -163,7 +163,7 @@ table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom
 .cmd button { position: absolute; top: 4px; right: 4px; width: 36px; height: 36px; border: 0; background: none; color: var(--sub); border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
 .cmd button:active { background: var(--card); }
 
-/* ---------- moved from chat.html (AIUIheinz-Menu phase 0, 12.11.2026); catalog: tools/design/index.html ---------- */
+/* ---------- moved from dashboard.html (AIUIheinz-Menu phase 0, 12.11.2026); catalog: tools/design/index.html ---------- */
 /* group heading with scope tag, hidden text, separator, counter badge, spinner */
 .caps.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .caps .scope { font-size: .62rem; letter-spacing: .04em; text-transform: none; font-weight: 400; color: var(--muted); }
@@ -174,7 +174,7 @@ table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom
 .cnt:empty { display: none; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--edge); border-top-color: var(--acc); border-radius: 50%; animation: rotate 1s linear infinite; vertical-align: -2px; margin-left: 6px; }
 @keyframes rotate { 100% { transform: rotate(360deg); } }
-/* form fields and checkbox row (checkbox row was .chk in the test bench; setup keeps its own .chk status text) */
+/* form fields and checkbox row (checkbox row was .chk in the dashboard; setup keeps its own .chk status text) */
 select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: var(--card); border: 1px solid var(--ol); color: var(--txt); padding: 0 12px; font: inherit; font-size: .92rem; outline: none; margin-top: 6px; }
 .inp:focus, select.sel:focus { border-color: var(--acc); }
 .fld { display: block; margin: 12px 0 0; font-size: .78rem; color: var(--sub); }
@@ -200,6 +200,6 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .cap-tag.unk { color: var(--orange); }
 .cap-text { font-size: .72rem; line-height: 1.4; color: var(--sub); margin-top: 2px; }
 .cap-text .pill { margin: 4px 0 0; }
-/* progress bar (setup assistant; the test bench has its own .st-prog for test series) */
+/* progress bar (setup assistant; the dashboard has its own .st-prog for test series) */
 .prog { height: 4px; border-radius: 99px; background: var(--card); overflow: hidden; margin: 8px 0 14px; }
 .prog i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: 0 0 8px var(--green); transition: width .4s; }
