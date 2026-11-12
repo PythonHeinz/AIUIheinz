@@ -51,11 +51,13 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 ## Plattform
 - **Geräteprofile für die veröffentlichte Fassung (Idee des Entwicklers, 09.11.2026):** Voreinstellungen je Handy-Prozessor (Threads, Kontext, Modellvorschlag), entweder zur Auswahl oder automatisch erkannt, damit die KI auf fremden Geräten direkt schnell läuft. Grundlage: `num_thread` hat sich auf dem Pixel 9 Pro als größter Tempohebel gezeigt. Ungeklärt: ob der Browser genug Geräteinfo liefert (Kernzahl über `navigator.hardwareConcurrency`, Chipname eher nicht); Messreihe je Gerät nötig.
 - Zweites Gerät als reine Experimentierhardware für lokale Modelle (zunächst ein Pixel mit neuerem Tensor-Chip, später ein gebrauchtes Gerät mit 24 GB RAM und Snapdragon, mit Root oder alternativem System), um 4B bis 12B zu testen. Erfahrungen vom Pixel 9 Pro sollen übertragen werden.
+- **Komfort für das spätere Kit (Idee des Entwicklers, 12.11.2026, nicht begonnen):** Für die veröffentlichte Fassung soll der Benutzer maximalen Komfort bekommen, zum Beispiel einen Knopf „Server neu starten“ in der Info-Seite des Dashboards (heute startet „Nach Updates suchen“ den Server nur neu, wenn sich `server.py` geändert hat; sonst Strg+C und `bash start.sh`). Berührt `server.py` (Fundament), braucht einen eigenen Strang. **Reihenfolge und Grund:** Die manuelle Vorgehensweise ist jetzt Absicht. Sie dient dem Entwickler zum Lernen und dazu, in jedem Modul die volle Kontrolle zu behalten, statt alles hinter einem Knopf zu verstecken, bei dem am Ende unklar ist, was er genau startet. Komfortfunktionen kommen deshalb erst nach den Modulen und dürfen die manuellen Wege nicht ersetzen: jeder Knopf zeigt, was er startet (Befehl oder Schritte), und der manuelle Weg bleibt daneben möglich.
 - Das Projekt soll auch am PC laufen können (`python server.py --vitals-interval 0`), sobald dort ein Ollama zur Verfügung steht (nicht geprüft).
 
 ## Leitplanken (beschlossen)
 - Komplett offline, autark („Schweizer Taschenmesser“ ohne Strom und Internet).
 - Kleine Modelle bewusst, Antworten nativ Englisch; Deutsch nur per Umschalter.
 - Alle Parameter immer manuell regelbar.
+- Manuell vor bequem (12.11.2026): Komfortknöpfe erst später für das Kit; sie zeigen, was sie ausführen, und ersetzen nie den manuellen Weg (siehe „Komfort für das spätere Kit“ unter Plattform).
 - Das Modell klassifiziert und übersetzt, der Code rechnet.
 - Stil: minimalistisch, schwarzer Hintergrund, kräftige Google-Farben.
