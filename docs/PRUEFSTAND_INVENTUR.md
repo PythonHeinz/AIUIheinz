@@ -81,6 +81,9 @@ Erwartete Größe danach: `chat.html` rund 600 Zeilen (Markup, Einstieg, Handler
 4. **Menü:** bleibt, wie es ist (Beschluss 12.11.). Es zieht in Schritt 5 nur mit um (Block 17), ohne Änderung; spätere Menüänderungen laufen dann auf den neuen Strukturen.
 5. **Sonden S1 bis S8:** sollen sie in diesem Strang als Datendatei angelegt werden oder später im Strang Chat? Im Code gibt es sie noch nicht.
 
+## 6a Umsetzung (12.11.2026, nach Freigabe)
+Schritte 0 (Fassade), 1 und 2 (Daten, Parser) und 3 (Speicherschicht) sind gebaut, siehe `ENTWICKLUNGSVERLAUF.md`. Abweichung: Bibliotheken zunächst als klassische Skripte mit Namensraum; die Speicherschicht liest synchron aus dem geöffneten Speicher und schreibt per Promise.
+
 ## 7 Nicht auf dem Gerät geprüft
 
 Diese Inventur ist gelesen, nicht gelaufen. Nach dem Umbau gilt weiter: simuliert getestet ist nicht am Handy bestätigt.

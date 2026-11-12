@@ -180,6 +180,14 @@ class PageTest(unittest.TestCase):
                 page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
             return r
         page.goto = goto_ready
+        reload = page.reload
+
+        def reload_ready(*a, **k):
+            r = reload(*a, **k)
+            if page.url.split("?")[0].endswith("/chat.html"):
+                page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
+            return r
+        page.reload = reload_ready
         page.route("**/127.0.0.1:9379/**", lambda route: route.abort())   # LiteRT-LM not running in tests
         self.addCleanup(ctx.close)
         return page
