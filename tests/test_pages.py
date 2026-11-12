@@ -218,25 +218,27 @@ class PageTest(unittest.TestCase):
         page.click("#send-btn")
         page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#send-btn').classList.contains('stopping')")
 
-    def test_every_dashboard_file_loads_as_the_first_module_of_a_page(self):
-        # Cycles between the files are allowed (docs/MODULE.md) as long as nothing uses an import while its file loads.
+    def test_every_module_file_loads_as_the_first_module_of_a_page(self):
+        # Cycles between files are allowed (docs/MODULE.md) as long as nothing uses an import while its file loads.
         # Importing each file first, in a fresh page, makes such a use fail (use of a binding before its file ran).
-        names = sorted(os.path.basename(f) for f in glob.glob(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib", "dashboard", "*.js")))
-        names = [n for n in names if n not in ("failsafe.js", "main.js")]
-        self.assertGreater(len(names), 15)
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         bad = {}
-        for n in names:
-            ctx = self.browser.new_context(viewport=VIEWPORT, service_workers="block")
-            try:
-                page = ctx.new_page()
-                page.route("**/localhost:11434/**", lambda route: route.abort())
-                page.route("**/lib/dashboard/main.js", lambda route: route.fulfill(status=200, content_type="text/javascript", body=""))   # the real start is not wanted here
-                page.goto(self.srv.base + "/dashboard.html")
-                res = page.evaluate("async n => { try { await import('/lib/dashboard/' + n); return ''; } catch (e) { return String(e); } }", n)
-                if res:
-                    bad[n] = res
-            finally:
-                ctx.close()
+        for page_file, folder in (("dashboard.html", "lib/dashboard"), ("chat.html", "lib/chat")):
+            names = sorted(os.path.basename(f) for f in glob.glob(os.path.join(root, folder, "*.js")))
+            names = [n for n in names if n not in ("failsafe.js", "main.js")]
+            self.assertGreater(len(names), 8)
+            for n in names:
+                ctx = self.browser.new_context(viewport=VIEWPORT, service_workers="block")
+                try:
+                    page = ctx.new_page()
+                    page.route("**/localhost:11434/**", lambda route: route.abort())
+                    page.route("**/" + folder + "/main.js", lambda route: route.fulfill(status=200, content_type="text/javascript", body=""))   # the real start is not wanted here
+                    page.goto(self.srv.base + "/" + page_file)
+                    res = page.evaluate("async f => { try { await import(f); return ''; } catch (e) { return String(e); } }", "/" + folder + "/" + n)
+                    if res:
+                        bad[folder + "/" + n] = res
+                finally:
+                    ctx.close()
         self.assertEqual(bad, {})
 
     def test_a_failed_start_of_the_bench_is_shown_on_the_page(self):
@@ -2686,6 +2688,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(fake.requests[-1]["messages"][-1], {"role": "user", "content": "Hi"})
         # change it for this model only
         page.click("#mod"); page.wait_for_selector("#sh-model.open")
+        page.wait_for_selector("#models [data-model]")   # the sheet is redrawn when the model list arrives: fill only after that (flaky on a busy machine, 12.11.2026)
         page.fill("#sys", "Answer in one word."); page.press("#sys", "Tab")
         page.evaluate("Heinz.sheetClose()")
         page.fill("#q", "Again"); page.click("#send")
