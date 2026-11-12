@@ -25,6 +25,7 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - Genau ein Strang baut zur selben Zeit, wenn nichts anderes vereinbart ist (Absprache des Entwicklers). Gleichzeitig nur, wenn die berührten Dateien verschieden sind und jeder Strang seine Zeile unter „Aktive Arbeit“ hat.
 - Das Fundament (`lib/`, Hub, `server.py`, gemeinsame localStorage-Schlüssel, EN/DE-Verfahren, Kopfzeile, Engine-Aufrufe) ändert nur ein Strang zur Zeit. Berührt ein Vorhaben das Fundament oder ein fremdes Modul, dem Entwickler sagen und fragen, bevor etwas gebaut wird. Eingriffe stehen in `STAND.md` unter „Berührt Fundament“.
 - Ein Modul ändert nur seine eigene Seite. Neue Seiten bekommen eine Kachel im Hub und, wenn sie Ollama oder den Server neu ansprechen, einen Eintrag in `docs/OLLAMA_UND_MODELLE.md`.
+- **Neue Dateien sind ES-Module** (`docs/MODULE.md`, `TECHNIK.md` „ES-Module“): keine klassischen Skripte außer `lib/core.js` im Kopf, keine Inline-Handler; `bash tests/run_all.sh rules` prüft das.
 - Korrektur-Stränge beheben nur das gemeldete Problem, ergänzen einen Eintrag in `ENTWICKLUNGSVERLAUF.md` und ändern keine Struktur.
 - Neue sichtbare Texte immer mit EN und DE; Designregeln siehe `TECHNIK.md` und `docs/DESIGN.md`.
 - **Oberfläche: erst den Design-Katalog ansehen** (`tools/design/index.html`, Regel in `docs/DESIGN.md` 7). Keine eigenen Varianten bestehender Bausteine auf einzelnen Seiten; fehlt ein Baustein, wird er in `lib/core.css` angelegt und im Katalog eingetragen.

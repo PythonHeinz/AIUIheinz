@@ -86,6 +86,8 @@ Schritte 0 (Fassade), 1 und 2 (Daten, Parser) und 3 (Speicherschicht) sind gebau
 
 Nachtrag: Der Textumzug der Blöcke 2 bis 20 nach `lib/dashboard/*.js` ist erfolgt (klassische Skripte, Ladereihenfolge wie vorher). Es fehlt die Umstellung auf ES-Module mit explizitem Zustand und der Ersatz der Inline-Handler.
 
+Nachtrag (12.11.2026, Strang Fundament): Die Umstellung auf ES-Module ist erfolgt (Dashboard, Heinz Chat, Hub, Tools, Bibliotheken). Das Dashboard bleibt eine Gruppe mit Kreisen, abgesichert durch den Test „jede Datei als erstes Modul“; Aufbau und Regeln in `docs/MODULE.md`.
+
 ## 7 Nicht auf dem Gerät geprüft
 
 Diese Inventur ist gelesen, nicht gelaufen. Nach dem Umbau gilt weiter: simuliert getestet ist nicht am Handy bestätigt.

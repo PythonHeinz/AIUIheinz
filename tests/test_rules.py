@@ -137,6 +137,28 @@ class RuleTest(unittest.TestCase):
                     problems.append(page + ": classic script " + src)
         self.assertEqual(problems, [])
 
+    # old pages that keep their classic inline script until they are converted after consultation (docs/agent/AUFTRAG_Fundament.md)
+    LEGACY_PAGES = {"lab.html", "sheet.html", "vitals.html"}
+
+    def test_no_page_has_a_classic_script_except_the_head_block_and_the_legacy_pages(self):
+        problems = []
+        pages = [os.path.relpath(f, ROOT).replace(os.sep, "/") for f in glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "tools", "**", "*.html"), recursive=True)]
+        self.assertGreater(len(pages), 12)
+        for page in sorted(pages):
+            if page in self.LEGACY_PAGES:
+                continue
+            with open(os.path.join(ROOT, page), encoding="utf-8") as fh:
+                html = fh.read()
+            for attrs in re.findall(r"<script\b([^>]*)>", html):
+                if 'type="module"' in attrs:
+                    continue
+                m = re.search(r'\bsrc="([^"]*)"', attrs)
+                src = m.group(1) if m else ""
+                if src.endswith("lib/core.js") or src.endswith("lib/dashboard/failsafe.js"):
+                    continue
+                problems.append("%s: classic script %s" % (page, src or "(inline)"))
+        self.assertEqual(problems, [], "new scripts are modules (docs/MODULE.md); the head block is lib/core.js")
+
     def test_every_control_of_heinz_chat_has_an_action(self):
         with open(os.path.join(ROOT, "chat.html"), encoding="utf-8") as fh:
             html = fh.read()

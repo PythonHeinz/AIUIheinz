@@ -86,6 +86,12 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - Skripte setzen die Aktion eines Knopfes mit `setAttribute('data-click', …)`; Tests suchen Knöpfe über `button[data-click='newChat']` statt über das alte `onclick`.
 - Nach dem Neuladen baut sich die Seite erst nach dem Laden ihrer Daten auf: Tests warten auf `HeinzDashboard.ready` (die Wrapper `goto` und `reload` tun das; nach einer Navigation, die die Seite selbst auslöst, `page.wait_for_function(...)` selbst aufrufen). Das war die Ursache des unregelmäßigen Tests zum Update-Knopf.
 
+## ES-Module (seit 12.11.2026)
+- Ausführlich in `docs/MODULE.md`. Kurz: kein Build; jede Seite lädt ein Einstiegsmodul (`lib/dashboard/main.js`, `lib/chat/main.js`) oder hat ein kleines Inline-Modul (Hub, Tools). Importpfade relativ mit `.js`. Bibliotheken unter `lib/` exportieren ihr Objekt und setzen weiter `window.X`; `lib/core.js` bleibt klassischer Kopf-Block.
+- **Neue Dateien sind Module.** Anlegen: `lib/<bereich>/name.js`, importieren was gebraucht wird, Zustand mehrerer Dateien im Objekt `state`, Bedienelemente über `data-click` und `ACTIONS`; testen mit `bash tests/run_all.sh rules` und `bash tests/run_all.sh first_module`.
+- **Fallstricke:** Funktionen und `var` auf oberster Ebene sind keine `window`-Eigenschaften (Tests über Fassade, `window.X` oder Ereignisse, nie Seitenfunktionen überschreiben); Module sind strikt (undeklarierte Zuweisung wirft); Importe sind schreibgeschützt (kein `export let`, Zuweisung nur über `state.feld`); Module laufen erst nach dem Seitenaufbau, Thema und Sprache bleiben im klassischen Kopf; beim Laden nichts Importiertes benutzen (Kreise im Dashboard); `HeinzDashboard.ready` und `data-heinz-chat=ready` melden wie zuvor.
+- **Update und Cache:** `sw.js` holt zuerst vom Netz, `server.py` sendet `no-cache`; ein Mischstand aus altem und neuem Modulgraphen entsteht nur bei ausgefallenen Einzeldateien, dann zeigt `failsafe.js` das rote Band (Neuladen). Am Handy nach `git pull` hart neu laden, installierte App und Browsertab prüfen.
+
 ## Tests laufen parallel
 - `bash tests/run_all.sh` startet die kleinen Testdateien und die Seitentests in Teilen (`HEINZ_SHARD=i/n`, Anzahl über `HEINZ_SHARDS`, Standard Anzahl Kerne, höchstens 4) gleichzeitig. Jeder Teil startet seinen eigenen Server auf freiem Port; Tests dürfen keinen gemeinsamen Zustand teilen.
 - `bash tests/run_all.sh <Wort>` führt nur Tests aus, deren Name das Wort enthält.
