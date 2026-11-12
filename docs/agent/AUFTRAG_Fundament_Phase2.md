@@ -22,6 +22,13 @@ Aussehen und Verhalten bleiben **unverändert**, außer der Entwickler hat eine 
 ### Schritt 0 – Vorbereitung
 Sicherungsbranch `sicherung/vor-fundament-phase2-<datum>`; Zeile unter „Aktive Arbeit“ eintragen und pushen. Lesen: `docs/MODULE.md`, `TECHNIK.md` („ES-Module“), Verlauf Phase 1, `docs/DESIGN.md` 7. Berührt: `lib/dashboard/*`, `lib/chat/*`, neue Dateien unter `lib/`, `tests/`, `docs/MODULE.md`. Während Phase 2 ändern die Stränge Dashboard, Chat, Design und Modelle nichts an diesen Dateien.
 
+### Schritt 0a – Leerer orange Balken im Heinz Chat (kleiner Fix, aufgenommen am 13.11.2026)
+- **Beobachtung (Entwickler, Handy):** Unter der Kopfzeile des Heinz Chat steht ein leerer Balken mit orangem Punkt.
+- **Ursache (im Root-Strang mit Playwright geprüft, simuliert):** `chat.html` hat `<div id="store-note" class="notice warn" role="status" hidden>`; `lib/core.css` setzt `.notice { display: flex; … }`, das überstimmt `hidden`, das leere Hinweisband bleibt sichtbar (37 px Höhe). Gilt auch für den Stand vor Phase 1 (`4c47d71`); das Dashboard ist nicht betroffen.
+- **Behebung:** In `lib/core.css` `.notice[hidden] { display: none; }` (wie `.selbar[hidden]`); prüfen, dass `#note` (Fehler, „kein Modell“) weiter erscheint.
+- **Tests (neu):** Auf jeder Seite, die `lib/core.css` einbindet, ist nach dem Start kein Element mit Attribut `hidden` sichtbar (berechnetes `display` ≠ `none` oder Höhe > 0 ist ein Fehler); bei einem simulierten Speicherproblem erscheint das Hinweisband im Heinz Chat mit Text; Mutation (Regel entfernen) macht den ersten Test rot. Eigener Commit, volle Tests, danach erst Schritt 1.
+- Nicht Teil: Übernahme von Engine, Modell, Parametern und Prompts zwischen Dashboard und Heinz Chat (B1) und der Befund zum Systemprompt (B2) sind vertagt (`STAND.md` „Offen“, `KONZEPT.md` 23 Punkt 6); nicht ändern.
+
 ### Schritt 1 – Kreise im Dashboard abbauen
 1. **Ebenen festlegen und in `docs/MODULE.md` zeichnen** (Abhängigkeit nur von oben nach unten). Vorschlag zur Prüfung: Ebene 0 `base`, `state`, neues `hooks` (Registrierung, siehe 3); Ebene 1 reine Hilfen ohne Rückgriff nach oben (`i18n` nur `t()`, `status`, `pixelbar`, `persist`, `update`); Ebene 2 Engine, Konfiguration, Einstellungen; Ebene 3 Nachrichten, Unterhaltungen, Senden, Tempo-Test, Testreihen; Ebene 4 Schnellblatt, Modellblatt, Menü, Vorladen; Ebene 5 `init`, `actions`, `main`. Die tatsächliche Einteilung ergibt sich aus der Messung, nicht aus diesem Vorschlag.
 2. **Für jeden Importkreis feststellen, warum die untere Datei die obere braucht.** Meist ist es „nach einer Änderung neu zeichnen“ (zum Beispiel `renderCaps`, `renderRing`, `applyI18n`, `saveSettings`) oder ein gemeinsamer Zustandswert.

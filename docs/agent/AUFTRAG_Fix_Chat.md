@@ -1,3 +1,5 @@
+> **Status 13.11.2026: entfällt.** Entscheidung des Entwicklers: Der leere Balken (Problem 1) wird als Schritt 0a in `AUFTRAG_Fundament_Phase2.md` behoben, Problem 2 (Systemprompt, B2) ist vertagt bis nach dem MVP. Diese Datei bleibt als Befund und Verlauf stehen.
+
 # AUFTRAG Fix Chat (Strang AIUIheinz-Fix-Chat)
 
 Korrektur-Strang, angelegt 13.11.2026 im Root-Strang nach dem Handytest der Modulumstellung (Befunde B1 und B2, `STAND.md` „Offen“). Strangname: **AIUIheinz-Fix-Chat**. Regel für Korrektur-Stränge: nur die gemeldeten Probleme beheben, einen Eintrag in `ENTWICKLUNGSVERLAUF.md` ergänzen, **keine Struktur ändern**. Nicht angefasst wird B1 (Engine-Übernahme): Was der Heinz Chat vom Dashboard übernimmt, legt der Entwickler im späteren Workflow „Modell laden, einstellen, übernehmen“ fest.
