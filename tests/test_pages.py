@@ -172,6 +172,14 @@ class PageTest(unittest.TestCase):
         page.on("request", lambda r: self.external.append(r.url) if not (
             r.url.startswith(self.srv.base) or "localhost:11434" in r.url or "127.0.0.1:9379" in r.url or r.url.startswith("data:") or r.url.startswith("blob:")) else None)
         self.ollama = FakeOllama(page, **fake)
+        goto = page.goto
+
+        def goto_ready(url, *a, **k):   # the bench loads its data files before it starts: wait until it is built
+            r = goto(url, *a, **k)
+            if url.split("?")[0].endswith("/chat.html"):
+                page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
+            return r
+        page.goto = goto_ready
         page.route("**/127.0.0.1:9379/**", lambda route: route.abort())   # LiteRT-LM not running in tests
         self.addCleanup(ctx.close)
         return page
