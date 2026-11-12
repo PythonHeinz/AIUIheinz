@@ -17,6 +17,9 @@ Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles
 4. ~~AIUIheinz-Speicher~~ (fertig 12.11.2026, am Handy bestätigt, auch im normalen Browsertab): IndexedDB für Unterhaltungen und Testreihen mit Migration und Rückfall.
 Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `dashboard.html` und `lib/core.*` nicht berühren. Modi, Design und Assistent warten bis nach Schritt 3 (sie berühren `dashboard.html`); der Strang Chat (Heinz Chat) wartet nicht. Strang Modi: nicht starten ohne Rücksprache.
 
+## Zielstand (Beschluss `docs/KONZEPT.md` 23, 12.11.2026)
+**MVP intern:** Hub, Heinz Chat und Heinz Dashboard laufen perfekt auf dem Konzept und auf der neuen Modulstruktur (Strang Fundament); danach erste Fassung einer zweiten Person zeigen. Die Vormerkungen unten sind ein Becken und dürfen wachsen; Root prüft sie nach der Fundament-Umstellung auf „nötig für MVP“, „danach“ und „Becken“. Danach der Reihe nach: convert2 aufnehmen, Sheet, Lab und Vitals bei Bedarf, INCIheinz-Umbau, neue Apps.
+
 ## Stränge
 Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge hier eintragen.
 
@@ -62,8 +65,8 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 3. Strang Dashboard danach: Sonden-Reihen S1 bis S8 und Testreihe Google Teil 2 wiederholen, Testreihen Schritt 4 und 5 (`docs/KONZEPT.md` 21.5a), danach Bild-Ein/Ausgabe.
 4. Strang Modelle: Denkregeln und CORS der neuen Anbieter prüfen.
 5. Strang Design: Cursorfarbe klären; Label „Model name“ im Modellblatt des Dashboards.
-6. Sheet mit echtem Qwen 2.5 3B auf der Rohstoffliste erproben, Prompt und Schema nachschärfen.
-7. Alte Seiten `sheet.html`, `lab.html`, `vitals.html` rufen Ollama noch direkt auf (Test `test_rules.py` führt sie als Ausnahme) und sollen auf `HeinzProviders` umgestellt werden.
+6. *(nach dem MVP, `KONZEPT.md` 23)* Sheet mit echtem Qwen 2.5 3B auf der Rohstoffliste erproben, Prompt und Schema nachschärfen.
+7. *(nach dem MVP, nach convert2 und Sheet, bei Bedarf eine nach der anderen)* Alte Seiten `sheet.html`, `lab.html`, `vitals.html` rufen Ollama noch direkt auf (Test `test_rules.py` führt sie als Ausnahme) und sollen auf `HeinzProviders` umgestellt werden.
 8. Ideen aus `docs/GEPLANT.md`; Konzept `docs/KONZEPT.md` Abschnitt 15.6 (Offen) und 20 (Medien, Funktionsplätze).
 9. **Testläufe beschleunigen** (beauftragt und freigegeben 12.11.2026 für den Strang Dashboard, im Zuge der ES-Modul-Umstellung; Freigabe des Entwicklers für `tests/` und `run_all.sh`): `docs/GEPLANT.md`, Abschnitt „Testläufe beschleunigen“. Reihenfolge: zuerst den unregelmäßigen Test `test_update_button_reports_states_and_reloads_after_update` klären (Punkt 4), dann nur betroffene Tests beim Arbeiten (Regel in `UEBERGABE.md`), Schnellauswahl in `run_all.sh`, parallele Testdateien (vorher gemeinsamen Zustand prüfen). Der volle Lauf bleibt vor jedem Push Pflicht. **Erledigt 12.11.2026:** Ursache des unregelmäßigen Tests war ein Testfehler (Prüfung vor Ende des Seitenaufbaus), behoben; `bash tests/run_all.sh <Wort>` (Schnellauswahl) und parallele Teile (`HEINZ_SHARDS`), voller Lauf etwa 2 Minuten statt 3 bis 4; Regel in `UEBERGABE.md`.
 Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.md`, „Grundgerüst“).
