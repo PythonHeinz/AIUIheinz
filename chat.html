@@ -3066,6 +3066,24 @@
         ['focusin', 'focusout'].forEach(function (ev) { document.addEventListener(ev, function () { setTimeout(setKbd, 0); }); });
         if (window.visualViewport) window.visualViewport.addEventListener('resize', setKbd);
 
+        // ===== Zugriff für Tests: HeinzBench (Fassade) =====
+        // Tests und Werkzeuge greifen nur hierüber auf den Zustand der Seite zu, nie über freie Globalnamen.
+        // Das Skript wird in Module zerlegt (docs/PRUEFSTAND_INVENTUR.md); die Fassade bleibt der feste Zugriffsweg.
+        window.HeinzBench = (function () {
+            const B = {};
+            [['t', t], ['onSlider', onSlider], ['renderRing', renderRing], ['lsSet', lsSet], ['setParamSrc', setParamSrc], ['switchProvider', switchProvider], ['newChat', newChat], ['loadModels', loadModels], ['renderCaps', renderCaps], ['closeAll', closeAll], ['srStart', srStart], ['renderThink', renderThink], ['buildOptions', buildOptions], ['pickEngine', pickEngine], ['onModelChange', onModelChange], ['onThreads', onThreads], ['copyWholeChat', copyWholeChat], ['srExportParts', srExportParts], ['exportBackup', exportBackup], ['thinkRule', thinkRule], ['capsStates', capsStates], ['showPage', showPage], ['onModelFree', onModelFree], ['openMenu', openMenu], ['saveChatNow', saveChatNow], ['setSysSrc', setSysSrc], ['togglePin', togglePin], ['paramSrc', paramSrc], ['updateReadBtn', updateReadBtn], ['getSaved', getSaved], ['perfColors', perfColors], ['setGenerating', setGenerating], ['renderModelSheet', renderModelSheet], ['updateChatBar', updateChatBar], ['thinkEffort', thinkEffort], ['sysSrc', sysSrc], ['jumpBottom', jumpBottom], ['modelKey', modelKey], ['srRender', srRender], ['srResumeBtn', srResumeBtn], ['paramsText', paramsText], ['saveSettings', saveSettings], ['applyToChat', applyToChat], ['stickBottom', stickBottom], ['thinkStage', thinkStage], ['checkServer', checkServer], ['MODE_PRESETS', MODE_PRESETS], ['chatBox', chatBox], ['stLog', stLog], ['pulse', pulse]].forEach(function (p) { B[p[0]] = p[1]; });
+            function live(name, get, set) { Object.defineProperty(B, name, { get: get, set: set, enumerable: true }); }
+            live('settings', function () { return settings; }, function (v) { settings = v; });
+            live('chatHistory', function () { return chatHistory; }, function (v) { chatHistory = v; });
+            live('generating', function () { return generating; }, function (v) { generating = v; });
+            live('preloadAbort', function () { return preloadAbort; }, function (v) { preloadAbort = v; });
+            live('gotToken', function () { return gotToken; }, function (v) { gotToken = v; });
+            live('seriesRunning', function () { return seriesRunning; }, function (v) { seriesRunning = v; });
+            live('chipPx', function () { return chipPx; }, function (v) { chipPx = v; });
+            live('MODELS', function () { return MODELS; }, function (v) { MODELS = v; });
+            return B;
+        })();
+
         // ===== Start =====
         function applyUIFromSettings() {
             settings.mode = normalizeMode(settings.mode);
