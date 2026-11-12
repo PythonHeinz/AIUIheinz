@@ -5,7 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 12.11.2026, AIUIheinz-Dashboard: Phase 2 läuft, Umbenennung Prüfstand → Dashboard gerade fertig (gepusht: Fassade `HeinzDashboard`, Daten in `lib/data`, `lib/store.js`, Blöcke nach `lib/dashboard/`); berührt `dashboard.html`, `tests/`, neue Dateien in `lib/` und `lib/dashboard/`. Zeile bleibt, bis die Umstellung auf Module abgeschlossen ist.
+- 12.11.2026, AIUIheinz-Speicher: IndexedDB-Backend für `HeinzStore` (Unterhaltungen, Testreihen, Messungen), Migration aus `localStorage`, Rückfall mit Hinweis, Umstellung Heinz Chat und `Heinz.lsGet/lsSet` für die verschobenen Schlüssel (Freigabe des Entwicklers 12.11.); berührt `lib/store.js`, `lib/core.js`, `chat.html`, `dashboard.html` (nur Speicheraufrufe), `tests/`.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
