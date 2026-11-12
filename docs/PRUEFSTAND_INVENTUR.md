@@ -84,6 +84,8 @@ Erwartete Größe danach: `chat.html` rund 600 Zeilen (Markup, Einstieg, Handler
 ## 6a Umsetzung (12.11.2026, nach Freigabe)
 Schritte 0 (Fassade), 1 und 2 (Daten, Parser) und 3 (Speicherschicht) sind gebaut, siehe `ENTWICKLUNGSVERLAUF.md`. Abweichung: Bibliotheken zunächst als klassische Skripte mit Namensraum; die Speicherschicht liest synchron aus dem geöffneten Speicher und schreibt per Promise.
 
+Nachtrag: Der Textumzug der Blöcke 2 bis 20 nach `lib/bench/*.js` ist erfolgt (klassische Skripte, Ladereihenfolge wie vorher). Es fehlt die Umstellung auf ES-Module mit explizitem Zustand und der Ersatz der Inline-Handler.
+
 ## 7 Nicht auf dem Gerät geprüft
 
 Diese Inventur ist gelesen, nicht gelaufen. Nach dem Umbau gilt weiter: simuliert getestet ist nicht am Handy bestätigt.

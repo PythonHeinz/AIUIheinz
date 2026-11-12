@@ -525,3 +525,9 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Tests: `tests/test_pages.py` wartet nach `goto` und `reload` auf `HeinzBench.ready`. Stand 20 + 24 + 2 + 144 = 190 grün (nur simuliert, nicht am Handy). `chat.html`: 2897 statt 3141 Zeilen.
 - Offen: Blöcke (Tempo-Test, Testreihe, Senden, …) aus dem Skript lösen; Inline-Handler; Handytest (`docs/HANDYTEST.md`).
 
+## 12.11.2026 – Prüfstand schlank: Textumzug der Skriptblöcke nach `lib/bench/` (Strang AIUIheinz-Pruefstand)
+- Das Skript von `chat.html` ist in 18 zusammenhängende Dateien zerlegt (`config`, `engine`, `i18n`, `state`, `settings`, `preload`, `status`, `speech`, `messages`, `conversations`, `send`, `update`, `speedtest`, `series`, `menu`, `pixelbar`, `quick`, `caps`), geladen in der ursprünglichen Reihenfolge als klassische Skripte mit gemeinsamem Namensraum. Reiner Umzug von Text (um 8 Leerzeichen eingerückt), kein Verhalten geändert. `chat.html` hat nur noch Markup, Stile, Fassade und Start (726 statt 3141 Zeilen).
+- `tests/test_rules.py` prüft jetzt auch `lib/bench/*.js`; Ausnahmen für direkte Ollama-Aufrufe: `speedtest.js` und `series.js` (wie früher `chat.html`).
+- Zuschnitt der Stränge (Beschluss des Entwicklers 12.11.): Strang Chat = Seite Heinz Chat; Strang Pruefstand = Seite `chat.html` mit allem, was prüft und einstellt (auch Chatfenster, Testreihen, Sonden). Register in `STAND.md` angepasst.
+- Tests 20 + 24 + 2 + 144 = 190 grün (nur simuliert). Offen: Umstellung auf ES-Module und Ersatz der Inline-Handler, Handytest.
+

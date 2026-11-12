@@ -8,13 +8,14 @@ import re
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LEGACY = {"chat.html", "sheet.html", "lab.html", "vitals.html"}   # chat.html: speed test and series measure directly on purpose
+LEGACY = {"lib/bench/speedtest.js", "lib/bench/series.js", "sheet.html", "lab.html", "vitals.html"}   # speed test and series of the test bench measure directly on purpose
 DIRECT = re.compile(r"/api/(chat|generate|embed|embeddings)\b|num_thread\s*:|keep_alive\s*:")   # reading rt.options.num_thread for display is fine; setting values is not
 
 
 class RuleTest(unittest.TestCase):
     def test_new_pages_use_the_shared_runtime_only(self):
-        files = glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "tools", "**", "*.html"), recursive=True)
+        files = (glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "tools", "**", "*.html"), recursive=True)
+                 + glob.glob(os.path.join(ROOT, "lib", "bench", "*.js")))
         bad = []
         for f in files:
             rel = os.path.relpath(f, ROOT).replace(os.sep, "/")

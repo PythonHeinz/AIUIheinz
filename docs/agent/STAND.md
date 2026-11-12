@@ -5,7 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 12.11.2026, AIUIheinz-Pruefstand: Phase 2 läuft (Schritte 0 bis 3 gepusht: Fassade `HeinzBench`, Daten in `lib/data`, `lib/store.js`); berührt `chat.html`, `tests/test_pages.py`, neue Dateien in `lib/`. Zeile bleibt, bis die Blöcke ausgelagert sind.
+- 12.11.2026, AIUIheinz-Pruefstand: Phase 2 läuft (gepusht: Fassade `HeinzBench`, Daten in `lib/data`, `lib/store.js`, Blöcke nach `lib/bench/`); berührt `chat.html`, `tests/`, neue Dateien in `lib/` und `lib/bench/`. Zeile bleibt, bis die Umstellung auf Module abgeschlossen ist.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -14,7 +14,7 @@ Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles
 2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog ✔ (12.11.2026). Der Umbau des Menüs ist **nicht beauftragt** (Entwickler 12.11.: Menü des Prüfstands bleibt vorerst).
 3. **AIUIheinz-Pruefstand:** `chat.html` in ES-Module, Prüfprozeduren als Daten.
 4. **AIUIheinz-Speicher:** IndexedDB für Unterhaltungen und Testreihen mit Migration.
-Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `chat.html` und `lib/core.*` nicht berühren. Chat, Modi, Design und Assistent warten bis nach Schritt 3. Strang Modi: nicht starten ohne Rücksprache.
+Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `chat.html` und `lib/core.*` nicht berühren. Modi, Design und Assistent warten bis nach Schritt 3 (sie berühren `chat.html`); der Strang Chat (Heinz Chat) wartet nicht. Strang Modi: nicht starten ohne Rücksprache.
 
 ## Stränge
 Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge hier eintragen.
@@ -24,9 +24,9 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | AIUIheinz (Root) | Konzept (`docs/KONZEPT.md`), Querprüfung, neue Aufträge | Konzept nachgeführt bis Abschnitt 22 (Beschlüsse zur Struktur, 12.11.) |
 | AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | fertig (12.11.2026): Doppelablage beendet, Dokumente neu geordnet, Anweisungen geschrieben; Abweichungen in `AUFTRAG_Aufraeumen.md` |
 | AIUIheinz-Menu | Bausteinkatalog (Phase 0), Menü des Prüfstands (DR2 Phase B); `AUFTRAG_Menu.md` | Phase 0 fertig (12.11.2026): Design-Katalog, Bausteine nach `lib/core.css`, Helfer in `lib/core.js`; Menü-Umbau nicht beauftragt, Menü bleibt |
-| AIUIheinz-Pruefstand | Schlankes Web-UI: `chat.html` zerlegen, Prüfprozeduren als Daten; `AUFTRAG_Pruefstand_Schlank.md`, Vorschlag `docs/PRUEFSTAND_INVENTUR.md` | läuft (seit 12.11.): Fassade, Daten als JSON, Speicherschicht gepusht; Blöcke und Inline-Handler offen |
+| AIUIheinz-Pruefstand | **Heinz Prüfstand** (`chat.html`): Menü, Chatfenster, Modi, Regler, Tempo-Test, Testreihen, Sonden S1 bis S8, Engine- und Modellprüfung (übernimmt seit 12.11.2026 die frühere Prüfstand-Arbeit des Strangs Chat); schlankes Web-UI nach `AUFTRAG_Pruefstand_Schlank.md`, Vorschlag `docs/PRUEFSTAND_INVENTUR.md`; weitere Aufträge `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_Chat_Schnittstellen.md` | läuft (seit 12.11.): Fassade, Daten als JSON, Speicherschicht, Blöcke nach `lib/bench/` gepusht; offen: Umstellung auf ES-Module und Inline-Handler, Testreihen Schritt 4 und 5, LiteRT-LM und Online-Anbieter am Handy, Modellverwaltung, Sonden |
 | AIUIheinz-Speicher | IndexedDB; `AUFTRAG_Speicher.md` | startet nach Pruefstand |
-| AIUIheinz-Chat | Anbieterschicht, Prüfstand-Bedienung, Modi als Daten, Testreihen; `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_Chat_Schnittstellen.md` | gepusht bis Testreihen Schritt 3 (11.11.); offen: Testreihen Schritt 4 und 5, LiteRT-LM und Online-Anbieter am Handy, Modellverwaltung; wartet bis nach Pruefstand |
+| AIUIheinz-Chat | **Heinz Chat** (`tools/heinz/index.html`, ruhige Leseseite, Schnellblatt für Modell und Unterhaltungen); Weiterentwicklung der eigenen Seite. Zuschnitt neu seit 12.11.2026 (Beschluss des Entwicklers); Auftrag noch nicht geschrieben (Root-Strang) | Seite läuft (Systemprompt je Modell, Laufzeit mit dem Prüfstand geteilt, am Handy bestätigt 11.11.); offen: Cursorfarbe, Handytest Systemprompt je Modell. Berührt `chat.html` nicht und muss nicht auf den Strang Pruefstand warten; Schnittstelle zum Prüfstand: `HeinzProviders` (`runtime`, `activeModel`, `chatSystemFor`, `chatSamplingFor`), Schlüssel `heinz_active`, `heinz_chat_system`, `heinz_chat_options` |
 | AIUIheinz-Design | Manifest, Themes, Bausteine, Hub; `AUFTRAG_DESIGN.md` | Design-Review 1 bestanden (10.11.), Heinz Chat, Hub und Setup freigegeben (11.11.); offen: Cursorfarbe, Handytest; DR2 siehe `docs/DESIGN_DR2.md`; wartet bis nach Pruefstand |
 | AIUIheinz-Modelle | Modellmanager, Schnittstellenwissen, `lib/capabilities.json`; `AUFTRAG_Modelle.md` | Phase 1 Doku und Daten gepusht (Version 2, `docs/SCHNITTSTELLEN.md` bis Abschnitt 18); weiter: Messungen auswerten, Läufer-Ausbau (wartet auf Freigabe), Wissensbereich; Phase 2 berührt `lib/providers.js` (Fundament, Abstimmung nötig) |
 | AIUIheinz-Modi | Modi als Prüfwerkzeuge, Schnell/Tief-Pille, Reasoning bei Cloud-Modellen; `AUFTRAG_Modi.md` | nicht starten ohne Rücksprache (Reasoning und Schnell/Tief hat der Strang Chat gebaut) |
@@ -40,7 +40,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 |---|---|---|---|
 | Hub | `index.html` | seit 11.11.2026 der neue Hub (Reiter Chat, Werkzeuge, Einrichten) mit Versionszeile; am Handy bestätigt: alle Einträge da | neue Module über `tool.json`/`AREAS` einhängen |
 | Heinz Chat | `tools/heinz/index.html` | ruhige Leseseite, Modell und Unterhaltungen im Schnellblatt, Systemprompt je Modell, sendet `num_thread`; Modell und Laufzeit mit Prüfstand geteilt (am Handy bestätigt 11.11.) | Handytest Systemprompt je Modell, Cursorfarbe |
-| Heinz Prüfstand | `chat.html` | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (am Handy vorhanden, zeigt „Applied for gemma2:2b …“, 12.11.) | Handytest LiteRT-LM, Testreihen; Umbau im Strang Pruefstand |
+| Heinz Prüfstand | `chat.html` (Markup und Start) plus `lib/bench/*.js` (Skript, seit 12.11.2026 aufgeteilt) | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (am Handy vorhanden, zeigt „Applied for gemma2:2b …“, 12.11.) | Handytest LiteRT-LM, Testreihen; Umbau im Strang Pruefstand |
 | Design-Katalog | `tools/design/index.html` | seit 12.11.2026 datengetrieben: alle Bausteine mit Klassen, Verwendung, Beispiel (Theme, EN/DE), Markup zum Kopieren, Funktionen, Lücken; nicht im Hub (nur per Adresse) | bei neuen Bausteinen nachtragen (Regel `docs/DESIGN.md` 7) |
 | Setup | `tools/setup/index.html` | Einrichtungsassistent, läuft | – |
 | Data Lab (Filter) | `lab.html` | fertig, bewusst unverändert, ruft Ollama noch direkt auf | nur auf Wunsch des Entwicklers ändern |
@@ -52,7 +52,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 ## Nächste Aufgaben (Reihenfolge nach Wunsch des Entwicklers)
 1. Reihenfolge der Stränge siehe oben (Menu, Pruefstand, Speicher).
 2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, `ollama rm heinz-wilson:latest heinz-fakt:latest`.
-3. Strang Chat danach: Sonden-Reihen S1 bis S8 und Testreihe Google Teil 2 wiederholen, Testreihen Schritt 4 und 5 (`docs/KONZEPT.md` 21.5a), danach Bild-Ein/Ausgabe.
+3. Strang Pruefstand danach: Sonden-Reihen S1 bis S8 und Testreihe Google Teil 2 wiederholen, Testreihen Schritt 4 und 5 (`docs/KONZEPT.md` 21.5a), danach Bild-Ein/Ausgabe.
 4. Strang Modelle: Denkregeln und CORS der neuen Anbieter prüfen.
 5. Strang Design: Cursorfarbe klären; Label „Model name“ im Modellblatt des Prüfstands.
 6. Sheet mit echtem Qwen 2.5 3B auf der Rohstoffliste erproben, Prompt und Schema nachschärfen.
@@ -66,7 +66,7 @@ Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.
 - 11.11.2026, AIUIheinz-Chat: gemeinsame Laufzeit und Modellwahl in `lib/providers.js`, Personas in `lib/personas.js`, `lib/testreihe.js`.
 - 12.11.2026, AIUIheinz-Aufraeumen: nur Dokumente und Pfad in `tests/test_rules.py`.
 - 12.11.2026, AIUIheinz-Menu (Freigabe des Entwicklers): `lib/core.css` (Bausteine aus `chat.html` und `tools/setup` hierher gezogen, `.chk` → `.chkrow`), `lib/core.js` (`Heinz.setting/setSetting/bindSwitch/bindSlider`), `tools/design/index.html`; `chat.html` und `tools/heinz/index.html` nur Regeln entfernt bzw. Klasse umbenannt, Verhalten gleich (Heinz Chat: Felder jetzt wie im Prüfstand, 46 statt 44 px).
-- 12.11.2026, AIUIheinz-Pruefstand (Freigabe des Entwicklers): neue Dateien `lib/markdown.js`, `lib/benchdata.js`, `lib/store.js`, `lib/data/*.json`; `lib/core.*` und `lib/providers.js` unberührt.
+- 12.11.2026, AIUIheinz-Pruefstand (Freigabe des Entwicklers): neue Dateien `lib/markdown.js`, `lib/benchdata.js`, `lib/store.js`, `lib/data/*.json`, `lib/bench/*.js`; `lib/core.*` und `lib/providers.js` unberührt.
 Als Fundament gelten: gemeinsame localStorage-Schlüssel (`heinz_settings`), das EN/DE-Verfahren, die Kopfzeile mit Hub-Link, die Schnittstelle des Servers und die Ollama-Aufrufe.
 
 ## Offen
