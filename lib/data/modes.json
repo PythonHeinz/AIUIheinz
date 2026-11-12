@@ -1,0 +1,70 @@
+{
+ "prompts": {
+  "en": {
+   "respond": "Respond in English.",
+   "plain": "Reply briefly in plain text: no Markdown, no lists, no tables, no bold.",
+   "ctxLabel": "Context / source text:",
+   "audit": "SYSTEM RULE: Analyze the context strictly and objectively. Execute the instruction without introduction or embellishment. If information is missing, answer exactly with: \"Information not in context.\"",
+   "code": "SYSTEM RULE: You are a strict code generator. Output ONLY raw, executable code or exact terminal commands. Do NOT provide explanations, tutorials, or pleasantries unless explicitly asked. If the user provides code and asks for an explanation, be extremely brief, strictly technical, and use bullet points. Use standard libraries whenever possible.",
+   "creative": "SYSTEM RULE: Write vividly and diversely. Use creative comparisons and smooth transitions."
+  },
+  "de": {
+   "respond": "Antworte auf Deutsch.",
+   "plain": "Antworte knapp in reinem Text: kein Markdown, keine Listen, keine Tabellen, kein Fettdruck.",
+   "ctxLabel": "Kontext / Rohtext:",
+   "audit": "SYSTEMREGEL: Analysiere den Kontext streng und objektiv. Führe die Anweisung ohne Einleitung und Ausschmückung aus. Wenn Informationen fehlen, antworte exakt mit: \"Information nicht im Kontext.\"",
+   "code": "SYSTEMREGEL: Du bist ein strenger Code-Generator. Gib NUR reinen, ausführbaren Code oder exakte Terminal-Befehle aus. Keine Erklärungen, Tutorials oder Höflichkeitsfloskeln, außer sie werden ausdrücklich verlangt. Wenn der Nutzer Code liefert und eine Erklärung will, antworte extrem knapp, rein technisch und in Stichpunkten. Nutze nach Möglichkeit Standardbibliotheken.",
+   "creative": "SYSTEMREGEL: Schreibe lebendig und abwechslungsreich. Nutze kreative Vergleiche und fließende Übergänge."
+  }
+ },
+ "presets": {
+  "wilson": {
+   "persona": "wilson",
+   "top_k": 40,
+   "stop": [],
+   "ctx": "none",
+   "color": "#00acc1",
+   "on": "#fff"
+  },
+  "heinz": {
+   "persona": "heinz",
+   "ctx": "optional",
+   "color": "#e91e63",
+   "on": "#fff"
+  },
+  "audit": {
+   "temp": 0.15,
+   "top_p": 0.3,
+   "top_k": 20,
+   "model": "qwen2.5:3b",
+   "alt": [],
+   "stop": [],
+   "ctx": "required",
+   "ctxInSystem": true,
+   "color": "#d2b56a",
+   "on": "#1c1a14"
+  },
+  "code": {
+   "temp": 0.15,
+   "top_p": 0.1,
+   "top_k": 10,
+   "model": "qwen2.5:3b",
+   "alt": [],
+   "stop": [],
+   "ctx": "optional",
+   "color": "#6b8ba4",
+   "on": "#fff"
+  },
+  "creative": {
+   "temp": 0.75,
+   "top_p": 0.92,
+   "top_k": 60,
+   "model": "gemma2:2b",
+   "alt": [],
+   "stop": [],
+   "ctx": "optional",
+   "color": "#b184ec",
+   "on": "#17111f"
+  }
+ }
+}

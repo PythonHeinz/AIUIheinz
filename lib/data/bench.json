@@ -1,0 +1,9 @@
+{
+ "speedtest": {
+  "short": "Write the numbers from one to twenty as words, separated by commas.",
+  "longIntro": "Summarize the following text in one sentence.\n\n",
+  "longFill": "The quick brown fox jumps over the lazy dog while the sun sets slowly behind the distant hills and the river keeps flowing. ",
+  "longRepeat": 12
+ },
+ "seriesAxes": [["temperature", "sr-temp", "float"], ["top_p", "sr-topp", "float"], ["top_k", "sr-topk", "int"], ["num_thread", "sr-thr", "int"]]
+}
