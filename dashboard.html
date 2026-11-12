@@ -102,8 +102,8 @@
         #st-log small { color: #80868b; font-family: var(--mono); font-size: 10px; }
         .srow.xl { height: auto; min-height: 26px; align-items: flex-start; padding-top: 3px; }
         .srow.xl canvas { align-self: center; }
-        #preload-status { cursor: pointer; flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sdot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin: 0 -2px 0 22px; background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
+        #preload-status { height: 28px; line-height: 28px; cursor: pointer; flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sdot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin: 0 -2px 0 calc(52px + 12px - 4px); background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
         .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #0a0b0d; box-sizing: content-box; }
 
         /* Modusleiste */
@@ -279,23 +279,7 @@
         .drawer .dtools .lang-btn { width: 100%; } .drawer .dtools .lang-btn span { flex: 1; }
         #saved-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 14px calc(150px + env(safe-area-inset-bottom)); }
         #saved-list > small { display: block; color: var(--muted); padding: 14px 4px; font-size: .86rem; }
-        .saved-item { border-top: 1px solid var(--line); }
-        .saved-item .sr { display: flex; align-items: center; gap: 2px; }
-        .saved-item .sr::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--mc, var(--sub)); flex: none; margin-right: 8px; }
-        .saved-item .load { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: var(--txt); padding: 11px 0; font-size: .95rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .saved-item .load small { display: block; color: var(--sub); font-size: .72rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
-        .saved-item .more { width: 38px; height: 38px; }
-        .saved-item .acts2 { display: none; padding: 0 0 10px 17px; gap: 8px; flex-wrap: wrap; }
-        .saved-item .pinned { color: var(--acc); margin-right: 6px; flex: none; order: -1; }
-        .pin-sep { height: 0; border-top: 1px solid var(--edge); margin: 6px 0 4px; }
-        .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
-        .saved-item.open .acts2 { display: flex; }
-        .saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding-right: 8px; padding-top: 20px; }
-        .saved-item .acts2 .pill { flex: 1; min-height: 34px; padding: 0; }
-        .saved-item .acts2 .pill span { display: none; }
-        .saved-item .acts2 .pill.danger { background: var(--card); color: var(--red); border-color: var(--red); }
-        .saved-item .acts2 .pill.okc { color: var(--green); border-color: var(--green); }
     </style>
 </head>
 <body>
@@ -370,6 +354,7 @@
             <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" oninput="renderSavedList()">
         </div>
         <div id="saved-list"></div>
+        <div id="sel-bar" class="selbar" hidden><span id="sel-count"></span><button class="pill danger" id="sel-del" type="button" onclick="selDelete()"></button><button class="ibtn" id="sel-x" type="button" onclick="selEnd()"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
     </aside>
 
     <!-- Modellwahl -->

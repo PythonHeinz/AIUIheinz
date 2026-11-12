@@ -96,10 +96,10 @@ function heinzChatMain() {
     var D = {
         en: { st_fallback: 'Browser storage (IndexedDB) is not available. Conversations are kept in the small fallback storage and can run out of space.', st_quota: 'Storage is full: the last change was not saved. Delete old conversations.', st_write: 'The last change could not be saved.', st_migrate: 'Moving the saved data to the new storage failed. The old data stays in use, nothing is lost.', st_nearfull: 'Browser storage is more than 80 % full. Delete old conversations.', smpSet: 'Values from the dashboard: {v}', smpNone: 'No sampling values: the model uses its own. The dashboard can hand over values.', smpReset: 'Remove dashboard values', preLoading: 'Preparing model …', rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the dashboard, per model)', rtDef: 'default', sysL: 'System prompt (this model)', sysReset: 'Reset to default', sysH: 'Sent with every message. Empty = no system prompt. Keep it short: it is read again after another page used the model.', rtT: 'threads', rtC: 'context', rtLast: 'Last request seen by Ollama:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
             local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
-            reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the dashboard under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
+            reload: 'Reload', ren: 'Rename', pin: 'Pin', unpin: 'Unpin', exp: 'Export', pinMax: 'At most 5 pinned chats.', more: 'More', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the dashboard under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
         de: { st_fallback: 'Der Browserspeicher (IndexedDB) ist nicht verfügbar. Unterhaltungen liegen im kleinen Ersatzspeicher und können ihn füllen.', st_quota: 'Speicher voll: die letzte Änderung wurde nicht gespeichert. Lösche alte Unterhaltungen.', st_write: 'Die letzte Änderung konnte nicht gespeichert werden.', st_migrate: 'Das Umziehen der gespeicherten Daten in den neuen Speicher ist fehlgeschlagen. Die alten Daten bleiben in Gebrauch, nichts geht verloren.', st_nearfull: 'Der Browserspeicher ist zu mehr als 80 % voll. Lösche alte Unterhaltungen.', smpSet: 'Werte aus dem Dashboard: {v}', smpNone: 'Keine Sampling-Werte: das Modell nutzt seine eigenen. Das Dashboard kann Werte übergeben.', smpReset: 'Dashboard-Werte entfernen', preLoading: 'Modell wird vorbereitet …', rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Dashboard, je Modell)', rtDef: 'Standard', sysL: 'Systemprompt (dieses Modell)', sysReset: 'Auf Standard zurücksetzen', sysH: 'Wird mit jeder Nachricht gesendet. Leer = kein Systemprompt. Kurz halten: Er wird neu gelesen, wenn eine andere Seite das Modell benutzt hat.', rtT: 'Threads', rtC: 'Kontext', rtLast: 'Zuletzt an Ollama gesendet:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
             local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
-            reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Dashboard unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
+            reload: 'Neu laden', ren: 'Umbenennen', pin: 'Anpinnen', unpin: 'Lösen', exp: 'Exportieren', pinMax: 'Höchstens 5 angepinnte Chats.', more: 'Mehr', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Dashboard unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
     };
     function t(k, v) { return Heinz.t(D, k, v); }
     var $ = function (id) { return document.getElementById(id); };
@@ -193,7 +193,7 @@ function heinzChatMain() {
         if (!msgs.length) return;
         var first = msgs.filter(function (m) { return m.role === 'user'; })[0];
         if (!cur) { cur = { id: Date.now(), title: '', messages: [], ts: Date.now() }; chats.unshift(cur); S.chat = cur.id; }
-        cur.messages = msgs.slice(); cur.title = first ? first.content.replace(/\s+/g, ' ').slice(0, 44) : t('untitled');
+        cur.messages = msgs.slice(); cur.title = cur.name || (first ? first.content.replace(/\s+/g, ' ').slice(0, 44) : t('untitled'));
         cur.provider = S.provider; cur.model = S.model; cur.ts = Date.now();
         save();
     }
@@ -204,12 +204,39 @@ function heinzChatMain() {
         cur = c; msgs = c.messages.slice(); S.chat = c.id; if (c.provider && PV.get(c.provider)) { S.provider = c.provider; } if (c.model) S.model = c.model;
         save(); head(); renderLog(); Heinz.sheetClose();
     }
+    function ic(n, c) { return '<svg class="i ' + (c || 'sm') + '"><use href="/lib/icons.svg#i-' + n + '"/></svg>'; }
     function renderHist() {
         $('sh-h').textContent = t('chats');
         var list = chats.slice().sort(function (a, b) { return b.ts - a.ts; });
+        list = list.filter(function (c) { return c.pinned; }).concat(list.filter(function (c) { return !c.pinned; }));
         $('chats').innerHTML = list.length ? list.map(function (c) {
-            return '<div class="row' + (c.id === S.chat ? ' sel' : '') + '" data-open="' + c.id + '"><span class="tx"><b>' + esc(c.title || t('untitled')) + '</b><small>' + esc((c.model || '') + ' · ' + new Date(c.ts).toLocaleString(Heinz.lang === 'de' ? 'de-DE' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' })) + '</small></span><button class="ibtn" type="button" data-del="' + c.id + '" aria-label="' + t('del') + '"><svg class="i sm"><use href="/lib/icons.svg#i-trash"/></svg></button></div>';
+            var pb = function (act, icon, key, cls) { return '<button type="button" class="pill' + (cls ? ' ' + cls : '') + '" data-act="' + act + '" data-id="' + c.id + '" title="' + esc(t(key)) + '" aria-label="' + esc(t(key)) + '">' + ic(icon) + '</button>'; };
+            return '<div class="saved-item' + (c.id === S.chat ? ' cur' : '') + '" data-row="' + c.id + '"><div class="sr">' + (c.pinned ? ic('pin', 'sm pinned') : '') +
+                '<button type="button" class="load" data-open="' + c.id + '"><span class="ttl-in">' + esc(c.title || t('untitled')) + '</span><small>' + esc((c.model || '') + ' · ' + new Date(c.ts).toLocaleString(Heinz.lang === 'de' ? 'de-DE' : 'en-GB', { dateStyle: 'short', timeStyle: 'short' })) + '</small></button>' +
+                '<button type="button" class="ibtn more" data-more="' + c.id + '" aria-label="' + esc(t('more')) + '">' + ic('dots', '') + '</button></div>' +
+                '<div class="acts2">' + pb('ren', 'pencil', 'ren') + pb('pin', 'pin', c.pinned ? 'unpin' : 'pin') + pb('cp', 'copy', 'copy') + pb('exp', 'download', 'exp') + pb('del', 'trash', 'del', 'danger') + '</div></div>';
         }).join('') : '<p class="hint">' + t('none') + '</p>';
+    }
+    function chatById(id) { return chats.filter(function (c) { return c.id === id; })[0]; }
+    function chatText(c) { return (c.messages || []).map(function (m) { return (m.role === 'user' ? 'You' : 'Heinz') + '\n' + m.content; }).join('\n\n'); }
+    function chatAct(act, id, btn) {
+        var c = chatById(id); if (!c) return;
+        if (act === 'del') { chats = chats.filter(function (x) { return x.id !== id; }); if (S.chat === id) { cur = null; msgs = []; S.chat = 0; renderLog(); } save(); renderHist(); return; }
+        if (act === 'pin') { if (!c.pinned && chats.filter(function (x) { return x.pinned; }).length >= 5) { notice('warn', t('pinMax')); return; } c.pinned = !c.pinned; save(); renderHist(); return; }
+        if (act === 'cp') { Heinz.copy(chatText(c)).then(function () { btn.classList.add('okc'); setTimeout(function () { btn.classList.remove('okc'); }, 1500); }, function () { }); return; }
+        if (act === 'exp') {
+            var md = '# ' + (c.title || t('untitled')) + '\n\n' + (c.messages || []).map(function (m) { return '**' + (m.role === 'user' ? 'You' : 'Heinz') + '**\n\n' + m.content; }).join('\n\n---\n\n');
+            var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+            a.download = 'heinz-chat-' + String(c.title || 'chat').replace(/[^\w\-]+/g, '_').slice(0, 30) + '.md';
+            document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); return;
+        }
+        if (act === 'ren') {
+            var row = document.querySelector('[data-row="' + id + '"]'), host = row.querySelector('.ttl-in'), inp = document.createElement('input'), done = false;
+            row.classList.remove('open'); inp.type = 'text'; inp.className = 'inline-edit'; inp.maxLength = 60; inp.value = c.name || c.title || ''; host.innerHTML = ''; host.appendChild(inp);
+            var fin = function (ok) { if (done) return; done = true; if (ok) { var v = inp.value.trim(); c.name = v || undefined; var f = (c.messages || []).filter(function (m) { return m.role === 'user'; })[0]; c.title = v || (f ? f.content.replace(/\s+/g, ' ').slice(0, 44) : t('untitled')); if (S.chat === id) cur = c; save(); } renderHist(); };
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } else if (e.key === 'Escape') fin(false); });
+            inp.addEventListener('blur', function () { fin(true); }); inp.addEventListener('click', function (e) { e.stopPropagation(); }); inp.focus(); inp.select();
+        }
     }
 
     // ---- model sheet ----
@@ -297,8 +324,8 @@ function heinzChatMain() {
     $('free').addEventListener('change', function () { S.model = $('free').value.trim(); save(); head(); renderLog(gen); });
     $('onl').addEventListener('change', function () { PV.setOnlineAllowed($('onl').checked); if (!$('onl').checked && !pv().local) { S.provider = 'ollama'; S.model = ''; save(); head(); } renderSheet(); loadModels(); });
     $('chats').addEventListener('click', function (e) {
-        var d = e.target.closest('[data-del]');
-        if (d) { var id = +d.getAttribute('data-del'); chats = chats.filter(function (c) { return c.id !== id; }); if (S.chat === id) { cur = null; msgs = []; S.chat = 0; renderLog(); } save(); renderHist(); return; }
+        var m = e.target.closest('[data-more]'); if (m) { var r = m.closest('.saved-item'); r.classList.toggle('open'); return; }
+        var a = e.target.closest('[data-act]'); if (a) { chatAct(a.getAttribute('data-act'), +a.getAttribute('data-id'), a); return; }
         var o = e.target.closest('[data-open]'); if (o) openChat(+o.getAttribute('data-open'));
     });
     $('log').addEventListener('click', function (e) { var b = e.target.closest('[data-cp]'); if (b) Heinz.copy(msgs[+b.getAttribute('data-cp')].content).then(function () { b.innerHTML = '<svg class="i sm"><use href="/lib/icons.svg#i-check"/></svg>'; }); });

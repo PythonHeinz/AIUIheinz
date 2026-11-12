@@ -5,7 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 12.11.2026 21:40, AIUIheinz-Design: Layout-Wünsche des Entwicklers (Mehrfachauswahl in der Unterhaltungsliste des Dashboards, 5 Pillen per ⋯ in der Liste des Heinz Chat, Kopfzeile Zeile 2 Punkt/Status zur Equalizer-Mitte). Berührt dashboard.html, lib/dashboard/conversations.js, chat.html, lib/core.css, tests.
+- keine
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -39,7 +39,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | Modul | Datei | Stand | Nächster Schritt |
 |---|---|---|---|
 | Hub | `index.html` | seit 11.11.2026 der neue Hub (Reiter Chat, Werkzeuge, Einrichten) mit Versionszeile; am Handy bestätigt: alle Einträge da | neue Module über `tool.json`/`AREAS` einhängen |
-| Heinz Chat | `chat.html` | ruhige Leseseite, Modell und Unterhaltungen im Schnellblatt, Systemprompt je Modell, sendet `num_thread`; Modell und Laufzeit mit Dashboard geteilt (am Handy bestätigt 11.11.) | Handytest Systemprompt je Modell, Cursorfarbe |
+| Heinz Chat | `chat.html` | ruhige Leseseite, Modell und Unterhaltungen im Schnellblatt (⋯ je Unterhaltung mit 5 Pillen seit 12.11.), Systemprompt je Modell, sendet `num_thread`; Modell und Laufzeit mit Dashboard geteilt (am Handy bestätigt 11.11.) | Handytest Systemprompt je Modell, Cursorfarbe |
 | Heinz Dashboard | `dashboard.html` (Markup und Start) plus `lib/dashboard/*.js` (Skript, seit 12.11.2026 aufgeteilt) | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (am Handy vorhanden, zeigt „Applied for gemma2:2b …“, 12.11.) | Handytest LiteRT-LM, Testreihen; Umbau im Strang Dashboard |
 | Design-Katalog | `tools/design/index.html` | seit 12.11.2026 datengetrieben: alle Bausteine mit Klassen, Verwendung, Beispiel (Theme, EN/DE), Markup zum Kopieren, Funktionen, Lücken; nicht im Hub (nur per Adresse) | bei neuen Bausteinen nachtragen (Regel `docs/DESIGN.md` 7) |
 | Setup | `tools/setup/index.html` | Einrichtungsassistent, läuft | – |
