@@ -160,10 +160,10 @@ class StoreTest(unittest.TestCase):
         self.reload_dash(page)
         self.assertEqual(page.evaluate("HeinzStore.get('heinz_chats', null)"), CHATS)
         page.click("button.burger-btn")
-        page.evaluate("showPage('update')")
+        page.evaluate("HeinzDashboard.showPage('update')")
         page.wait_for_function("document.getElementById('store-status').textContent.indexOf('fallback') > -1")
         # language switch re-renders the note
-        page.evaluate("HeinzDashboard.setLang ? HeinzDashboard.setLang('de') : toggleLang()")
+        page.evaluate("HeinzDashboard.toggleLang()")
         page.wait_for_function("document.getElementById('store-note').textContent.indexOf('nicht verfügbar') > -1")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
@@ -212,7 +212,7 @@ class StoreTest(unittest.TestCase):
         page.evaluate("""() => {
             window.confirm = () => true;
             const f = new File([JSON.stringify({app: 'heinz-ui', data: {heinz_chats: '[]'}})], 'b.json', {type: 'application/json'});
-            const dt = new DataTransfer(); dt.items.add(f); const i = document.getElementById('bk-file'); i.files = dt.files; importBackup(i);
+            const dt = new DataTransfer(); dt.items.add(f); const i = document.getElementById('bk-file'); i.files = dt.files; i.dispatchEvent(new Event('change', { bubbles: true }));
         }""")
         page.wait_for_function("document.getElementById('bk-status').textContent.indexOf('could not be written') > -1")
 
@@ -224,7 +224,7 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(st["backend"], "indexeddb")
         self.assertIn(st["persisted"], (True, False, None))
         self.assertTrue(st["quota"] is None or st["quota"] > 0)
-        page.evaluate("showPage('update')")
+        page.evaluate("HeinzDashboard.showPage('update')")
         page.wait_for_function("document.getElementById('store-status').textContent.indexOf('IndexedDB') > -1")
 
     # ---- Heinz Chat ----
@@ -242,6 +242,10 @@ class StoreTest(unittest.TestCase):
         page.click("[data-more='111']")
         page.click("[data-act=del][data-id='111']")
         page.wait_for_function("document.querySelectorAll('#chats [data-open]').length === 0")
+        for _ in range(50):   # the deletion is written asynchronously: reload only after it is stored (the test was flaky on a busy machine, 12.11.2026)
+            if json.loads(page.evaluate(IDB_DUMP)["conversations"]["heinz_slim_chats"]) == []:
+                break
+            page.wait_for_timeout(100)
         page.reload()
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         self.assertNotIn("Hello old", page.inner_text("#log"))

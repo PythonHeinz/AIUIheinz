@@ -4,7 +4,7 @@ Setup (once):  pip install playwright && playwright install chromium
 Run:           python3 tests/test_pages.py
 Real models only run on the phone; here Ollama is answered by page.route().
 """
-import json, os, sys, unittest
+import glob, json, os, sys, unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from helpers import Server, ROOT
 import re
@@ -203,9 +203,13 @@ class PageTest(unittest.TestCase):
         page.click("#model-chip")
         page.click('#model-list [data-model="%s"]' % name)
 
+    def capture_copy(self, page, key):
+        """replaces the clipboard (navigator.clipboard.writeText) by a recorder: the copied text lands in window.<key>"""
+        page.evaluate("k => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window[k] = t; return Promise.resolve(); } }, configurable: true }); }", key)
+
     def proto(self, page, index=-1):
         """text of the test log under the answer with this index (default: the last one)"""
-        page.evaluate("window.copyText = function (t) { window.__proto = t; return Promise.resolve(); }")
+        self.capture_copy(page, "__proto")
         page.evaluate("i => { const b = document.querySelectorAll('.msg-assistant .msg-proto'); b[i < 0 ? b.length + i : i].click(); }", index)
         return page.evaluate("window.__proto")
 
@@ -213,6 +217,27 @@ class PageTest(unittest.TestCase):
         page.fill("#query", text)
         page.click("#send-btn")
         page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#send-btn').classList.contains('stopping')")
+
+    def test_every_dashboard_file_loads_as_the_first_module_of_a_page(self):
+        # Cycles between the files are allowed (docs/MODULE.md) as long as nothing uses an import while its file loads.
+        # Importing each file first, in a fresh page, makes such a use fail (use of a binding before its file ran).
+        names = sorted(os.path.basename(f) for f in glob.glob(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib", "dashboard", "*.js")))
+        names = [n for n in names if n not in ("failsafe.js", "main.js")]
+        self.assertGreater(len(names), 15)
+        bad = {}
+        for n in names:
+            ctx = self.browser.new_context(viewport=VIEWPORT, service_workers="block")
+            try:
+                page = ctx.new_page()
+                page.route("**/localhost:11434/**", lambda route: route.abort())
+                page.route("**/lib/dashboard/main.js", lambda route: route.fulfill(status=200, content_type="text/javascript", body=""))   # the real start is not wanted here
+                page.goto(self.srv.base + "/dashboard.html")
+                res = page.evaluate("async n => { try { await import('/lib/dashboard/' + n); return ''; } catch (e) { return String(e); } }", n)
+                if res:
+                    bad[n] = res
+            finally:
+                ctx.close()
+        self.assertEqual(bad, {})
 
     def test_a_failed_start_of_the_bench_is_shown_on_the_page(self):
         # without the data files the bench cannot start; the page must say so instead of staying half built
@@ -1407,7 +1432,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#chat-box .msg-assistant").count(), 0, "the chat stays untouched")
         self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%")
         self.assertEqual(page.locator("#sr-table tr").count(), 5)
-        page.evaluate("window.copyText = function (t) { window.__sr = t; return Promise.resolve(); }")
+        self.capture_copy(page, "__sr")
         page.click("#sr-copies [data-sr-copy='0']")
         txt = page.evaluate("window.__sr")
         self.assertIn("# Heinz UI test series", txt)
@@ -1499,7 +1524,7 @@ class PageTest(unittest.TestCase):
         self.assertIn("Checks: 1 of 2 runs passed.", page.inner_text("#sr-status"), "the prompt without checks is not counted")
         cells = page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)")
         self.assertEqual(cells, ["\u2713", "fail", "\u2713"])
-        page.evaluate("window.copyText = function (t) { window.__sr = t; return Promise.resolve(); }")
+        self.capture_copy(page, "__sr")
         page.click("#sr-copies [data-sr-copy='0']")
         txt = page.evaluate("window.__sr")
         self.assertIn("p2: Say xyz. => contains:xyz | max:5", txt)
@@ -1524,7 +1549,7 @@ class PageTest(unittest.TestCase):
         self.series_open(page)
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
         page.click("#sr-start")
-        page.wait_for_function("srRuns.length >= 2")
+        page.wait_for_function("HeinzDashboard.srRuns.length >= 2")
         saved = page.evaluate("HeinzStore.get('heinz_series', null)")   # still running: every finished run is already saved
         self.assertTrue(saved["unfinished"])
         self.assertGreaterEqual(len(saved["runs"]), 2)
@@ -1565,7 +1590,7 @@ class PageTest(unittest.TestCase):
         self.assertFalse(page.is_visible("#sr-resume"), "nothing to resume yet")
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
         page.click("#sr-start")
-        page.wait_for_function("srRuns.length >= 2")
+        page.wait_for_function("HeinzDashboard.srRuns.length >= 2")
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertTrue(page.is_visible("#sr-resume"))
@@ -1576,15 +1601,15 @@ class PageTest(unittest.TestCase):
         self.assertTrue(page.is_visible("#sr-resume"))
         page.fill("#sr-temp", "1")   # changed form must not change the resumed series
         before = len(self.ollama.requests)
-        kept = page.evaluate("srRuns.filter(r => !r.aborted && !r.error).length")
+        kept = page.evaluate("HeinzDashboard.srRuns.filter(r => !r.aborted && !r.error).length")
         page.click("#sr-resume")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
         self.assertEqual(len(self.ollama.requests) - before, 20 - kept, "only the open runs are requested")
-        self.assertEqual(page.evaluate("srRuns.map(r => r.n)"), list(range(1, 21)), "no duplicates, no gaps")
-        self.assertTrue(page.evaluate("srRuns.every(r => !r.aborted && !r.error)"))
-        self.assertEqual(page.evaluate("srRuns.map(r => r.params.temperature)"), [i / 20 for i in range(20)])
+        self.assertEqual(page.evaluate("HeinzDashboard.srRuns.map(r => r.n)"), list(range(1, 21)), "no duplicates, no gaps")
+        self.assertTrue(page.evaluate("HeinzDashboard.srRuns.every(r => !r.aborted && !r.error)"))
+        self.assertEqual(page.evaluate("HeinzDashboard.srRuns.map(r => r.params.temperature)"), [i / 20 for i in range(20)])
         self.assertFalse(page.is_visible("#sr-resume"), "complete series: nothing left")
-        self.assertEqual(page.evaluate("srMeta.stopped"), "")
+        self.assertEqual(page.evaluate("HeinzDashboard.srMeta.stopped"), "")
 
     def test_series_resume_is_hidden_when_the_model_was_changed(self):
         page = self.new_page()
@@ -1593,11 +1618,11 @@ class PageTest(unittest.TestCase):
         self.series_open(page)
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
         page.click("#sr-start")
-        page.wait_for_function("srRuns.length >= 1")
+        page.wait_for_function("HeinzDashboard.srRuns.length >= 1")
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertTrue(page.is_visible("#sr-resume"))
-        other = page.evaluate("[...document.querySelectorAll('#model-select option')].map(o => o.value).find(v => v !== srMeta.model)")
+        other = page.evaluate("[...document.querySelectorAll('#model-select option')].map(o => o.value).find(v => v !== HeinzDashboard.srMeta.model)")
         page.evaluate("(m) => { const e = document.getElementById('model-select'); e.value = m; e.dispatchEvent(new Event('change', {bubbles: true})); HeinzDashboard.srRender(); HeinzDashboard.srResumeBtn(); }", other)
         self.assertFalse(page.is_visible("#sr-resume"), "another model: results would be mixed")
 
@@ -1615,7 +1640,7 @@ class PageTest(unittest.TestCase):
         # stop between two runs: the loop checks the signal itself
         self.series_fill(page, temp="0, 0.2, 0.4, 0.6, 0.8, 1", reps="2")
         page.click("#sr-start")
-        page.wait_for_function("srRuns.length >= 1")
+        page.wait_for_function("HeinzDashboard.srRuns.length >= 1")
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
         self.assertTrue(page.evaluate("!HeinzDashboard.seriesRunning"))
@@ -1631,18 +1656,18 @@ class PageTest(unittest.TestCase):
         page.click("#sr-start")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped after three errors')", timeout=30000)
         self.assertEqual(len(self.ollama.requests), 3)
-        self.assertIn("three errors in a row", page.evaluate("srMeta.stopped"))
+        self.assertIn("three errors in a row", page.evaluate("HeinzDashboard.srMeta.stopped"))
         self.assertEqual(page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)"), ["\u2715"] * 3)
         # stop by the user (slow answers are not simulated: stop right after the first run)
         self.ollama.status = 200
         page.click("#sr-start")
-        page.wait_for_function("srRuns.length >= 1")
+        page.wait_for_function("HeinzDashboard.srRuns.length >= 1")
         page.click("#sr-stop")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Stopped.')", timeout=30000)
-        self.assertEqual(page.evaluate("srMeta.stopped"), "by user")
+        self.assertEqual(page.evaluate("HeinzDashboard.srMeta.stopped"), "by user")
         self.assertIn('"aborted":true', page.evaluate("HeinzDashboard.srExportParts().join('\\n')"), "an interrupted run is marked, not shown as ok")
         self.assertEqual(page.eval_on_selector_all("#sr-table tr td:last-child", "els => els.map(e => e.textContent)")[-1], "\u2013")
-        self.assertLess(page.evaluate("srRuns.length"), 9)
+        self.assertLess(page.evaluate("HeinzDashboard.srRuns.length"), 9)
 
     def test_series_native_google_sends_thinking_levels_greys_out_top_k_and_asks_before_cloud_requests(self):
         page, g = self.gemini_page()
@@ -1668,7 +1693,7 @@ class PageTest(unittest.TestCase):
             self.assertEqual(c["maxOutputTokens"], 40)
         for r in g.requests[n0:]:
             self.assertEqual(len(r[2]["contents"]), 1)
-        self.assertNotIn("top_k", page.evaluate("srMeta.axes"), "a locked parameter is not part of the matrix")
+        self.assertNotIn("top_k", page.evaluate("HeinzDashboard.srMeta.axes"), "a locked parameter is not part of the matrix")
         txt = page.evaluate("HeinzDashboard.srExportParts().join('\\n')")
         self.assertNotIn("AIza", txt)
         self.assertIn("thinkingLevel", txt)
@@ -1735,7 +1760,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
-        page.evaluate("window.copyText = function (t) { window.__copied = t; return Promise.resolve(); }")
+        self.capture_copy(page, "__copied")
         page.click("button[data-click='copyWholeChat']")
         self.assertTrue(page.evaluate("window.__copied").startswith("You:\nHi"))
         page.click("#lang-btn")
@@ -1827,7 +1852,7 @@ class PageTest(unittest.TestCase):
             self.assertEqual((r["options"]["temperature"], r["options"]["num_predict"], r["options"]["seed"]), (0, 32, 1))
             self.assertEqual([m["role"] for m in r["messages"]], ["user"])
         self.assertNotEqual(reqs[0]["messages"][0]["content"], reqs[1]["messages"][0]["content"], "random tag defeats the prompt cache")
-        page.evaluate("window.copyText = function (t) { window.__copied = t; return Promise.resolve(); }")
+        self.capture_copy(page, "__copied")
         page.click("#st-copy")
         text = page.evaluate("window.__copied")
         self.assertTrue(text.startswith("Heinz UI speed test |"))

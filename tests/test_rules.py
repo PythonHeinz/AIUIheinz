@@ -59,6 +59,36 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(sorted(used - known), [], "These names have no entry in ACTIONS (lib/dashboard/actions.js)")
         self.assertEqual(sorted(known - used), [], "Unused entries in ACTIONS: remove them")
 
+    def test_the_dashboard_is_one_entry_module_and_every_file_declares_what_it_needs(self):
+        # ES modules without build (12.11.2026, docs/MODULE.md): one entry module, imports with relative path and .js ending,
+        # the classic libraries are reached only through lib/dashboard/base.js, no exported `let`, the safety net is the only classic script
+        with open(os.path.join(ROOT, "dashboard.html"), encoding="utf-8") as fh:
+            html = fh.read()
+        mods = re.findall(r'<script[^>]*type="module"[^>]*src="([^"]+)"', html)
+        self.assertEqual(mods, ["lib/dashboard/main.js"], "dashboard.html loads exactly one module: the entry")
+        classic = [m for m in re.findall(r'<script(?![^>]*type="module")[^>]*src="(lib/dashboard/[^"]+)"', html)]
+        self.assertEqual(classic, ["lib/dashboard/failsafe.js"], "only the safety net is a classic script under lib/dashboard/")
+        self.assertEqual(re.findall(r"<script(?![^>]*\bsrc=)[^>]*>", html), [], "no inline script in dashboard.html (code lives in lib/dashboard/main.js)")
+        problems = []
+        for f in sorted(glob.glob(os.path.join(ROOT, "lib", "dashboard", "*.js"))):
+            name = os.path.basename(f)
+            if name == "failsafe.js":
+                continue
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            if not re.search(r"^(import|export)\b", text, re.M) and name != "actions.js":
+                problems.append(name + ": not a module (no import/export)")
+            if re.search(r"^export let\b", text, re.M):
+                problems.append(name + ": export let (importers cannot assign; use the state object)")
+            if name != "base.js" and re.search(r"window\.Heinz(?!Dashboard\b)\w*", text):
+                problems.append(name + ": reads a window.Heinz* library directly (use lib/dashboard/base.js)")
+            for spec in re.findall(r"""(?:from|import)\s+['"]([^'"]+)['"]""", text):
+                if not (spec.startswith("./") and spec.endswith(".js")):
+                    problems.append("%s: import path %s (relative, with .js)" % (name, spec))
+                elif not os.path.exists(os.path.join(ROOT, "lib", "dashboard", spec[2:])):
+                    problems.append("%s: imports missing file %s" % (name, spec))
+        self.assertEqual(problems, [])
+
     def test_the_rule_document_exists_and_is_linked(self):
         self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "LOKALE_MODELLE.md")))
         with open(os.path.join(ROOT, "docs", "agent", "UEBERGABE.md"), encoding="utf-8") as fh:
