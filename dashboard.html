@@ -19,9 +19,12 @@
         .app { max-width: 600px; margin: 0 auto; height: var(--appH, 100%); max-height: var(--appH, 100dvh); min-height: 560px; box-sizing: border-box; padding-bottom: max(6px, env(safe-area-inset-bottom)) !important; display: flex; flex-direction: column; padding: 0 14px; }
 
         /* Kopfzeile: Statusring, Modellchip, EN/DE, Menue */
+        /* Status row geometry (porting: change here only). The status dot centres on the left edge of the pixel text inside the model LCD:
+           --ring-d (logo ring) + --top-gap (gap in .top) + --lcd-indent (LCD border 1 px + 6 px indent + about 2.5 px to the centre of the first lit LED column, tuned by eye on the Pixel 9 Pro; see drawChip in lib/dashboard/pixelbar.js). */
+        .app { --ring-d: 52px; --top-gap: 12px; --lcd-indent: 9.5px; --sdot-d: 8px; }
         .top { display: flex; align-items: center; gap: 8px; height: 76px; flex: none; }
         .ring-btn .rt { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: .01em; }
-        .top { gap: 12px; transition: max-height .22s ease, opacity .18s ease, margin .22s ease; max-height: 76px; }
+        .top { gap: var(--top-gap); transition: max-height .22s ease, opacity .18s ease, margin .22s ease; max-height: 76px; }
         body.kbd .top, body.kbd-ctx .top { max-height: 0; opacity: 0; overflow: hidden; margin: 0; pointer-events: none; }
         .ring-btn.s-yellow { --s: #fbbc04; }
         #ring-logo { display: block; }
@@ -103,7 +106,7 @@
         .srow.xl { height: auto; min-height: 26px; align-items: flex-start; padding-top: 3px; }
         .srow.xl canvas { align-self: center; }
         #preload-status { height: 28px; line-height: 28px; cursor: pointer; flex: 1; min-width: 0; margin-right: 12px; text-align: left; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sdot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin: 0 -2px 0 calc(52px + 12px - 4px); background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
+        .sdot { flex: none; width: var(--sdot-d); height: var(--sdot-d); border-radius: 50%; margin: 0 -2px 0 calc(var(--ring-d) + var(--top-gap) + var(--lcd-indent) - var(--sdot-d) / 2); background: var(--sub); box-shadow: 0 0 6px currentColor; color: var(--sub); }
         .srow canvas { display: block; flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #0a0b0d; box-sizing: content-box; }
 
         /* Modusleiste */
@@ -351,6 +354,7 @@
         <div class="dh"><h3 data-i18n="chatsTitle">Chats</h3><button class="ibtn" type="button" onclick="closeAll()" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
         <div class="dtools">
             <button id="chats-scope" class="lang-btn" type="button" onclick="toggleChatScope()"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" id="scope-all">All</span></button>
+            <button id="chats-sort" class="lang-btn" type="button" onclick="toggleChatSort()"><span data-s="time" data-i18n="sortTime">Latest</span><span data-s="az" data-i18n="sortAz">A–Z</span></button>
             <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" oninput="renderSavedList()">
         </div>
         <div id="saved-list"></div>

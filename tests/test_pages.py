@@ -2779,7 +2779,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('chip-model') && document.getElementById('chip-model').textContent.length > 1")
         g = page.evaluate("""() => { const r = s => document.querySelector(s).getBoundingClientRect(); const c = r('#model-chip'), d = r('#st-dot'), t = r('#preload-status'), e = r('#eq-led');
             return { chipLeft: c.left, dotCx: d.left + d.width / 2, dotCy: d.top + d.height / 2, textCy: t.top + t.height / 2, eqCy: e.top + e.height / 2 } }""")
-        self.assertAlmostEqual(g["dotCx"], g["chipLeft"], delta=1.0)
+        self.assertAlmostEqual(g["dotCx"], g["chipLeft"] + 9.5, delta=1.0)   # dot centre on the first lit LED column of the pixel text
         self.assertAlmostEqual(g["textCy"], g["eqCy"], delta=1.0)
         self.assertAlmostEqual(g["dotCy"], g["eqCy"], delta=1.0)
 
@@ -2836,6 +2836,41 @@ class PageTest(unittest.TestCase):
         page.click("#chats [data-more]")
         page.click("#chats [data-act=del]")
         self.assertEqual(page.locator("#chats [data-open]").count(), 0)
+        self.assertEqual(self.errors, [])
+
+    def test_chat_lists_sort_alphabetically_with_project_prefix_and_pins_stay_on_top(self):
+        page = self.new_page()
+        FakeOllama(page)
+        titles = ["Zebra Idee", "AIUI Chat 10", "AIUI Chat 2", "aiui Design", "Mein Rezept"]
+        chats = [{"id": i + 1, "title": t, "ts": "x", "model": "gemma2:2b", "provider": "ollama", "mode": "wilson", "pinned": t == "Zebra Idee",
+                  "messages": [{"role": "user", "content": "q"}]} for i, t in enumerate(titles)]
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("c => localStorage.setItem('heinz_chats', JSON.stringify(c))", chats)
+        page.reload()
+        page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
+        page.click("#chats-open")
+        page.wait_for_function("document.querySelector('#drawer').getBoundingClientRect().left >= -1")
+        page.click("#chats-scope span[data-s=all]")
+        page.click("#chats-sort span[data-s=az]")
+        got = page.eval_on_selector_all("#saved-list .saved-item .ttl-in", "els => els.map(e => e.textContent)")
+        self.assertEqual(got, ["Zebra Idee", "AIUI Chat 2", "AIUI Chat 10", "aiui Design", "Mein Rezept"])
+        self.assertEqual(self.errors, [])
+
+    def test_heinz_chat_list_sorts_alphabetically(self):
+        page = self.new_page()
+        FakeOllama(page)
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.evaluate("() => localStorage.setItem('heinz_chat_sort', JSON.stringify('az'))")
+        for i, t in enumerate(["Beta", "alpha", "Gamma"]):
+            page.fill("#q", t)
+            page.click("#send")
+            page.wait_for_function("document.querySelectorAll('#log .msg.a').length >= 1 && !document.querySelector('#log .cur')")
+            page.click("#new")
+        page.click("#hist")
+        page.wait_for_selector("#sh-hist.open")
+        got = page.eval_on_selector_all("#chats .ttl-in", "els => els.map(e => e.textContent)")
+        self.assertEqual(got, ["alpha", "Beta", "Gamma"])
         self.assertEqual(self.errors, [])
 
     def test_manifest_and_service_worker_installable(self):
