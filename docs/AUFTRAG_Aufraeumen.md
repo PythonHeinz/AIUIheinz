@@ -2,6 +2,8 @@
 
 Neuer Strang, angelegt 12.11.2026 im Root-Chat auf Beschluss des Entwicklers. Chat-Name: **AIUIheinz-Aufraeumen**. Kein neues Feature, kein Code der Seiten. Dieser Strang läuft **allein**: Er ändert Ablageorte und Regeln, die alle anderen Stränge betreffen.
 
+**Vorrang:** Dieser Strang startet noch unter der alten Projektanweisung (mit PC-Abgleich und `cmp`). Für diesen Strang gilt dieser Auftrag, nicht der alte Ablauf; der Strang **endet mit der neuen Projektanweisung** (`docs/agent/PROJEKTANWEISUNG.md`), die der Entwickler danach ins Projekt setzt.
+
 ## Beschlüsse des Entwicklers (12.11.2026)
 1. **Doppelte Ablage PC und Repo beenden.** Alle Steuerdateien liegen nur noch im Repo (GitHub, maßgeblich). Der PC-Ordner `AIUIheinz` enthält nur noch den Klon `repo/` (nur lesen, `git pull`) und die Projektübersicht `Toolsbyclaude\INDEX.md`. Das Abgleichen per `cmp` und das Schreiben von STAND.md in den PC-Ordner **entfallen aus der Routine**. Der Entwickler kann den Root-Chat weiter auf Anweisung bitten, einen Stand in den PC-Ordner oder in `INDEX.md` zu schreiben.
 2. **Dokumenten-Wildwuchs beheben:** Überholtes archivieren, `UEBERGABE.md` in Prozess und Technik trennen, `STAND.md` kurz halten.
@@ -32,8 +34,8 @@ Neuer Strang, angelegt 12.11.2026 im Root-Chat auf Beschluss des Entwicklers. Ch
 9. **Prüfen:** `bash tests/run_all.sh` grün (gleich viele Tests wie vorher), Test aus einem frischen Klon, Hub und Seiten unverändert erreichbar (nichts im Code geändert). Fund-Liste: Verweise, die ins Leere zeigen.
 10. **Abschluss:** `ENTWICKLUNGSVERLAUF.md`-Eintrag, `STAND.md` (Stand, Reihenfolge, „Aktive Arbeit“ leer), Push. Dem Entwickler sagen, wann er die neue Projektanweisung einsetzen kann und welche Chats danach zu starten sind.
 
-## Datenschutz am Rande (Beschluss: im Moment nicht dringend)
-Neue Texte nennen den Benutzernamen im Pfad nicht mehr (`%USERPROFILE%\Toolsbyclaude` oder „PC-Ordner“). Die Git-Historie wird **nicht** umgeschrieben (würde alle Commit-Kennungen ändern und alle Klone brechen). In der Historie stehen nur ein Windows-Pfad und private Adressen aus dem Heimnetz, keine Schlüssel (geprüft 12.11.2026).
+## Datenschutz am Rande (Beschluss 12.11.2026)
+In allen **aktuellen** Dateien (Repo, Dokumente des Claude-Projekts, `INDEX.md`) den Pfad mit dem Benutzernamen ersetzen: Windows `%USERPROFILE%\Toolsbyclaude` (PowerShell `$env:USERPROFILE`), sonst „PC-Ordner“. Die Git-Historie bleibt **unverändert**, die Versionierung wird nicht angetastet (Entscheidung des Entwicklers). In der Historie stehen nur ein Windows-Pfad und Heimnetz-Adressen, keine Schlüssel (geprüft 12.11.2026). Bei einer späteren Portierung wird der Verweis ohnehin ersetzt.
 
 ## Grenzen
 - Kein Code von Seiten, `lib/`, `server.py`, `sw.js` ändern (Ausnahme: der Pfad in `tests/test_rules.py`).
