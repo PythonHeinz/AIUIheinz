@@ -310,6 +310,7 @@
             <button class="ibtn burger-btn" type="button" onclick="openMenu()" data-i18n-title="menuTitle" title="Menu"><svg class="i"><use href="lib/icons.svg#i-menu"/></svg></button>
         </div>
         <div class="srow"><i class="sdot" id="st-dot"></i><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas><div id="st-log" hidden></div></div>
+        <div id="store-note" class="notice warn" role="status" hidden></div>
         <select id="model-select" onchange="onModelChange()" aria-hidden="true" tabindex="-1"></select>
 
         <div class="modes" id="mode-bar" role="tablist">
@@ -572,6 +573,7 @@
                 <div class="st-btns"><button class="pill" type="button" onclick="exportBackup()"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span data-i18n="bkExport">Export backup</span></button><button class="pill" type="button" onclick="$('bk-file').click()"><svg class="i sm"><use href="lib/icons.svg#i-save"/></svg><span data-i18n="bkImport">Import backup</span></button></div>
                 <input type="file" id="bk-file" accept="application/json,.json" hidden onchange="importBackup(this)">
                 <div id="bk-status" class="help" style="min-height:16px"></div>
+                <div id="store-status" class="help" style="min-height:16px"></div>
             </div>
         </div>
     </section>
@@ -662,6 +664,7 @@
 
         async function initDashboard() {
             await HeinzStore.open();
+            HeinzStore.onProblem(showStoreProblem);
             applyDashboardData(await HeinzDashboardData.load());
             const s = HeinzStore.get('heinz_settings', {});
             if (s.model) settings.model = s.model;

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/lib/core.css">
 <script src="/lib/core.js"></script>
 <script src="/lib/providers.js"></script>
+<script src="/lib/store.js"></script>
 <style>
 /* Heinz Chat: the calm chat (DR2 draft). Reading first, one model switch, no parameters. Own storage keys heinz_slim and heinz_slim_chats. */
 html, body { height: 100%; overflow: hidden; }
@@ -55,6 +56,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         <button class="ibtn" id="hist" type="button" aria-label="Chats"><svg class="i"><use href="/lib/icons.svg#i-chats"/></svg></button>
     </div>
     <div id="note" hidden></div>
+    <div id="store-note" class="notice warn" role="status" hidden style="margin: 0 0 8px"></div>
     <div id="log"></div>
     <div class="comp">
         <textarea id="q" rows="1" autocomplete="off"></textarea>
@@ -89,13 +91,13 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
 </section>
 
 <script>
-(function () {
+function heinzChatMain() {
     var PV = HeinzProviders;
     var D = {
-        en: { smpSet: 'Values from the dashboard: {v}', smpNone: 'No sampling values: the model uses its own. The dashboard can hand over values.', smpReset: 'Remove dashboard values', preLoading: 'Preparing model …', rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the dashboard, per model)', rtDef: 'default', sysL: 'System prompt (this model)', sysReset: 'Reset to default', sysH: 'Sent with every message. Empty = no system prompt. Keep it short: it is read again after another page used the model.', rtT: 'threads', rtC: 'context', rtLast: 'Last request seen by Ollama:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
+        en: { st_fallback: 'Browser storage (IndexedDB) is not available. Conversations are kept in the small fallback storage and can run out of space.', st_quota: 'Storage is full: the last change was not saved. Delete old conversations.', st_write: 'The last change could not be saved.', st_migrate: 'Moving the saved data to the new storage failed. The old data stays in use, nothing is lost.', st_nearfull: 'Browser storage is more than 80 % full. Delete old conversations.', smpSet: 'Values from the dashboard: {v}', smpNone: 'No sampling values: the model uses its own. The dashboard can hand over values.', smpReset: 'Remove dashboard values', preLoading: 'Preparing model …', rtH: 'Sent to Ollama: threads {n}, context {c}, keep {k} (values from the dashboard, per model)', rtDef: 'default', sysL: 'System prompt (this model)', sysReset: 'Reset to default', sysH: 'Sent with every message. Empty = no system prompt. Keep it short: it is read again after another page used the model.', rtT: 'threads', rtC: 'context', rtLast: 'Last request seen by Ollama:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud engine: "Allow online" is off', stCloudNoKey: 'Cloud engine: API key missing', stCloudReady: 'Cloud engine connected (nothing is sent until you send)', stHandshake: 'Handshake pending: connection not confirmed yet', stEngineUp: 'Engine reachable', stOffline: 'Ollama server offline', stDefault: 'Model is loaded in RAM', stOnline: 'Server online (model asleep)', stThinking: 'Thinking …', stAnswering: 'Answering',title: 'Heinz Chat', hello: 'What is on your mind?', sub: 'Model: {m}', ph: 'Write a message', model: 'Model', chats: 'Chats', none: 'No saved chats yet.', newChat: 'New chat', untitled: 'New chat',
             local: 'on this device', cloud: 'online', noModels: 'No models found. Type the model name below.', freeL: 'Model name', onl: 'Allow online', onlH: 'Off by default. If on, the messages of the current chat go to the online engine you choose, nothing else.',
             reload: 'Reload', err: 'That did not work: {m}', noModel: 'Choose a model first.', blocked: 'Online is switched off. Turn on "Allow online" in the model sheet, or choose a local model.', noKey: 'This engine needs an API key. Add it in the dashboard under Engine.', stopped: '(stopped)', del: 'Delete', copy: 'Copy', loading: 'Loading models …' },
-        de: { smpSet: 'Werte aus dem Dashboard: {v}', smpNone: 'Keine Sampling-Werte: das Modell nutzt seine eigenen. Das Dashboard kann Werte übergeben.', smpReset: 'Dashboard-Werte entfernen', preLoading: 'Modell wird vorbereitet …', rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Dashboard, je Modell)', rtDef: 'Standard', sysL: 'Systemprompt (dieses Modell)', sysReset: 'Auf Standard zurücksetzen', sysH: 'Wird mit jeder Nachricht gesendet. Leer = kein Systemprompt. Kurz halten: Er wird neu gelesen, wenn eine andere Seite das Modell benutzt hat.', rtT: 'Threads', rtC: 'Kontext', rtLast: 'Zuletzt an Ollama gesendet:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
+        de: { st_fallback: 'Der Browserspeicher (IndexedDB) ist nicht verfügbar. Unterhaltungen liegen im kleinen Ersatzspeicher und können ihn füllen.', st_quota: 'Speicher voll: die letzte Änderung wurde nicht gespeichert. Lösche alte Unterhaltungen.', st_write: 'Die letzte Änderung konnte nicht gespeichert werden.', st_migrate: 'Das Umziehen der gespeicherten Daten in den neuen Speicher ist fehlgeschlagen. Die alten Daten bleiben in Gebrauch, nichts geht verloren.', st_nearfull: 'Der Browserspeicher ist zu mehr als 80 % voll. Lösche alte Unterhaltungen.', smpSet: 'Werte aus dem Dashboard: {v}', smpNone: 'Keine Sampling-Werte: das Modell nutzt seine eigenen. Das Dashboard kann Werte übergeben.', smpReset: 'Dashboard-Werte entfernen', preLoading: 'Modell wird vorbereitet …', rtH: 'An Ollama gesendet: Threads {n}, Kontext {c}, Haltezeit {k} (Werte aus dem Dashboard, je Modell)', rtDef: 'Standard', sysL: 'Systemprompt (dieses Modell)', sysReset: 'Auf Standard zurücksetzen', sysH: 'Wird mit jeder Nachricht gesendet. Leer = kein Systemprompt. Kurz halten: Er wird neu gelesen, wenn eine andere Seite das Modell benutzt hat.', rtT: 'Threads', rtC: 'Kontext', rtLast: 'Zuletzt an Ollama gesendet:', rtB: 'Dashboard', rtCh: 'Chat', stCloudOff: 'Cloud-Engine: „Online erlauben“ ist aus', stCloudNoKey: 'Cloud-Engine: API-Schlüssel fehlt', stCloudReady: 'Cloud-Engine verbunden (nichts wird gesendet, bis du sendest)', stHandshake: 'Handshake offen: Verbindung noch nicht bestätigt', stEngineUp: 'Engine erreichbar', stOffline: 'Ollama Server offline', stDefault: 'Modell ist im RAM geladen', stOnline: 'Server online (Modell schläft)', stThinking: 'Denkt nach …', stAnswering: 'Antwortet',title: 'Heinz Chat', hello: 'Was beschäftigt dich?', sub: 'Modell: {m}', ph: 'Nachricht schreiben', model: 'Modell', chats: 'Chats', none: 'Noch keine gespeicherten Chats.', newChat: 'Neuer Chat', untitled: 'Neuer Chat',
             local: 'auf diesem Gerät', cloud: 'online', noModels: 'Keine Modelle gefunden. Gib den Modellnamen unten ein.', freeL: 'Modellname', onl: 'Online erlauben', onlH: 'Standardmäßig aus. Wenn an, gehen die Nachrichten des aktuellen Chats an die gewählte Online-Engine, sonst nichts.',
             reload: 'Neu laden', err: 'Das hat nicht geklappt: {m}', noModel: 'Wähle zuerst ein Modell.', blocked: 'Online ist ausgeschaltet. Schalte „Online erlauben“ im Modellblatt ein oder wähle ein lokales Modell.', noKey: 'Diese Engine braucht einen API-Schlüssel. Trage ihn im Dashboard unter Engine ein.', stopped: '(gestoppt)', del: 'Löschen', copy: 'Kopieren', loading: 'Lade Modelle …' }
     };
@@ -105,11 +107,11 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     var S = Heinz.lsGet('heinz_slim', null);
     if (!S) { var gs = Heinz.lsGet('heinz_settings', {}) || {}; S = { provider: gs.provider || 'ollama', model: '', chat: 0 }; }
     (function () { var a = PV.activeModel(); if (a && a.provider === S.provider) S.model = a.model; })();   // model chosen on another page (dashboard)
-    var chats = Heinz.lsGet('heinz_slim_chats', []); if (!Array.isArray(chats)) chats = [];
+    var chats = HeinzStore.get('heinz_slim_chats', []); if (!Array.isArray(chats)) chats = [];
     var cur = chats.filter(function (c) { return c.id === S.chat; })[0] || null;
     var msgs = cur ? cur.messages.slice() : [];
     var gen = false, abort = null, modelsList = [], modelsFor = '';
-    function save() { PV.setActiveModel(S.provider, S.model); Heinz.lsSet('heinz_slim', S); Heinz.lsSet('heinz_slim_chats', chats.slice(0, 100)); }
+    function save() { PV.setActiveModel(S.provider, S.model); Heinz.lsSet('heinz_slim', S); HeinzStore.set('heinz_slim_chats', chats.slice(0, 100)); }
 
     // ---- minimal markdown for answers (escaped first) ----
     function md(src) {
@@ -304,7 +306,14 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     function fit() { if (window.visualViewport) document.documentElement.style.setProperty('--appH', Math.round(visualViewport.height * visualViewport.scale) + 'px'); }
     if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); } fit();
     head(); renderLog(); autosize(); loadModels();
-})();
+    // storage problems (IndexedDB missing, full, copy failed) stay visible, not silent
+    var storeMsgs = [];
+    function storeNote() { var el = $('store-note'); el.hidden = !storeMsgs.length; el.textContent = storeMsgs.map(function (c) { return t('st_' + c); }).join(' '); }
+    HeinzStore.onProblem(function (p) { if (storeMsgs.indexOf(p.code) < 0) storeMsgs.push(p.code); storeNote(); });
+    Heinz.onLang(storeNote);
+    document.documentElement.setAttribute('data-heinz-chat', 'ready');
+}
+HeinzStore.open().then(heinzChatMain, heinzChatMain);
 </script>
 </body>
 </html>

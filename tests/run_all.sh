@@ -5,4 +5,5 @@ cd "$(dirname "$0")/.."
 python3 tests/test_server.py
 python3 tests/test_capabilities.py
 python3 tests/test_rules.py
+python3 tests/test_store.py
 python3 tests/test_pages.py

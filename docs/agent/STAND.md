@@ -5,7 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 12.11.2026, AIUIheinz-Speicher: IndexedDB-Backend für `HeinzStore` (Unterhaltungen, Testreihen, Messungen), Migration aus `localStorage`, Rückfall mit Hinweis, Umstellung Heinz Chat und `Heinz.lsGet/lsSet` für die verschobenen Schlüssel (Freigabe des Entwicklers 12.11.); berührt `lib/store.js`, `lib/core.js`, `chat.html`, `dashboard.html` (nur Speicheraufrufe), `tests/`.
+- keine
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -13,7 +13,7 @@ Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles
 1. ~~AIUIheinz-Aufraeumen~~ (fertig 12.11.2026; neue Projektanweisung liegt in `PROJEKTANWEISUNG.md`, der Entwickler setzt sie ein).
 2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog ✔ (12.11.2026). Der Umbau des Menüs ist **nicht beauftragt** (Entwickler 12.11.: Menü des Dashboards bleibt vorerst).
 3. **AIUIheinz-Dashboard:** `dashboard.html` in ES-Module, Prüfprozeduren als Daten.
-4. **AIUIheinz-Speicher:** IndexedDB für Unterhaltungen und Testreihen mit Migration.
+4. ~~AIUIheinz-Speicher~~ (gebaut 12.11.2026, Handytest offen): IndexedDB für Unterhaltungen und Testreihen mit Migration und Rückfall.
 Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `dashboard.html` und `lib/core.*` nicht berühren. Modi, Design und Assistent warten bis nach Schritt 3 (sie berühren `dashboard.html`); der Strang Chat (Heinz Chat) wartet nicht. Strang Modi: nicht starten ohne Rücksprache.
 
 ## Stränge
@@ -25,7 +25,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | fertig (12.11.2026): Doppelablage beendet, Dokumente neu geordnet, Anweisungen geschrieben; Abweichungen in `AUFTRAG_Aufraeumen.md` |
 | AIUIheinz-Menu | Bausteinkatalog (Phase 0), Menü des Dashboards (DR2 Phase B); `AUFTRAG_Menu.md` | Phase 0 fertig (12.11.2026): Design-Katalog, Bausteine nach `lib/core.css`, Helfer in `lib/core.js`; Menü-Umbau nicht beauftragt, Menü bleibt |
 | AIUIheinz-Dashboard | **Heinz Dashboard** (`dashboard.html`): Menü, Chatfenster, Modi, Regler, Tempo-Test, Testreihen, Sonden S1 bis S8, Engine- und Modellprüfung (übernimmt seit 12.11.2026 die frühere Dashboard-Arbeit des Strangs Chat); schlankes Web-UI nach `AUFTRAG_Dashboard_Schlank.md`, Vorschlag `docs/DASHBOARD_INVENTUR.md`; weitere Aufträge `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_Chat_Schnittstellen.md` | läuft (seit 12.11.): Fassade, Daten als JSON, Speicherschicht, Blöcke nach `lib/dashboard/` gepusht; offen: Umstellung auf ES-Module und Inline-Handler, Testreihen Schritt 4 und 5, LiteRT-LM und Online-Anbieter am Handy, Modellverwaltung, Sonden |
-| AIUIheinz-Speicher | IndexedDB; `AUFTRAG_Speicher.md` | startet nach Dashboard |
+| AIUIheinz-Speicher | IndexedDB; `AUFTRAG_Speicher.md` | gebaut und gepusht (12.11.2026, nur simuliert getestet): `lib/store.js` mit IndexedDB und Rückfall, Migration mit Prüfung, Hinweisband, Info-Zeile, Heinz Chat umgestellt; offen: Handytest (Daten nach Neustart, `persisted`/Quote am Pixel), Medienspeicher (nur Objektspeicher vorbereitet), spätere Freigabe zum Löschen der alten `localStorage`-Einträge |
 | AIUIheinz-Chat | **Heinz Chat** (`chat.html`, ruhige Leseseite, Schnellblatt für Modell und Unterhaltungen); Weiterentwicklung der eigenen Seite. Zuschnitt neu seit 12.11.2026 (Beschluss des Entwicklers); Auftrag noch nicht geschrieben (Root-Strang) | Seite läuft (Systemprompt je Modell, Laufzeit mit dem Dashboard geteilt, am Handy bestätigt 11.11.); offen: Cursorfarbe, Handytest Systemprompt je Modell. Berührt `dashboard.html` nicht und muss nicht auf den Strang Dashboard warten; Schnittstelle zum Dashboard: `HeinzProviders` (`runtime`, `activeModel`, `chatSystemFor`, `chatSamplingFor`), Schlüssel `heinz_active`, `heinz_chat_system`, `heinz_chat_options` |
 | AIUIheinz-Design | Manifest, Themes, Bausteine, Hub; `AUFTRAG_DESIGN.md` | Design-Review 1 bestanden (10.11.), Heinz Chat, Hub und Setup freigegeben (11.11.); offen: Cursorfarbe, Handytest; DR2 siehe `docs/DESIGN_DR2.md`; wartet bis nach Dashboard |
 | AIUIheinz-Modelle | Modellmanager, Schnittstellenwissen, `lib/capabilities.json`; `AUFTRAG_Modelle.md` | Phase 1 Doku und Daten gepusht (Version 2, `docs/SCHNITTSTELLEN.md` bis Abschnitt 18); weiter: Messungen auswerten, Läufer-Ausbau (wartet auf Freigabe), Wissensbereich; Phase 2 berührt `lib/providers.js` (Fundament, Abstimmung nötig) |
@@ -51,7 +51,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 
 ## Nächste Aufgaben (Reihenfolge nach Wunsch des Entwicklers)
 1. Reihenfolge der Stränge siehe oben (Menu, Dashboard, Speicher).
-2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, `ollama rm heinz-wilson:latest heinz-fakt:latest`.
+2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, `ollama rm heinz-wilson:latest heinz-fakt:latest`, Speicher (Unterhaltungen bleiben nach Neustart von Termux und Browser, alte Unterhaltungen erscheinen nach dem Update, Info zeigt IndexedDB sowie `persisted` und Belegung, kein Hinweisband; Zahlen in `docs/SCHNITTSTELLEN.md` 16 eintragen).
 2a. **Strang Dashboard, vorgemerkt am 12.11.2026 (Wunsch des Entwicklers, erst umsetzen, wenn er es freigibt):**
    - (a) Nach dem Update startet die installierte App im Heinz Chat statt im Dashboard: Verlinkung prüfen (`manifest.json` `start_url`, Service Worker, alle Verweise auf `/chat.html`).
    - (b) Reste des Wortes „Prüfstand“ in der Oberfläche durch „Dashboard“ ersetzen, EN und DE (zum Beispiel „Prüfstand-Werte entfernen“ im Modellblatt des Heinz Chat).
@@ -71,6 +71,7 @@ Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.
 - 12.11.2026, AIUIheinz-Aufraeumen: nur Dokumente und Pfad in `tests/test_rules.py`.
 - 12.11.2026, AIUIheinz-Menu (Freigabe des Entwicklers): `lib/core.css` (Bausteine aus `dashboard.html` und `tools/setup` hierher gezogen, `.chk` → `.chkrow`), `lib/core.js` (`Heinz.setting/setSetting/bindSwitch/bindSlider`), `tools/design/index.html`; `dashboard.html` und `chat.html` nur Regeln entfernt bzw. Klasse umbenannt, Verhalten gleich (Heinz Chat: Felder jetzt wie im Dashboard, 46 statt 44 px).
 - 12.11.2026, AIUIheinz-Dashboard (Freigabe des Entwicklers): neue Dateien `lib/markdown.js`, `lib/dashboarddata.js`, `lib/store.js`, `lib/data/*.json`, `lib/dashboard/*.js`; `lib/core.*` und `lib/providers.js` unberührt.
+- 12.11.2026, AIUIheinz-Speicher (Freigabe des Entwicklers): `lib/store.js` (IndexedDB-Backend, Migration, Rückfall, `info/status/onProblem`); `chat.html` (Heinz Chat startet nach `HeinzStore.open()`, Unterhaltungen über `HeinzStore`); `dashboard.html`, `lib/dashboard/state.js`, `menu.js`, `i18n.js` und `lib/data/dashboard.i18n.json` nur Hinweisband, Info-Zeile, Fehlerfang; `lib/core.js` und `lib/providers.js` unberührt; neu `tests/test_store.py`.
 Als Fundament gelten: gemeinsame localStorage-Schlüssel (`heinz_settings`), das EN/DE-Verfahren, die Kopfzeile mit Hub-Link, die Schnittstelle des Servers und die Ollama-Aufrufe.
 
 ## Offen
@@ -80,6 +81,7 @@ Als Fundament gelten: gemeinsame localStorage-Schlüssel (`heinz_settings`), das
 - `heinz-fakt:latest` ist installiert (Basis: abliteriertes Qwen 2.5 3B), steht aber nicht in den Auswahllisten; Refusal-Vergleichstest offen. Personas liegen extern in `lib/personas.js`.
 - Tempo hängt an `num_thread` (Standard 8 am langsamsten, 3 bis 4 etwa doppelt so schnell); der Heinz Chat sendet es seit 11.11., Messung am Handy offen.
 - LiteRT-LM: Systemnachricht, Parameter und GPU über das `model`-Feld in `litert-lm serve` prüfen, dann Testprompts T1 bis T4 (`docs/KONZEPT.md` 10 und 14, jetzt im Archiv).
+- IndexedDB am Pixel: ob Chrome im Termux-Tab `persist()` gewährt und wie viel Quote frei ist, ist nicht gemessen (Anzeige unter Info im Dashboard); räumt der Browser bei Platzmangel, geschieht es stumm, daher gelegentlich Sicherung exportieren.
 - Rohstofflisten des Entwicklers (`Lager_JW.pdf`) gehören nicht ins Repo.
 
 ## Pflichtregel lokale Modelle (11.11.2026)

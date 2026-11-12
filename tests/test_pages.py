@@ -417,7 +417,7 @@ class PageTest(unittest.TestCase):
         users = [m for m in self.ollama.requests[1]["messages"] if m["role"] == "user"]
         self.assertEqual(users[0]["content"], "Hey", "earlier turns are sent as stored, without language line or context")
         self.assertIn("Respond in English.", users[1]["content"], "only the last user message carries it")
-        stored = page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[0].content")
+        stored = page.evaluate("HeinzStore.get('heinz_current', null).messages[0].content")
         self.assertEqual(stored, "Hey")
 
     def wait_preloads(self, page, n, timeout=6000):
@@ -499,7 +499,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("<strong>", html)
         self.assertNotIn("<b>tag", html, "raw text is escaped, not interpreted")
         self.assertIn("**bold** and &lt;b&gt;tag&lt;/b&gt;", html)
-        self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).messages[1].plain"))
+        self.assertTrue(page.evaluate("HeinzStore.get('heinz_current', null).messages[1].plain"))
         page.reload()
         self.assertNotIn("<strong>", page.inner_html(".msg-assistant"), "history keeps the plain look")
         # normal mode again: no num_predict, markdown rendered
@@ -519,7 +519,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit")
         self.assertEqual(page.input_value("#model-select"), "gemma2:2b", "a mode does not change the chosen model")
         self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).mode"), "audit")
-        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats')).length"), 1, "old chat saved on mode switch")
+        self.assertEqual(page.evaluate("HeinzStore.get('heinz_chats', null).length"), 1, "old chat saved on mode switch")
         self.assertEqual(page.evaluate("document.querySelectorAll('.msg').length"), 0, "new mode starts a fresh chat")
         page.click("#lang-btn")
         self.assertEqual(page.inner_text("#mode-bar [data-mode=creative]").split(" ")[-1], "Kreativ")
@@ -653,7 +653,7 @@ class PageTest(unittest.TestCase):
         page.press(".bar .inline-edit", "Enter")
         self.assertEqual(page.inner_text("#chat-title"), "Projekt A / Notizen")
         page.evaluate("HeinzDashboard.saveChatNow()")
-        saved = page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))")
+        saved = page.evaluate("HeinzStore.get('heinz_chats', null)")
         self.assertEqual(saved[0]["title"], "Projekt A / Notizen")
         page.reload()
         self.assertEqual(page.inner_text("#chat-title"), "Projekt A / Notizen", "name survives a reload")
@@ -774,9 +774,9 @@ class PageTest(unittest.TestCase):
         page.check("#bk-keys")
         page.evaluate("HeinzDashboard.exportBackup()")
         self.assertIn("SECRET", page.evaluate("window._blob.text()"))
-        page.evaluate("localStorage.removeItem('heinz_chats'); window.confirm = function () { return true; }; window.location.reload = function () {}")
-        page.evaluate("var r = JSON.parse(%s); Object.keys(r.data).forEach(function (k) { localStorage.setItem(k, r.data[k]); })" % json.dumps(txt))
-        self.assertIn("Backed up", page.evaluate("localStorage.getItem('heinz_chats')"))
+        page.evaluate("HeinzStore.remove('heinz_chats'); window.confirm = function () { return true; }; window.location.reload = function () {}")
+        page.evaluate("HeinzStore.importAll(JSON.parse(%s).data)" % json.dumps(txt))
+        self.assertIn("Backed up", page.evaluate("JSON.stringify(HeinzStore.get('heinz_chats', null))"))
 
     def test_scroll_stays_when_reading_up_and_actions_sit_under_the_answer(self):
         page = self.new_page()
@@ -861,7 +861,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(lit.requests[1][1]["model"], "gemma4-e2b,gpu", "GPU is chosen through the model field")
         self.assertEqual(len(self.ollama.preloads), n_preloads, "no Ollama preload while another engine is active")
         self.assertEqual(self.external, [])
-        self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_current')).provider") == "litert")
+        self.assertTrue(page.evaluate("HeinzStore.get('heinz_current', null).provider") == "litert")
 
     def test_online_engine_needs_switch_and_key_and_sends_only_the_current_chat(self):
         page = self.new_page()
@@ -955,7 +955,7 @@ class PageTest(unittest.TestCase):
         page.reload()
         page.click("#chats-open")
         page.click("#chats-scope")
-        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_chats'))[0].provider"), "openrouter")
+        self.assertEqual(page.evaluate("HeinzStore.get('heinz_chats', null)[0].provider"), "openrouter")
         page.click("#saved-list .saved-item .load")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama", "an online chat opens locally while online is off")
         self.assertEqual(page.evaluate("HeinzDashboard.chatHistory.length"), 2)
@@ -1525,7 +1525,7 @@ class PageTest(unittest.TestCase):
         self.series_fill(page, temp=", ".join(str(i / 20) for i in range(20)))
         page.click("#sr-start")
         page.wait_for_function("srRuns.length >= 2")
-        saved = page.evaluate("JSON.parse(localStorage.getItem('heinz_series'))")   # still running: every finished run is already saved
+        saved = page.evaluate("HeinzStore.get('heinz_series', null)")   # still running: every finished run is already saved
         self.assertTrue(saved["unfinished"])
         self.assertGreaterEqual(len(saved["runs"]), 2)
         page.reload()   # the run is gone with the page; the saved rest must not look like a running test
@@ -1540,7 +1540,7 @@ class PageTest(unittest.TestCase):
         self.series_fill(page, temp="0, 1")
         page.click("#sr-start")
         page.wait_for_function("document.getElementById('sr-status').textContent.startsWith('Done')", timeout=30000)
-        self.assertFalse(page.evaluate("JSON.parse(localStorage.getItem('heinz_series')).unfinished"))
+        self.assertFalse(page.evaluate("HeinzStore.get('heinz_series', null).unfinished"))
         self.assertEqual(page.evaluate("document.getElementById('sr-prog-i').style.width"), "100%", "a complete series shows a full bar")
 
     def test_series_estimate_uses_history_per_thinking_level_and_defaults_without(self):
@@ -1780,7 +1780,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("button[onclick^='copyWholeChat']").count(), 1)
         page.click("button[onclick='newChat(true)']")
         self.assertEqual(page.locator(".msg-user").count(), 0)
-        self.assertEqual(len(json.loads(page.evaluate("localStorage.getItem('heinz_chats')"))), 1, "old chat is saved in the list")
+        self.assertEqual(len(page.evaluate("HeinzStore.get('heinz_chats', null)")), 1, "old chat is saved in the list")
         self.assertEqual(page.inner_text("#dash-start"), "0.0")
         self.assertEqual(page.inner_text("#chats-count"), "1", "counter on the chats button")
 
@@ -2066,7 +2066,7 @@ class PageTest(unittest.TestCase):
         page.click("#saved-list .saved-item >> nth=0 >> .more")
         page.click("#saved-list .saved-item >> nth=0 >> .del")
         self.assertEqual(page.locator("#saved-list .saved-item").count(), 1)
-        self.assertEqual(len(json.loads(page.evaluate("localStorage.getItem('heinz_chats')"))), 1)
+        self.assertEqual(len(page.evaluate("HeinzStore.get('heinz_chats', null)")), 1)
         page.mouse.click(400, 300)   # scrim
         self.assertFalse(page.evaluate("document.getElementById('drawer').classList.contains('open')"))
 
@@ -2341,6 +2341,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2365,6 +2366,7 @@ class PageTest(unittest.TestCase):
         fake = FakeOllama(page)
         page.add_init_script(settings_js)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2387,6 +2389,7 @@ class PageTest(unittest.TestCase):
     def test_slim_chat_sends_no_threads_for_other_engines(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.evaluate("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'m': 3}}))")
         self.assertEqual(page.evaluate("HeinzProviders.runtime('ollama','m').options"), {"num_thread": 3, "num_ctx": 8192})
         for prov in ("litert", "google-native", "openai", "custom"):
@@ -2406,6 +2409,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)   # the fake /api/ps always reports gemma2:2b as loaded
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2432,6 +2436,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(bench["model"], "qwen2.5:3b")
         # the chat page (same browser storage) must send exactly the same load options for the same model
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")   # the bench's model is taken over
         page.fill("#q", "Hi")
         page.click("#send")
@@ -2446,6 +2451,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         FakeOllama(page)   # /api/ps reports gemma2:2b as loaded
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         st = lambda js: page.evaluate("(async () => { const r = await " + js + "; return [r.code, r.color, r.key]; })()")
         self.assertEqual(st("HeinzProviders.status('ollama', 'gemma2:2b')"), ["loaded", "blue", "stDefault"])
         self.assertEqual(st("HeinzProviders.status('ollama', 'qwen2.5:3b')"), ["asleep", "orange", "stOnline"], "reachable but this model is not in memory")
@@ -2465,6 +2471,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         ring = lambda: page.evaluate("document.getElementById('ring').className")
         page.wait_for_function("document.getElementById('ring').classList.contains('s-blue')")   # gemma2:2b is in memory
@@ -2497,6 +2504,7 @@ class PageTest(unittest.TestCase):
         FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}, params: {ctx: 6144}}))")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2515,6 +2523,7 @@ class PageTest(unittest.TestCase):
         fake = FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 2}, params: {ctx: 6144}}))")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
         # pick another model; the preload is slow so the ring has to say "preparing"
@@ -2542,6 +2551,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2555,6 +2565,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("() => { const s = document.getElementById('model-select'); s.value = 'gemma2:2b'; s.dispatchEvent(new Event('change')); }")
         page.wait_for_timeout(500)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
 
     def test_model_sheet_shows_what_bench_and_chat_last_sent_to_ollama(self):
@@ -2565,6 +2576,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.wait_for_timeout(2500)   # the bench preloads on its own
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hi")   # the chat has no preload of its own here (the bench just loaded the model): it sends a real message
         page.click("#send")
@@ -2583,6 +2595,7 @@ class PageTest(unittest.TestCase):
         fake = FakeOllama(page)
         page.add_init_script("if (!localStorage.getItem('heinz_settings')) { localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}})); localStorage.setItem('heinz_lastreq', JSON.stringify({bench: {model: 'gemma2:2b', threads: 2, ctx: 8192, keep: '30m', preload: false, ts: Date.now()}})); }")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.wait_for_timeout(1500)
         self.assertEqual(fake.preloads, [], "loaded with the same options: the chat must not overwrite Ollama's cache with a preload")
@@ -2596,6 +2609,7 @@ class PageTest(unittest.TestCase):
     def test_leaving_the_page_cancels_the_running_request(self):
         page = self.new_page()
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("typeof HeinzProviders !== 'undefined'")
         page.unroute("**/localhost:11434/**")
         page.route("**/localhost:11434/**", lambda route: None)   # never answers: the request stays open
@@ -2617,6 +2631,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_timeout(800)
         self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "llama3.2:3b", "the shared choice is not overwritten")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('llama3.2:3b') >= 0", timeout=15000)
 
     def test_slim_chat_does_not_offer_the_persona_models(self):
@@ -2624,6 +2639,7 @@ class PageTest(unittest.TestCase):
         FakeOllama(page, tags=("heinz-fakt:latest", "heinz-wilson:latest", "gemma2:2b", "qwen2.5:3b"))
         page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)   # persona model from the bench is replaced
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2635,6 +2651,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         default = page.evaluate("HeinzProviders.DEFAULT_CHAT_SYSTEM")
         page.fill("#q", "Hi"); page.click("#send")
@@ -2673,6 +2690,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn("num_ctx", smp); self.assertNotIn("num_thread", smp); self.assertNotIn("num_predict", smp)
         # the chat sends exactly that, plus the shared runtime values
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hi"); page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2700,6 +2718,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("typeof HeinzProviders !== 'undefined'")
         page.evaluate("""async () => {
             await HeinzProviders.chat('ollama', { model: 'gemma2:2b', system: 'S1', messages: [{ role: 'user', content: 'a' }], stream: true, onDelta: () => {} });
@@ -2713,6 +2732,7 @@ class PageTest(unittest.TestCase):
         fake = FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({preload: false}))")
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
@@ -2724,6 +2744,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         FakeOllama(page, status=500)
         page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.fill("#q", "Hello?")
         page.click("#send")
