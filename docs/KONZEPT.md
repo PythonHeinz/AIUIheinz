@@ -499,3 +499,13 @@ Anlass: Der Entwickler kopiert Testläufe bisher von Hand zwischen App und Chat 
 
 ### 21.5 Offen
 Format und Länge des Export-Blocks, wie viele Läufe in einen Chat passen, Obergrenze für die Matrix (Zeilen mal Wiederholungen), ob Testreihen im Repo (`data/` ist ignoriert) oder nur im Browser liegen, Name des Menüpunkts.
+
+## 22 Beschlüsse zur Struktur (12.11.2026, Entwickler)
+Anlass: Eine Außenanalyse der Architektur (Doppelablage, Dokumenten-Wildwuchs, `chat.html` mit über 3000 Zeilen, Daten in `localStorage`) wurde vom Entwickler geprüft. Beschlossen:
+1. **Eine Quelle der Wahrheit:** Alle Steuerdateien (STAND, UEBERGABE, ENTWICKLUNGSVERLAUF, AUFTRAG_*, NAECHSTER_CHAT) liegen nur im Repo (`docs/agent/`). Der PC-Ordner ist ein Klon plus `INDEX.md`. Abgleich per `cmp` entfällt. Umsetzung: Strang AIUIheinz-Aufraeumen (`docs/AUFTRAG_Aufraeumen.md`).
+2. **Dokumente schlank:** Überholte Konzeptabschnitte 1 bis 14 und alter Verlauf wandern ins Archiv; `UEBERGABE.md` wird in Prozess und Technik getrennt. Ergebnis sind eine neue Projektanweisung und eine Arbeitsanweisung für den Entwickler.
+3. **Schlankes Web-UI (Dogma):** Seiten zeigen an und bedienen. Prüfprozeduren, Prompts, Regeln und Matrizen sind **Daten** im Repo; Chats, Testreihen und Ergebnisse liegen im Browser-Speicher und gehen per Export nach außen. Eine neue Prüfprozedur ist eine neue Datendatei, nicht neuer Code in `chat.html`. Umsetzung: Strang AIUIheinz-Pruefstand (`docs/AUFTRAG_Pruefstand_Schlank.md`).
+4. **IndexedDB** für Chats und Testreihen (später Medien), `localStorage` nur für kleine Schalter; Migration ohne Datenverlust. Umsetzung: Strang AIUIheinz-Speicher (`docs/AUFTRAG_Speicher.md`).
+5. **Reihenfolge** (nacheinander, Fundament nur ein Chat): Aufraeumen, Menu (mit Bausteinkatalog), Pruefstand, Speicher. Modelle und Tertius laufen nach dem Aufräumen daneben, solange sie `chat.html` und `lib/core.*` nicht berühren.
+6. **Datenschutz:** Neue Texte nennen den Benutzernamen im Pfad nicht. Die Git-Historie wird nicht umgeschrieben (nur ein Windows-Pfad und Heimnetz-Adressen, keine Schlüssel, geprüft 12.11.2026).
+

@@ -646,3 +646,7 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 - Neu: Einstellungen des Prüfstands, Gruppe „Heinz Chat“, Zeile „In den Chat übernehmen“ (`applyToChat()`). Schreibt für das gewählte Ollama-Modell (1) den Systemprompt in `heinz_chat_system` (Modus-Prompt ohne den Antwortsprache-Satz; „Mine“ = eigener Prompt; „Model“ = leer) und (2) die Sampling-Werte Temperatur, Top-P, Top-K, Stop in den neuen Schlüssel `heinz_chat_options` (`PV.setChatSampling`). Threads und Kontext teilen beide Seiten ohnehin über `PV.runtime`.
 - Heinz Chat sendet `PV.chatSamplingFor(modell)` zusätzlich zu den Laufzeitwerten; Modellblatt zeigt die übernommenen Werte und „Prüfstand-Werte entfernen“.
 - Bei „Standardwerte des Modells“ im Prüfstand werden vorhandene Chat-Werte gelöscht. Gerätetest steht aus.
+
+## 12.11.2026 – Beschlüsse zur Struktur, drei neue Aufträge (Chat „AIUIheinz“, nur Doku)
+- Anlass: Außenanalyse der Architektur (Entwickler hat sie geprüft). `docs/KONZEPT.md` 22 hält die Beschlüsse fest: eine Quelle der Wahrheit im Repo (`docs/agent/`), Dokumente schlank, Dogma „schlankes Web-UI“, IndexedDB, Reihenfolge der Stränge, Datenschutz zum Pfad.
+- Neue Aufträge: `docs/AUFTRAG_Aufraeumen.md`, `docs/AUFTRAG_Pruefstand_Schlank.md`, `docs/AUFTRAG_Speicher.md`. Nichts gebaut, nichts verschoben. Prüfung der Analyse: keine Schlüssel in der Git-Historie (Muster für Google-, OpenAI-, Groq-Schlüssel ohne Treffer), nur ein Windows-Pfad und Heimnetz-Adressen.
