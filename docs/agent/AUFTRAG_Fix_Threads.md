@@ -1,6 +1,6 @@
-# AUFTRAG Fix Threads (Chat „AIUIheinz-Fix-Threads“)
+# AUFTRAG Fix Threads (Strang „AIUIheinz-Fix-Threads“)
 
-Korrektur-Chat, angelegt 11.11.2026 im Root-Chat. Nur das gemeldete Problem beheben, einen Eintrag in `ENTWICKLUNGSVERLAUF.md` ergänzen, keine Struktur ändern.
+Korrektur-Strang, angelegt 11.11.2026 im Root-Strang. Nur das gemeldete Problem beheben, einen Eintrag in `docs/agent/ENTWICKLUNGSVERLAUF.md` ergänzen, keine Struktur ändern.
 
 ## Problem (Handytest des Entwicklers, 11.11.2026)
 Lokale Ollama-Modelle antworten im neuen **Heinz Chat** (`tools/heinz/index.html`) deutlich langsamer als im **Prüfstand** (`chat.html`). Cloud-Modelle antworten schnell, Modellwahl für Ollama und eigene OpenAI-kompatible Engine funktioniert.
@@ -24,7 +24,7 @@ Ein lokales Ollama-Modell läuft im Heinz Chat so schnell wie im Prüfstand mit 
 `tools/heinz/index.html`, ggf. `lib/core.js`, Tests. **Nicht** `chat.html`, `server.py`, Engine-Aufrufe in `lib/providers.js` (nur lesen). Berührt der Eingriff `lib/providers.js` doch, vorher dem Entwickler sagen und fragen.
 
 ## Fertig, wenn
-Heinz Chat und Prüfstand senden für dasselbe Ollama-Modell dieselben Thread-Optionen, Tests grün, Eintrag in `ENTWICKLUNGSVERLAUF.md`, nach `main` gepusht; Entwickler misst am Handy.
+Heinz Chat und Prüfstand senden für dasselbe Ollama-Modell dieselben Thread-Optionen, Tests grün, Eintrag in `docs/agent/ENTWICKLUNGSVERLAUF.md`, nach `main` gepusht; Entwickler misst am Handy.
 
 ## Nebenbefund (nur melden, nicht bauen)
 Der Cursor im Heinz Chat ist blau-violett; ob er die Farbe des Heinz-Logos oder des Modus zeigen soll, ist offen und gehört in den Design-Strang.

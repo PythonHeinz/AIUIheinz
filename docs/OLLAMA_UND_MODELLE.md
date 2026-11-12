@@ -84,7 +84,7 @@ Dateinamen: `^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,63}\.(csv|json|txt)$`, höchstens 5 
 | 3 | 10,9 | nicht gemessen |
 | 2 | 7,12 | 4,9 |
 | 1 | 8,03 | nicht gemessen |
-Empfehlung (vorläufig): `num_thread` 3 oder 4 setzen statt den Ollama-Standard zu nutzen. Details in `ENTWICKLUNGSVERLAUF.md`.
+Empfehlung (vorläufig): `num_thread` 3 oder 4 setzen statt den Ollama-Standard zu nutzen. Details in `docs/agent/ENTWICKLUNGSVERLAUF.md`.
 
 **Bestätigung in der Chat-Seite (09.11.2026, Beobachtung des Entwicklers, Chrome auf dem Pixel, Regler „CPU-Threads“, Modus Heinz mit `heinz-fakt:latest`, Termux im Hintergrund, kein Dashboard offen; ein Gespräch, keine Messreihe):** Mit 4 Threads antworteten Einstiegsfragen „so schnell wie noch nie“; ein Lauf zeigte Prompt 190 Token, Antwort 12 Token, 4,8 Token/s. Auf 8 Threads gestellt dauerte die nächste Antwort „elend lange“ (keine Zahl abgelesen), zurück auf 4 war die Antwort wieder schnell. Mehrere kurze Fragen nacheinander funktionierten, der Gesprächsverlauf wurde berücksichtigt („Auch ein Hund …“). Termux war nicht sichtbar. Beschluss: `num_thread` bleibt dauerhaft ein einstellbarer Parameter der Chat-Seite.
 

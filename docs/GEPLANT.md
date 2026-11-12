@@ -1,12 +1,12 @@
 # Geplante Funktionen und Ideen
 
-Stand 10.11.2026. Reihenfolge der konkreten Aufgaben steht in `STAND.md` („Nächste Aufgaben“). Hier steht, was darüber hinaus besprochen wurde. Nichts davon ist beschlossen, außer wo es „beschlossen“ heißt.
+Stand 10.11.2026. Reihenfolge der konkreten Aufgaben steht in `docs/agent/STAND.md` („Nächste Aufgaben“). Hier steht, was darüber hinaus besprochen wurde. Nichts davon ist beschlossen, außer wo es „beschlossen“ heißt.
 
 ## Zwei Bereiche (Richtung des Entwicklers, 10.11.2026; im Konzept eingearbeitet in `docs/KONZEPT.md` Abschnitt 15.3, dort inzwischen als drei Bereiche; diese Fassung ist überholt)
 Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind offen; „beschlossen“ ist hier nur, was der Entwickler so gesagt hat, die Ableitungen sind als Vorschlag gekennzeichnet.
 
 **Bereich A – Ausprobieren und Modelle (Arbeitsname offen: „Research“ oder „Model Manager“).** Zweck: Nutzer sollen auf ihrem Handy mit lokalen Sprachmodellen spielen und herausfinden, welche Modelle und Prozessor-Einstellungen am besten passen.
-- Inhalt: die heutige Chat-Seite als Testfeld (Modi, Parameter, Tempo-Test, Threads), dazu Erstinstallation, Installation und Verwaltung lokaler Modelle in Ollama (Konzept Abschnitt 6), Einbindung von Cloud-Anbietern und LiteRT-LM. Alles zusammen ein Bereich.
+- Inhalt: die heutige Chat-Seite als Testfeld (Modi, Parameter, Tempo-Test, Threads), dazu Erstinstallation, Installation und Verwaltung lokaler Modelle in Ollama (Konzept Abschnitt 6, Archiv: `docs/archiv/KONZEPT_v1_entwurf.md`), Einbindung von Cloud-Anbietern und LiteRT-LM. Alles zusammen ein Bereich.
 - **Chats werden je Modus gespeichert, nicht je Modell.** Grund: Derselbe Prompt soll in einem Modus mit mehreren Modellen verglichen werden können. Umgesetzt am 10.11.2026 (Liste je Modus, Umschalter auf alle Modi).
 - **Modell am Chat erkennbar:** Der Chat soll zeigen, mit welchem Modell er gestartet wurde. Offen: Was gilt, wenn der Nutzer nach der Moduswahl das Modell von Hand ändert (in manchen Modi möglich)? Vorschlag: Der Chat bleibt im Modus, speichert das Startmodell und vermerkt einen Modellwechsel mitten im Chat an der Stelle der Antwort.
 - **Testfeld für andere Tools:** Zum Beispiel soll convert2 Fragen zu Text und Aufbereitung kurzzeitig an ein Modell auslagern können, lokal oder per Cloud; hier wird erprobt, welches Modell dafür reicht. Vorschlag: Die Anbieterschicht (`lib/providers.js`) ist ein gemeinsamer Baustein für alle Tools, nicht Teil der Chat-Seite.
@@ -16,7 +16,7 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 
 **Offene Abgrenzung online/offline (Entwickler stimmt sich mit dem Design-Chat ab).** Offline bleibt alles: Chat-Modi, Tabellenmodus, Labor, später convert2. Offen ist, welche Funktionen und Modi zusätzlich erscheinen, wenn „Online erlauben“ an ist (Standard aus), und wie die Leiste nicht überquillt, wenn alle Tools und Modi wählbar sind. Vorschläge: Bereichsumschalter (Chat | Werkzeuge), Modi nur im Chat-Bereich; ein Merkmal je Modus (zum Beispiel `braucht Cloud: ja/nein`), das Modi ohne Cloud-Zugang ausblendet oder grau zeigt.
 
-**Folgen für die nächsten Schritte im Chat-Strang.** (1) Anbieterschicht samt LiteRT-LM bauen, so dass Bereich A und andere Tools sie nutzen können (berührt das Fundament `lib/`, vorher Freigabe einholen). (2) Parameter, Tempo-Test und Modellverwaltung gehören in Bereich A, nicht in Bereich B. (3) Hinweis an den Konzept-Chat: Konzept Abschnitt 4 („Bedienkonzept Chat“) beschreibt bisher eine Hauptansicht mit ☰-Einstellungen; mit zwei Bereichen wäre er zu teilen (Bereich A: Abschnitt 4 und 6, Bereich B: neu).
+**Folgen für die nächsten Schritte im Chat-Strang.** (1) Anbieterschicht samt LiteRT-LM bauen, so dass Bereich A und andere Tools sie nutzen können (berührt das Fundament `lib/`, vorher Freigabe einholen). (2) Parameter, Tempo-Test und Modellverwaltung gehören in Bereich A, nicht in Bereich B. (3) Hinweis an den Konzept-Chat: Konzept Abschnitt 4 (Archiv: `docs/archiv/KONZEPT_v1_entwurf.md`; „Bedienkonzept Chat“) beschreibt bisher eine Hauptansicht mit ☰-Einstellungen; mit zwei Bereichen wäre er zu teilen (Bereich A: Abschnitt 4 und 6, Bereich B: neu).
 
 ## Konkret in Arbeit oder als Nächstes
 - **Sheet mit echtem 3B-Modell** auf einer realen Rohstoffliste (Lager Jakobswiese) erproben: Befehlsübersetzung („wie viele blaue Artikel?“, „7 entnehmen“) mit Qwen 2.5 3B. Bisher nur mit simuliertem Modell geprüft.
@@ -42,7 +42,7 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 **Weitere vorgemerkte Punkte (Sammlung)**
 - (erledigt 11.11.2026) Mehrere eigene OpenAI-kompatible Engines mit eigenem Namen, Adresse und Schlüssel; das doppelte Auswahlfeld im Engine-Menü ist weg (Liste oben wählt aus). Handytest offen.
 - Modus-Schieberegler am linken Rand (Halbkreis-Kragen, senkrechte Leiste mit farbigen Kreisen), Wichtigstes im Daumenbereich, Parameter-Schnellöffner: siehe `docs/DESIGN.md`, Abschnitt Design-Review 1, Planung für DR2.
-- Zwei Stufen „Schnell/Tief" als Pille an der Eingabe und Reasoning für Cloud-Modelle: Auftrag `docs/AUFTRAG_Modi.md`.
+- Zwei Stufen „Schnell/Tief" als Pille an der Eingabe und Reasoning für Cloud-Modelle: Auftrag `docs/agent/AUFTRAG_Modi.md`.
 - App-Sprache (Oberfläche und Vorlesen, Englisch als Rückfall), Geräte- und CPU-Listen.
 - Tempo-Test: Kerne gezielt zuweisen (zum Beispiel `taskset` über `server.py`); die Kacheln setzen heute nur die Thread-Zahl, die Farben sind ein Hinweis. Eventuell Streaming im Test für echten Fortschritt je Lauf.
 - Schwellen für T/s und Startzeit (Farben der Telemetrie) mit Handy-Messwerten abgleichen.

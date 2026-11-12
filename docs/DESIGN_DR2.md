@@ -72,5 +72,5 @@ Regeln wie bisher: kein Umbau ohne Absprache, nur simuliert getestet bleibt geke
 - **Schnellblatt von unten** (`.bsheet`) für den neuen Chat (Modell, Chats); das Seitenblatt von rechts bleibt nur im Prüfstand.
 - **Fußzeile des Hubs sachlich**, kein Datenschutzversprechen mit Bezug auf Richtlinien oder Verordnungen.
 - **Modus-Schieberegler**: bedienbares Mockup `tools/design/modus.html` (Kragen am linken Rand, senkrechte Leiste, Rahmen ziehen, Akzentfarbe live). Noch nicht im Prüfstand.
-- **Phase B (Menü umbauen)** wird eigener Strang **AIUIheinz-Menu**, Auftrag `docs/AUFTRAG_Menu.md`.
+- **Phase B (Menü umbauen)** wird eigener Strang **AIUIheinz-Menu**, Auftrag `docs/agent/AUFTRAG_Menu.md`.
 - Neue Bausteine in `lib/core.css`/`core.js`: `.notice`, `.bsheet`/`.bscrim`, `.step`, `.cmd`, `Heinz.copy`, `Heinz.sheetOpen/Close`. Nur simuliert getestet, nicht am Gerät.

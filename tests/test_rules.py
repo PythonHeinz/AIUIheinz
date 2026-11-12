@@ -27,7 +27,7 @@ class RuleTest(unittest.TestCase):
 
     def test_the_rule_document_exists_and_is_linked(self):
         self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "LOKALE_MODELLE.md")))
-        with open(os.path.join(ROOT, "UEBERGABE.md"), encoding="utf-8") as fh:
+        with open(os.path.join(ROOT, "docs", "agent", "UEBERGABE.md"), encoding="utf-8") as fh:
             self.assertIn("docs/LOKALE_MODELLE.md", fh.read())
 
 

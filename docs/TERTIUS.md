@@ -10,7 +10,7 @@ Strang „AIUIheinz-Tertius“, Rolle: unbeteiligter Dritter, nur lesen. Kein Sc
 
 ## Eindruck von außen (festgehalten vor dem Lesen von KONZEPT, UEBERGABE, ENTWICKLUNGSVERLAUF, Aufträgen)
 
-Blickwinkel: Outsider. Einschränkung: `INDEX.md`, `STAND.md` und `AUFTRAG_Tertius.md` hatte ich vorher gelesen (Pflichtlektüre), der Außenblick ist deshalb nicht rein. Gelesen wurden danach nur `README.md` und die Oberfläche (Hub, Chat, Designseite; Viewport 426 × 803, simulierter Ollama-Server; nichts davon auf einem Gerät geprüft).
+Blickwinkel: Outsider. Einschränkung: `INDEX.md`, `docs/agent/STAND.md` und `AUFTRAG_Tertius.md` hatte ich vorher gelesen (Pflichtlektüre), der Außenblick ist deshalb nicht rein. Gelesen wurden danach nur `README.md` und die Oberfläche (Hub, Chat, Designseite; Viewport 426 × 803, simulierter Ollama-Server; nichts davon auf einem Gerät geprüft).
 
 - Hub: Der Satz „Private AI tools that work offline“ ist verständlich. Drei Wörter sind Binnensprache: „Heinz UI“ (Name ohne Erklärung), „Wilson, Heinz, Audit, Code, Creative“ (fünf Namen ohne Erklärung, was sie tun), „Models: placeholder“. „Old versions“ mit „Data Lab (old)“ und „Phone Vitals (old)“ zeigt dem Fremden Baustellen statt eines Einstiegs.
 - Ein „Erste Schritte“ fehlt auf der Oberfläche. Wer ohne Ollama startet, sieht „LiteRT-LM not reachable (optional)“, ohne zu wissen, was LiteRT-LM ist. Im Chat steht „Server online (model asleep)“ und „Preparing model …“ ohne Hinweis, was jetzt zu tun ist.
@@ -22,10 +22,10 @@ Blickwinkel: Outsider. Einschränkung: `INDEX.md`, `STAND.md` und `AUFTRAG_Terti
 ## Befunde zum Außenblick und zur Dokumentation (nach Gewicht)
 
 **Hoch**
-1. **Zwei Ziele, ein Bild.** `docs/KONZEPT.md` 1 nennt „persönliches Taschenmesser“ und „Starterkit für Einsteiger“. Hub, README und Chat bedienen nur das erste. Ein Fremder erkennt nicht, für wen die App gedacht ist. Konzept 18 (zwei Hub-Einträge, Assistent) löst das auf dem Papier, gebaut ist nichts davon.
+1. **Zwei Ziele, ein Bild.** `docs/KONZEPT.md` 1 (seit 12.11.2026 im Archiv: `docs/archiv/KONZEPT_v1_entwurf.md`) nennt „persönliches Taschenmesser“ und „Starterkit für Einsteiger“. Hub, README und Chat bedienen nur das erste. Ein Fremder erkennt nicht, für wen die App gedacht ist. Konzept 18 (zwei Hub-Einträge, Assistent) löst das auf dem Papier, gebaut ist nichts davon.
 2. **Es gibt keinen Einstieg für Dritte.** `README.md` beginnt bei Termux und Ollama; wie ein Fremder dorthin kommt, steht erst in `KONZEPT.md` 18.3 als Planung. Der Hub zeigt „placeholder“ und „old versions“.
 3. **Das Versprechen ist im Hub unbedingter als im Detail.** Fußzeile „Nothing leaves this device“ (Hub) und README „Alles läuft ohne Internet“ gegen: Online-Schalter, Cloud-Engines mit Schlüssel im Browser, Update per `git pull` (braucht Internet), Modellsuche (`KONZEPT.md` 18.3, Schritt 6). Der Chat formuliert es richtig bedingt („Off: nothing leaves this device“, `chat.html` Hilfetext). Für ein Datenschutz-Versprechen ist die unbedingte Fassung angreifbar.
-4. **Doku widerspricht sich und veraltet schnell.** `README.md` nennt fünf Seiten und „Data Lab“; der Hub zeigt andere Einträge und das Design-Manifest ist maßgeblich. `KONZEPT.md` 1 bis 13 sind laut eigenem Vorspann „stellenweise überholt“, daneben stehen 15 bis 20. `INDEX.md` und `STAND.md` führen mehrere Stände in einer Zelle. Das ist für den Entwickler lesbar, für Dritte nicht, und es kostet jeden neuen Chat Lesezeit. Die Zellen der Strangtabelle in `STAND.md` sind so lang, dass sie wie Chroniken wirken, obwohl `UEBERGABE.md` die Datei als geordneten Stand vorsieht.
+4. **Doku widerspricht sich und veraltet schnell.** `README.md` nennt fünf Seiten und „Data Lab“; der Hub zeigt andere Einträge und das Design-Manifest ist maßgeblich. `KONZEPT.md` 1 bis 13 (jetzt im Archiv) sind laut eigenem Vorspann „stellenweise überholt“, daneben stehen 15 bis 20. `INDEX.md` und `docs/agent/STAND.md` führen mehrere Stände in einer Zelle. Das ist für den Entwickler lesbar, für Dritte nicht, und es kostet jeden neuen Chat Lesezeit. Die Zellen der Strangtabelle in `docs/agent/STAND.md` sind so lang, dass sie wie Chroniken wirken, obwohl `docs/agent/UEBERGABE.md` die Datei als geordneten Stand vorsieht.
 
 **Mittel**
 5. **Binnensprache:** Wilson, Heinz, Audit, Code, Creative, Strang, Engine, Modus, Fundament, DR1, Funktionsplätze, Heimserver. In der Oberfläche fehlt zu den fünf Modi jede Erklärung. Vorschlag EN/DE für den Hub-Untertitel: „Ask offline AI, test small models on your phone.“ / „Offline-KI fragen, kleine Modelle auf dem Handy testen.“
@@ -63,14 +63,14 @@ Blickwinkel: Outsider. Einschränkung: `INDEX.md`, `STAND.md` und `AUFTRAG_Terti
 **Belegbar aus den Artefakten:**
 - Du hast **nicht den Code geschrieben**, sondern Anforderungen gesetzt, Entscheidungen getroffen, am Gerät getestet, abgenommen und einen Arbeitsprozess für mehrere KI-Instanzen gebaut. Die zentrale Leistung liegt dort, nicht im Programmieren.
 - Das Gesamtbild ist **Produktverantwortung plus Prozessgestaltung**: Leitplanken (offline zuerst, „Modell übersetzt, Code rechnet“, alle Regler manuell, Schlüssel nur im Browser), klare Zuständigkeiten (Register, `AUFTRAG_*.md`), Änderungskontrolle für das Fundament, Sperrzeilen, Abnahmestufen, Übergabedokumente, ein unabhängiger Dritter (diese Rolle) als Gegenprobe.
-- Die **Prüfdisziplin** ist ungewöhnlich hoch: „nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief“ (`UEBERGABE.md`), Status je Aussage (belegt/vermutet), Messungen mit Grenzen benannt (`KONZEPT.md` 17.2). In meinen Stichproben stimmen Aussage und Befund: Tests laufen grün, die Funde in 5 bis 8 hat das Projekt teils selbst genannt (17.4 Punkt 5).
+- Die **Prüfdisziplin** ist ungewöhnlich hoch: „nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief“ (`docs/agent/UEBERGABE.md`), Status je Aussage (belegt/vermutet), Messungen mit Grenzen benannt (`KONZEPT.md` 17.2). In meinen Stichproben stimmen Aussage und Befund: Tests laufen grün, die Funde in 5 bis 8 hat das Projekt teils selbst genannt (17.4 Punkt 5).
 - Die Domänenbefunde (Android beendet Termux mit Signal 9, Tempo hängt an `num_thread`, Hintergrund-cgroup) stammen aus Messung am Gerät, nicht aus Lehrtext.
 
 **Nicht belegbar oder einzuschränken:**
 - „Ohne Quellen“: Die Quellen hat mindestens teilweise die KI für dich gelesen (`SCHNITTSTELLEN.md`, `MODELLQUELLEN.md` tragen Anbieterlinks). Das ist zulässig, aber in einer Arbeit müsstest du **Primärquellen-Kompetenz** getrennt zeigen.
 - **Verifikationslücke:** Ein Lauf der Tests beweist, dass Code zu den Tests passt, die dieselbe Werkzeugklasse schrieb. Du kannst das, wie du selbst sagst, nicht gegenlesen. Die sicherheitsrelevanten Teile (Update-Endpunkt, Ursprungsprüfung, Schlüsselablage im Browser, `server.py`) sind von Agenten entworfen und getestet; ein unabhängiges Review hat nicht stattgefunden. Das ist das stärkste Gegenargument gegen „Entwicklerniveau“.
 - Das Tempo (36 Stunden Kalenderzeit, nach Commit-Zeitstempeln rund 29 Stunden mit Aktivität) ist mit parallelen Agenten plausibel. Die 16 Stunden eigener Arbeitszeit sind eine Angabe von dir; ich kann sie weder belegen noch widerlegen. Wichtig für die Einordnung: Die Geschwindigkeit sagt etwas über die **Werkzeuge** und die **Steuerung**, nicht über Programmierleistung. Dass es in einem Tag ging, belegt auch, dass das System ohne Pflege schnell veraltet (Befund 4).
-- Vorarbeit: „Heinz UI“ (Oktober, mit Gemini) war der Ausgangspunkt; der Verlauf nennt das offen (`ENTWICKLUNGSVERLAUF.md`).
+- Vorarbeit: „Heinz UI“ (Oktober, mit Gemini) war der Ausgangspunkt; der Verlauf nennt das offen (`docs/agent/ENTWICKLUNGSVERLAUF.md`).
 
 ## 3 Qualifikationsprofil (aus den Artefakten abgeleitet)
 
@@ -79,7 +79,7 @@ Blickwinkel: Outsider. Einschränkung: `INDEX.md`, `STAND.md` und `AUFTRAG_Terti
 | Anforderungs- und Produktarbeit | Beschlüsse, Leitplanken, offene Entscheidungen (`KONZEPT.md` 0, 1, 13, 18 bis 20) | Zielgruppe und Wettbewerb nicht geklärt (Befund 1) |
 | Prozess- und Änderungsmanagement | Register, Sperrzeilen, Fundament-Regel, Aufträge, Review-Stufen | Einhaltung nicht belegt (Befund 8), Doku-Überhang (Befund 4) |
 | Qualitätssicherung (Denkweise) | Teststrategie, Status „simuliert/Gerät“, Messgrenzen | Keine Automatisierung von dir; keine unabhängige Codeprüfung |
-| Technische Dokumentation | `UEBERGABE.md`, `DESIGN.md`, `SCHNITTSTELLEN.md` mit Quellenstatus | Zielgruppe Dritte fehlt |
+| Technische Dokumentation | `docs/agent/UEBERGABE.md`, `DESIGN.md`, `SCHNITTSTELLEN.md` mit Quellenstatus | Zielgruppe Dritte fehlt |
 | Systemverständnis Edge-KI | Messungen, Termux/Android-Fallstricke, Anbieterschicht als Daten (`capabilities.json`) | Einzelmessungen, keine Statistik |
 | Datenschutz als Entwurfsprinzip | Online-Schalter, Schlüssel nur im Browser, Beschluss „nie die ganze Datenbank“ | Kein formales Datenschutzkonzept (DSGVO-Frage ist im Freiberufler-Konzept schon aufgetaucht) |
 | Programmierung | – | Nicht belegt; du sagst selbst, dass du es nicht kannst |
@@ -114,7 +114,7 @@ Daraus folgt kein Titel, aber ein **Profil**: technisch versierter Produkt- und 
 
 **Auftrag:** Überblicken, welche Entwicklungen des Entwicklers sich als eigene Produkte eignen. **Nachtrag zu Durchgang 1:** Hub und Chat („Heinz UI“) sind Arbeitsgrundlage und Testumgebung; die Befunde 5 und 10 und die Teile von 1 und 2, die Aufbau und Beschriftung dieser Seiten bewerten, gelten nicht als Produktbefunde. Beurteilt wird hier nur, was als eigenes Produkt gedacht ist: der spätere schlanke Chat, die Testumgebung als Werkzeug, die Nischen-Apps (INCIheinz), Convert2, das Muster „Modell übersetzt, Code rechnet“ und der Entwicklungsprozess.
 
-**Grenzen:** INCIheinz und Convert2 habe ich nur über `INDEX.md`, `STAND.md` und `KI_KONZEPT.md` gelesen, nicht gebaut oder getestet. Erlöse kann ich nicht schätzen (keine Marktzahlen recherchiert). Rechtliches ist Einschätzung, keine Rechtsberatung. Recherchierte Fakten stehen unten mit Quelle.
+**Grenzen:** INCIheinz und Convert2 habe ich nur über `INDEX.md`, `docs/agent/STAND.md` und `KI_KONZEPT.md` gelesen, nicht gebaut oder getestet. Erlöse kann ich nicht schätzen (keine Marktzahlen recherchiert). Rechtliches ist Einschätzung, keine Rechtsberatung. Recherchierte Fakten stehen unten mit Quelle.
 
 ## Maßstab (aus den Zielen des Entwicklers)
 Offline, kein Konto, keine Werbung, kein Abo; wenig Pflegeaufwand; ein Kern, mehrere Anwendungen; Zuverdienst oder Reputation, nicht sofort Lebensunterhalt.
@@ -123,13 +123,13 @@ Offline, kein Konto, keine Werbung, kein Abo; wenig Pflegeaufwand; ein Kern, meh
 
 | Kandidat | Reife (nach Dokumenten) | Erlösweg | Hauptrisiko | Einschätzung |
 |---|---|---|---|---|
-| **INCIheinz** (Lager, Rezeptbuch, Katalog 1053 Stoffe) | höchste: PWA, Testgruppe, KI-Import gebaut (`STAND.md` INCIheinz, 08.11.) | Einmalkauf im Store, Zuverdienst | kleiner Markt, Entdeckbarkeit; Katalog aus Fachbüchern (Rechte, Eigenformulierung); Sicherheits- und Warnhinweise (Haftung); Mehrsprachigkeit EN/ES nicht muttersprachlich geprüft | **Bestes erstes Produkt**, weil am weitesten und billig testbar (Marktbeweis vor Ausbau) |
+| **INCIheinz** (Lager, Rezeptbuch, Katalog 1053 Stoffe) | höchste: PWA, Testgruppe, KI-Import gebaut (`docs/agent/STAND.md` INCIheinz, 08.11.) | Einmalkauf im Store, Zuverdienst | kleiner Markt, Entdeckbarkeit; Katalog aus Fachbüchern (Rechte, Eigenformulierung); Sicherheits- und Warnhinweise (Haftung); Mehrsprachigkeit EN/ES nicht muttersprachlich geprüft | **Bestes erstes Produkt**, weil am weitesten und billig testbar (Marktbeweis vor Ausbau) |
 | **Muster „Modell übersetzt, Code rechnet“** samt Fähigkeitendaten und Testreihen-Läufer (Konzept 19 bis 21) | Konzept und Teile gebaut | Kein Eigenprodukt, sondern **gemeinsamer Kern** der Apps (KI-Import, Schnittstellenwissen, Messläufer) | Wartung der Anbieterdaten (veralten schnell) | Als Baustein behalten, nicht verkaufen |
 | **Heinz UI / Testumgebung** | Release Candidate, Gerätetests teilweise | kaum direkt; Reichweite, Reputation, Anleitung, Beratung | Wettbewerb (Apps für lokale Modelle auf dem Handy, z. B. Googles AI Edge Gallery, im Konzept selbst genannt; Wettbewerbsanalyse fehlt); Einrichtung über Termux ist für Laien eine Hürde | **Portfolio- und Reichweitenprodukt**, kein Erlösprodukt |
 | **Schlanker Chat** (geplant) | nur Konzept 18.1 | wie oben | gleicher Markt wie viele Chat-Apps; Alleinstellung unklar (offline, Wechsel Lokal/Cloud, Datenschutzstufen) | erst nach Wettbewerbsvergleich entscheiden |
 | **Convert2** (Markdown zu ePub/PDF) | Ort „noch zu verschieben“, Stand unbekannt | Gratis-Werkzeug als Türöffner, kaum Erlös | Konkurrenz durch freie Werkzeuge | Beiwerk; passt zum Open-Source-Umstieg und zu Doku-Themen |
 | **EPREL-/Label-Werkzeug** (Idee) | nur Idee, zurückgestellt | Software oder Dienstleistung | siehe „Fachlicher Befund“ unten | als **Dienstleistung oder Checkliste** prüfen, nicht als Software, solange der Quellenstand fehlt |
-| **Prozess-Playbook** (Stränge, Sperrzeile, Fundament-Regel, Review-Stufen, Tertius-Rolle, Vorlagen) | dokumentiert und im Einsatz (`UEBERGABE.md`, `STAND.md`, `AUFTRAG_*`) | Leitfaden oder Vorlagenpaket, Fallstudie, Beratung | Wirksamkeit bisher nicht gemessen; vor Veröffentlichung von Projektspezifika bereinigen | **Aussichtsreichstes Wissensprodukt**, auch für den Berufsweg (eigene Datei) |
+| **Prozess-Playbook** (Stränge, Sperrzeile, Fundament-Regel, Review-Stufen, Tertius-Rolle, Vorlagen) | dokumentiert und im Einsatz (`docs/agent/UEBERGABE.md`, `docs/agent/STAND.md`, `AUFTRAG_*`) | Leitfaden oder Vorlagenpaket, Fallstudie, Beratung | Wirksamkeit bisher nicht gemessen; vor Veröffentlichung von Projektspezifika bereinigen | **Aussichtsreichstes Wissensprodukt**, auch für den Berufsweg (eigene Datei) |
 | **Ratgeber „Lokale KI auf dem Handy“** (aus Konzept 18.3 ableitbar) | Material vorhanden (Einrichtungsschritte, Fallstricke, Messungen) | E-Book, Blog, später Kurs | Aktualität, Probelauf auf frischem Gerät fehlt | gut machbar, kleiner bis mittlerer Ertrag |
 
 ## Fachlicher Befund zum Label-Werkzeug (recherchiert)

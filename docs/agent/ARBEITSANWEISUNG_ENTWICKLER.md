@@ -1,0 +1,16 @@
+# Arbeitsanweisung für den Entwickler (nach dem Aufräumen)
+
+Stand 12.11.2026, Ergebnis des Strangs AIUIheinz-Aufraeumen. Reihenfolge so, wie du sie ausführst. Danach kann der nächste Strang nach dem neuen Ablauf arbeiten (keine Steuerdateien am PC, kein `cmp`, kein PC-Abgleich).
+
+| Nr. | Wo | Was |
+|---|---|---|
+| 1 | Claude-App, Projekt „AIUIheinz“ → Projektanweisung | Den Text im Codeblock von `docs/agent/PROJEKTANWEISUNG.md` (GitHub PythonHeinz/AIUIheinz, Branch `main`) kopieren und die alte Anweisung vollständig ersetzen. Kein Strang kann sie ändern. |
+| 2 | Claude-App, Projekt → Projektdokumente `claude/*` | Geprüft und aktualisiert sind `claude/chat-namen.md`, `claude/repo-adresse.md`, `claude/regeln-lokale-modelle.md`. Offen (nur Wortwahl und ein Verweis, nichts Falsches): `claude/modellquellen.md` (der Verweis „KONZEPT Abschnitt 7“ steht jetzt in `docs/archiv/KONZEPT_v1_entwurf.md`) und `claude/design-manifest.md` („ein Chat zur Zeit“ meint „ein Strang“). Wenn du sie nicht mehr brauchst, entfernen: die maßgeblichen Fassungen liegen als `docs/MODELLQUELLEN.md` und `docs/DESIGN.md` im Repo. |
+| 3 | PC, PowerShell | Klon aktualisieren: `cd $env:USERPROFILE\Toolsbyclaude\AIUIheinz\repo; git pull`. Danach liegen die Steuerdateien in `repo\docs\agent\`. Im Klon nie von Hand ändern. |
+| 4 | PC, Ordner `Toolsbyclaude\AIUIheinz` | Dort liegen jetzt nur noch Hinweisdateien (je drei Zeilen: umgezogen nach `docs/agent/…`), die neue `README.md`, der Klon `repo\`, `TERTIUS_privat\` und `archiv_vor_2026-11-12\` (die alten Steuerdateien). Wenn alles passt, die Hinweisdateien löschen (`STAND.md`, `UEBERGABE.md`, `ENTWICKLUNGSVERLAUF.md`, `NAECHSTER_CHAT.md`, `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_DESIGN.md`). `README.md` ist neu gefasst und bleibt, ebenso `TERTIUS_privat\`. |
+| 5 | PC, Ordner `Toolsbyclaude` | `_Sicherung_vor_Aufraeumen_2026-11-12\` enthält dieselben alten Dateien noch einmal. Eine der beiden Kopien (`archiv_vor_2026-11-12` oder die Sicherung) kannst du nach einigen Tagen löschen. `INDEX.md` zeigt für AIUIheinz schon auf den neuen Ort. |
+| 6 | GitHub | Sicherungsstand vor dem Aufräumen: Branch `sicherung/vor-aufraeumen-2026-11-12` (Commit `c20127f`). Ein Tag ließ sich aus dem Strang-Container nicht pushen; wenn du einen Tag willst: `git tag vor-aufraeumen-2026-11-12 c20127f; git push origin vor-aufraeumen-2026-11-12` auf dem PC (mit Push-Zugang) oder den Branch als Sicherung behalten. |
+| 7 | Handy (Termux) | Nichts zu ändern. Am Code hat sich nichts geändert, nur Dokumente und ein Pfad in `tests/test_rules.py`. Beim nächsten `git pull` kommen die Dokumente mit. |
+| 8 | Claude-App, neuer Chat im Projekt | Nächsten Strang starten: erster Satz `AIUIheinz-Menu` (Reihenfolge in `docs/agent/STAND.md`: Menu, dann Pruefstand, dann Speicher). Modelle und Tertius dürfen daneben laufen, wenn sie `chat.html` und `lib/core.*` nicht berühren. Der Strang liest `AUFTRAG_Menu.md` selbst. |
+
+Danach gilt für jeden Strang die Routine aus `UEBERGABE.md`: `git pull --rebase`, Zeile unter „Aktive Arbeit“ eintragen und pushen, arbeiten, Tests, `ENTWICKLUNGSVERLAUF.md` und `STAND.md` im Repo, pushen. Wünschst du einen Stand am PC (`INDEX.md`, eine Datei im Ordner), bitte den Root-Strang darum.

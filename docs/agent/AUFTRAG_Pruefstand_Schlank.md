@@ -1,12 +1,12 @@
 # AUFTRAG Prüfstand schlank (Strang AIUIheinz-Pruefstand)
 
-Neuer Strang, angelegt 12.11.2026 im Root-Chat. Chat-Name: **AIUIheinz-Pruefstand**. Startet **nach** AIUIheinz-Menu (beide ändern `chat.html`), **vor** AIUIheinz-Speicher.
+Neuer Strang, angelegt 12.11.2026 im Root-Strang. Strangname: **AIUIheinz-Pruefstand**. Startet **nach** AIUIheinz-Menu (beide ändern `chat.html`), **vor** AIUIheinz-Speicher.
 
 ## Dogma (Beschluss des Entwicklers 12.11.2026, steht in `docs/KONZEPT.md` 22)
 **Schlankes Web-UI: Die Seite zeigt an und bedient. Sie enthält keine Datenbanken, keine Prüfprozeduren-Texte und keine Ergebnisse.** Definitionen (Prompts, Prüfregeln, Parametermatrizen, Modellregeln) liegen als Daten im Repo, Nutzdaten und Ergebnisse im Speicher des Browsers (nächster Strang: IndexedDB) und gehen per Export nach außen. Eine neue Prüfprozedur ist eine neue Datendatei, nicht eine neue Funktion in `chat.html`.
 
 ## Ausgangslage
-`chat.html` ist auf über 3000 Zeilen gewachsen: Chat, Menü, Tempo-Test, Testreihen, Modus- und Modellwerte, Texte in EN/DE. Neue Prüfverfahren und Ergebnisse landen im Skript. Das kostet beim Lesen und Ändern viele Token und erzeugt Regressionen.
+`chat.html` ist auf über 3000 Zeilen gewachsen: Unterhaltung, Menü, Tempo-Test, Testreihen, Modus- und Modellwerte, Texte in EN/DE. Neue Prüfverfahren und Ergebnisse landen im Skript. Das kostet beim Lesen und Ändern viele Token und erzeugt Regressionen.
 
 ## Phase 1 – Inventur und Vorschlag (kein Code)
 1. `chat.html` in Blöcke gliedern: Anzeige (Markup, Stile), Bedienlogik, Engine- und Messlogik, Prüfverfahren, eingebettete Daten (Texte, Standardprompts, Regeln), Speicherzugriffe. Je Block Zeilenzahl, Abhängigkeiten, Ziel (Modul, Datendatei, bleibt).
@@ -28,5 +28,5 @@ Neuer Strang, angelegt 12.11.2026 im Root-Chat. Chat-Name: **AIUIheinz-Pruefstan
 
 ## Grenzen
 - `lib/providers.js` und Engine-Aufrufe nur lesen, außer die Aufteilung verlangt es; dann vorher fragen.
-- Nichts als am Gerät geprüft melden. Nach dem Umbau Handytest in `docs/HANDYTEST.md` eintragen (Chat, Tempo-Test, Testreihe, Modellwechsel), nicht einzeln beim Entwickler abfragen.
+- Nichts als am Gerät geprüft melden. Nach dem Umbau Handytest in `docs/HANDYTEST.md` eintragen (Unterhaltung, Tempo-Test, Testreihe, Modellwechsel), nicht einzeln beim Entwickler abfragen.
 - Läuft allein; Zeile unter „Aktive Arbeit“ in `docs/agent/STAND.md`.

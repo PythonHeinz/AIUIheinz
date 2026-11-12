@@ -180,7 +180,7 @@ Ziel: Der Entwickler prüft mit eigenem Schlüssel auf dem Handy, was die Schnit
 
 ## 7 Festgelegte Werte (Version 1 von `lib/capabilities.json`, 10.11.2026 nachts)
 
-Aus diesem Bericht ist die Datei `lib/capabilities.json` entstanden (nur Daten, kein Code; geprüft durch `tests/test_capabilities.py`). Sie ist die maschinenlesbare Fassung der Abschnitte 1 und 2. Der Chat-Strang liest sie (Auftrag `docs/AUFTRAG_Chat_Schnittstellen.md`).
+Aus diesem Bericht ist die Datei `lib/capabilities.json` entstanden (nur Daten, kein Code; geprüft durch `tests/test_capabilities.py`). Sie ist die maschinenlesbare Fassung der Abschnitte 1 und 2. Der Chat-Strang liest sie (Auftrag `docs/agent/AUFTRAG_Chat_Schnittstellen.md`).
 
 **Zustand je Regler, Engine und Modell:**
 | Zustand | Bedeutung in der Oberfläche |

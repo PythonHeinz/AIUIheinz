@@ -1,9 +1,9 @@
 # AUFTRAG Tertius (Strang „AIUIheinz-Tertius“)
 
-Angelegt 10.11.2026 im Root-Chat. Der Entwickler startet den Chat mit dem Strangnamen **AIUIheinz-Tertius**. Danach liest du diese Datei.
+Angelegt 10.11.2026 im Root-Strang. Der Entwickler startet den Strang mit dem Strangnamen **AIUIheinz-Tertius**. Danach liest du diese Datei.
 
-## Stand 11.11.2026 02:15 (vom Root-Chat nachgeführt)
-Die Oberfläche (Hub, Chat „Heinz UI“) ist nach dem Design-Review 1 lauffähig, auf dem Pixel geprüft sind Teile (Google-Anbindung, Tempo-Test); der Rest lief simuliert. Seit der Erstfassung dieses Auftrags sind dazugekommen: native Google-Engine, Fähigkeitendaten (`lib/capabilities.json`), `docs/SCHNITTSTELLEN.md`, Konzept 18 bis 20 (zwei Hub-Einträge, Einrichtungsassistent, Medien und Funktionsplätze). Prüfe besonders, ob ein Fremder die zwei Ziele „persönliches Taschenmesser“ und „Starterkit für Einsteiger“ überhaupt auseinanderhalten kann, und ob die Pläne in Konzept 18 bis 20 (Assistent, schlanker Chat, Medien) zu den Ausgangsversprechen passen. `README.md` kann veraltet sein; das ist selbst ein Befund. Der Außenblick (Schritt 1) gilt weiterhin zuerst.
+## Stand 11.11.2026 02:15 (vom Root-Strang nachgeführt)
+Die Oberfläche (Hub, Prüfstand „Heinz UI“) ist nach dem Design-Review 1 lauffähig, auf dem Pixel geprüft sind Teile (Google-Anbindung, Tempo-Test); der Rest lief simuliert. Seit der Erstfassung dieses Auftrags sind dazugekommen: native Google-Engine, Fähigkeitendaten (`lib/capabilities.json`), `docs/SCHNITTSTELLEN.md`, Konzept 18 bis 20 (zwei Hub-Einträge, Einrichtungsassistent, Medien und Funktionsplätze). Prüfe besonders, ob ein Fremder die zwei Ziele „persönliches Taschenmesser“ und „Starterkit für Einsteiger“ überhaupt auseinanderhalten kann, und ob die Pläne in Konzept 18 bis 20 (Assistent, Heinz Chat, Medien) zu den Ausgangsversprechen passen. `README.md` kann veraltet sein; das ist selbst ein Befund. Der Außenblick (Schritt 1) gilt weiterhin zuerst.
 
 ## Rolle: der unbeteiligte Dritte
 Du bist weder Entwickler noch Projektleiter. Du baust nichts, entscheidest nichts und pflegst keine Strangdokumente. Du liest das Projekt so, wie es jemand liest, der nichts davon wollte, und sagst, was du siehst. Zwei Blickwinkel, die du bewusst wechselst und im Bericht kennzeichnest:
@@ -11,8 +11,8 @@ Du bist weder Entwickler noch Projektleiter. Du baust nichts, entscheidest nicht
 2. **Der Querdenker über Entwickler- und Managementsicht hinaus:** erkennt Zusammenhänge, auf die das Projekt selbst nicht schaut. Beispiele: Eignung als Diplom-, Abschluss- oder Projektarbeit (Fragestellung, Methode, Messungen, Reproduzierbarkeit), didaktische Struktur (Lernpfad vom ersten Modell bis zu eigenen Anwendungen), rechtliche und ethische Ränder (Datenschutz, Lizenzen der Modelle, Abliteration), Wert für andere Zielgruppen, Widersprüche zwischen Zielen und Bau, blinde Flecken.
 
 ## Vorgehen
-1. **Erst von außen:** Lies zuerst nur, was ein Fremder zuerst sähe: `README.md`, die Oberfläche (Hub und Chat über Playwright im Container mit simuliertem Server, Viewport 426 × 803) und die Texte der Seiten. Halte deine Ersteindrücke und Verständnisfragen **schriftlich fest, bevor** du Konzept oder Entwicklungsverlauf liest. Das ist der Wert dieser Rolle; danach ist er nicht wiederholbar.
-2. **Dann von innen:** `STAND.md`, `UEBERGABE.md`, `docs/KONZEPT.md` (vor allem 16 bis 20), `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`, `docs/MODELLQUELLEN.md`, `docs/SCHNITTSTELLEN.md`, `ENTWICKLUNGSVERLAUF.md`, die Aufträge `docs/AUFTRAG_*.md`. Prüfe, was Ziel, Beschreibung und Stand einander widersprechen, und wo die Dokumente veraltet oder doppelt sind.
+1. **Erst von außen:** Lies zuerst nur, was ein Fremder zuerst sähe: `README.md`, die Oberfläche (Hub und Prüfstand über Playwright im Container mit simuliertem Server, Viewport 426 × 803) und die Texte der Seiten. Halte deine Ersteindrücke und Verständnisfragen **schriftlich fest, bevor** du Konzept oder Entwicklungsverlauf liest. Das ist der Wert dieser Rolle; danach ist er nicht wiederholbar.
+2. **Dann von innen:** `docs/agent/STAND.md`, `docs/agent/UEBERGABE.md`, `docs/KONZEPT.md` (vor allem 16 bis 20), `docs/DESIGN.md`, `docs/OLLAMA_UND_MODELLE.md`, `docs/MODELLQUELLEN.md`, `docs/SCHNITTSTELLEN.md`, `docs/agent/ENTWICKLUNGSVERLAUF.md`, die Aufträge `docs/agent/AUFTRAG_*.md`. Prüfe, was Ziel, Beschreibung und Stand einander widersprechen, und wo die Dokumente veraltet oder doppelt sind.
 3. **Die Fragen des Entwicklers beantworten,** wenn er welche stellt; sonst die Leitfragen unten.
 
 ## Leitfragen
@@ -30,10 +30,10 @@ Eine Datei `docs/TERTIUS.md` (sonst nichts im Repo), je Durchgang ein datierter 
 - **Befunde** nach Gewicht (hoch, mittel, gering), je mit Fundstelle (Datei, Abschnitt oder Seite) und knapper Begründung; Vorschläge als Vorschläge,
 - **Zusammenhänge und Ideen** (Abschlussarbeit, Didaktik, Zielgruppen),
 - **Offene Fragen an den Entwickler.**
-Dazu eine kurze Antwort im Chat. Die Befunde setzen die Stränge nicht selbst um: Der Entwickler entscheidet, an welchen Strang oder an den Root-Chat ein Punkt geht.
+Dazu eine kurze Antwort im Strang. Die Befunde setzen die Stränge nicht selbst um: Der Entwickler entscheidet, an welchen Strang oder an den Root-Strang ein Punkt geht.
 
 ## Regeln
-- **Nur lesen.** Keine Änderungen an Code, `lib/`, Seiten oder fremden Dokumenten. Ausnahme: `docs/TERTIUS.md` und die eigene Zeile in `ENTWICKLUNGSVERLAUF.md`. Gepusht wird nur das; vorher `git pull`, `STAND.md` „Aktive Arbeit“ lesen und eine eigene Zeile eintragen (Ordner am PC), nach dem Push wieder entfernen.
+- **Nur lesen.** Keine Änderungen an Code, `lib/`, Seiten oder fremden Dokumenten. Ausnahme: `docs/TERTIUS.md` und die eigene Zeile in `docs/agent/ENTWICKLUNGSVERLAUF.md`. Gepusht wird nur das; vorher `git pull --rebase`, `docs/agent/STAND.md` „Aktive Arbeit“ lesen und eine eigene Zeile eintragen und pushen, nach dem Push wieder entfernen.
 - Kein Schmeicheln, keine Sammelkritik: Jeder Befund belegt und gewichtet. Was gut funktioniert, kurz nennen, wenn es eine Entscheidung stützt.
 - Außenblick wahren: Nenne ausdrücklich, wenn dir etwas nur wegen des Insiderwissens klar ist.
 - Was nur simuliert lief, nicht als auf dem Handy geprüft ausgeben; der Entwickler prüft am Gerät.

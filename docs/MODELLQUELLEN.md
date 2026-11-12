@@ -11,7 +11,7 @@ Stand: 09.11.2026. Strang „AIUIheinz-Modelle“. Reine Recherche und Planungsg
 - **AI Horde: zurückgestellt (nicht aufnehmen).** Pollinations bleibt Kandidat für Stufe 4 (Gratiszugang ohne Konto zum Ausprobieren, auch für Nutzer, die erst einmal nichts einrichten wollen); die Eingabe wird vorab gewarnt.
 - Vorrang der Recherche: Google AI Studio (einzige API, die der Entwickler zurzeit testen kann), dann LiteRT-LM. Parameter und Fähigkeiten stehen in `docs/SCHNITTSTELLEN.md`.
 
-**Wie belastbar ist das?** Fast alle Zahlen stammen aus Drittquellen (Vergleichsseiten, Blogs, Foren) von August bis Oktober 2026, nur wenige direkt aus Anbieterdokus. Gratisstufen ändern sich oft (siehe Abschnitt G). Vor dem Einbau jeden Eintrag auf der Anbieterseite gegenprüfen. CORS (ob der Browser den Anbieter direkt aufrufen darf) ist bei keinem Anbieter geprüft; dafür ist der optionale Proxy in `server.py` (KONZEPT Abschnitt 7) vorgesehen.
+**Wie belastbar ist das?** Fast alle Zahlen stammen aus Drittquellen (Vergleichsseiten, Blogs, Foren) von August bis Oktober 2026, nur wenige direkt aus Anbieterdokus. Gratisstufen ändern sich oft (siehe Abschnitt G). Vor dem Einbau jeden Eintrag auf der Anbieterseite gegenprüfen. CORS (ob der Browser den Anbieter direkt aufrufen darf) ist bei keinem Anbieter geprüft; dafür ist der optionale Proxy in `server.py` (KONZEPT Abschnitt 7, Archiv: `docs/archiv/KONZEPT_v1_entwurf.md`) vorgesehen.
 
 ## A Lokal und offline (Kern der App)
 | Quelle | Was | Hinweis |
