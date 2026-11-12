@@ -5,7 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- keine
+- 12.11.2026 21:40, AIUIheinz-Design: Layout-Wünsche des Entwicklers (Mehrfachauswahl in der Unterhaltungsliste des Dashboards, 5 Pillen per ⋯ in der Liste des Heinz Chat, Kopfzeile Zeile 2 Punkt/Status zur Equalizer-Mitte). Berührt dashboard.html, lib/dashboard/conversations.js, chat.html, lib/core.css, tests.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
