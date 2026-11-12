@@ -531,3 +531,8 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Zuschnitt der Stränge (Beschluss des Entwicklers 12.11.): Strang Chat = Seite Heinz Chat; Strang Pruefstand = Seite `chat.html` mit allem, was prüft und einstellt (auch Chatfenster, Testreihen, Sonden). Register in `STAND.md` angepasst.
 - Tests 20 + 24 + 2 + 144 = 190 grün (nur simuliert). Offen: Umstellung auf ES-Module und Ersatz der Inline-Handler, Handytest.
 
+## 12.11.2026 – Fix: JSON-Dateien des Prüfstands fehlten im Repo (Strang AIUIheinz-Pruefstand)
+- Handytest: Prüfstand startete nicht (aufgeblähter Equalizer, leerer Chip, Modusleiste fehlt). Die neue Startfehler-Anzeige nannte `lib/data/pruefstand.i18n.json: HTTP 404`.
+- Ursache: `.gitignore` enthielt `data/` und schloss damit `lib/data/` aus; `lib/data/*.json` waren nie committet. Meine Tests liefen gegen den Arbeitsordner, nicht gegen das Repo, und blieben deshalb grün.
+- Behoben: `.gitignore` auf `/data/`, die drei Dateien committet, neuer Test `test_no_file_of_the_app_is_hidden_from_git`, Startfehler werden auf der Seite angezeigt (Test dazu), Tests aus frischem Klon: 20 + 24 + 3 + 145 grün (nur simuliert). Regel in `TECHNIK.md`.
+

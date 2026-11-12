@@ -43,6 +43,7 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 
 ### Speicher
 - **localStorage-Schlüssel:** `heinz_settings` (Sprache, Regler und Standardwerte-Haken des Prüfstands, `threads`, `ownSystem`, `preload`, `fast`, `fastN`), `heinz_current`, `heinz_chats` (die Unterhaltungen), `heinz_lab`, `heinz_sheet`, `heinz_sheet_cfg`, `heinz_vitals`, `heinz_bench`, `heinz_speedtest` (letztes Ergebnis des Tempo-Tests im Prüfstand). Jede Adresse (Host und Port) hat eigenen Speicher: `localhost:3000`, `127.0.0.1:3000` und `127.0.0.1:8081` sind getrennt.
+- **`.gitignore` nur mit führendem Schrägstrich:** `/data/` meint den Ordner im Projektstamm; `data/` würde auch `lib/data/` ausschließen (12.11.2026: die JSON-Dateien des Prüfstands fehlten deshalb nach `git pull` auf dem Handy, Tests liefen im Arbeitsordner grün). `tests/test_rules.py` prüft, dass keine Datei der App von `.gitignore` erfasst wird; Tests nach größeren Änderungen zusätzlich aus einem frischen Klon laufen lassen.
 - **Nicht ins Repo:** `data/` (Tabellen, Messwerte), Rohstofflisten, private Daten. `data/` steht in `.gitignore` und wird von `git pull` nie angefasst.
 
 ### Termux, Tempo, Server
