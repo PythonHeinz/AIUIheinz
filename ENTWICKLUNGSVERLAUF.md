@@ -650,3 +650,6 @@ Erste Chat-Oberfläche als eine Datei `index.html` mit fünf Modi und Voreinstel
 ## 12.11.2026 – Beschlüsse zur Struktur, drei neue Aufträge (Chat „AIUIheinz“, nur Doku)
 - Anlass: Außenanalyse der Architektur (Entwickler hat sie geprüft). `docs/KONZEPT.md` 22 hält die Beschlüsse fest: eine Quelle der Wahrheit im Repo (`docs/agent/`), Dokumente schlank, Dogma „schlankes Web-UI“, IndexedDB, Reihenfolge der Stränge, Datenschutz zum Pfad.
 - Neue Aufträge: `docs/AUFTRAG_Aufraeumen.md`, `docs/AUFTRAG_Pruefstand_Schlank.md`, `docs/AUFTRAG_Speicher.md`. Nichts gebaut, nichts verschoben. Prüfung der Analyse: keine Schlüssel in der Git-Historie (Muster für Google-, OpenAI-, Groq-Schlüssel ohne Treffer), nur ein Windows-Pfad und Heimnetz-Adressen.
+
+## 12.11.2026 – Begriffe im Auftrag Aufräumen (Chat „AIUIheinz“, nur Doku)
+- `docs/AUFTRAG_Aufraeumen.md` Schritt 4a: Das Wort „Chat“ (Strang, Heinz Chat, Prüfstand, Unterhaltung, Chatmenü) wird in den Dokumenten vereinheitlicht, mit Tabelle `docs/agent/BEGRIFFE.md`. Nur Doku, Oberfläche unberührt.
