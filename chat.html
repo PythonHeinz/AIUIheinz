@@ -45,14 +45,11 @@
         #menu-sheet .sh-head { padding-top: max(8px, env(safe-area-inset-top)); }
         #menu-sheet .sh-body { padding-left: 14px; padding-right: 14px; }
         #model-sheet { z-index: 43; }
-        .caps.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-        .caps .scope { font-size: .62rem; letter-spacing: .04em; text-transform: none; font-weight: 400; color: var(--muted); }
         .quick { padding: 4px 0 6px; }
         .quick .slidercard { padding: 8px 12px 6px; margin-bottom: 6px; border-radius: 14px; }
         .quick .slidercard .sc-top output { font-size: 1rem; }
         .quick .slidercard small { display: none; }
         .quick .row { min-height: 52px; }
-        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
         #menu-sheet .sh-head h3 { text-align: center; padding-left: 0; }
         #menu-sheet #sh-back:not([hidden]) + h3, #menu-sheet #q-reload[hidden] + #sh-back + h3 { }
         .upd-pill { display: flex; width: 62%; height: 50px; margin: 26px auto 0; justify-content: center; align-items: center; border-radius: 999px; font-size: .78rem; letter-spacing: .16em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; box-shadow: 0 0 22px color-mix(in srgb, var(--acc) 26%, transparent); }
@@ -68,15 +65,7 @@
         #ps-text { width: 100%; box-sizing: border-box; resize: vertical; font-size: .82rem; line-height: 1.4; min-height: 130px; }
         #ps-text:read-only { color: var(--sub); }
         .ps-meta { text-align: right; color: var(--muted); font-size: .68rem; font-family: var(--mono); margin: 2px 2px 6px; }
-        .pw-tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
-        .pw-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--sub); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; padding: 4px 10px 8px; cursor: pointer; }
-        .pw-tabs button.on { color: var(--txt); border-bottom-color: var(--acc); }
-        .pw-tabs button.on::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); margin-right: 7px; vertical-align: middle; }
-        .seg2 { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 8px; }
-        .seg2 button { flex: 1; border: 0; background: none; color: var(--sub); border-radius: 99px; padding: 7px 4px; font-size: .78rem; cursor: pointer; }
         .q-btns .pill.act { background: var(--acc); border-color: var(--acc); color: var(--onacc); font-weight: 600; }
-        .seg2 button.on { background: var(--acc); color: var(--onacc); font-weight: 600; }
-        .status-line.tappable { text-decoration: underline; text-underline-offset: 3px; }
         .dflt { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .84rem; padding: 2px 0 8px; cursor: pointer; }
         .pw-sl { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px 0; }
         .pwin .slidercard { display: grid; grid-template-columns: 50px 1fr 44px; align-items: center; gap: 6px; padding: 4px 0; margin: 0; background: none; border-radius: 0; border: 0; }
@@ -87,9 +76,7 @@
         .q-btns { display: flex; gap: 6px; margin-top: 10px; }
         .q-btns .pill { flex: 1; min-height: 34px; padding: 0 6px; font-size: .74rem; justify-content: center; }
         .pwin .help { display: block; margin-top: 6px; font-size: .66rem; line-height: 1.3; }
-        .grpbox { margin: 8px -4px; padding: 2px 6px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
         .pg[data-pg=update] .led { margin-top: 14px; }
-        .sep { height: 1px; background: var(--line); margin: 14px 0 2px; }
         .rl-wrap { display: flex; justify-content: center; padding: 2px 0 6px; }
         .rl-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--ol); background: var(--card); color: var(--pri); display: grid; place-items: center; cursor: pointer; }
         .rl-btn:active { background: var(--hover, var(--card)); }
@@ -137,8 +124,6 @@
         .bar .ttlbox .ttl { flex: none; text-align: left; font-size: .88rem; color: var(--txt); font-weight: 600; padding: 0; }
         .bar .ttl { flex: 1; min-width: 0; text-align: center; font-size: .86rem; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
         #chats-open { position: relative; }
-        .cnt { position: absolute; top: 3px; right: 1px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--acc); color: var(--onacc); font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; }
-        .cnt:empty { display: none; }
 
         /* Chat */
         .cwrap { position: relative; flex: 1; min-height: 120px; display: flex; flex-direction: column; }
@@ -157,8 +142,6 @@
         .msg-copy { position: absolute; top: 2px; right: 2px; width: 30px; height: 30px; padding: 0; background: none; border: 0; color: var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .msg-copy:active { background: var(--card); }
         .placeholder { text-align: center; color: var(--muted); margin: auto 0; font-size: .92rem; }
-        .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--edge); border-top-color: var(--acc); border-radius: 50%; animation: rotate 1s linear infinite; vertical-align: -2px; margin-left: 6px; }
-        @keyframes rotate { 100% { transform: rotate(360deg); } }
         .msg-assistant h1, .msg-assistant h2, .msg-assistant h3, .msg-assistant h4 { margin: 12px 0 5px; font-family: var(--serif); }
         .msg-assistant p { margin: 6px 0; }
         .msg-assistant ul, .msg-assistant ol { margin: 6px 0; padding-left: 22px; }
@@ -186,13 +169,7 @@
         .think .seg2 { margin: 0; width: 148px; flex: none; }
         .think small { flex: 1; min-width: 0; color: var(--sub); font-size: .7rem; line-height: 1.3; }
         /* Schnittstellenwissen: Regler nach Zustand (lib/capabilities.json) */
-        .slidercard.cap-blocked { opacity: .45; cursor: help; }
-        .slidercard input.cap-lock { pointer-events: none; }
         .cap-row { grid-column: 1 / -1; order: 5; }   /* unter Name, Regler und Wert, nie dazwischen */
-        .cap-tag { border: 0; background: none; padding: 2px 0; font: 600 .66rem var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
-        .cap-tag.unk { color: var(--orange); }
-        .cap-text { font-size: .72rem; line-height: 1.4; color: var(--sub); margin-top: 2px; }
-        .cap-text .pill { margin: 4px 0 0; }
         body.kbd .think { display: none; }
         .m1 b { color: var(--m1); } .m2 b { color: var(--m2); } .m3 b { color: var(--m3); } .m4 b { color: var(--m4); }
 
@@ -246,13 +223,7 @@
 
         /* Menue-Sheet, Seiten, Zeilen */
         .pg { display: none; } .pg.on { display: block; }
-        .grp { margin: 20px 4px 6px; }
         .pg > .grp:first-child { margin-top: 8px; }
-        .sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: var(--card); border: 1px solid var(--ol); color: var(--txt); padding: 0 12px; font: inherit; font-size: .92rem; outline: none; margin-top: 6px; }
-        .inp:focus, .sel:focus { border-color: var(--acc); }
-        .fld { display: block; margin: 12px 0 0; font-size: .78rem; color: var(--sub); }
-        .help { display: block; font-size: .74rem; color: var(--sub); line-height: 1.4; margin-top: 6px; }
-        .status-line { font-size: .78rem; color: var(--orange); min-height: 16px; margin-top: 6px; }
         .param-group.off, .slider-group.off { opacity: .4; }
         .row.sel-on .tile { background: var(--acc); color: var(--onacc); }
         .row .ck { color: var(--pri); visibility: hidden; } .row.sel-on .ck { visibility: visible; }
@@ -283,14 +254,12 @@
         .st-chips label.tile:has(input:checked) { color: #06140a; font-weight: 700; background: color-mix(in srgb, var(--tc) 82%, #fff); border-color: var(--tc); box-shadow: 0 0 22px color-mix(in srgb, var(--tc) 70%, transparent), 0 0 6px var(--tc), inset 0 0 14px color-mix(in srgb, #fff 45%, transparent); }
         .st-chips label {display: flex; align-items: center; gap: 5px; background: var(--card); border: 1px solid var(--ol); border-radius: 99px; padding: 7px 12px; font-size: .86rem; cursor: pointer; }
         .st-chips input { margin: 0; accent-color: var(--acc); }
-        .chk { display: flex; align-items: center; gap: 10px; font-size: .88rem; margin: 10px 0; cursor: pointer; }
-        .chk input { accent-color: var(--acc); width: 18px; height: 18px; margin: 0; }
         .sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .sr-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; } .sr-grid label.sr-off { opacity: .45; } .sr-grid .inp { width: 100%; box-sizing: border-box; }
         .st-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: 8px; }
         .st-table th, .st-table td { text-align: right; padding: 3px 2px; border-bottom: 1px solid var(--line); }
         .st-table th:first-child, .st-table td:first-child { text-align: left; }
         .st-table tr.stc0 td { color: var(--m2); } .st-table tr.stc1 td { color: var(--m4); } .st-table tr.stc2 td { color: var(--m1); } .st-table tr.stc3 td { color: var(--m3); }
-        .pg.off .st-chips, .pg.off .chk, .pg.off .sel { opacity: .4; }
+        .pg.off .st-chips, .pg.off .chkrow, .pg.off .sel { opacity: .4; }
         .st-table th { color: var(--sub); font-weight: normal; }
         .st-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         /* Modellauswahl */
@@ -542,7 +511,7 @@
                     <label><b data-i18n="srReps">Repeats</b><input id="sr-reps" class="inp" inputmode="numeric" value="1" oninput="srPlan()"></label>
                     <label><b data-i18n="srMaxTok">Max. answer tokens</b><input id="sr-max" class="inp" inputmode="numeric" value="200" oninput="srPlan()"></label>
                 </div>
-                <label class="chk"><input type="checkbox" id="sr-answers" checked><span data-i18n="srAnswers">Answer texts in the export</span></label>
+                <label class="chkrow"><input type="checkbox" id="sr-answers" checked><span data-i18n="srAnswers">Answer texts in the export</span></label>
                 <div id="sr-plan" class="help" style="min-height:16px"></div>
                 <div class="st-btns">
                     <button class="pill acc" id="sr-start" type="button" onclick="srStart()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
@@ -571,8 +540,8 @@
                     <option value="short" data-i18n="stShort">Short prompt (~20 tokens)</option>
                     <option value="long" data-i18n="stLong">Long prompt (~300 tokens)</option>
                 </select>
-                <label class="chk"><input type="checkbox" id="st-termux"><span data-i18n="stTermuxVisible">Termux visible (split screen)</span></label>
-                <label class="chk"><input type="checkbox" id="st-cold" checked><span data-i18n="stCold">Unload model first (measures real load time)</span></label>
+                <label class="chkrow"><input type="checkbox" id="st-termux"><span data-i18n="stTermuxVisible">Termux visible (split screen)</span></label>
+                <label class="chkrow"><input type="checkbox" id="st-cold" checked><span data-i18n="stCold">Unload model first (measures real load time)</span></label>
                 <div class="st-btns">
                     <button class="pill acc" id="st-start" type="button" onclick="startSpeedTest()"><svg class="i sm"><use href="lib/icons.svg#i-timer"/></svg><span data-i18n="stStart">Start test</span></button>
                     <button class="pill danger" id="st-stop" type="button" onclick="stopSpeedTest()" style="display:none"><svg class="i sm"><use href="lib/icons.svg#i-stop"/></svg><span data-i18n="stStop">Stop</span></button>
@@ -599,7 +568,7 @@
                 <div class="led updled" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
                 <div id="upd-status" class="help" style="min-height:16px"></div>
                 <div class="caps grp" style="margin-top:22px"><span data-i18n="bkTitle">Backup</span></div>
-                <label class="chk"><input type="checkbox" id="bk-keys"><span data-i18n="bkKeys">Include API keys (keep the file safe)</span></label>
+                <label class="chkrow"><input type="checkbox" id="bk-keys"><span data-i18n="bkKeys">Include API keys (keep the file safe)</span></label>
                 <div class="st-btns"><button class="pill" type="button" onclick="exportBackup()"><svg class="i sm"><use href="lib/icons.svg#i-download"/></svg><span data-i18n="bkExport">Export backup</span></button><button class="pill" type="button" onclick="$('bk-file').click()"><svg class="i sm"><use href="lib/icons.svg#i-save"/></svg><span data-i18n="bkImport">Import backup</span></button></div>
                 <input type="file" id="bk-file" accept="application/json,.json" hidden onchange="importBackup(this)">
                 <div id="bk-status" class="help" style="min-height:16px"></div>

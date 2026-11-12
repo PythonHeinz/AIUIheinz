@@ -27,6 +27,7 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - Ein Modul ändert nur seine eigene Seite. Neue Seiten bekommen eine Kachel im Hub und, wenn sie Ollama oder den Server neu ansprechen, einen Eintrag in `docs/OLLAMA_UND_MODELLE.md`.
 - Korrektur-Stränge beheben nur das gemeldete Problem, ergänzen einen Eintrag in `ENTWICKLUNGSVERLAUF.md` und ändern keine Struktur.
 - Neue sichtbare Texte immer mit EN und DE; Designregeln siehe `TECHNIK.md` und `docs/DESIGN.md`.
+- **Oberfläche: erst den Design-Katalog ansehen** (`tools/design/index.html`, Regel in `docs/DESIGN.md` 7). Keine eigenen Varianten bestehender Bausteine auf einzelnen Seiten; fehlt ein Baustein, wird er in `lib/core.css` angelegt und im Katalog eingetragen.
 - Vor jedem Umbau in kurzen Sätzen sagen, was geplant ist und was der Entwickler auf dem Handy prüfen soll.
 - Nie behaupten, etwas sei auf dem Gerät getestet, was nur simuliert lief. Messwerte vom Handy kommen in `docs/KONZEPT.md` oder `docs/OLLAMA_UND_MODELLE.md`.
 - Der Entwickler arbeitet auf Deutsch; Antworten sachlich und knapp, ohne Lob und Begeisterung.

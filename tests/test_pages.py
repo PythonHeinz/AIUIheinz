@@ -6,11 +6,18 @@ Real models only run on the phone; here Ollama is answered by page.route().
 """
 import json, os, sys, unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from helpers import Server
+from helpers import Server, ROOT
+import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
 PAGES = ["/", "/hub.html", "/chat.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/tools/heinz/index.html", "/tools/setup/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
+
+
+def missing_classes(css, classes):
+    """class names (without the dot) that have no selector in the css text (comments do not count)"""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return [c for c in classes if not re.search(r"\." + re.escape(c) + r"(?![\w-])", css)]
 
 
 class FakeOllama:
@@ -2153,20 +2160,118 @@ class PageTest(unittest.TestCase):
     def test_design_page_blocks_symbols_theme_and_language(self):
         page = self.new_page()
         page.goto(self.srv.base + "/tools/design/index.html")
-        self.assertGreater(page.locator(".icons .ic").count(), 40)
+        page.wait_for_function("document.querySelectorAll('.icons .ic').length > 40")
         self.assertGreater(page.evaluate("document.querySelector('#pd2').width"), 300)
         page.click("[data-th=dk]")
         self.assertEqual(page.get_attribute("html", "data-theme"), "dk")
         page.click("[data-th=lt]")
         self.assertEqual(page.get_attribute("html", "data-theme"), "lt")
         page.click("#lang")
-        self.assertIn("Bausteine", page.inner_text("h1"))
+        self.assertIn("Katalog", page.inner_text("h1"))
         page.click("#open-sheet")
         self.assertTrue(page.locator("#sheet.open").count() == 1)
         page.click("#close-sheet")
         self.assertEqual(page.locator("#sheet.open").count(), 0)
         self.assertEqual(self.errors, [])
         self.assertEqual(self.external, [])
+
+    # ---- design catalog (AIUIheinz-Menu, phase 0) ----
+    def catalog(self, scheme="dark", lang="en"):
+        ctx = self.browser.new_context(viewport=VIEWPORT, color_scheme=scheme)
+        self.addCleanup(ctx.close)
+        page = ctx.new_page()
+        self.errors, self.external = [], []
+        page.on("pageerror", lambda e: self.errors.append(str(e)))
+        page.on("console", lambda m: self.errors.append(m.text) if m.type == "error" else None)
+        page.on("request", lambda r: self.external.append(r.url) if not (r.url.startswith(self.srv.base) or r.url.startswith("data:")) else None)
+        page.goto(self.srv.base + "/tools/design/index.html")
+        if lang == "de":
+            page.click("#lang")
+        page.wait_for_function("document.querySelectorAll('.icons .ic').length > 40")
+        return page
+
+    def core_css(self):
+        with open(os.path.join(ROOT, "lib", "core.css"), encoding="utf-8") as f:
+            return f.read()
+
+    def test_design_catalog_every_named_class_is_in_core_css_and_shown(self):
+        page = self.catalog()
+        classes = page.evaluate("[].concat.apply([], CATALOG.map(b => b.cls))")
+        self.assertGreater(len(classes), 40)
+        self.assertEqual(missing_classes(self.core_css(), sorted(set(classes))), [], "class named in the catalog but not in lib/core.css")
+        absent = page.evaluate("Array.from(new Set([].concat.apply([], CATALOG.map(b => b.cls)))).filter(c => !document.querySelector('.' + c))")
+        self.assertEqual(absent, [], "class named in the catalog but not shown in any example")
+        self.assertEqual(page.evaluate("CATALOG.filter(b => !b.en[0] || !b.en[1] || !b.de[0] || !b.de[1] || !b.where).length"), 0, "every block needs EN, DE and a place of use")
+        self.assertEqual(page.locator(".blk").count(), page.evaluate("CATALOG.length"))
+
+    def test_catalog_check_detects_a_class_removed_from_core_css(self):
+        css = self.core_css()
+        self.assertEqual(missing_classes(css, ["seg2", "pill", "sw"]), [])
+        broken = re.sub(r"\.seg2[^{]*\{[^}]*\}", "", css)
+        self.assertEqual(missing_classes(broken, ["seg2", "pill", "sw"]), ["seg2"])
+        self.assertEqual(missing_classes("/* .seg2 only in a comment */ .pill { }", ["seg2", "pill"]), ["seg2"])
+
+    def test_design_catalog_symbols_exist_in_the_sprite_and_functions_exist(self):
+        page = self.catalog()
+        with open(os.path.join(ROOT, "lib", "icons.svg"), encoding="utf-8") as f:
+            sprite = f.read()
+        ids = set(re.findall(r'id="i-([a-z0-9-]+)"', sprite))
+        used = page.evaluate("Array.from(new Set(CATALOG.map(b => b.h).join(' ').match(/\\{\\{i:[a-z0-9-]+\\}\\}/g).map(x => x.slice(4, -2))))")
+        self.assertGreater(len(used), 5)
+        self.assertEqual([u for u in used if u not in ids], [])
+        shown = page.evaluate("Array.from(document.querySelectorAll('use')).map(u => u.getAttribute('href').split('#i-')[1])")
+        self.assertEqual([u for u in shown if u not in ids], [])
+        self.assertEqual(page.locator(".icons .ic").count(), len(ids), "the symbol list comes from the sprite")
+        missing = page.evaluate("FUNCS.map(f => f.n).filter(n => typeof Heinz[n] === 'undefined')")
+        self.assertEqual(missing, [], "function named in the catalog but missing in lib/core.js")
+
+    def test_design_catalog_fits_the_phone_in_both_themes_and_languages(self):
+        for scheme, lang in (("dark", "en"), ("light", "de")):
+            page = self.catalog(scheme, lang)
+            self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), 426, scheme + " " + lang)
+            self.assertEqual(self.errors, [])
+            self.assertEqual(self.external, [])
+        self.assertIn("Katalog", page.inner_text("h1"))
+
+    def test_catalog_copy_button_hands_over_markup_without_catalog_internals(self):
+        page = self.catalog()
+        page.evaluate("window.__c = null; Heinz.copy = function (t) { window.__c = t; return Promise.resolve(); }")
+        page.click("#b-sw .cmd button")
+        txt = page.evaluate("window.__c")
+        self.assertIn('class="sw"', txt)
+        self.assertNotIn("data-bind", txt)
+
+    def test_core_helpers_switch_slider_and_setting_store_and_restore(self):
+        page = self.catalog()
+        sw = page.locator("#b-sw [data-bind-switch=demoA]")
+        self.assertFalse(sw.is_checked())
+        page.click("#b-sw label.sw:first-of-type")
+        self.assertTrue(sw.is_checked())
+        self.assertEqual(page.evaluate("localStorage.getItem('heinz.design.demoA')"), "true")
+        page.reload()
+        page.wait_for_selector("#b-sw [data-bind-switch=demoA]")
+        self.assertTrue(page.locator("#b-sw [data-bind-switch=demoA]").is_checked())
+        page.evaluate("document.querySelector('#b-slider input[type=range]').value = '1.5'; document.querySelector('#b-slider input[type=range]').dispatchEvent(new Event('input'))")
+        self.assertEqual(page.inner_text("#b-slider output"), "1.5")
+        page.evaluate("Heinz.setSetting('catalogProbe', 7)")
+        self.assertEqual(page.evaluate("Heinz.setting('catalogProbe', 0)"), 7)
+        self.assertEqual(page.evaluate("Heinz.setting('nothingHere', 'fb')"), "fb")
+        self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_settings')).catalogProbe"), 7)
+        self.assertEqual(self.errors, [])
+
+    def test_moved_blocks_work_in_the_test_bench_and_do_not_leak_into_other_pages(self):
+        css = re.sub(r"/\*.*?\*/", "", self.core_css(), flags=re.S)   # comments may name the old class
+        self.assertIsNone(re.search(r"(?<![\w-])\.chk(?![\w-])", css), ".chk belongs to the setup page (status text), the checkbox row is .chkrow")
+        self.assertIsNone(re.search(r"(?<![\w-])\.sel(?![\w-])", css), "a bare .sel would restyle .row.sel in the Heinz Chat; the field is select.sel")
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector(".burger-btn")
+        style = "s => getComputedStyle(document.querySelector(s))"
+        self.assertEqual(page.evaluate(style + ".position", "#chats-open .cnt"), "absolute")
+        self.assertEqual(page.evaluate(style + ".display", ".seg2"), "flex")
+        self.assertEqual(page.evaluate(style + ".display", ".chkrow"), "flex")
+        self.assertEqual(page.evaluate(style + ".height", "select.sel"), "46px")
+        self.assertEqual(self.errors, [])
 
     # ---- DR2 phase A: new hub, Heinz Chat, setup, mode slider ----
     def test_new_hub_groups_names_and_footer(self):
