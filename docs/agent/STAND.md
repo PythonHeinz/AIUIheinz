@@ -17,7 +17,18 @@ Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles
 Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `dashboard.html` und `lib/core.*` nicht berühren. Modi, Design und Assistent warten bis nach Schritt 3 (sie berühren `dashboard.html`); der Strang Chat (Heinz Chat) wartet nicht. Strang Modi: nicht starten ohne Rücksprache.
 
 ## Zielstand (Beschluss `docs/KONZEPT.md` 23, 12.11.2026)
-**MVP intern:** Hub, Heinz Chat und Heinz Dashboard laufen perfekt auf dem Konzept und auf der neuen Modulstruktur (Strang Fundament); danach erste Fassung einer zweiten Person zeigen. Die Vormerkungen unten sind ein Becken und dürfen wachsen; Root prüft sie nach der Fundament-Umstellung auf „nötig für MVP“, „danach“ und „Becken“. Danach der Reihe nach: convert2 aufnehmen, Sheet, Lab und Vitals bei Bedarf, INCIheinz-Umbau, neue Apps.
+**MVP intern:** Hub, Heinz Chat und Heinz Dashboard laufen perfekt auf dem Konzept und auf der neuen Modulstruktur (Strang Fundament); danach erste Fassung einer zweiten Person zeigen. Die Vormerkungen unten sind ein Becken und dürfen wachsen; Root hat sie nach der Fundament-Umstellung eingeordnet (Abschnitt „Einordnung der Vormerkungen“ unten). Danach der Reihe nach: convert2 aufnehmen, Sheet, Lab und Vitals bei Bedarf, INCIheinz-Umbau, neue Apps.
+
+## Einordnung der Vormerkungen (Root-Review 12.11.2026, nach der Fundament-Umstellung; `KONZEPT.md` 23)
+Vorschlag des Root-Strangs, der Entwickler entscheidet. Quellen: Nächste Aufgaben unten, `docs/GEPLANT.md`, `KONZEPT.md` 15.6 und 18.4. Erneut prüfen nach dem MVP.
+**A. Nötig für den MVP intern** (Hub, Heinz Chat, Dashboard perfekt auf dem Konzept; Reihenfolge):
+1. **Handytest der Modulumstellung** (Entwickler; Liste im Verlauf): Tor für alles Weitere. Dazu die offenen gebündelten Handytests (Testreihen, `ollama rm heinz-wilson:latest heinz-fakt:latest`, Systemprompt je Modell im Heinz Chat) und der Handytest LiteRT-LM (15.6 Punkt 2).
+2. **Strang Dashboard, Rückstau 2a und 2b:** App startet im Heinz Chat statt im Dashboard (a), Reste „Prüfstand“ (b), Standard für `num_thread` und Übertragung von Einstellungen zwischen App und Tab (2b), **Konfiguration** (c; berührt `lib/store.js` und Heinz Chat, vorher mit dem Entwickler abstimmen).
+3. **Strang Chat:** Auftrag schreibt der Root-Strang; Cursorfarbe, Handytest Systemprompt je Modell.
+4. **Gemeinsames von Dashboard und Heinz Chat** (Markdown, Nachrichten zeichnen, Unterhaltungsliste, Modellblatt sind doppelt vorhanden, `docs/MODULE.md`) und **Kreise der 19 Dashboard-Dateien**: Voraussetzung dafür, dass Design-Änderungen sich einmal global auswirken. Beschluss des Entwicklers nötig, weil Aussehen und Verhalten berührt werden können; eigener Auftrag, Strang Fundament Phase 2.
+5. **Strang Design (Feinschliff):** Cursorfarbe, Label „Model name“, DR2 soweit für den Zeigbarkeits-Stand nötig; Umbau des Menüs bleibt nicht beauftragt.
+**B. Danach** (nach dem MVP, Reihenfolge nach `KONZEPT.md` 23): convert2 aufnehmen, Sheet mit echtem Qwen 2.5 3B, Lab und Vitals, Umbau INCIheinz, neue Apps. Dazwischen nach Bedarf: Testreihen Schritt 4 und 5, Sonden S1 bis S8, Modellverwaltung und Denkregeln/CORS der Anbieter (Strang Modelle, Phase 2 berührt `lib/providers.js`), Modi (Schnell/Tief, Reasoning), Assistent (Dimensionierung), Geräteprofile, App-Sprache, Tempo-Test (Kerne zuweisen), Schwellen der Telemetrie, Signal 9 und Vitals, Medien (Abschnitt 20), Wissensquellen und Einbettung (19.6), Tools mit Online-Sperre, gehostete Fassung.
+**C. Becken** (Idee, ohne Termin): Entwickleroption „Brummen“, Sensor-Dashboards, Spotify-Tempo, Claude-ermittelte Werte tracken, Mail- und Newsfeed-Stimmung, eigene Bestände als Wissensquelle und Bestellliste als E-Mail (GEPLANT 12.11.), `heinz-fakt` in den Auswahllisten, Kamera und Dokumente, Refusal-Vergleich.
 
 ## Stränge
 Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge hier eintragen.
