@@ -4,7 +4,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
-Aktuell: keine.
+- 12.11.2026, AIUIheinz-Menu: Phase 0 Bausteinkatalog (nur benennen und herausziehen, Verhalten der Seiten unverändert, Menü des Prüfstands bleibt). Berührt: `lib/core.css`, `lib/core.js`, `lib/icons.svg`, `tools/design/index.html`, `docs/DESIGN.md`, Tests, Doku. Nicht: `lib/providers.js`, `server.py`, Menüstruktur in `chat.html`.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -39,7 +39,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 |---|---|---|---|
 | Hub | `index.html` | seit 11.11.2026 der neue Hub (Reiter Chat, Werkzeuge, Einrichten) mit Versionszeile; am Handy bestätigt: alle Einträge da | neue Module über `tool.json`/`AREAS` einhängen |
 | Heinz Chat | `tools/heinz/index.html` | ruhige Leseseite, Modell und Unterhaltungen im Schnellblatt, Systemprompt je Modell, sendet `num_thread`; Modell und Laufzeit mit Prüfstand geteilt (am Handy bestätigt 11.11.) | Handytest Systemprompt je Modell, Cursorfarbe |
-| Heinz Prüfstand | `chat.html` | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (nur simuliert) | Handytest LiteRT-LM, Testreihen, Übernehmen-Knopf; Umbau im Strang Pruefstand |
+| Heinz Prüfstand | `chat.html` | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (am Handy vorhanden, zeigt „Applied for gemma2:2b …“, 12.11.) | Handytest LiteRT-LM, Testreihen; Umbau im Strang Pruefstand |
 | Setup | `tools/setup/index.html` | Einrichtungsassistent, läuft | – |
 | Data Lab (Filter) | `lab.html` | fertig, bewusst unverändert, ruft Ollama noch direkt auf | nur auf Wunsch des Entwicklers ändern |
 | Sheet | `sheet.html` | Logik fertig, mit simuliertem Modell getestet, ruft Ollama noch direkt auf | echtes 3B-Modell auf Rohstoffliste erproben |
@@ -49,7 +49,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 
 ## Nächste Aufgaben (Reihenfolge nach Wunsch des Entwicklers)
 1. Reihenfolge der Stränge siehe oben (Menu, Pruefstand, Speicher).
-2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, Knopf „In den Chat übernehmen“, Abbruch der Antwort beim Verlassen der Seite, `ollama rm heinz-wilson:latest heinz-fakt:latest`.
+2. **Handytests gebündelt** (`docs/HANDYTEST.md`, wird nach Go des Entwicklers angelegt): offen sind Testreihen, `ollama rm heinz-wilson:latest heinz-fakt:latest`.
 3. Strang Chat danach: Sonden-Reihen S1 bis S8 und Testreihe Google Teil 2 wiederholen, Testreihen Schritt 4 und 5 (`docs/KONZEPT.md` 21.5a), danach Bild-Ein/Ausgabe.
 4. Strang Modelle: Denkregeln und CORS der neuen Anbieter prüfen.
 5. Strang Design: Cursorfarbe klären; Label „Model name“ im Modellblatt des Prüfstands.
@@ -75,4 +75,4 @@ Als Fundament gelten: gemeinsame localStorage-Schlüssel (`heinz_settings`), das
 - Rohstofflisten des Entwicklers (`Lager_JW.pdf`) gehören nicht ins Repo.
 
 ## Pflichtregel lokale Modelle (11.11.2026)
-Alle Seiten, die ein lokales Modell ansprechen, folgen `docs/LOKALE_MODELLE.md` (nur `HeinzProviders`, gemeinsame Laufzeit, Modellwahl, Vorladen nur wenn nötig, Abbruch beim Verlassen der Seite). Am Handy bestätigt (11.11.2026, 15:15): Modelle bleiben beim Seitenwechsel im Speicher, erste Antwort 4 bis 6 s auf beiden Seiten. Offen am Handy: Abbruch der laufenden Antwort beim Verlassen der Seite.
+Alle Seiten, die ein lokales Modell ansprechen, folgen `docs/LOKALE_MODELLE.md` (nur `HeinzProviders`, gemeinsame Laufzeit, Modellwahl, Vorladen nur wenn nötig, Abbruch beim Verlassen der Seite). Am Handy bestätigt (11.11.2026, 15:15): Modelle bleiben beim Seitenwechsel im Speicher, erste Antwort 4 bis 6 s auf beiden Seiten. Am Handy bestätigt (Entwickler, 12.11.2026): Abbruch der laufenden Antwort beim Verlassen der Seite; Wechsel zwischen Heinz Chat und Prüfstand ohne die früher dokumentierten Probleme; im Prüfstand parametrisiertes Modell bleibt im Heinz Chat geladen, Tempo überzeugt (2 Threads).
