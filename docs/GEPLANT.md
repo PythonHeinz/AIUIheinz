@@ -62,3 +62,11 @@ Stand der Besprechung im Chat „AIUIheinz-Chat“. Namen und Zuschnitt sind off
 - Manuell vor bequem (12.11.2026): Komfortknöpfe erst später für das Kit; sie zeigen, was sie ausführen, und ersetzen nie den manuellen Weg (siehe „Komfort für das spätere Kit“ unter Plattform).
 - Das Modell klassifiziert und übersetzt, der Code rechnet.
 - Stil: minimalistisch, schwarzer Hintergrund, kräftige Google-Farben.
+
+## Testläufe beschleunigen (Vorschlag AIUIheinz-Design, 12.11.2026; für den Root-Strang zur Entwicklungsplanung, noch nicht beauftragt)
+Ausgangslage: `bash tests/run_all.sh` braucht 165 s für 150 Tests (vormittags 105 s für 109), etwa 1 s je Test, wächst mit jedem neuen Test. Ändern und Lesen gehen seit der Umstellung der Steuerdateien in Sekunden; die Wartezeit ist fast nur noch der Testlauf. Der Strang-Container begrenzt einen Aufruf auf 120 s, der volle Lauf muss deshalb im Hintergrund laufen.
+1. **Beim Arbeiten nur betroffene Tests** (`python3 -m unittest tests.test_pages.PageTest.<name>`), der volle Lauf einmal vor dem Push. In `UEBERGABE.md` als Regel festhalten.
+2. **Testdateien parallel starten** (`run_all.sh` mit getrennten Prozessen je Datei). Jeder Test startet seinen eigenen Server auf freiem Port (`tests/helpers.py`); vorher prüfen, dass die Tests keinen gemeinsamen Zustand teilen. Erwartung: grob die halbe Zeit.
+3. **Schnellauswahl für die Fehlersuche** (zum Beispiel `bash tests/run_all.sh dashboard`), damit ein Strang nur die Tests seiner Seite laufen lässt.
+4. **Unregelmäßiger Test:** `test_update_button_reports_states_and_reloads_after_update` ist auch ohne neue Änderungen manchmal rot (Unterhaltung nach dem Neuladen weg, vermutlich IndexedDB-Schreiben gegen `location.reload`); vor Punkt 2 klären, sonst verdecken unregelmäßige Fehler echte.
+Berührt `tests/` und `run_all.sh` (Fundament-nah): nur nach Freigabe des Entwicklers.

@@ -63,6 +63,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 6. Sheet mit echtem Qwen 2.5 3B auf der Rohstoffliste erproben, Prompt und Schema nachschärfen.
 7. Alte Seiten `sheet.html`, `lab.html`, `vitals.html` rufen Ollama noch direkt auf (Test `test_rules.py` führt sie als Ausnahme) und sollen auf `HeinzProviders` umgestellt werden.
 8. Ideen aus `docs/GEPLANT.md`; Konzept `docs/KONZEPT.md` Abschnitt 15.6 (Offen) und 20 (Medien, Funktionsplätze).
+9. **Testläufe beschleunigen** (Vorschlag 12.11.2026, noch nicht beauftragt): `docs/GEPLANT.md`, Abschnitt „Testläufe beschleunigen“; Entscheidung beim Root-Strang.
 Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.md`, „Grundgerüst“).
 
 ## Berührt Fundament (Chronik der Eingriffe)
