@@ -424,6 +424,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("HeinzDashboard.settings.model = 'not-installed:1b'; document.getElementById('model-select').value = 'gemma2:2b'")
         page.click("#mode-bar [data-mode=heinz]")
+        page.wait_for_function("document.getElementById('model-select').value === 'qwen2.5:3b'")   # the model list refreshes in the background: wait for the suggestion
         self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", "chosen model gone: the mode's alternative is suggested")
 
     def test_own_system_prompt_sends_no_system_message(self):
@@ -2216,6 +2217,24 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelector('#ollama').textContent.includes('gemma2:2b')")
         self.assertIn("LiteRT", page.text_content("#h-litert"))
         self.assertEqual(self.errors, [])
+
+    def test_no_element_with_the_hidden_attribute_is_visible_on_any_page_with_core_css(self):
+        # a class that sets display (.notice: flex) overrides [hidden]: an empty band stayed visible under the header of the Heinz Chat (13.11.2026)
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        shown = {}
+        for url in PAGES:
+            rel = "index.html" if url == "/" else url.lstrip("/")
+            with open(os.path.join(root, rel), encoding="utf-8") as fh:
+                if "core.css" not in fh.read():
+                    continue
+            page = self.new_page()
+            page.route("**/localhost:11434/**", lambda route: route.abort())
+            page.goto(self.srv.base + url)
+            page.wait_for_timeout(700)
+            bad = page.evaluate("Array.from(document.querySelectorAll('[hidden]')).filter(e => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().height > 0).map(e => (e.id || e.className || e.tagName))")
+            if bad:
+                shown[url] = bad
+        self.assertEqual(shown, {})
 
     def test_design_page_blocks_symbols_theme_and_language(self):
         page = self.new_page()

@@ -141,6 +141,7 @@ table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom
 .notice { --n: var(--pri); display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--n) 12%, var(--surf)); border: 1px solid color-mix(in srgb, var(--n) 45%, transparent); font-size: .88rem; line-height: 1.45; color: var(--txt); }
 .notice::before { content: ""; flex: none; width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: var(--n); box-shadow: 0 0 8px var(--n); }
 .notice.warn { --n: var(--orange); } .notice.err { --n: var(--red); } .notice.ok { --n: var(--green); }
+.notice[hidden] { display: none; }   /* .notice sets display:flex, which would override the hidden attribute (empty band under the header) */
 .notice .pill { min-height: 32px; margin-top: 6px; }
 /* bottom sheet ("Schnellblatt"): slides up from the bottom, scrim above the page */
 .bscrim { position: fixed; inset: 0; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 70; }
