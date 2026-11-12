@@ -660,7 +660,7 @@
             SR_AXES = D.bench.seriesAxes;
         }
 
-        (async function init() {
+        async function initBench() {
             await HeinzStore.open();
             applyBenchData(await HeinzBenchData.load());
             const s = HeinzStore.get('heinz_settings', {});
@@ -720,7 +720,21 @@
             if (lastSt && Array.isArray(lastSt.rows)) { stRows = lastSt.rows; stMeta = lastSt.meta; renderSpeedTest(); }
             srRestore();
             HeinzBench.ready = true;
-        })();
+        }
+
+        // Startfehler sichtbar machen (sonst bleibt die Seite halb aufgebaut und man sieht nur eine leere Fläche).
+        function showInitError(e) {
+            try {
+                const d = document.createElement('div');
+                d.id = 'init-error';
+                d.setAttribute('style', 'position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#5c1a1a;color:#fff;border:1px solid #ea4335;border-radius:12px;padding:10px 12px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all;max-height:60vh;overflow:auto;user-select:text');
+                d.textContent = 'Start failed / Start fehlgeschlagen:\n' + String((e && (e.stack || e.message)) || e).split('\n').slice(0, 6).join('\n');
+                document.body.appendChild(d);
+            } catch (x) {}
+        }
+        window.addEventListener('error', function (ev) { if (!document.getElementById('init-error') && !HeinzBench.ready) showInitError(ev.error || ev.message); });
+        initBench().catch(function (e) { showInitError(e); throw e; });
+        setTimeout(function () { if (!HeinzBench.ready && !document.getElementById('init-error')) showInitError(new Error('The start did not finish within 6 s (data files or storage not answering?)')); }, 6000);
     </script>
 </body>
 </html>

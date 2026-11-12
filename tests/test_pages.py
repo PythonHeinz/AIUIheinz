@@ -175,8 +175,9 @@ class PageTest(unittest.TestCase):
         goto = page.goto
 
         def goto_ready(url, *a, **k):   # the bench loads its data files before it starts: wait until it is built
+            wait = k.pop("ready", True)
             r = goto(url, *a, **k)
-            if url.split("?")[0].endswith("/chat.html"):
+            if wait and url.split("?")[0].endswith("/chat.html"):
                 page.wait_for_function("window.HeinzBench && HeinzBench.ready === true", timeout=15000)
             return r
         page.goto = goto_ready
@@ -212,6 +213,18 @@ class PageTest(unittest.TestCase):
         page.fill("#query", text)
         page.click("#send-btn")
         page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#send-btn').classList.contains('stopping')")
+
+    def test_a_failed_start_of_the_bench_is_shown_on_the_page(self):
+        # without the data files the bench cannot start; the page must say so instead of staying half built
+        ctx = self.browser.new_context(viewport=VIEWPORT, service_workers="block")   # the service worker would bypass the route
+        self.addCleanup(ctx.close)
+        page = ctx.new_page()
+        page.route("**/localhost:11434/**", lambda route: route.abort())
+        page.route("**/lib/data/modes.json", lambda route: route.fulfill(status=404, body=""))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("#init-error", timeout=8000)
+        self.assertIn("modes.json", page.inner_text("#init-error"))
+        self.assertFalse(page.evaluate("HeinzBench.ready"))
 
     def test_all_pages_load_without_errors_and_stay_offline(self):
         page = self.new_page()
