@@ -2,7 +2,7 @@
 
 Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundament.md`). Beschreibt, wie der Code der Web-App in Dateien gegliedert ist, welche Regeln für Module gelten und wer wen importiert. Fachliches steht in `docs/agent/TECHNIK.md` (Abschnitt „ES-Module“), das Verfahren in `docs/agent/UEBERGABE.md`.
 
-**Stand 12.11.2026:** Umgestellt sind das Dashboard (`dashboard.html` plus `lib/dashboard/*.js`) und Heinz Chat (`chat.html` plus `lib/chat/*.js`). Die Bibliotheken unter `lib/` sind noch klassische Skripte und werden vom Modul `lib/dashboard/base.js` aus `window.*` gelesen. Hub und Tool-Seiten folgen in den weiteren Schritten des Auftrags; dieser Abschnitt wird mit jedem Schritt ergänzt.
+**Stand 12.11.2026:** Umgestellt sind das Dashboard (`dashboard.html` plus `lib/dashboard/*.js`) und Heinz Chat (`chat.html` plus `lib/chat/*.js`). Die Bibliotheken unter `lib/` sind noch klassische Skripte und werden vom Modul `lib/dashboard/base.js` aus `window.*` gelesen. Hub (`index.html`, `hub.html`) und Tool-Seiten (`tools/*/*.html`) haben ihr kleines Skript weiter inline, aber als `type="module"`; die Bibliotheken folgen in Schritt 4.
 
 ## Regeln
 
@@ -23,7 +23,7 @@ Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundam
 | `lib/dashboard/*.js` | Dashboard (`dashboard.html`) | Module; `main.js` ist der Einstieg, `failsafe.js` klassisch |
 | `lib/chat/*.js` | Heinz Chat (`chat.html`) | Module; `main.js` ist der Einstieg |
 | `lib/data/*.json` | Daten (Texte, Modi, Prüfsätze, Fähigkeiten) | Daten, keine Module |
-| `tools/<id>/` | Tool-Seiten | Schritt 3 |
+| `tools/<id>/` | Tool-Seiten, `index.html`, `hub.html` | Inline-Modul (`<script type="module">`), kein Inline-Handler (Test) |
 
 ## Dateien des Dashboards und was sie importieren
 
@@ -77,3 +77,7 @@ Der Graph ist azyklisch. Blätter: `base.js` (Brücke zu `core.js`, `providers.j
 ## Gemeinsames von Heinz Chat und Dashboard (nur festgehalten)
 
 Doppelt vorhanden und bewusst nicht zusammengeführt (Verhalten und Aussehen bleiben): die Markdown-Darstellung der Antworten, das Zeichnen der Nachrichten, die Liste der Unterhaltungen und das Modellblatt. Eine gemeinsame Datei unter `lib/` wäre eine eigene Aufgabe mit Test auf beiden Seiten.
+
+## Hub und Tool-Seiten
+
+Inline-Module sind erlaubt, weil die Seiten klein sind und keine Funktionen an `window` erwarten. Folgen der Strenge: Funktionen und `var` auf oberster Ebene sind keine `window`-Eigenschaften. Der Design-Katalog (`tools/design/index.html`) setzt deshalb `window.CATALOG` und `window.FUNCS` ausdrücklich, weil Tests sie lesen. Der Beispielknopf des Schnellblatts im Katalog hat keinen Inline-Handler mehr (`id="open-bsheet"` plus Listener, wie beim Blatt); das kopierbare Markup zeigt dadurch nur den Knopf.

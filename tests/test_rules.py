@@ -94,6 +94,23 @@ class RuleTest(unittest.TestCase):
                         problems.append("%s: imports missing file %s" % (name, spec))
             self.assertEqual(problems, [], page)
 
+    def test_hub_and_tool_pages_use_module_scripts_and_no_inline_handlers(self):
+        # step 3 (12.11.2026): small pages keep their script inline, but as type="module"; lib/core.js stays the classic head block
+        pages = ["index.html", "hub.html"] + sorted(os.path.relpath(f, ROOT).replace(os.sep, "/") for f in glob.glob(os.path.join(ROOT, "tools", "*", "*.html")))
+        problems = []
+        for page in pages:
+            with open(os.path.join(ROOT, page), encoding="utf-8") as fh:
+                html = fh.read()
+            for tag in re.findall(r"<script(?![^>]*\bsrc=)([^>]*)>", html):
+                if 'type="module"' not in tag:
+                    problems.append(page + ": inline script without type=module")
+            for src in re.findall(r'<script(?![^>]*type="module")[^>]*src="([^"]+)"', html):
+                if not src.endswith("lib/core.js") and not src.endswith("lib/pixel.js"):
+                    problems.append(page + ": classic script " + src)
+            if re.search(r"\son(?:click|input|change|submit|keydown)=", html):
+                problems.append(page + ": inline handler (use a listener in the module)")
+        self.assertEqual(problems, [])
+
     def test_every_control_of_heinz_chat_has_an_action(self):
         with open(os.path.join(ROOT, "chat.html"), encoding="utf-8") as fh:
             html = fh.read()

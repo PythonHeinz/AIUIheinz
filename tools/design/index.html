@@ -89,7 +89,7 @@ p.note{color:var(--sub);font-size:.85rem;margin:6px 0 0;line-height:1.45}
 <div class="bs-h"><h3 data-t="bsheetT">Quick sheet</h3><button class="ibtn" type="button" id="close-bsheet" aria-label="Close"><svg class="i"><use href="../../lib/icons.svg#i-x"/></svg></button></div>
 <div class="bs-b"><p class="note" data-t="bsheetP"></p></div></div>
 
-<script>
+<script type="module">
 Heinz.iconBase = '../../lib/';
 /* ---- texts of the page itself ---- */
 var T = {
@@ -152,7 +152,7 @@ var CATALOG = [
 {id:'notice',cls:['notice','warn','err','ok'],where:'Hub, Heinz Chat, Setup',en:['Notice band','Info (default), .warn, .err, .ok. A pill inside is possible.'],de:['Hinweisband','Info (Standard), .warn, .err, .ok. Ein Pillen-Knopf darin ist möglich.'],
  h:'<div class="notice">{{n1}}</div><div class="notice warn" style="margin-top:8px">{{n2}}<button class="pill">{{retry}}</button></div><div class="notice err" style="margin-top:8px">{{n3}}</div><div class="notice ok" style="margin-top:8px">{{n4}}</div>'},
 {id:'bsheet',cls:['bsheet','bscrim','grab','bs-h','bs-b'],where:'Heinz Chat',en:['Quick sheet (from below)','Needs one .bscrim with id bscrim per page. Heinz.sheetOpen(id) / sheetClose(). Used by the Heinz Chat.'],de:['Schnellblatt (von unten)','Braucht ein .bscrim mit der id bscrim je Seite. Heinz.sheetOpen(id) / sheetClose(). Genutzt vom Heinz Chat.'],
- h:'<button class="pill" type="button" onclick="Heinz.sheetOpen(\'demo-bsheet\')">{{openB}}</button>'},
+ h:'<button class="pill" type="button" id="open-bsheet">{{openB}}</button>'},
 {id:'sheet',cls:['sheet','scrim','sh-head','sh-body'],where:'Dashboard (Menü, Modellwahl)',en:['Sheet','Menu sheet with .scrim; the dashboard opens its settings from the right (#menu-sheet). Opened by toggling the class open.'],de:['Blatt','Menü-Blatt mit .scrim; das Dashboard öffnet seine Einstellungen von rechts (#menu-sheet). Geöffnet über die Klasse open.'],
  h:'<button class="pill" type="button" id="open-sheet">{{openS}}</button>'},
 {id:'fields',cls:['sel','inp','fld','help'],where:'Dashboard, Heinz Chat',en:['Fields','.fld = label, .inp = text field, select.sel = selection (list opens styled via Heinz.enhanceSelects), .help = hint under the field. Fields are 46 px high.'],de:['Felder','.fld = Beschriftung, .inp = Textfeld, select.sel = Auswahl (Liste öffnet gestaltet über Heinz.enhanceSelects), .help = Hinweis unter dem Feld. Felder sind 46 px hoch.'],
@@ -208,6 +208,8 @@ var FUNCS = [
 {n:'pingLiteRT',en:'Is LiteRT-LM reachable?',de:'Ist LiteRT-LM erreichbar?'},
 {n:'litertModels',en:'Model list of LiteRT-LM, or null.',de:'Modellliste von LiteRT-LM oder null.'}
 ];
+/* the catalog data is read by the tests (and the console): modules have no page globals */
+window.CATALOG = CATALOG; window.FUNCS = FUNCS;
 var LOCAL = {
 en:['Dashboard only: .chip (model chip), .mode-pill and .modes (mode bar), .bar (conversation bar), .prompt, .msg-user / .msg-assistant, .pwin (parameter window), .bigbtn, .st-card / .st-bar / .st-chips (speed test and test series).','Heinz Chat only: .top .mod (model button), .comp (composer), .msg.u / .msg.a, .lst, .hint, .swr.'],
 de:['Nur Dashboard: .chip (Modellchip), .mode-pill und .modes (Modusleiste), .bar (Unterhaltungsleiste), .prompt, .msg-user / .msg-assistant, .pwin (Parameterfenster), .bigbtn, .st-card / .st-bar / .st-chips (Tempo-Test und Testreihen).','Nur Heinz Chat: .top .mod (Modellknopf), .comp (Eingabe), .msg.u / .msg.a, .lst, .hint, .swr.']
@@ -237,6 +239,7 @@ function renderBlocks(){
  $$('#blocks [data-bind-slider]').forEach(function(c){Heinz.bindSlider(c,{fmt:function(v){return v.toFixed(1)}})});
  $$('#blocks [data-seg]').forEach(function(g){Array.prototype.forEach.call(g.querySelectorAll('button'),function(b){b.onclick=function(){Array.prototype.forEach.call(g.querySelectorAll('button'),function(o){o.classList.toggle('on',o===b)})}})});
  $('#open-sheet').onclick=function(){sheet(true)};
+ $('#open-bsheet').onclick=function(){Heinz.sheetOpen('demo-bsheet')};
 }
 function renderLists(){
  var l=Heinz.lang;
