@@ -225,6 +225,9 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("#init-error", timeout=8000)
         self.assertIn("modes.json", page.inner_text("#init-error"))
         self.assertFalse(page.evaluate("HeinzBench.ready"))
+        self.assertEqual(page.inner_text("#init-error button >> nth=0"), "Update", "a way out of the error: update, reload, close")
+        page.click("#init-error button >> nth=2")
+        self.assertEqual(page.locator("#init-error").count(), 0, "the message can be closed so the menu is reachable")
 
     def test_all_pages_load_without_errors_and_stay_offline(self):
         page = self.new_page()
