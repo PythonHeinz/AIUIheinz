@@ -12,7 +12,7 @@ Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles
 ## Reihenfolge (Beschluss `docs/KONZEPT.md` 22, nacheinander)
 1. ~~AIUIheinz-Aufraeumen~~ (fertig 12.11.2026; neue Projektanweisung liegt in `PROJEKTANWEISUNG.md`, der Entwickler setzt sie ein).
 2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog ✔ (12.11.2026). Der Umbau des Menüs ist **nicht beauftragt** (Entwickler 12.11.: Menü des Dashboards bleibt vorerst).
-3. **AIUIheinz-Dashboard:** `dashboard.html` in ES-Module, Prüfprozeduren als Daten.
+3. **AIUIheinz-Dashboard:** `dashboard.html` in ES-Module, Prüfprozeduren als Daten. **Beauftragt 12.11.2026 (Entwickler):** Umstellung nach `AUFTRAG_Dashboard_Schlank.md` und `DASHBOARD_INVENTUR.md` Schritt 6 (Inline-Handler schrittweise durch `data-action`), Dashboard arbeitet allein am Fundament; dabei Testläufe beschleunigen (Punkt 9).
 4. ~~AIUIheinz-Speicher~~ (fertig 12.11.2026, am Handy bestätigt, auch im normalen Browsertab): IndexedDB für Unterhaltungen und Testreihen mit Migration und Rückfall.
 Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `dashboard.html` und `lib/core.*` nicht berühren. Modi, Design und Assistent warten bis nach Schritt 3 (sie berühren `dashboard.html`); der Strang Chat (Heinz Chat) wartet nicht. Strang Modi: nicht starten ohne Rücksprache.
 
@@ -63,7 +63,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 6. Sheet mit echtem Qwen 2.5 3B auf der Rohstoffliste erproben, Prompt und Schema nachschärfen.
 7. Alte Seiten `sheet.html`, `lab.html`, `vitals.html` rufen Ollama noch direkt auf (Test `test_rules.py` führt sie als Ausnahme) und sollen auf `HeinzProviders` umgestellt werden.
 8. Ideen aus `docs/GEPLANT.md`; Konzept `docs/KONZEPT.md` Abschnitt 15.6 (Offen) und 20 (Medien, Funktionsplätze).
-9. **Testläufe beschleunigen** (Vorschlag 12.11.2026, noch nicht beauftragt): `docs/GEPLANT.md`, Abschnitt „Testläufe beschleunigen“; Entscheidung beim Root-Strang.
+9. **Testläufe beschleunigen** (beauftragt und freigegeben 12.11.2026 für den Strang Dashboard, im Zuge der ES-Modul-Umstellung; Freigabe des Entwicklers für `tests/` und `run_all.sh`): `docs/GEPLANT.md`, Abschnitt „Testläufe beschleunigen“. Reihenfolge: zuerst den unregelmäßigen Test `test_update_button_reports_states_and_reloads_after_update` klären (Punkt 4), dann nur betroffene Tests beim Arbeiten (Regel in `UEBERGABE.md`), Schnellauswahl in `run_all.sh`, parallele Testdateien (vorher gemeinsamen Zustand prüfen). Der volle Lauf bleibt vor jedem Push Pflicht.
 Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.md`, „Grundgerüst“).
 
 ## Berührt Fundament (Chronik der Eingriffe)
