@@ -4,13 +4,13 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
-- 12.11.2026, AIUIheinz-Menu: Phase 0 Bausteinkatalog (nur benennen und herausziehen, Verhalten der Seiten unverändert, Menü des Prüfstands bleibt). Berührt: `lib/core.css`, `lib/core.js`, `lib/icons.svg`, `tools/design/index.html`, `docs/DESIGN.md`, Tests, Doku. Nicht: `lib/providers.js`, `server.py`, Menüstruktur in `chat.html`.
+Aktuell: keine.
 
 Stand: 12.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
 ## Reihenfolge (Beschluss `docs/KONZEPT.md` 22, nacheinander)
 1. ~~AIUIheinz-Aufraeumen~~ (fertig 12.11.2026; neue Projektanweisung liegt in `PROJEKTANWEISUNG.md`, der Entwickler setzt sie ein).
-2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog, dann Menü des Prüfstands (Fundament).
+2. **AIUIheinz-Menu:** Phase 0 Bausteinkatalog ✔ (12.11.2026). Der Umbau des Menüs ist **nicht beauftragt** (Entwickler 12.11.: Menü des Prüfstands bleibt vorerst).
 3. **AIUIheinz-Pruefstand:** `chat.html` in ES-Module, Prüfprozeduren als Daten.
 4. **AIUIheinz-Speicher:** IndexedDB für Unterhaltungen und Testreihen mit Migration.
 Modelle und Tertius dürfen nach Schritt 1 daneben laufen, wenn sie `chat.html` und `lib/core.*` nicht berühren. Chat, Modi, Design und Assistent warten bis nach Schritt 3. Strang Modi: nicht starten ohne Rücksprache.
@@ -22,7 +22,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 |---|---|---|
 | AIUIheinz (Root) | Konzept (`docs/KONZEPT.md`), Querprüfung, neue Aufträge | Konzept nachgeführt bis Abschnitt 22 (Beschlüsse zur Struktur, 12.11.) |
 | AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | fertig (12.11.2026): Doppelablage beendet, Dokumente neu geordnet, Anweisungen geschrieben; Abweichungen in `AUFTRAG_Aufraeumen.md` |
-| AIUIheinz-Menu | Bausteinkatalog, Menü des Prüfstands (DR2 Phase B); `AUFTRAG_Menu.md` | Auftrag bereit, Fundament nur nach Rückfrage |
+| AIUIheinz-Menu | Bausteinkatalog (Phase 0), Menü des Prüfstands (DR2 Phase B); `AUFTRAG_Menu.md` | Phase 0 fertig (12.11.2026): Design-Katalog, Bausteine nach `lib/core.css`, Helfer in `lib/core.js`; Menü-Umbau nicht beauftragt, Menü bleibt |
 | AIUIheinz-Pruefstand | Schlankes Web-UI: `chat.html` zerlegen, Prüfprozeduren als Daten; `AUFTRAG_Pruefstand_Schlank.md` | startet nach Menu |
 | AIUIheinz-Speicher | IndexedDB; `AUFTRAG_Speicher.md` | startet nach Pruefstand |
 | AIUIheinz-Chat | Anbieterschicht, Prüfstand-Bedienung, Modi als Daten, Testreihen; `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_Chat_Schnittstellen.md` | gepusht bis Testreihen Schritt 3 (11.11.); offen: Testreihen Schritt 4 und 5, LiteRT-LM und Online-Anbieter am Handy, Modellverwaltung; wartet bis nach Pruefstand |
@@ -40,6 +40,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | Hub | `index.html` | seit 11.11.2026 der neue Hub (Reiter Chat, Werkzeuge, Einrichten) mit Versionszeile; am Handy bestätigt: alle Einträge da | neue Module über `tool.json`/`AREAS` einhängen |
 | Heinz Chat | `tools/heinz/index.html` | ruhige Leseseite, Modell und Unterhaltungen im Schnellblatt, Systemprompt je Modell, sendet `num_thread`; Modell und Laufzeit mit Prüfstand geteilt (am Handy bestätigt 11.11.) | Handytest Systemprompt je Modell, Cursorfarbe |
 | Heinz Prüfstand | `chat.html` | neues Design seit 10.11.; 5 Modi, Regler nach Zustand, Engine-Wahl (Ollama, LiteRT-LM, Google nativ, Online mit Haken), Tempo-Test, Testreihen Schritt 1 bis 3, Knopf „In den Chat übernehmen“ (am Handy vorhanden, zeigt „Applied for gemma2:2b …“, 12.11.) | Handytest LiteRT-LM, Testreihen; Umbau im Strang Pruefstand |
+| Design-Katalog | `tools/design/index.html` | seit 12.11.2026 datengetrieben: alle Bausteine mit Klassen, Verwendung, Beispiel (Theme, EN/DE), Markup zum Kopieren, Funktionen, Lücken; nicht im Hub (nur per Adresse) | bei neuen Bausteinen nachtragen (Regel `docs/DESIGN.md` 7) |
 | Setup | `tools/setup/index.html` | Einrichtungsassistent, läuft | – |
 | Data Lab (Filter) | `lab.html` | fertig, bewusst unverändert, ruft Ollama noch direkt auf | nur auf Wunsch des Entwicklers ändern |
 | Sheet | `sheet.html` | Logik fertig, mit simuliertem Modell getestet, ruft Ollama noch direkt auf | echtes 3B-Modell auf Rohstoffliste erproben |
@@ -63,6 +64,7 @@ Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.
 - 10.11.2026, AIUIheinz-Chat und -Design: Anbieterschicht `lib/providers.js`, Design-Fundament `lib/core.css`, `lib/core.js`, `lib/icons.svg`.
 - 11.11.2026, AIUIheinz-Chat: gemeinsame Laufzeit und Modellwahl in `lib/providers.js`, Personas in `lib/personas.js`, `lib/testreihe.js`.
 - 12.11.2026, AIUIheinz-Aufraeumen: nur Dokumente und Pfad in `tests/test_rules.py`.
+- 12.11.2026, AIUIheinz-Menu (Freigabe des Entwicklers): `lib/core.css` (Bausteine aus `chat.html` und `tools/setup` hierher gezogen, `.chk` → `.chkrow`), `lib/core.js` (`Heinz.setting/setSetting/bindSwitch/bindSlider`), `tools/design/index.html`; `chat.html` und `tools/heinz/index.html` nur Regeln entfernt bzw. Klasse umbenannt, Verhalten gleich (Heinz Chat: Felder jetzt wie im Prüfstand, 46 statt 44 px).
 Als Fundament gelten: gemeinsame localStorage-Schlüssel (`heinz_settings`), das EN/DE-Verfahren, die Kopfzeile mit Hub-Link, die Schnittstelle des Servers und die Ollama-Aufrufe.
 
 ## Offen

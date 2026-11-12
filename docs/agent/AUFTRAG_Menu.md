@@ -1,5 +1,7 @@
 # AUFTRAG Menü (Strang AIUIheinz-Menu)
 
+**Stand 12.11.2026:** Phase 0 (Bausteinkatalog) ist erledigt, siehe `ENTWICKLUNGSVERLAUF.md`. Der Entwickler hat entschieden, dass das **Menü des Prüfstands vorerst bleibt, wie es ist**. Die Aufgaben unter „Gliederung“ und „Aufgaben“ (neue Gliederung, Zustandsmarke mit Legende, Parameter-Schnellöffner, Modus-Schieberegler) sind deshalb **nicht beauftragt**; sie bleiben als Vorschlag stehen und werden erst nach ausdrücklichem Auftrag gebaut.
+
 Neuer Strang, angelegt 11.11.2026 im Strang AIUIheinz-Design (DR2 Phase B). Strangname: **AIUIheinz-Menu**.
 
 ## Ziel
