@@ -42,8 +42,19 @@ Benannter, gespeicherter Satz: Engine, Modell, Person (als Ausgangspunkt), Promp
 - **Zuweisung zum Heinz Chat** (Knopf „Im Heinz Chat verwenden“ im Dashboard-Menü und auf der Verwaltungsseite, `heinz_chat_config`): Der Chat startet mit der Engine und dem Modell der Konfiguration (online nur bei „Online erlauben“), mit ihrem Prompt und Ton. Zweiter Tipp löst die Zuweisung; danach gilt wieder die Vorgabe.
 - **Export/Import:** Datei `heinz-configuration` (Format 1, mit Modellname). Import legt immer einen neuen Eintrag an. Export als Ollama-Modelfile oder LM-Studio-Preset: nicht gebaut.
 
-## 6. Entwicklerwunsch (13.11.2026, noch nicht gebaut): Zuordnung je Modell
-Der Entwickler beschreibt als Ziel: Eine Konfiguration überschreibt immer, was per „Übernehmen“ in den Heinz Chat kam; eine einmal einem **Modell** zugeordnete Konfiguration wird nach Neustart automatisch geladen, samt Person und deren Einstellungen; erst das Entfernen der Zuordnung bringt beim Neustart wieder den Standard ohne zuletzt geänderte Parameter. Heute: genau **eine** Konfiguration ist dem Heinz Chat zugewiesen (und bestimmt dessen Modell); nach Entfernen gilt die Vorgabe der Seite. Die Umsetzung (Zuordnung je Modell, Verhalten beim Neustart im Dashboard) berührt gemeinsamen Speicher (`lib/providers.js`) und Heinz Chat und wird vor dem Bau abgestimmt (Tertius-Prüfung des Gesamtkonzepts steht an).
+## 6. Zielbild des Entwicklers (13.11.2026, noch nicht gebaut)
+Leitgedanke: **Die Konfiguration gehört zum Modell und enthält alles** (Engine, Modell, Laufzeit, Person als Startpunkt, Prompt, Ton). Die Person ist nur eine Vorlage zum Ausprobieren; was der Entwickler dabei lernt, wird für das Modell als Konfiguration festgehalten und gilt dann im Dashboard, im Heinz Chat und (per Export) in anderen Anwendungen. Der Heinz Chat wird nur über Konfigurationen gesteuert (Abschnitt 4).
+
+Regeln:
+1. **Modell mit zugeordneter Konfiguration:** wird nach jedem Neustart automatisch mit ihr geladen, samt Person und deren Einstellungen, auch der Laufzeit. Erst das Entfernen der Zuordnung bringt wieder den Standard, ohne zuletzt geänderte Parameter.
+2. **Modell ohne Konfiguration:** lädt mit seinem Standard; das Dashboard startet im Heinz-Modus.
+3. **Heinz Chat ohne zugewiesene Konfiguration:** lädt den Auslieferungsstandard. Dafür gibt es eine **Standardkonfiguration für den Heinz Chat**, die immer vorhanden ist und nicht gelöscht werden kann (sichtbar oder unsichtbar, noch festzulegen). „Zuweisung lösen“ heißt: zurück auf diese Standardkonfiguration.
+
+Heute gebaut: genau **eine** Zuweisung an den Heinz Chat; ohne sie gilt die Vorgabe im Code der Chat-Seite, die Laufzeit der Konfiguration übernimmt der Chat nicht.
+
+Offene Fragen vor dem Bau (berührt gemeinsamen Speicher `lib/providers.js` und den Heinz Chat; Tertius-Prüfung steht an):
+- Standardkonfiguration des Heinz Chat hat kein festes Modell (gilt für das jeweils aktive); sichtbar mit Schloss oder unsichtbar, änderbar oder nur kopierbar?
+- Gibt es für ein Modell mehrere benannte Konfigurationen, von denen eine als Zuordnung gilt? Und was gewinnt im Heinz Chat, wenn sowohl eine Zuweisung an den Chat als auch eine Zuordnung des Modells besteht?
 
 ## 7. Offen
 - Zuordnung je Modell (Punkt 6); Laden über Engine-Grenzen im Dashboard; Export als Modelfile und LM-Studio-Preset.
