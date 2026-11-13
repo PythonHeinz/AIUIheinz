@@ -139,9 +139,23 @@ Ein Hook ist ein benannter Rückruf: `hooks.call('renderQuick')` in einer untere
 
 Der Graph ist azyklisch. Blätter: `base.js` (Brücke zu `core.js`, `providers.js`, `store.js`, `$`), `state.js` (Objekt `state`: `S`, `chats`, `cur`, `msgs`, `gen`, `abort`, `modelsList`, `modelsFor`, `stLast`, `gotTok`, `preAbort`, `preKey`). Darüber: `i18n`, `markdown`, `status`, `view`, `conversations`, `model`, `send`. `actions.js` enthält die Tabelle `ACTIONS` (bisher: `sheetClose`) und einen Listener für `data-click`. Einstieg `main.js`: `initState()` füllt `state` nach `HeinzStore.open()`, `heinzChatMain()` verdrahtet die Seite wie vorher.
 
-## Gemeinsames von Heinz Chat und Dashboard (nur festgehalten)
+## Gemeinsames von Heinz Chat und Dashboard (Inventur 13.11.2026, Phase 2 Schritt 2)
 
-Doppelt vorhanden und bewusst nicht zusammengeführt (Verhalten und Aussehen bleiben): die Markdown-Darstellung der Antworten, das Zeichnen der Nachrichten, die Liste der Unterhaltungen und das Modellblatt. Eine gemeinsame Datei unter `lib/` wäre eine eigene Aufgabe mit Test auf beiden Seiten.
+Gemessen mit denselben Daten in beiden Seiten (Playwright, simuliert): Markup und berechnete Stile. „Gleich“ heißt gleiche Ausgabe bei gleicher Eingabe.
+
+| Teil | Chat | Dashboard | Urteil |
+|---|---|---|---|
+| Markdown | `lib/chat/markdown.js` (`md`, 22 Zeilen): Absätze, `-`/`1.`-Listen, `**fett**`, `` `code` ``, Codeblock ohne Färbung; Zeilenumbruch `<br>`; erzeugt `<p><pre>` (ungültig) | `lib/markdown.js` (`parse`, 173 Zeilen): zusätzlich `#`-Überschriften, Tabellen, Zitate, `*kursiv*`, Codeblock mit Sprachetikett, Syntaxfärbung und Kopierknopf, Absätze ohne `<br>` zwischen Blöcken | **verschieden, sichtbar** (gleich bei fett, Inline-Code, einfachen Listen, Umbrüchen) |
+| `esc` (HTML maskieren) | `Heinz.esc` (`lib/core.js`): maskiert auch `"` und `'` | `HeinzMarkdown.esc`: nur `& < >` | **verschieden, nicht sichtbar**; der Dashboard-Fall `esc` in Attributwerten maskiert Anführungszeichen nicht (Befund, siehe unten) |
+| In Zwischenablage kopieren | `Heinz.copy` | `copyText` (`clipboard.js`): zusätzlich Prüfung `isSecureContext` | **fast gleich** (Rückfall über Textfeld in beiden) |
+| Nachrichten | `view.js` `renderLog`: ganzer Verlauf als HTML-Text; Klassen `.msg.u`/`.msg.a`; Nutzer ohne Blase (Schrift 16 px, kein Hintergrund), Antwort Georgia 16,96 px, Absatzabstand 13,6 px, Code Rand 6 px; unter der Antwort nur Kopierknopf; blinkender Cursor beim Streamen | `messages.js`: DOM wird je Nachricht angehängt; Klassen `.msg.msg-user`/`.msg-assistant`; Nutzer in Blase (Hintergrund, Rand 18/18/4, höchstens 88 % Breite, 15,68 px), Antwort 16,64 px, Absatzabstand 6 px, Code Rand 4 px; Knöpfe Kopieren, Herunterladen, Vorlesen, Testprotokoll; Kennzahlen und Statuszeile | **verschieden, sichtbar** (Aussehen und Bedienung) |
+| Unterhaltungsliste | `conversations.js` `renderHist`: HTML-Text, Zeile `.saved-item` mit `.sr`/`.load`/`.ttl-in`/`small`/`.more`/`.acts2`, fünf Pillen **nur Symbol**; Sortierung Neueste/A–Z, Anpinnen bis 5, Umbenennen; Datenform `ts` als Zahl, Schlüssel `heinz_slim_chats` | `conversations.js` `renderSavedList`: DOM, gleiche Klassen, fünf Pillen **Symbol plus Beschriftung**, Moduspunkt (`--mc`, `data-mode`), Suche, „Alle/Modus“, Mehrfachauswahl (langes Drücken), Trennlinie nach Angepinnten; Datenform `ts` als Text, Schlüssel `heinz_chats` | **Klassen und Ablauf gleich, Markup verschieden, sichtbar** (Beschriftung der Pillen, Moduspunkt) und **Datenform verschieden** (Schlüssel bleiben, siehe Auftrag) |
+| Sortieren nach Titel, Chat als Text, Export als Markdown | `chatText`, Export in `chatAct` (feste Texte „You“/„Heinz“) | `sortByTitle`, `exportChat`, Kopieren (Texte über `t('roleUser')`/`t('roleBot')`) | **fast gleich**; sichtbar nur in der Beschriftung der Rollen im kopierten Text |
+| Modellblatt | `model.js`: unteres Blatt (`.bsheet`), Engine-Pillen, Zeilen `.row` mit Haken, freies Feld, Online-Schalter, Systemprompt, Sampling, Laufzeitzeile | `caps.js` `renderModelSheet`: Blatt von rechts (`.sheet`), Zeilen `.mrow` mit geteiltem Namen (Name fett, Größe klein), Filterfeld, Laden-Knopf, Fähigkeiten | **verschieden, sichtbar** (anderes Blatt, andere Zeilen, andere Inhalte) |
+
+**Befunde:** (1) Das Dashboard maskiert Anführungszeichen in `esc` nicht; wo `esc` in Attributwerte geht (zum Beispiel `title="…"`), wäre ein Name mit `"` ein Fehler (nicht behoben, nicht Teil des Auftrags). (2) Der Chat erzeugt `<p><pre>…</pre></p>` (ungültig, Browser korrigiert still).
+
+Stand: Entscheidungsvorlage an den Entwickler offen; ohne Beschluss wird nichts zusammengeführt, was sichtbar ändert. Gleiche Teile ohne Sichtbarkeit (Hilfsfunktionen) werden mit Schritt 2 zusammengelegt, sobald es einen Beschluss zu den sichtbaren gibt.
 
 ## Hub und Tool-Seiten
 
