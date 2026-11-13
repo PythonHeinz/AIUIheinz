@@ -1063,30 +1063,69 @@ class PageTest(unittest.TestCase):
         self._save_config(page, "Beta")
         page.goto(self.srv.base + "/tools/configs/index.html")
         page.wait_for_selector(".cfg")
-        self.assertEqual(page.locator(".cfg").count(), 2)
+        self.assertEqual(page.locator(".cfg").count(), 3, "the built-in default configuration is listed first")
         self.assertIn("gemma2:2b", page.inner_text(".cfg"))
         # assign one to the Heinz Chat, the chat then uses its model, prompt and tone
-        page.click(".cfg[data-id] >> nth=0 >> [data-act=chat]")
+        page.click(".cfg:not(#cfg-default) >> nth=0 >> [data-act=chat]")
         self.assertIsNotNone(page.evaluate("HeinzProviders.chatConfigId()"))
         self.assertIn("In the Heinz Chat", page.inner_text("#list"))
         # rename
-        page.fill(".cfg >> nth=0 >> input.nm", "Gamma"); page.dispatch_event(".cfg >> nth=0 >> input.nm", "change")
+        page.fill(".cfg:not(#cfg-default) >> nth=0 >> input.nm", "Gamma"); page.dispatch_event(".cfg:not(#cfg-default) >> nth=0 >> input.nm", "change")
         self.assertIn("Gamma", [c["name"] for c in page.evaluate("HeinzProviders.configs()")])
         # export contains the model; import creates a new entry (never overwrites)
         exported = page.evaluate("HeinzProviders.exportConfig(HeinzProviders.configs()[0])")
         self.assertEqual((exported["kind"], exported["format"], exported["model"]), ("heinz-configuration", 1, "gemma2:2b"))
         page.set_input_files("#imp-file", files=[{"name": "x.json", "mimeType": "application/json", "buffer": json.dumps(exported).encode()}])
-        page.wait_for_function("document.querySelectorAll('.cfg').length == 3")
+        page.wait_for_function("document.querySelectorAll('.cfg').length == 4")
         page.set_input_files("#imp-file", files=[{"name": "bad.json", "mimeType": "application/json", "buffer": b'{"a": 1}'}])
         page.wait_for_function("document.getElementById('msg').textContent.indexOf('not a configuration') >= 0")
-        self.assertEqual(page.locator(".cfg").count(), 3)
+        self.assertEqual(page.locator(".cfg").count(), 4)
         # delete needs two taps; deleting the assigned one clears the assignment
         aid = page.evaluate("HeinzProviders.chatConfigId()")
         row = ".cfg[data-id='%s']" % aid
         page.click(row + " [data-act=del]")
-        self.assertEqual(page.locator(".cfg").count(), 3, "first tap only asks")
+        self.assertEqual(page.locator(".cfg").count(), 4, "first tap only asks")
         page.click(row + " [data-act=del]")
-        self.assertEqual(page.locator(".cfg").count(), 2)
+        self.assertEqual(page.locator(".cfg").count(), 3)
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+
+    def test_configuration_page_marks_the_assignment_and_opens_the_dashboard_with_the_configuration(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.25; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        self._save_config(page, "Alpha")
+        page.goto(self.srv.base + "/tools/configs/index.html")
+        page.wait_for_selector("#cfg-default")
+        # without an assignment the built-in default carries the mark, with one the assigned configuration does
+        self.assertIn("on", page.get_attribute("#cfg-default", "class"))
+        self.assertIn("cannot be deleted", page.inner_text("#cfg-default"))
+        self.assertEqual(page.locator("#cfg-default [data-act=del]").count(), 0)
+        page.click(".cfg:not(#cfg-default) [data-act=chat]")
+        self.assertNotIn(" on", " " + page.get_attribute("#cfg-default", "class"))
+        self.assertIn("on", page.get_attribute(".cfg:not(#cfg-default)", "class"))
+        # "Configure now" opens the dashboard with exactly that configuration, the parameter then disappears from the address
+        page.click(".cfg:not(#cfg-default) [data-act=param]")
+        page.wait_for_function("typeof HeinzDashboard !== 'undefined' && HeinzDashboard.settings.mode === 'wilson'", timeout=15000)
+        page.wait_for_selector("#cfg-auto:not([hidden])")
+        self.assertIn("Alpha", page.inner_text("#cfg-auto"))
+        self.assertEqual(page.input_value("#param-temp"), "0.25")
+        self.assertNotIn("config=", page.evaluate("location.search"))
+        # the default configuration opens the same way (its prompt, tone and runtime), also without any saved configuration
+        page.goto(self.srv.base + "/tools/configs/index.html")
+        page.click("#cfg-default [data-act=param]")
+        page.wait_for_selector("#cfg-auto:not([hidden])")
+        self.assertIn("Default configuration", page.inner_text("#cfg-auto"))
+        self.assertEqual(page.input_value("#param-temp"), "0.6")
+        self.assertEqual(page.input_value("#param-ctx"), "4096")
+        self.assertEqual(page.input_value("#param-threads"), "2")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), page.evaluate("HeinzProviders.DEFAULT_CHAT_SYSTEM"))
+        self.assertEqual(self.errors, [])
+        # the default can be unassigned from its own card
+        page.goto(self.srv.base + "/tools/configs/index.html")
+        page.click(".cfg:not(#cfg-default) [data-act=chat]")
+        page.click("#cfg-default [data-act=chat]")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
 
     def test_heinz_chat_uses_the_assigned_configuration_for_model_prompt_and_tone(self):
@@ -3164,6 +3203,58 @@ class PageTest(unittest.TestCase):
         self.assertEqual(lit.requests[0][1]["model"], "gemma4-e2b")
         self.assertEqual([m["role"] for m in lit.requests[0][1]["messages"]], ["user"], "Native: no system message at all")
         self.assertEqual(self.ollama.requests, [], "nothing went to Ollama")
+
+    def _cloud_chat(self):
+        page = self.new_page()
+        fake = FakeOpenAI(page, "**/api.groq.com/**", models=("m1",))
+        page.add_init_script("localStorage.setItem('heinz_configs', JSON.stringify([{id: 'k1', name: 'Cloud', provider: 'groq', model: 'm1', person: 'native', prompt: '', tone: null, stop: [], runtime: null}])); localStorage.setItem('heinz_chat_config', JSON.stringify('k1'));")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.evaluate("HeinzProviders.setKey('groq', 'secret')")
+        page.reload()
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        return page, fake
+
+    def test_heinz_chat_with_an_online_configuration_asks_once_per_session_and_never_switches_the_global_setting(self):
+        page, fake = self._cloud_chat()
+        page.wait_for_selector("#online-ask:not([hidden])")
+        self.assertIn("cloud service", page.inner_text("#online-ask"))
+        self.assertTrue(page.is_hidden("#eng-note"), "the question replaces the plain hint")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#note:not([hidden])")
+        self.assertEqual(fake.requests, [], "nothing is sent while online is not allowed")
+        page.click("#ask-yes")
+        self.assertTrue(page.is_hidden("#online-ask"))
+        page.wait_for_function("!document.getElementById('ring').classList.contains('s-red')", timeout=15000)
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hi there') >= 0")
+        self.assertEqual(len(fake.requests), 1)
+        self.assertNotEqual(page.evaluate("localStorage.getItem('heinz_online')"), "true", "the global switch stays off")
+        # the answer holds for the session (reload does not ask again) but only on the Heinz Chat page
+        page.reload(); page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("!document.getElementById('ring').classList.contains('s-red')", timeout=15000)
+        self.assertTrue(page.is_hidden("#online-ask"))
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("typeof HeinzProviders !== 'undefined'")
+        self.assertFalse(page.evaluate("HeinzProviders.onlineAllowed()"), "the dashboard is not affected")
+
+    def test_heinz_chat_online_question_answered_with_not_now_keeps_everything_blocked(self):
+        page, fake = self._cloud_chat()
+        page.wait_for_selector("#online-ask:not([hidden])")
+        page.click("#ask-no")
+        page.wait_for_selector("#eng-note:not([hidden])")
+        self.assertTrue(page.is_hidden("#online-ask"))
+        self.assertIn("online", page.inner_text("#eng-note").lower())
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#note:not([hidden])")
+        self.assertEqual(fake.requests, [])
+
+    def test_heinz_chat_never_asks_for_a_local_configuration(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
+        self.assertTrue(page.is_hidden("#online-ask"))
 
     def test_heinz_chat_with_an_unreachable_engine_shows_red_and_a_hint_and_never_switches_engine(self):
         page = self.new_page()   # LiteRT-LM is not running (aborted) in tests

@@ -123,3 +123,17 @@ Vorbereitung: `git pull`, `bash start.sh`; LiteRT-LM bei Bedarf neu starten: `li
 - [ ] Dashboard, Menü Konfiguration: eine LiteRT-LM-Konfiguration laden, während Ollama aktiv ist. Erwartung: Das Dashboard wechselt auf LiteRT-LM, wählt das Modell, Hinweis „Engine auf … gewechselt“.
 - [ ] **B2-Probe (LiteRT-LM):** `litert-lm serve --cors-origin http://localhost:3000` neu starten. Dashboard, Person Audit, Quelltext senden (Modell `gemma4-e2b`). Dann Heinz Chat mit einer Nativ-Konfiguration auf `gemma4-e2b` (im Dashboard Person Nativ, Konfiguration speichern, „Im Heinz Chat verwenden“) und „Hallo“ senden. Erwartung: antwortet normal, nicht im Wortlaut des Audit-Prompts. Der Chat sendet bei Nativ keine System-Nachricht (simuliert geprüft). Zeigt der Server trotzdem die alte Anweisung, melden: dann muss der Chat bei LiteRT-LM einen leeren Systemprompt ausdrücklich senden.
 - [ ] Wechsel Dashboard (Modell A) → Heinz Chat (Modell B) → Dashboard: Ollama lädt jeweils neu (erwartet, kein Fehler); keine Fehlermeldung, die Antworten kommen.
+
+## Strang Konfiguration, Stufen (c) und (d) (13.11.2026; nur simuliert getestet)
+Vorbereitung: `git pull`, `bash start.sh`.
+
+**P. Mauer Offline/Online**
+- [ ] Dashboard, Menü Konfiguration: eine Konfiguration mit Online-Engine (zum Beispiel Google AI Studio mit gespeichertem Schlüssel) speichern und dem Heinz Chat zuweisen. „Online erlauben“ bleibt aus. Heinz Chat öffnen. Erwartung: Rückfrage „Diese Konfiguration nutzt einen Cloud-Dienst. Online für diese Sitzung zulassen?“, Senden ist gesperrt.
+- [ ] „Nicht jetzt“: roter Ring und Hinweis, es geht nichts raus. „Für diese Sitzung zulassen“ (nach Neuladen): Ring wird blau, Antwort kommt.
+- [ ] Heinz Chat schließen und neu öffnen (App im Hintergrund, nicht beendet): keine neue Rückfrage. Danach Dashboard öffnen: der globale Haken „Online erlauben“ ist weiter aus.
+- [ ] Lokale Konfiguration zuweisen: nie eine Rückfrage.
+
+**Q. Hub-Kachel „Konfigurationen“**
+- [ ] Erste Karte ist die Standardkonfiguration („eingebaut, nicht löschbar“, ohne Löschen). Ohne Zuweisung trägt sie die Markierung „Heinz Chat“, mit Zuweisung die zugewiesene Karte.
+- [ ] „Jetzt parametrieren“ an einer eigenen Konfiguration: Dashboard öffnet sich mit Person, Prompt, Ton, Kontext und Threads dieser Konfiguration (Hinweisband). Bei einer Konfiguration einer anderen Engine wechselt das Dashboard die Engine.
+- [ ] „Jetzt parametrieren“ an der Standardkonfiguration: Qwen-Werte (0,6 / 0,9 / 40, Kontext 4096, Threads 2) im Dashboard; ändern, unter neuem Namen speichern, im Heinz Chat verwenden.

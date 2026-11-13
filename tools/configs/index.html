@@ -12,6 +12,8 @@
     .cfg .nm { width: 100%; height: 40px; margin: 0 0 4px; font-weight: 600; }
     .cfg small.meta { display: block; color: var(--sub); font-size: .78rem; overflow-wrap: anywhere; margin-bottom: 8px; }
     .cfg .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cfg.on { border-left: 3px solid var(--acc, #4caf50); padding-left: 10px; }
+    .cfg .btns a.pill { text-decoration: none; }
     .cfg .btns .pill.on { background: var(--acc, #4caf50); color: #fff; }
     .cfg .tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: .68rem; background: var(--card); color: var(--sub); vertical-align: middle; }
     #msg { margin: 8px 0; min-height: 1.2em; }
@@ -37,13 +39,13 @@ import { HeinzProviders as PV } from '/lib/providers.js';
               chat: 'Heinz Chat', chatOn: 'In the Heinz Chat', chatOff: 'Use in Heinz Chat', exp: 'Export', del: 'Delete', del2: 'Really delete?',
               tone: 'tone', noTone: 'model’s own tone', noPrompt: 'no prompt', ctx: 'context window', thr: 'threads', person: 'person',
               imported: 'Imported “{n}”.', badFile: 'This file is not a configuration of this app.', assigned: '“{n}” is now used by the Heinz Chat.', unassigned: 'The Heinz Chat uses its default configuration again.',
-              cloud: 'Online engine: only used when “Allow online” is on.' },
+              cloud: 'Online engine: only used when “Allow online” is on.', param: 'Configure now', dflt: 'Default configuration', lock: 'built in, cannot be deleted', dfltInfo: 'The Heinz Chat uses it as long as no configuration is assigned. To change it: configure it, save under a new name and assign that one.' },
         de: { sub: 'konfigurationen', intro: 'Eine Konfiguration ist ein benannter Satz für ein Modell: Engine, Person, Prompt, Ton und ein Abbild der Laufzeit. Gespeichert wird im Heinz Dashboard (Menü, Konfiguration). Hier weist du eine dem Heinz Chat zu, benennst um, exportierst oder löschst.',
               imp: 'Aus Datei importieren', none: 'Noch keine Konfiguration gespeichert. Öffne das Heinz Dashboard, richte ein Modell ein und speichere es unter einem Namen.',
               chat: 'Heinz Chat', chatOn: 'Im Heinz Chat', chatOff: 'Im Heinz Chat verwenden', exp: 'Exportieren', del: 'Löschen', del2: 'Wirklich löschen?',
               tone: 'Ton', noTone: 'Ton des Modells', noPrompt: 'kein Prompt', ctx: 'Kontextfenster', thr: 'Threads', person: 'Person',
               imported: '„{n}“ importiert.', badFile: 'Diese Datei ist keine Konfiguration dieser App.', assigned: '„{n}“ gilt jetzt im Heinz Chat.', unassigned: 'Der Heinz Chat nutzt wieder seine Standardkonfiguration.',
-              cloud: 'Online-Engine: wird nur genutzt, wenn „Online erlauben“ an ist.' }
+              cloud: 'Online-Engine: wird nur genutzt, wenn „Online erlauben“ an ist.', param: 'Jetzt parametrieren', dflt: 'Standardkonfiguration', lock: 'eingebaut, nicht löschbar', dfltInfo: 'Der Heinz Chat nutzt sie, solange keine Konfiguration zugewiesen ist. Ändern: parametrieren, unter neuem Namen speichern und diese zuweisen.' }
     };
     function t(k, v) { return Heinz.t(D, k, v); }
     var armed = null;
@@ -61,12 +63,18 @@ import { HeinzProviders as PV } from '/lib/providers.js';
         document.getElementById('intro').textContent = t('intro');
         document.getElementById('imp-btn').textContent = t('imp');
         var list = PV.configs(), act = PV.chatConfigId(), el = document.getElementById('list');
-        if (!list.length) { el.innerHTML = '<p class="help" id="none">' + Heinz.esc(t('none')) + '</p>'; return; }
-        el.innerHTML = list.map(function (c) {
+        var d = PV.defaultChatConfig(), dOn = !act;
+        var html = '<div class="cfg' + (dOn ? ' on' : '') + '" data-id="' + PV.DEFAULT_CONFIG_ID + '" id="cfg-default"><b>' + Heinz.esc(t('dflt')) + '</b> <span class="tag">' + Heinz.esc(t('lock')) + '</span>' +
+            '<small class="meta">' + meta(d) + (dOn ? ' <span class="tag">' + Heinz.esc(t('chat')) + '</span>' : '') + '<br>' + Heinz.esc(t('dfltInfo')) + '</small>' +
+            '<div class="btns"><button class="pill' + (dOn ? ' on' : '') + '" type="button" data-act="chat">' + Heinz.esc(dOn ? t('chatOn') : t('chatOff')) + '</button>' +
+            '<a class="pill" data-act="param" href="/dashboard.html?config=' + PV.DEFAULT_CONFIG_ID + '">' + Heinz.esc(t('param')) + '</a></div></div>';
+        if (!list.length) html += '<p class="help" id="none">' + Heinz.esc(t('none')) + '</p>';
+        el.innerHTML = html + list.map(function (c) {
             var on = c.id === act;
-            return '<div class="cfg" data-id="' + c.id + '"><input class="inp nm" value="' + Heinz.esc(c.name) + '" data-act="rename" maxlength="80">' +
+            return '<div class="cfg' + (on ? ' on' : '') + '" data-id="' + c.id + '"><input class="inp nm" value="' + Heinz.esc(c.name) + '" data-act="rename" maxlength="80">' +
                 '<small class="meta">' + meta(c) + (on ? ' <span class="tag">' + Heinz.esc(t('chat')) + '</span>' : '') + '</small>' +
                 '<div class="btns"><button class="pill' + (on ? ' on' : '') + '" type="button" data-act="chat">' + Heinz.esc(on ? t('chatOn') : t('chatOff')) + '</button>' +
+                '<a class="pill" data-act="param" href="/dashboard.html?config=' + encodeURIComponent(c.id) + '">' + Heinz.esc(t('param')) + '</a>' +
                 '<button class="pill" type="button" data-act="export">' + Heinz.esc(t('exp')) + '</button>' +
                 '<button class="pill" type="button" data-act="del">' + Heinz.esc(armed === c.id ? t('del2') : t('del')) + '</button></div></div>';
         }).join('');
@@ -75,6 +83,7 @@ import { HeinzProviders as PV } from '/lib/providers.js';
     document.getElementById('list').addEventListener('click', function (e) {
         var b = e.target.closest('button[data-act]'); if (!b) return;
         var id = b.closest('.cfg').getAttribute('data-id'), c = PV.configById(id), a = b.getAttribute('data-act');
+        if (id === PV.DEFAULT_CONFIG_ID) { if (a === 'chat') { PV.setChatConfig(null); msg(t('unassigned')); render(); } return; }
         if (!c) return;
         if (a !== 'del') armed = null;
         if (a === 'chat') {
