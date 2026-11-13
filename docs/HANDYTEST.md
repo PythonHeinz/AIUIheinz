@@ -99,7 +99,7 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 - [ ] Menü, „Letzten Stand laden“ tippen: „xx“ und die Temperatur sind zurück, LEDs leuchten. Bei Audit ist der Knopf ausgegraut (dort wurde nichts geändert).
 - [ ] App schließen, neu öffnen, Wilson wählen: „Letzten Stand laden“ ist weiter möglich.
 
-**M. Konfigurationen**
+**M. Konfigurationen** (Entwickler: bestanden, 13.11.2026)
 - [ ] Dashboard, Menü, Abschnitt „Konfiguration“: Stelle Person, Prompt, Ton ein. Schreibe einen Namen („Meine erste“) und tippe „Speichern“. Erwartung: Hinweis „Als … gespeichert“, die Konfiguration steht in der Auswahl daneben.
 - [ ] Ändere etwas (andere Person). Wähle die Konfiguration, tippe „Laden“. Erwartung: Person, Prompt, Ton und Kontextfenster wie beim Speichern, LEDs leuchten, wenn sie von der Vorgabe abweichen.
 - [ ] Startseite, Bereich „Einrichten“: neue Kachel „Konfigurationen“. Öffnen: deine Konfiguration steht mit Modell, Engine und Person da.

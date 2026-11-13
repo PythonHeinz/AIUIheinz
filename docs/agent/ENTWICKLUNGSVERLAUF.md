@@ -638,3 +638,8 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - **Dashboard:** neue Datei `lib/dashboard/configs.js`, Menü „Konfiguration“ (Name, Speichern, Auswahl, Laden). Laden setzt Person, Prompt, Ton und Laufzeit; Modell und Engine nur innerhalb der aktuellen Engine, sonst Hinweis (Wechsel der Engine beim Laden noch nicht umgesetzt). Neue Hooks `pickPerson`, `renderConfigs`.
 - **Hub:** Kachel „Konfigurationen“ unter Einrichten (`tools/configs`): Liste, Umbenennen, Heinz-Chat-Zuweisung, Export (Datei mit Modellname), Import, Löschen mit zweitem Tipp.
 - Tests: vier neue (Speichern/Laden, Nativ, Verwaltungsseite, Heinz Chat). Nur simuliert; Export als Ollama-Modelfile und LM-Studio-Preset ist nicht gebaut.
+
+### 2026-11-13 AIUIheinz-Personen: Handytest bestanden, Bedienkonzept dokumentiert
+- Handytest A bis M vom Entwickler bestanden (Personenleiste, LEDs, Resets, Letzter Stand, Konfigurationen, Zuweisung an den Heinz Chat).
+- Neu: `docs/BEDIENKONZEPT_DASHBOARD.md` (Funktionsweise: drei Blöcke mit LED, Vorgabe/Reset, Rangfolge der Quellen, Übernehmen, Konfiguration). Dort Abschnitt 6: Wunsch des Entwicklers, Konfigurationen je Modell zuzuordnen und nach Neustart automatisch zu laden; nicht gebaut, vorher abstimmen.
+- Gestaltung (LED, Farben, Formen) bewusst nicht Thema dieses Strangs.
