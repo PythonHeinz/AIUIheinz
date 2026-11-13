@@ -4,6 +4,7 @@ A new page that calls /api/chat or /api/generate directly would bring back the r
 The listed pages are older code that still calls Ollama directly and are to be migrated (remove an entry once migrated)."""
 import glob
 import os
+import sys
 import re
 import unittest
 
@@ -158,6 +159,69 @@ class RuleTest(unittest.TestCase):
                     continue
                 problems.append("%s: classic script %s" % (page, src or "(inline)"))
         self.assertEqual(problems, [], "new scripts are modules (docs/MODULE.md); the head block is lib/core.js")
+
+    def _import_graph(self, folder):
+        graph = {}
+        for f in glob.glob(os.path.join(ROOT, folder, "*.js")):
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            graph[os.path.basename(f)[:-3]] = sorted(set(re.findall(r"""(?:from|import)\s*['"]\./(\w+)\.js['"]""", text)))
+        return graph
+
+    def _cycles(self, graph):
+        # strongly connected groups with more than one file (Tarjan)
+        index, low, stack, on, groups, counter = {}, {}, [], set(), [], [0]
+        def visit(v):
+            index[v] = low[v] = counter[0]; counter[0] += 1; stack.append(v); on.add(v)
+            for w in graph[v]:
+                if w not in index:
+                    visit(w); low[v] = min(low[v], low[w])
+                elif w in on:
+                    low[v] = min(low[v], index[w])
+            if low[v] == index[v]:
+                group = []
+                while True:
+                    w = stack.pop(); on.discard(w); group.append(w)
+                    if w == v:
+                        break
+                if len(group) > 1 or v in graph[v]:
+                    groups.append(sorted(group))
+        for v in graph:
+            if v not in index:
+                visit(v)
+        return groups
+
+    def test_the_import_graph_of_the_module_folders_has_no_cycle(self):
+        # Phase 2 (13.11.2026, docs/MODULE.md): files form layers, imports go only downward; a lower file that must say "draw again" uses a hook
+        for folder in ("lib/dashboard", "lib/chat"):
+            graph = self._import_graph(folder)
+            self.assertGreater(len(graph), 10)
+            self.assertEqual(self._cycles(graph), [], "cycle between files of " + folder + " (move the shared part down or use a hook, docs/MODULE.md)")
+        self.assertEqual(self._cycles({"a": ["b"], "b": ["a"], "c": []}), [["a", "b"]], "the check itself finds a cycle")
+
+    def test_the_module_graph_in_this_document_is_current(self):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import modulegraph
+        with open(os.path.join(ROOT, "docs", "MODULE.md"), encoding="utf-8") as fh:
+            doc = fh.read()
+        block = doc[doc.index(modulegraph.BEGIN):doc.index(modulegraph.END) + len(modulegraph.END)]
+        self.assertEqual(block, modulegraph.markdown(), "run: python3 tests/modulegraph.py --write")
+
+    def test_every_hook_is_listed_registered_in_init_and_called(self):
+        def read(name):
+            with open(os.path.join(ROOT, "lib", "dashboard", name), encoding="utf-8") as fh:
+                return fh.read()
+        listed = set(re.findall(r"^    (\w+): \[", read("hooks.js"), re.M))
+        registered = set(re.findall(r"hooks\.on\('(\w+)'", read("init.js")))
+        called = set()
+        for f in glob.glob(os.path.join(ROOT, "lib", "dashboard", "*.js")):
+            with open(f, encoding="utf-8") as fh:
+                called |= set(re.findall(r"hooks\.call\('(\w+)'", fh.read()))
+        self.assertGreater(len(listed), 5)
+        self.assertEqual(sorted(called - listed), [], "called but not listed in hooks.js")
+        self.assertEqual(sorted(listed - registered), [], "listed but not registered in init.js")
+        self.assertEqual(sorted(registered - listed), [], "registered but not listed")
+        self.assertEqual(sorted(listed - called), [], "listed but never called: remove it")
 
     def test_every_control_of_heinz_chat_has_an_action(self):
         with open(os.path.join(ROOT, "chat.html"), encoding="utf-8") as fh:

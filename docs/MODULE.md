@@ -9,7 +9,7 @@ Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundam
 1. **Ein Einstiegsmodul je Seite.** Die Seite lädt genau ein Modul (`<script type="module" src="lib/dashboard/main.js">`). Verdrahtung und Start stehen nur dort. Kein Inline-Skript in der Seite.
 2. **Importpfade** relativ zur importierenden Datei, mit Endung `.js` (`import { t } from './i18n.js'`). Keine Ordner-Importe, keine Importmap, kein Build.
 3. **Zustand in einem Objekt.** Veränderliche Werte, die mehrere Dateien lesen oder setzen, stehen im Objekt `state` (`lib/dashboard/state.js`) und werden als `state.feld = wert` gesetzt, nie als einzelne `export let` (Importe sind schreibgeschützt, eine Zuweisung in einer anderen Datei ändert nur eine lokale Kopie oder wirft einen Fehler). Objekte, die nie ersetzt, nur geändert werden (`settings`, Tabellen), dürfen `export const` sein. Werte, die nur eine Datei braucht, bleiben dort lokal (`let` in der Datei, nicht exportiert).
-4. **Kreise sind im Dashboard Stand des Codes und erlaubt, wenn beim Laden nichts Importiertes benutzt wird.** Die 19 Dateien `config` bis `update` plus `init` bilden eine zusammenhängende Gruppe, weil sie früher einen gemeinsamen globalen Namensraum hatten (Graph unten). Das ist nur sicher, solange auf oberster Ebene einer Datei (außerhalb von Funktionen) keine importierte Bindung benutzt wird; sie wird erst beim Aufruf einer Funktion gebraucht. Ausnahmen: Bindungen aus `base.js` (Blatt ohne Importe, wird immer zuerst ausgewertet) und das Einstiegsmodul `main.js`. Ein Test (`test_every_module_file_loads_as_the_first_module_of_a_page`) importiert jede Datei einzeln als erstes Modul einer frischen Seite; wer beim Laden eine Bindung benutzt, bricht dort ab. **Neue Dateien bilden keine neuen Kreise:** eine neue Datei darf Dateien der Gruppe importieren, aber keine Datei der Gruppe darf sie importieren (sie liegt darüber, zum Beispiel wie `init.js`), oder sie importiert nur Blätter (`base.js`, `state.js`). Gemeinsames kommt in eine tiefere Datei. Der Abbau der bestehenden Gruppe ist eine eigene Aufgabe (nicht Teil des Umbaus).
+4. **Keine Kreise.** Die Dateien eines Ordners liegen in Ebenen; eine Datei importiert nur Dateien tiefer liegender Ebenen. Braucht eine untere Datei etwas von oben, gibt es der Reihe nach: (a) das Gemeinsame in eine tiefere Datei legen, (b) einen Rückruf über `hooks.js` („neu zeichnen“, „Zustand geändert“), (c) einen Wert in `state` ablegen. Keine dynamischen `import()` als Umgehung. Der Test `test_the_import_graph_of_the_module_folders_has_no_cycle` prüft `lib/dashboard/` und `lib/chat/`; `test_every_module_file_loads_as_the_first_module_of_a_page` lädt jede Datei einzeln als erstes Modul.
 5. **Bibliotheken nur über `base.js`.** `lib/<bereich>/base.js` importiert die Bibliotheken (`import { HeinzStore } from '../store.js'`) und reicht sie weiter (Dashboard: `PV`, `HeinzStore`, `Heinz`, `HeinzCaps`, `HeinzSeries`, `HeinzPersonas`, `HeinzDashboardData`, `esc`, `parseOfflineMarkdown`, `$`). Nur `base.js` darf `../`-Importe haben und `window.Heinz` (die Kernbibliothek) lesen; kein anderes `window.Heinz*` (Test). Die Bibliotheken importieren nichts und setzen weiter `window.X` für Tests und Konsole.
 6. **Kopf-Block und Sicherheitsnetz bleiben klassisch.** Thema und Sprache im `<head>` (`lib/core.js`, gegen Aufblitzen; als Modul liefe es erst nach dem ersten Zeichnen) und `lib/dashboard/failsafe.js` (zeigt das rote Band mit Update/Neu laden, wenn ein Modul nicht lädt oder der Start nach 6 s nicht fertig ist) sind klassische Skripte ohne Importe, damit sie auch dann laufen, wenn der Modulgraph versagt.
 7. **Module sind strikt** (`"use strict"` gilt automatisch): Zuweisung an nicht deklarierte Namen, `with`, Oktalzahlen und doppelte Parameternamen werfen Fehler. Funktionen auf oberster Ebene sind **keine** `window`-Eigenschaften mehr; was Tests oder die Konsole brauchen, steht in der Fassade `window.HeinzDashboard` (`main.js`). Tests ersetzen keine Funktionen der Seite (`window.copyText = …` geht nicht mehr); sie ersetzen Browser-Schnittstellen (`navigator.clipboard`, `window.confirm`).
@@ -28,36 +28,100 @@ Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundam
 
 ## Dateien des Dashboards und was sie importieren
 
-Blätter (importieren nichts): `base.js` (Brücke zu den klassischen Bibliotheken und `$`), `state.js` (`settings`, `state`, `FALLBACK_MODELS`). Einstieg: `main.js` (Fassade `HeinzDashboard`, `initDashboard()`); Seiteneffekt-Datei: `actions.js` (Tabelle `ACTIONS` und die drei Listener für `data-click`/`data-input`/`data-change`).
+Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in Ebenen, Importe gehen nur nach unten (Regel 4, Test `test_the_import_graph_of_the_module_folders_has_no_cycle`). Was eine untere Datei von einer oberen braucht („neu zeichnen“, „neu planen“), geht über die Rückrufe in `hooks.js` (Abschnitt „Hooks“). Den Graphen erzeugt `tests/modulegraph.py`; `test_the_module_graph_in_this_document_is_current` meldet, wenn er veraltet ist.
 
-| Datei | Inhalt | importiert |
+| Datei | Inhalt |
+|---|---|
+| `base.js` | Brücke zu den Bibliotheken unter `lib/` und `$` |
+| `state.js` | Zustand (`settings`, `state`, `FALLBACK_MODELS`, `selIds`) |
+| `hooks.js` | Rückrufe nach oben (Liste der Namen und Begründungen) |
+| `clipboard.js` | `copyText` |
+| `sliders.js` | Regler lesen und setzen |
+| `persist.js` | Hinweisband bei Speicherproblemen, Info-Zeile, Einstellungen und aktuelle Unterhaltung sichern, `getSaved` |
+| `i18n.js` | Texte `t()`, `applyI18n()` (danach Hook `repaintLang`) |
+| `params.js` | Parameterquelle (Modell, Modus, eigene), gespeicherte Werte je Modell, `onSlider` |
+| `build.js` | Anfrage bauen: Systemprompt, Nachrichten, Optionen, `sysSrc` |
+| `protocol.js` | Texte für „Parameter kopieren“ und das Testprotokoll einer Antwort |
+| `status.js` | Statusring |
+| `update.js` | Update, Version |
+| `pixelbar.js` | Pixelanzeigen, Equalizer, Modellchip |
+| `menu.js` | Menü, Seiten, Sicherung, Export |
+| `caps.js` | Fähigkeitszellen, Regler-Zustände, Modellblatt |
+| `config.js` | Modellliste, Modell laden |
+| `engine.js` | Engine-Wahl, Online, Verbindungsdaten |
+| `settings.js` | Threads, Systemprompt, „In den Chat übernehmen“, Schnelleinstellungen |
+| `speech.js` | Vorlesen |
+| `quick.js` | Schnellblatt: Engine-Karten, Online freischalten, Modellblatt aus dem Panel |
+| `messages.js` | Nachrichten zeichnen, Kennzahlen, Kopieren |
+| `conversations.js` | Unterhaltungen, Liste, Auswahl |
+| `preload.js` | Vorladen, Modusleiste, Sprachknopf |
+| `send.js` | Senden, Abbruch |
+| `series.js` | Testreihen |
+| `speedtest.js` | Tempo-Test |
+| `init.js` | Start; registriert die Hooks |
+| `actions.js` | Aktionstabelle `ACTIONS`, Listener |
+| `main.js` | Einstieg, Fassade `HeinzDashboard` |
+| `failsafe.js` | Sicherheitsnetz (klassisch) |
+
+<!-- graph:begin -->
+Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Hand ändern. Ebene 0 importiert keine Datei des Ordners; jede Datei liegt eine Ebene über ihrer höchsten Abhängigkeit, Importe gehen nur nach unten.
+
+**Dashboard** (`lib/dashboard/`, 30 Dateien)
+
+| Ebene | Datei | importiert |
 |---|---|---|
-| `base.js` | Brücke, `$` | – |
-| `state.js` | Zustand | – |
-| `persist.js` | Hinweisband bei Speicherproblemen, Info-Zeile, Einstellungen und aktuelle Unterhaltung sichern | base, caps, i18n, state |
-| `i18n.js` | Texte `t()`, `applyI18n()` | caps, conversations, engine, menu, messages, persist, preload, state |
-| `config.js` | Modellliste, Modell laden | base, caps, i18n, persist, preload, quick, settings, state, status |
-| `engine.js` | Engine-Wahl, Online, Verbindungsdaten | base, caps, config, i18n, menu, persist, preload, quick, settings, state, status |
-| `settings.js` | Regler, Threads, Systemprompt, „In den Chat übernehmen“ | base, caps, i18n, messages, persist, preload, quick, send, state |
-| `preload.js` | Vorladen, Modusleiste, Sprachknopf | base, caps, config, conversations, engine, i18n, menu, persist, quick, send, settings, speech, state, status |
-| `status.js` | Statusring | base, caps, i18n, pixelbar, state |
-| `speech.js` | Vorlesen | caps, engine, i18n, state |
-| `messages.js` | Nachrichten zeichnen, Kennzahlen, Kopieren | base, caps, i18n, menu, pixelbar, speech, state |
-| `conversations.js` | Unterhaltungen, Liste, Auswahl | base, caps, config, i18n, init, menu, messages, persist, state |
-| `send.js` | Senden, Abbruch, Anfrage bauen | base, caps, i18n, messages, persist, pixelbar, preload, quick, settings, state, status |
-| `update.js` | Update, Version | base, i18n, state |
-| `speedtest.js` | Tempo-Test | base, config, i18n, messages, persist, settings, state |
-| `series.js` | Testreihen | base, caps, i18n, messages, preload, quick, send, state |
-| `menu.js` | Menü, Seiten, Sicherung, Export | base, caps, conversations, i18n, persist, series, state, update |
-| `pixelbar.js` | Pixelanzeigen, Equalizer, Modellchip | base, i18n, state |
-| `quick.js` | Schnellblatt, Parameter, Engine-Karten | base, caps, engine, i18n, menu, messages, persist, preload, settings, state |
-| `caps.js` | Fähigkeitszellen, Regler-Zustände, Modellblatt | base, conversations, i18n, menu, persist, pixelbar, preload, quick, send, series, settings, state |
-| `init.js` | Start: Daten laden, Einstellungen einsetzen, Oberfläche aufbauen | base, caps, config, conversations, engine, i18n, messages, persist, preload, quick, series, settings, speedtest, state, status, update |
-| `actions.js` | Aktionstabelle `ACTIONS`, Listener | base, caps, config, conversations, engine, menu, messages, persist, preload, quick, send, series, settings, speech, speedtest, state, update |
-| `main.js` | Einstieg, Fassade `HeinzDashboard`, Start | fast alle (siehe Datei) |
-| `failsafe.js` | Sicherheitsnetz (klassisch) | – |
+| 0 | `base.js` | – |
+| 0 | `clipboard.js` | – |
+| 0 | `failsafe.js` | – |
+| 0 | `hooks.js` | – |
+| 0 | `state.js` | – |
+| 1 | `i18n.js` | `hooks`, `state` |
+| 1 | `sliders.js` | `base` |
+| 2 | `persist.js` | `base`, `hooks`, `i18n`, `state` |
+| 2 | `pixelbar.js` | `base`, `i18n`, `state` |
+| 2 | `update.js` | `base`, `i18n`, `state` |
+| 3 | `menu.js` | `base`, `hooks`, `i18n`, `persist`, `state`, `update` |
+| 3 | `params.js` | `base`, `hooks`, `i18n`, `persist`, `sliders`, `state` |
+| 4 | `caps.js` | `base`, `hooks`, `i18n`, `menu`, `params`, `persist`, `pixelbar`, `state` |
+| 5 | `build.js` | `base`, `caps`, `state` |
+| 5 | `protocol.js` | `base`, `caps`, `clipboard`, `sliders`, `state` |
+| 5 | `status.js` | `base`, `caps`, `i18n`, `pixelbar`, `state` |
+| 6 | `settings.js` | `base`, `build`, `clipboard`, `hooks`, `i18n`, `params`, `persist`, `state` |
+| 7 | `config.js` | `base`, `caps`, `hooks`, `i18n`, `params`, `persist`, `settings`, `state`, `status` |
+| 8 | `engine.js` | `base`, `caps`, `config`, `hooks`, `i18n`, `menu`, `params`, `persist`, `settings`, `state`, `status` |
+| 8 | `speedtest.js` | `base`, `clipboard`, `config`, `i18n`, `persist`, `settings`, `state` |
+| 9 | `quick.js` | `base`, `caps`, `engine`, `menu`, `state` |
+| 9 | `speech.js` | `caps`, `engine`, `i18n`, `state` |
+| 10 | `messages.js` | `base`, `caps`, `clipboard`, `i18n`, `menu`, `pixelbar`, `speech`, `state` |
+| 11 | `conversations.js` | `base`, `caps`, `clipboard`, `config`, `hooks`, `i18n`, `menu`, `messages`, `persist`, `state` |
+| 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
+| 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status` |
+| 14 | `series.js` | `base`, `caps`, `clipboard`, `i18n`, `preload`, `protocol`, `send`, `state` |
+| 15 | `actions.js` | `base`, `caps`, `config`, `conversations`, `engine`, `menu`, `messages`, `params`, `persist`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `state`, `update` |
+| 15 | `init.js` | `base`, `caps`, `config`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update` |
+| 16 | `main.js` | `actions`, `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, `messages`, `params`, `persist`, `pixelbar`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `state`, `status` |
 
-Die Gruppe `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, `messages`, `persist`, `pixelbar`, `preload`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `status`, `update` ist gegenseitig verbunden (Regel 4). `base`, `state`, `actions` und `main` liegen außerhalb der Gruppe.
+**Heinz Chat** (`lib/chat/`, 11 Dateien)
+
+| Ebene | Datei | importiert |
+|---|---|---|
+| 0 | `base.js` | – |
+| 0 | `state.js` | – |
+| 1 | `actions.js` | `base` |
+| 1 | `i18n.js` | `base` |
+| 1 | `markdown.js` | `base` |
+| 2 | `status.js` | `base`, `i18n`, `state` |
+| 3 | `view.js` | `base`, `i18n`, `markdown`, `state`, `status` |
+| 4 | `conversations.js` | `base`, `i18n`, `state`, `view` |
+| 5 | `model.js` | `base`, `conversations`, `i18n`, `state`, `view` |
+| 6 | `send.js` | `base`, `conversations`, `i18n`, `model`, `state`, `status`, `view` |
+| 7 | `main.js` | `actions`, `base`, `conversations`, `i18n`, `model`, `send`, `state`, `status`, `view` |
+
+<!-- graph:end -->
+
+## Hooks (`lib/dashboard/hooks.js`)
+
+Ein Hook ist ein benannter Rückruf: `hooks.call('renderQuick')` in einer unteren Datei, `hooks.on('renderQuick', renderQuick)` in `init.js`. Es gibt genau eine Umsetzung je Name, der Rückgabewert wird durchgereicht. Hooks sind **versteckte Abhängigkeiten**; deshalb nur für „neu zeichnen“ und „Zustand hat sich geändert“, nie für Fachlogik, und jeder Name steht mit Begründung in `HOOKS` (Test: genannt, in `init.js` registriert, aufgerufen). Vor einem neuen Hook prüfen: lässt sich das Gemeinsame in eine tiefere Datei legen (so geschehen mit `clipboard`, `sliders`, `params`, `build`, `getSaved`, `selIds`)? Die Hooks werden in `init.js` beim Laden der Datei registriert, vor jedem Aufruf (Aufrufe geschehen erst nach dem Start).
 
 ## Zustandsfelder (`state`)
 
@@ -67,7 +131,7 @@ Die Gruppe `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, 
 
 1. Datei unter `lib/<bereich>/name.js`, Kopfkommentar mit Zweck und Hinweis auf dieses Dokument; `import` was gebraucht wird (Pfad mit `./` und `.js`), `export` nur, was andere Dateien nutzen.
 2. Zustand, den auch andere Dateien brauchen, als Feld in `state.js` anlegen (Anfangswert dort, nur Literale; kein Import in `state.js`).
-3. Nichts Importiertes auf oberster Ebene benutzen (Regel 4). Browser-Zugriffe wie `document.getElementById` auf oberster Ebene sind erlaubt: Module laufen nach dem Seitenaufbau.
+3. Nichts Importiertes auf oberster Ebene benutzen (Ausnahme: `init.js` und `main.js` als oberste Dateien). Browser-Zugriffe wie `document.getElementById` auf oberster Ebene sind erlaubt: Module laufen nach dem Seitenaufbau.
 4. Bedienelemente über `data-click`/`data-input`/`data-change` und einen Eintrag in `ACTIONS` (`actions.js`) anbinden (Regel in `TECHNIK.md`).
 5. Tests: `bash tests/run_all.sh rules` (statische Regeln) und `bash tests/run_all.sh first_module` (jede Datei einzeln als erstes Modul laden); Verhalten über die Fassade `HeinzDashboard`.
 
