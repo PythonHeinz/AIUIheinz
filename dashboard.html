@@ -410,13 +410,15 @@
                             <button class="pill" type="button" id="q-copy" data-click="copyParams" data-i18n-title="qCopyTip" title="Copies only the settings above"><span data-i18n="qCopy">Copy values</span></button>
                         </div>
                         <small class="help" id="q-note"></small>
-                            <div class="caps" data-i18n="runTitle" style="margin:14px 0 2px">Runtime (applies to every person)</div>
+                            <div class="caps" id="rt-title" data-i18n="runTitle" style="margin:14px 0 2px">Runtime (applies to every person)</div>
                             <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context window</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" data-input="onSlider"></div>
                             <div class="thr"><div class="caps" id="thr-title" style="margin:12px 0 2px"></div>
                             <div class="slidercard param-group" id="sc-threads" data-cap-card="num_thread" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" data-input="onThreads"></div>
                                 <small class="help" id="thr-note"></small></div>
+                            <div class="q-btns"><button class="pill" type="button" id="rt-reset" data-click="resetRuntime" data-i18n="qReset">Reset</button></div>
                         </div>
                     </div>
+                    <div class="q-btns"><button class="pill" type="button" id="last-load" data-click="loadLastStand" data-i18n-title="lastLoadTip" title=""><span data-i18n="lastLoad">Load last state</span></button></div>
                     <div class="grpbox">
                 <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" data-change="onFast"><i></i></span></label>
 <button class="row" type="button" id="fastn-toggle" data-click="toggleFastCard"><span class="tx"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b></span><output id="fastn-val" class="mono"></output><svg class="i sm go"><use href="lib/icons.svg#i-chev-d"/></svg></button>

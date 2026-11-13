@@ -625,3 +625,9 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Weg: Stern und gemerkter Stand entfernt (`restoreOwn`, `rememberedTone` weg; `settings.modelParams` nur noch aufbewahrt). Zwei getrennte Zustände: Ton geändert, Prompt geändert. Orange LED am Reiter „Ton“ und „Prompt“ (`.pw-tabs button.chg::after`), am Personenknopf eine LED, wenn eines von beiden an ist (`.led`). Gewählte Person: Leuchtring; Heinz: bedruckte Fläche (`.home::before`).
 - Reset: im Reiter „Ton“ nur Ton, im Reiter „Prompt“ neu nur Prompt (`resetPrompt`); Tipp auf die aktive Person beides. Ein einziger Knopf „Prompt + Ton in den Chat übernehmen“. Reiter heißen „Prompt“ und „Ton“; Abschnitt „Laufzeit (gilt für jede Person)“ mit Kontextfenster und Threads. Das Zusatzfeld heißt „Quelltext“. Personenwechsel verwirft Änderungen ohne Rückfrage.
 - Nur simuliert getestet (Playwright; Leiste als Bild bei 426 px in Hell und Dunkel gesehen). Handytest steht aus.
+
+### 2026-11-13 AIUIheinz-Personen: Laufzeit-LED und „Letzter Stand“ (Bedienkonzept Punkte 1 und 2)
+- Laufzeit (Kontextfenster, Threads) hat eigene orange LED an der Überschrift und eigenen Reset (`runtimeChanged`, `resetRuntime`); der Personenknopf zeigt sie nicht an. Standardwerte aus `lib/providers.js` (`DEFAULT_CTX`, `DEFAULT_THREADS`).
+- „Letzter Stand“ (Arbeitsname): `settings.lastStand[Engine|Modell|Person] = {tone?, prompt?}`, abgelegt vor Reset, Personen- und Modellwechsel und beim App-Start (`keepStand` in `params.js`); Knopf „Letzten Stand laden“ (`#last-load`) unter dem Fenster Prompt/Ton, ausgegraut ohne Eintrag.
+- Tests: zwei neue (Laufzeit-LED unabhängig von der Person, Letzter Stand je Person und Modell mit Neuladen). Nur simuliert.
+- Offen: Punkt 3 Konfiguration (Speicherort, Export mit Modell; berührt gemeinsamen Speicher: Entwickler vorher fragen) und Steuerung der Parametrierung des Heinz Chat aus dem Dashboard.

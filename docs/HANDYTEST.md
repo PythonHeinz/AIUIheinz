@@ -90,3 +90,11 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 **J. Ansicht**
 - [ ] Bei Hell und Dunkel, EN und DE: Leiste überlappt nicht, LEDs gut sichtbar.
 - [ ] Nur LiteRT-LM: Schritt B und G wiederholen (B2 offen).
+
+**K. Laufzeit**
+- [ ] Menü, „Laufzeit“: schiebe das Kontextfenster auf 4096. Erwartung: orange LED an der Überschrift „Laufzeit“, der Personenknopf bekommt keine LED. „Reset“ in diesem Abschnitt: zurück auf 8192, LED aus.
+
+**L. Letzter Stand**
+- [ ] Wilson, Prompt „xx“ und Temperatur ändern. Tippe Heinz, dann wieder Wilson: Vorgabe ist da, keine LED.
+- [ ] Menü, „Letzten Stand laden“ tippen: „xx“ und die Temperatur sind zurück, LEDs leuchten. Bei Audit ist der Knopf ausgegraut (dort wurde nichts geändert).
+- [ ] App schließen, neu öffnen, Wilson wählen: „Letzten Stand laden“ ist weiter möglich.
