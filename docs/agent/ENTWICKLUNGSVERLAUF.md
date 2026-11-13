@@ -672,3 +672,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - `PV.exportModelfile(c)` in `lib/providers.js`: `FROM`, `PARAMETER` (temperature, top_p, top_k, num_ctx, num_thread, stop) und `SYSTEM """…"""`; dreifache Anführungszeichen im Prompt werden zu `'''`, ein Stoppwort mit `"` entfällt (kein geprüftes Escaping). Hub-Kachel: Knopf „Modelfile“ an jeder Konfiguration einer Ollama-Engine und an der Standardkonfiguration (Datei `<Name>.Modelfile`, Hinweis `ollama create <Name> -f <Datei>`).
 - **LM-Studio-Preset nicht gebaut:** Die Doku nennt Presets als JSON-Dateien und Schlüssel wie `llm.prediction.temperature`, die genaue Preset-Datei (Aufbau, Name, Systemprompt) ließ sich an der offiziellen Doku nicht bestätigen. Erst bauen, wenn eine echte Preset-Datei des Entwicklers als Vorlage vorliegt.
 - Test: Inhalt, Quoting, Knopf nur für Ollama, Download. Nur simuliert.
+
+### 2026-11-13 AIUIheinz-Konfiguration: Strang abgeschlossen
+- Entscheidung des Entwicklers (15:28): Strang abgeschlossen, Grundfunktion am Handy bestätigt, keine Bugs. Zurückgestellte Punkte stehen in `STAND.md` 2r und können später einzeln beauftragt werden. Letzter Stand: Commit siehe `git log -1`.
