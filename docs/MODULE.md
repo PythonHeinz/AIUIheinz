@@ -160,6 +160,10 @@ Gemessen mit denselben Daten in beiden Seiten (Playwright, simuliert): Markup un
 - Nachrichten zeichnen und Modellblatt: bleiben getrennt; nach dem MVP neu bewerten.
 - Offen beobachten: Beim Streamen rendert der Chat nun das reichere Markdown je Token neu (Geschwindigkeit auf dem Handy prüfen). `esc` bleibt in zwei Varianten (Befund 1).
 
+## Testlücken (Stand Phase 2)
+
+Im Container simuliert getestet: Senden mit Stream, Abbruch, Serien (Stopp, Fortsetzen), Update-Knopf, gespeicherte Unterhaltungen laden (je Modus), Vorladen, Themenwechsel, Online-Schalter, Markdown und Listenzeile in beiden Seiten. Lücken: kein Test mit echtem Modell, Gerät, Hintergrundbetrieb und Zwischenablage-Rechten (siehe `docs/HANDYTEST.md`); Streaming-Geschwindigkeit des Chat-Markdowns nicht gemessen; Hub-Kacheln und die Tool-Seiten (scan, filter, studio, models, setup) nur auf Ladefehler und Offline-Verhalten geprüft. Kernpfade (senden, abbrechen, speichern, laden, aktualisieren) sind im Container abgedeckt; neue Funktionen bekommen weiterhin Tests.
+
 ## Hub und Tool-Seiten
 
 Inline-Module sind erlaubt, weil die Seiten klein sind und keine Funktionen an `window` erwarten. Folgen der Strenge: Funktionen und `var` auf oberster Ebene sind keine `window`-Eigenschaften. Der Design-Katalog (`tools/design/index.html`) setzt deshalb `window.CATALOG` und `window.FUNCS` ausdrücklich, weil Tests sie lesen. Der Beispielknopf des Schnellblatts im Katalog hat keinen Inline-Handler mehr (`id="open-bsheet"` plus Listener, wie beim Blatt); das kopierbare Markup zeigt dadurch nur den Knopf.
