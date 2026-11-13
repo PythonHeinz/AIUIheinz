@@ -3126,21 +3126,13 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', null)")
         self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), default)
 
-    def test_apply_to_chat_hands_prompt_and_values_of_the_bench_mode_to_the_chat(self):
+    def test_heinz_chat_sends_prompt_and_tone_of_the_assigned_configuration(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
-        self.assertTrue(page.is_visible("#to-chat") or page.locator("#to-chat").count() == 1)
-        page.evaluate("document.getElementById('to-chat').click()")
-        self.assertIn("gemma2:2b", page.text_content("#to-chat-sub"))
-        self.assertTrue(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')").startswith("You are Heinz"))
-        self.assertNotIn("Respond in English", page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "the answer-language sentence stays in the bench")
-        smp = page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')")
-        self.assertEqual((smp["temperature"], smp["top_p"], smp["top_k"]), (0.2, 0.4, 20))
-        self.assertEqual(smp["stop"], ["Als KI", "As an AI"])
-        self.assertNotIn("num_ctx", smp); self.assertNotIn("num_thread", smp); self.assertNotIn("num_predict", smp)
-        # the chat sends exactly that, plus the shared runtime values
+        self._save_config(page, "Bench")
+        page.click(".burger-btn"); page.click("#cfg-use")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
@@ -3151,22 +3143,13 @@ class PageTest(unittest.TestCase):
         self.assertEqual((body["options"]["temperature"], body["options"]["top_p"], body["options"]["top_k"]), (0.2, 0.4, 20))
         self.assertEqual(body["options"]["stop"], ["Als KI", "As an AI"])
         self.assertIn("num_ctx", body["options"])
-        # the chat shows the values and can drop them
-        page.click("#mod"); page.wait_for_selector("#sh-model.open")
-        self.assertIn("T 0.2", page.inner_text("#smp-h"))
-        page.click("#smp-reset")
-        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
-        self.assertTrue(page.is_hidden("#smp-reset"))
 
-    def test_apply_to_chat_with_untouched_native_clears_prompt_and_sampling_values(self):
+    def test_dashboard_has_no_apply_to_chat_button_any_more(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.evaluate("HeinzProviders.setChatSampling('gemma2:2b', {temperature: 0.9})")
-        page.click("#mode-bar [data-mode=native]")
-        page.evaluate("HeinzDashboard.applyToChat()")
-        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
-        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "", "empty string = no prompt, not a missing entry")
+        self.assertEqual(page.locator("#to-chat").count(), 0)
+        self.assertEqual(page.evaluate("typeof HeinzDashboard.applyToChat"), "undefined")
 
     def test_chat_adds_the_system_text_once_and_only_when_the_messages_have_none(self):
         page = self.new_page()

@@ -85,7 +85,6 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 
 **I. Namen**
 - [ ] Das Feld über dem Eingabefeld heißt „Quelltext“ (Audit: Pflicht). Das Wort „Kontext“ steht nirgends allein.
-- [ ] Menüpunkt „Prompt + Ton in den Chat übernehmen“: nimmt beides zusammen; im Heinz Chat sind Prompt und Ton danach gesetzt.
 
 **J. Ansicht**
 - [ ] Bei Hell und Dunkel, EN und DE: Leiste überlappt nicht, LEDs gut sichtbar.
