@@ -293,6 +293,61 @@ class PageTest(unittest.TestCase):
         self.assertEqual(out["chat"], out["dashboard"])
         self.assertIn("#del", out["chat"])
 
+    def test_chat_list_title_tap_closes_only_the_pills_and_long_press_selects_several(self):
+        page = self.new_page()
+        FakeOllama(page)
+        chats = [{"id": 10 + i, "title": "Chat " + str(i), "ts": 1762000000000 + i * 1000, "model": "gemma2:2b", "messages": [{"role": "user", "content": "hi"}]} for i in range(3)]
+        page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_slim_chats', %s); }" % json.dumps(json.dumps(chats)))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.click("#hist")
+        page.wait_for_selector("#chats .saved-item")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#chats .sr'), '::before').content"), "none", "no dot before the title")
+        row = page.locator("#chats .saved-item").first
+        row.locator(".more").click()
+        self.assertTrue(page.evaluate("document.querySelector('#chats .saved-item').classList.contains('open')"))
+        page.evaluate("window.scrollTo(0, 0)")
+        box = page.evaluate("(() => { const r = document.querySelector('#chats .saved-item.open .acts2').getBoundingClientRect(), q = document.querySelector('#chats .saved-item.open').getBoundingClientRect(); return [r.left - q.left, q.right - r.right]; })()")
+        self.assertLessEqual(max(box), 1, "the pill row is as wide as the entry")
+        row.locator(".load").click()
+        self.assertFalse(page.evaluate("document.querySelector('#chats .saved-item').classList.contains('open')"), "tap on the title closes the pills")
+        self.assertTrue(page.evaluate("document.getElementById('sh-hist').classList.contains('open')"), "the list stays open")
+        # long press selects, a tap adds, delete removes the selected ones
+        def press(loc):
+            b = loc.bounding_box()
+            page.mouse.move(b["x"] + 30, b["y"] + b["height"] / 2); page.mouse.down(); page.wait_for_timeout(650); page.mouse.up()
+        press(page.locator("#chats .saved-item .load").nth(0))
+        self.assertFalse(page.is_hidden("#sel-bar"))
+        self.assertEqual(page.inner_text("#sel-count"), "1 selected")
+        page.locator("#chats .saved-item .load").nth(1).click()
+        self.assertEqual(page.inner_text("#sel-count"), "2 selected")
+        self.assertEqual(page.locator("#chats .saved-item.sel").count(), 2)
+        page.once("dialog", lambda d: d.accept())
+        page.click("#sel-del")
+        self.assertEqual(page.locator("#chats .saved-item").count(), 1)
+        self.assertTrue(page.is_hidden("#sel-bar"))
+        press(page.locator("#chats .saved-item .load").nth(0))
+        page.click("#sel-x")
+        self.assertTrue(page.is_hidden("#sel-bar"))
+        self.assertEqual(page.locator("#chats .saved-item").count(), 1, "cancel keeps the chat")
+        self.assertEqual(self.errors, [])
+
+    def test_dashboard_list_title_tap_closes_only_the_pills(self):
+        page = self.new_page()
+        FakeOllama(page)
+        chats = [{"id": 20 + i, "title": "Chat " + str(i), "ts": "12.11.2026, 10:00:0" + str(i), "model": "gemma2:2b", "mode": "wilson", "messages": []} for i in range(2)]
+        page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_chats', %s); }" % json.dumps(json.dumps(chats)))
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_selector("#saved-list .saved-item", state="attached")
+        page.evaluate("document.querySelector('#saved-list .saved-item .more').click()")
+        self.assertTrue(page.evaluate("document.querySelector('#saved-list .saved-item').classList.contains('open')"))
+        before = page.evaluate("HeinzDashboard.getSaved().length")
+        page.evaluate("document.querySelector('#saved-list .saved-item .load').click()")
+        self.assertFalse(page.evaluate("document.querySelector('#saved-list .saved-item').classList.contains('open')"), "tap on the title closes the pills")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#saved-list .sr'), '::before').content"), "none", "no dot before the title")
+        self.assertEqual(page.evaluate("HeinzDashboard.getSaved().length"), before)
+        self.assertEqual(self.errors, [])
+
     def test_every_module_file_loads_as_the_first_module_of_a_page(self):
         # Cycles between files are allowed (docs/MODULE.md) as long as nothing uses an import while its file loads.
         # Importing each file first, in a fresh page, makes such a use fail (use of a binding before its file ran).
