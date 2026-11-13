@@ -98,3 +98,10 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 - [ ] Wilson, Prompt „xx“ und Temperatur ändern. Tippe Heinz, dann wieder Wilson: Vorgabe ist da, keine LED.
 - [ ] Menü, „Letzten Stand laden“ tippen: „xx“ und die Temperatur sind zurück, LEDs leuchten. Bei Audit ist der Knopf ausgegraut (dort wurde nichts geändert).
 - [ ] App schließen, neu öffnen, Wilson wählen: „Letzten Stand laden“ ist weiter möglich.
+
+**M. Konfigurationen**
+- [ ] Dashboard, Menü, Abschnitt „Konfiguration“: Stelle Person, Prompt, Ton ein. Schreibe einen Namen („Meine erste“) und tippe „Speichern“. Erwartung: Hinweis „Als … gespeichert“, die Konfiguration steht in der Auswahl daneben.
+- [ ] Ändere etwas (andere Person). Wähle die Konfiguration, tippe „Laden“. Erwartung: Person, Prompt, Ton und Kontextfenster wie beim Speichern, LEDs leuchten, wenn sie von der Vorgabe abweichen.
+- [ ] Startseite, Bereich „Einrichten“: neue Kachel „Konfigurationen“. Öffnen: deine Konfiguration steht mit Modell, Engine und Person da.
+- [ ] Tippe „Im Heinz Chat verwenden“ (geht auch im Dashboard-Menü unter der Auswahl; der Knopf zeigt dann „Im Heinz Chat“), dann Heinz Chat öffnen: Er startet mit dem Modell der Konfiguration und antwortet mit deinem Prompt und Ton. Zurück, nochmal tippen: der Chat nutzt wieder seine eigenen Einstellungen.
+- [ ] Umbenennen (Namen im Feld ändern), „Exportieren“ (Datei mit dem Modellnamen), „Aus Datei importieren“ (neuer Eintrag), „Löschen“ (zweiter Tipp nötig).

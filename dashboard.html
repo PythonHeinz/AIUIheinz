@@ -419,6 +419,12 @@
                         </div>
                     </div>
                     <div class="q-btns"><button class="pill" type="button" id="last-load" data-click="loadLastStand" data-i18n-title="lastLoadTip" title=""><span data-i18n="lastLoad">Load last state</span></button></div>
+                    <div class="caps" style="margin:14px 0 4px"><span data-i18n="cfgTitle">Configuration</span></div>
+                    <div class="q-btns" style="gap:8px"><input class="inp" id="cfg-name" type="text" maxlength="80" data-i18n-ph="cfgNamePh" placeholder="Name" style="flex:1;min-width:0;margin:0"><button class="pill" type="button" id="cfg-save" data-click="saveConfig"><span data-i18n="cfgSave">Save</span></button></div>
+                    <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
+                    <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>
+                    <small class="help" id="cfg-empty" data-i18n="cfgEmpty">No configuration saved yet.</small>
+                    <small class="help" id="cfg-note"></small>
                     <div class="grpbox">
                 <label class="row"><span class="tile"><svg class="i"><use href="lib/icons.svg#i-bolt"/></svg></span><span class="tx"><b data-i18n="swFast">Fast mode</b><small data-i18n="swFastSub">Short answer, plain text</small></span><span class="sw"><input type="checkbox" id="fast-mode" data-change="onFast"><i></i></span></label>
 <button class="row" type="button" id="fastn-toggle" data-click="toggleFastCard"><span class="tx"><b data-i18n="fastN">Max. answer tokens (fast mode only)</b></span><output id="fastn-val" class="mono"></output><svg class="i sm go"><use href="lib/icons.svg#i-chev-d"/></svg></button>

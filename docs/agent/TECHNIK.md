@@ -98,3 +98,5 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 ## Tests laufen parallel
 - `bash tests/run_all.sh` startet die kleinen Testdateien und die Seitentests in Teilen (`HEINZ_SHARD=i/n`, Anzahl über `HEINZ_SHARDS`, Standard Anzahl Kerne, höchstens 4) gleichzeitig. Jeder Teil startet seinen eigenen Server auf freiem Port; Tests dürfen keinen gemeinsamen Zustand teilen.
 - `bash tests/run_all.sh <Wort>` führt nur Tests aus, deren Name das Wort enthält.
+
+- **Konfigurationen (13.11.2026):** gemeinsame Schlüssel `heinz_configs` (Liste) und `heinz_chat_config` (Id der dem Heinz Chat zugewiesenen) in `lib/providers.js`, nur dort lesen/schreiben (landen über `lib/store.js` im localStorage). Zuweisung im Dashboard (Knopf „Im Heinz Chat verwenden“) und auf `tools/configs`. Die zugewiesene Konfiguration überstimmt für ihr Modell die Chat-Einstellungen; ihre Laufzeit schreibt der Chat nie.

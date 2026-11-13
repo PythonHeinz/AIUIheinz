@@ -11,7 +11,7 @@ import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
+PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
 
 
 def missing_classes(css, classes):
@@ -961,6 +961,132 @@ class PageTest(unittest.TestCase):
         self.assertTrue(page.evaluate("document.getElementById('sc-ctx').previousElementSibling.textContent.startsWith('Runtime')"))
         self.assertIn("Source text", page.inner_text("#ctx-label"))
         page.evaluate("HeinzDashboard.closeAll()")
+
+    def _save_config(self, page, name):
+        page.click(".burger-btn")
+        page.fill("#cfg-name", name)
+        page.click("#cfg-save")
+        page.evaluate("HeinzDashboard.closeAll()")
+
+    def test_configuration_is_saved_in_the_dashboard_and_loaded_again_with_person_prompt_tone_and_runtime(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click(".burger-btn")
+        self.assertTrue(page.is_disabled("#cfg-load-btn"), "nothing to load yet")
+        page.click("[data-pw=prompts]")
+        page.fill("#ps-text", "You are a calm test agent.")
+        page.click("[data-pw=params]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input', {bubbles: true})); var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}))")
+        page.fill("#cfg-name", "Calm Heinz")
+        page.click("#cfg-save")
+        cfg = page.evaluate("HeinzProviders.configs()")
+        self.assertEqual(len(cfg), 1)
+        c = cfg[0]
+        self.assertEqual((c["name"], c["model"], c["provider"], c["person"]), ("Calm Heinz", "gemma2:2b", "ollama", "heinz"))
+        self.assertEqual(c["prompt"], "You are a calm test agent.")
+        self.assertEqual(c["tone"]["temperature"], 0.3)
+        self.assertEqual(c["runtime"]["ctx"], 4096)
+        # saving again under the same name replaces, a new name adds (no maximum)
+        page.fill("#cfg-name", "Calm Heinz"); page.click("#cfg-save")
+        self.assertEqual(len(page.evaluate("HeinzProviders.configs()")), 1)
+        page.fill("#cfg-name", "Second"); page.click("#cfg-save")
+        self.assertEqual(len(page.evaluate("HeinzProviders.configs()")), 2)
+        # change everything, then load: person, prompt, tone and runtime come back
+        page.evaluate("HeinzDashboard.closeAll()")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.click(".burger-btn")
+        page.select_option("#cfg-load", label="Calm Heinz · gemma2:2b")
+        page.click("#cfg-load-btn")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
+        self.assertEqual(page.input_value("#param-temp"), "0.3")
+        self.assertEqual(page.input_value("#param-ctx"), "4096")
+        page.click("[data-pw=prompts]")
+        self.assertEqual(page.input_value("#ps-text"), "You are a calm test agent.")
+        page.evaluate("HeinzDashboard.closeAll()")
+        self.send(page, "Hi")
+        self.assertEqual(self.ollama.requests[-1]["messages"][0], {"role": "system", "content": "You are a calm test agent."})
+        self.assertEqual(self.ollama.requests[-1]["options"]["temperature"], 0.3)
+
+    def test_native_configuration_keeps_no_prompt_and_no_tone(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=native]")
+        self._save_config(page, "Plain")
+        c = page.evaluate("HeinzProviders.configs()[0]")
+        self.assertEqual((c["prompt"], c["tone"], c["person"]), ("", None, "native"))
+
+    def test_dashboard_button_assigns_a_configuration_to_the_heinz_chat_and_removes_it_again(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self._save_config(page, "Mine")
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+        page.click(".burger-btn")
+        page.click("#cfg-use")
+        self.assertEqual(page.evaluate("HeinzProviders.chatConfigId()"), page.evaluate("HeinzProviders.configs()[0].id"))
+        self.assertIn("on", page.get_attribute("#cfg-use", "class"))
+        page.click("#cfg-use")
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+
+    def test_configuration_page_assigns_exports_imports_renames_and_deletes(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self._save_config(page, "Alpha")
+        self._save_config(page, "Beta")
+        page.goto(self.srv.base + "/tools/configs/index.html")
+        page.wait_for_selector(".cfg")
+        self.assertEqual(page.locator(".cfg").count(), 2)
+        self.assertIn("gemma2:2b", page.inner_text(".cfg"))
+        # assign one to the Heinz Chat, the chat then uses its model, prompt and tone
+        page.click(".cfg[data-id] >> nth=0 >> [data-act=chat]")
+        self.assertIsNotNone(page.evaluate("HeinzProviders.chatConfigId()"))
+        self.assertIn("In the Heinz Chat", page.inner_text("#list"))
+        # rename
+        page.fill(".cfg >> nth=0 >> input.nm", "Gamma"); page.dispatch_event(".cfg >> nth=0 >> input.nm", "change")
+        self.assertIn("Gamma", [c["name"] for c in page.evaluate("HeinzProviders.configs()")])
+        # export contains the model; import creates a new entry (never overwrites)
+        exported = page.evaluate("HeinzProviders.exportConfig(HeinzProviders.configs()[0])")
+        self.assertEqual((exported["kind"], exported["format"], exported["model"]), ("heinz-configuration", 1, "gemma2:2b"))
+        page.set_input_files("#imp-file", files=[{"name": "x.json", "mimeType": "application/json", "buffer": json.dumps(exported).encode()}])
+        page.wait_for_function("document.querySelectorAll('.cfg').length == 3")
+        page.set_input_files("#imp-file", files=[{"name": "bad.json", "mimeType": "application/json", "buffer": b'{"a": 1}'}])
+        page.wait_for_function("document.getElementById('msg').textContent.indexOf('not a configuration') >= 0")
+        self.assertEqual(page.locator(".cfg").count(), 3)
+        # delete needs two taps; deleting the assigned one clears the assignment
+        aid = page.evaluate("HeinzProviders.chatConfigId()")
+        row = ".cfg[data-id='%s']" % aid
+        page.click(row + " [data-act=del]")
+        self.assertEqual(page.locator(".cfg").count(), 3, "first tap only asks")
+        page.click(row + " [data-act=del]")
+        self.assertEqual(page.locator(".cfg").count(), 2)
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+
+    def test_heinz_chat_uses_the_assigned_configuration_for_model_prompt_and_tone(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.click(".burger-btn")
+        page.click("[data-pw=prompts]")
+        page.fill("#ps-text", "Chat config prompt")
+        page.click("[data-pw=params]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.15; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        page.fill("#cfg-name", "For chat"); page.click("#cfg-save")
+        page.evaluate("HeinzProviders.setChatConfig(HeinzProviders.configs()[0].id)")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        body = self.ollama.requests[-1]
+        self.assertEqual(body["messages"][0], {"role": "system", "content": "Chat config prompt"})
+        self.assertEqual(body["options"]["temperature"], 0.15)
+        # an unassigned configuration changes nothing for the chat
+        page.evaluate("HeinzProviders.setChatConfig(null)")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
 
     def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
         page = self.new_page()
@@ -2465,7 +2591,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(set(ids), {"sheet", "filter", "scan", "studio"})
         page.click("[data-area=setup]")
         ids = page.eval_on_selector_all("#main a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids[:2], ["setup", "models"])
+        self.assertEqual(ids[:3], ["setup", "configs", "models"])
         page.click("[data-area=tools]")
         page.reload()
         page.wait_for_selector("a.app[data-tool]")

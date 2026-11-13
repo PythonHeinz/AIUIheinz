@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Configurations</title>
+<link rel="stylesheet" href="/lib/core.css">
+<style>
+    .cfg { padding: 12px 0; border-bottom: 1px solid var(--ol); }
+    .cfg .nm { width: 100%; height: 40px; margin: 0 0 4px; font-weight: 600; }
+    .cfg small.meta { display: block; color: var(--sub); font-size: .78rem; overflow-wrap: anywhere; margin-bottom: 8px; }
+    .cfg .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cfg .btns .pill.on { background: var(--acc, #4caf50); color: #fff; }
+    .cfg .tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: .68rem; background: var(--card); color: var(--sub); vertical-align: middle; }
+    #msg { margin: 8px 0; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page">
+    <div class="panel">
+        <p id="intro" class="help"></p>
+        <div class="q-btns" style="gap:8px"><button class="pill" type="button" id="imp-btn"></button><input type="file" id="imp-file" accept=".json,application/json" hidden></div>
+        <small class="help" id="msg"></small>
+    </div>
+    <div class="panel" id="list"></div>
+</main>
+<script src="/lib/core.js"></script>
+<script type="module">
+import { HeinzProviders as PV } from '/lib/providers.js';
+(function () {
+    var D = {
+        en: { sub: 'configurations', intro: 'A configuration is a named set for one model: engine, person, prompt, tone and a snapshot of the runtime. Save them in the Heinz Dashboard (menu, Configuration). Here you assign one to the Heinz Chat, rename, export or delete them.',
+              imp: 'Import from file', none: 'No configuration saved yet. Open the Heinz Dashboard, set up a model and save it under a name.',
+              chat: 'Heinz Chat', chatOn: 'In the Heinz Chat', chatOff: 'Use in Heinz Chat', exp: 'Export', del: 'Delete', del2: 'Really delete?',
+              tone: 'tone', noTone: 'model’s own tone', noPrompt: 'no prompt', ctx: 'context window', thr: 'threads', person: 'person',
+              imported: 'Imported “{n}”.', badFile: 'This file is not a configuration of this app.', assigned: '“{n}” is now used by the Heinz Chat.', unassigned: 'The Heinz Chat uses its own settings again.',
+              cloud: 'Online engine: only used when “Allow online” is on.' },
+        de: { sub: 'konfigurationen', intro: 'Eine Konfiguration ist ein benannter Satz für ein Modell: Engine, Person, Prompt, Ton und ein Abbild der Laufzeit. Gespeichert wird im Heinz Dashboard (Menü, Konfiguration). Hier weist du eine dem Heinz Chat zu, benennst um, exportierst oder löschst.',
+              imp: 'Aus Datei importieren', none: 'Noch keine Konfiguration gespeichert. Öffne das Heinz Dashboard, richte ein Modell ein und speichere es unter einem Namen.',
+              chat: 'Heinz Chat', chatOn: 'Im Heinz Chat', chatOff: 'Im Heinz Chat verwenden', exp: 'Exportieren', del: 'Löschen', del2: 'Wirklich löschen?',
+              tone: 'Ton', noTone: 'Ton des Modells', noPrompt: 'kein Prompt', ctx: 'Kontextfenster', thr: 'Threads', person: 'Person',
+              imported: '„{n}“ importiert.', badFile: 'Diese Datei ist keine Konfiguration dieser App.', assigned: '„{n}“ gilt jetzt im Heinz Chat.', unassigned: 'Der Heinz Chat nutzt wieder seine eigenen Einstellungen.',
+              cloud: 'Online-Engine: wird nur genutzt, wenn „Online erlauben“ an ist.' }
+    };
+    function t(k, v) { return Heinz.t(D, k, v); }
+    var armed = null;
+    function eng(c) { var p = PV.get(c.provider); return p ? p.name : c.provider; }
+    function meta(c) {
+        var a = [c.model || '–', eng(c), t('person') + ' ' + c.person];
+        a.push(c.tone ? t('tone') + ' ' + [c.tone.temperature, c.tone.top_p, c.tone.top_k].filter(function (x) { return x !== undefined; }).join(' / ') : t('noTone'));
+        if (!c.prompt) a.push(t('noPrompt'));
+        if (c.runtime && c.runtime.ctx) a.push(t('ctx') + ' ' + c.runtime.ctx);
+        if (c.runtime && typeof c.runtime.threads === 'number') a.push(t('thr') + ' ' + c.runtime.threads);
+        var p = PV.get(c.provider);
+        return a.map(Heinz.esc).join(' · ') + (p && !p.local ? '<br>' + Heinz.esc(t('cloud')) : '');
+    }
+    function render() {
+        document.getElementById('intro').textContent = t('intro');
+        document.getElementById('imp-btn').textContent = t('imp');
+        var list = PV.configs(), act = PV.chatConfigId(), el = document.getElementById('list');
+        if (!list.length) { el.innerHTML = '<p class="help" id="none">' + Heinz.esc(t('none')) + '</p>'; return; }
+        el.innerHTML = list.map(function (c) {
+            var on = c.id === act;
+            return '<div class="cfg" data-id="' + c.id + '"><input class="inp nm" value="' + Heinz.esc(c.name) + '" data-act="rename" maxlength="80">' +
+                '<small class="meta">' + meta(c) + (on ? ' <span class="tag">' + Heinz.esc(t('chat')) + '</span>' : '') + '</small>' +
+                '<div class="btns"><button class="pill' + (on ? ' on' : '') + '" type="button" data-act="chat">' + Heinz.esc(on ? t('chatOn') : t('chatOff')) + '</button>' +
+                '<button class="pill" type="button" data-act="export">' + Heinz.esc(t('exp')) + '</button>' +
+                '<button class="pill" type="button" data-act="del">' + Heinz.esc(armed === c.id ? t('del2') : t('del')) + '</button></div></div>';
+        }).join('');
+    }
+    function msg(s) { document.getElementById('msg').textContent = s || ''; }
+    document.getElementById('list').addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-act]'); if (!b) return;
+        var id = b.closest('.cfg').getAttribute('data-id'), c = PV.configById(id), a = b.getAttribute('data-act');
+        if (!c) return;
+        if (a !== 'del') armed = null;
+        if (a === 'chat') {
+            if (PV.chatConfigId() === id) { PV.setChatConfig(null); msg(t('unassigned')); } else { PV.setChatConfig(id); msg(t('assigned', { n: c.name })); }
+        } else if (a === 'export') {
+            var blob = new Blob([JSON.stringify(PV.exportConfig(c), null, 2)], { type: 'application/json' }), url = URL.createObjectURL(blob), l = document.createElement('a');
+            l.href = url; l.download = c.name.replace(/[^\w\-. ]+/g, '_') + '.heinz-config.json'; document.body.appendChild(l); l.click(); l.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+            return;
+        } else if (a === 'del') {
+            if (armed !== id) { armed = id; render(); return; }
+            armed = null; PV.deleteConfig(id); msg('');
+        }
+        render();
+    });
+    document.getElementById('list').addEventListener('change', function (e) {
+        var i = e.target.closest('input[data-act=rename]'); if (!i) return;
+        var id = i.closest('.cfg').getAttribute('data-id');
+        if (!PV.renameConfig(id, i.value)) { var c = PV.configById(id); if (c) i.value = c.name; }
+        render();
+    });
+    document.getElementById('imp-btn').addEventListener('click', function () { document.getElementById('imp-file').click(); });
+    document.getElementById('imp-file').addEventListener('change', function (e) {
+        var f = e.target.files[0]; if (!f) return;
+        f.text().then(function (txt) {
+            var o = null; try { o = PV.importConfig(JSON.parse(txt)); } catch (x) { o = null; }
+            msg(o ? t('imported', { n: o.name }) : t('badFile')); e.target.value = ''; render();
+        });
+    });
+    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
+    Heinz.onLang(render); render();
+})();
+</script>
+</body>
+</html>

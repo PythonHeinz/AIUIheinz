@@ -39,7 +39,8 @@ Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in E
 | `sliders.js` | Regler lesen und setzen |
 | `persist.js` | Hinweisband bei Speicherproblemen, Info-Zeile, Einstellungen und aktuelle Unterhaltung sichern, `getSaved` |
 | `i18n.js` | Texte `t()`, `applyI18n()` (danach Hook `repaintLang`) |
-| `params.js` | Parameterquelle (Modell, Modus, eigene), gespeicherte Werte je Modell, `onSlider` |
+| `params.js` | Person, Ton, „geändert“ (LED), Reset, „Letzter Stand“, `onSlider` |
+| `configs.js` | Konfigurationen im Dashboard: aktuellen Stand benannt speichern, gespeicherte laden (Ablage: `lib/providers.js`, Verwaltung: `tools/configs`) |
 | `build.js` | Anfrage bauen: Systemprompt, Nachrichten, Optionen, `sysSrc` |
 | `protocol.js` | Texte für „Parameter kopieren“ und das Testprotokoll einer Antwort |
 | `status.js` | Statusring |
@@ -66,7 +67,7 @@ Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in E
 <!-- graph:begin -->
 Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Hand ändern. Ebene 0 importiert keine Datei des Ordners; jede Datei liegt eine Ebene über ihrer höchsten Abhängigkeit, Importe gehen nur nach unten.
 
-**Dashboard** (`lib/dashboard/`, 30 Dateien)
+**Dashboard** (`lib/dashboard/`, 31 Dateien)
 
 | Ebene | Datei | importiert |
 |---|---|---|
@@ -88,6 +89,7 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 5 | `status.js` | `base`, `caps`, `i18n`, `pixelbar`, `state` |
 | 6 | `settings.js` | `base`, `build`, `clipboard`, `hooks`, `i18n`, `params`, `persist`, `state` |
 | 7 | `config.js` | `base`, `caps`, `hooks`, `i18n`, `params`, `persist`, `settings`, `state`, `status` |
+| 7 | `configs.js` | `base`, `build`, `hooks`, `i18n`, `params`, `persist`, `settings`, `sliders`, `state` |
 | 8 | `engine.js` | `base`, `caps`, `config`, `hooks`, `i18n`, `menu`, `params`, `persist`, `settings`, `state`, `status` |
 | 8 | `speedtest.js` | `base`, `clipboard`, `config`, `i18n`, `persist`, `settings`, `state` |
 | 9 | `quick.js` | `base`, `caps`, `engine`, `menu`, `state` |
@@ -97,8 +99,8 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
 | 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status` |
 | 14 | `series.js` | `base`, `caps`, `clipboard`, `i18n`, `preload`, `protocol`, `send`, `state` |
-| 15 | `actions.js` | `base`, `caps`, `config`, `conversations`, `engine`, `menu`, `messages`, `params`, `persist`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `state`, `update` |
-| 15 | `init.js` | `base`, `caps`, `config`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update` |
+| 15 | `actions.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `menu`, `messages`, `params`, `persist`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `state`, `update` |
+| 15 | `init.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update` |
 | 16 | `main.js` | `actions`, `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, `messages`, `params`, `persist`, `pixelbar`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `state`, `status` |
 
 **Heinz Chat** (`lib/chat/`, 10 Dateien)

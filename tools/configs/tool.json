@@ -1,0 +1,18 @@
+{
+  "id": "configs",
+  "name": {
+    "en": "Configurations",
+    "de": "Konfigurationen"
+  },
+  "desc": {
+    "en": "Named settings per model: person, prompt, tone, runtime. Assign one to the Heinz Chat, export and import.",
+    "de": "Benannte Einstellungen je Modell: Person, Prompt, Ton, Laufzeit. Dem Heinz Chat zuweisen, exportieren und importieren."
+  },
+  "icon": "•",
+  "entry": "tools/configs/index.html",
+  "color": "green",
+  "status": "ready",
+  "order": 30,
+  "area": "hub2",
+  "symbol": "i-sliders"
+}
