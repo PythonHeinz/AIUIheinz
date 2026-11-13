@@ -226,8 +226,8 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .pin-sep { height: 0; border-top: 1px solid var(--edge); margin: 6px 0 4px; }
 .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
 .saved-item.open .acts2 { display: flex; animation: plate-out .22s ease-out; }
-/* Aluminiumplatte unter dem Eintrag: faehrt beim Tipp auf den Kreis nach unten aus, ein Stueck heller als der Grund, mit eingelassenen Knoepfen. Sie reicht bis zum linken Zellenrand und rechts nur so weit wie links Platz vor dem ersten Knopf ist (12 px); rechts bleibt schwarzer Grund. Knoepfe 90 % der bisherigen Breite und Hoehe, oben links. */
-.saved-item .acts2 { box-sizing: border-box; width: calc(24px + (100% - 24px) * .9); padding: 8px 12px; gap: 6px; flex-wrap: nowrap; margin: 0 0 10px; position: relative; z-index: 0; border-radius: 0 14px 14px 0; background: linear-gradient(180deg, color-mix(in srgb, var(--txt) 13%, var(--surf)), color-mix(in srgb, var(--txt) 8%, var(--surf))); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent), inset 0 -1px 0 color-mix(in srgb, #000 35%, transparent); }
+/* Aluminiumplatte unter dem Eintrag: faehrt beim Tipp auf den Kreis nach unten aus, ein Stueck heller als der Grund, mit eingelassenen Knoepfen. Sie reicht bis zum linken Zellenrand und rechts rund um den letzten Knopf (gleicher Abstand wie oben und unten, 6 px, Rundung konzentrisch); rechts bleibt schwarzer Grund. Knoepfe 90 % der bisherigen Breite und Hoehe, oben links. */
+.saved-item .acts2 { box-sizing: border-box; width: calc(18px + (100% - 24px) * .9); padding: 6px 6px 6px 12px; gap: 6px; flex-wrap: nowrap; margin: 0 0 6px; position: relative; z-index: 0; border-radius: 0 999px 999px 0; background: linear-gradient(180deg, color-mix(in srgb, var(--txt) 13%, var(--surf)), color-mix(in srgb, var(--txt) 8%, var(--surf))); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent), inset 0 -1px 0 color-mix(in srgb, #000 35%, transparent); }
 .saved-item .acts2 .pill { flex: 1; min-width: 0; min-height: 29px; height: 29px; padding: 0; box-shadow: inset 0 1px 3px color-mix(in srgb, #000 60%, transparent), 0 1px 0 color-mix(in srgb, #fff 12%, transparent); }
 @keyframes plate-out { from { clip-path: inset(0 0 100% 0); opacity: .4; } to { clip-path: inset(0); opacity: 1; } }
 .saved-item[data-mode]::before, .saved-item.pin::before { z-index: 1; }
@@ -255,3 +255,10 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .md-table th { background: var(--card); }
 .tok-c { color: var(--tk-c); font-style: italic; } .tok-s { color: var(--tk-s); } .tok-d { color: var(--tk-d); } .tok-n { color: var(--tk-n); }
 .tok-k { color: var(--tk-k); font-weight: bold; } .tok-b { color: var(--tk-b); } .tok-f { color: var(--tk-f); }
+
+/* Slide switch with words on both sides (.tgl): the knob sits next to the active word; tap anywhere toggles. Height of the text, small and quiet. JS sets .active on the span of the active side. */
+.tgl { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 0; font-size: 11px; font-weight: 600; line-height: 14px; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tgl span { color: var(--muted); transition: color .15s; white-space: nowrap; } .tgl span.active { color: var(--txt); }
+.tgl .trk { position: relative; width: 24px; height: 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--edge); box-shadow: inset 0 1px 2px color-mix(in srgb, #000 55%, transparent); flex: none; box-sizing: border-box; }
+.tgl .trk::after { content: ""; position: absolute; top: 1px; left: 1px; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); transition: transform .15s; }
+.tgl:has(span:last-of-type.active) .trk::after { transform: translateX(12px); }

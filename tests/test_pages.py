@@ -3045,8 +3045,10 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
         page.click("#chats-open")
         page.wait_for_function("document.querySelector('#drawer').getBoundingClientRect().left >= -1")
-        page.click("#chats-scope span[data-s=all]")
-        page.click("#chats-sort span[data-s=az]")
+        if page.get_attribute("#chats-scope span.active", "data-s") != "all":
+            page.click("#chats-scope")
+        if page.get_attribute("#chats-sort span.active", "data-s") != "az":
+            page.click("#chats-sort")
         got = page.eval_on_selector_all("#saved-list .saved-item .ttl-in", "els => els.map(e => e.textContent)")
         self.assertEqual(got, ["Zebra Idee", "AIUI Chat 2", "AIUI Chat 10", "aiui Design", "Mein Rezept"])
         self.assertEqual(self.errors, [])
@@ -3088,12 +3090,15 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
         page.click("#chats-open")
         page.wait_for_function("document.querySelector('#drawer').getBoundingClientRect().left >= -1")
-        g = page.evaluate("""() => { const a = document.getElementById('chats-scope').getBoundingClientRect(), b = document.getElementById('chats-sort').getBoundingClientRect(), d = document.getElementById('drawer').getBoundingClientRect();
-            return { aMid: a.top + a.height / 2, bMid: b.top + b.height / 2, aTop: a.top, bTop: b.top, drawerW: d.width, vw: innerWidth, vertical: getComputedStyle(document.getElementById('chats-scope')).flexDirection } }""")
-        self.assertEqual(g["vertical"], "column", "scope switch slides top/bottom")
+        g = page.evaluate("""() => { const a = document.getElementById('chats-scope').getBoundingClientRect(), b = document.getElementById('chats-sort').getBoundingClientRect(), d = document.getElementById('drawer').getBoundingClientRect(), s = document.querySelector('#drawer .srch').getBoundingClientRect(), tx = document.querySelector('#chats-sort span').getBoundingClientRect();
+            return { aMid: a.top + a.height / 2, bMid: b.top + b.height / 2, aH: a.height, txH: tx.height, searchBottom: s.bottom, aTop: a.top, drawerW: d.width, vw: innerWidth, ph: document.getElementById('chat-search').placeholder, val: document.getElementById('chat-search').value } }""")
         self.assertAlmostEqual(g["aMid"], g["bMid"], delta=3, msg="both switches sit in one row")
+        self.assertGreaterEqual(g["aTop"], g["searchBottom"] - 1, "switches sit below the search row")
+        self.assertLessEqual(g["aH"], g["txH"] + 14, "switch row stays low")
+        self.assertEqual(g["ph"], "", "search shows only the magnifier, no text")
         self.assertLessEqual(g["drawerW"], g["vw"] * 0.6 + 1)
-        page.click("#chats-sort span[data-s=az]")
+        if page.get_attribute("#chats-sort span.active", "data-s") != "az":
+            page.click("#chats-sort")
         page.click("#chat-search")
         page.fill("#chat-search", "a")
         page.fill("#chat-search", "")

@@ -601,3 +601,9 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - **Breite:** Drawer `min(60vw, 350px)`, also höchstens 3/5 des Bildschirms.
 - **Aluminiumplatte** (`lib/core.css`, `.saved-item .acts2`): fährt beim Tipp auf den Kreis nach unten aus (`plate-out`, 0,22 s), etwas heller als der Grund (leichter Verlauf, Lichtkante oben, Schattenkante unten), Knöpfe eingelassen (innerer Schatten) und auf 90 % (Höhe 29 statt 32 px, Breite 90 % der früheren Zeilenbreite), oben links in der Zelle. Die Platte beginnt am linken Zellenrand und endet rechts 12 px hinter dem letzten Knopf (Breite `calc(24px + (100% - 24px) * .9)`), rechts bleibt schwarzer Grund. Der Modusbalken links liegt über der Platte. Gilt auch im Heinz Chat (gemeinsame Regeln).
 - **Tests:** ein neuer Test (Schalterzeile, Breite, Reihenfolge bleibt), `test_chat_list_title_tap_closes_only_the_pills_and_long_press_selects_several` an die schmalere Platte angepasst. Nur simuliert. Werte (12 px Innenrand, 90 %, 0,22 s) sind Startwerte nach Augenmaß.
+
+### 2026-11-13 AIUIheinz-Design: Kopfzeile der Chatliste, Schieber, Aluplatte
+- Heinz Dashboard, Chatliste: Suchzeile ganz oben, ohne Text, nur Lupe (Platzhalter leer, Name über title/aria-label); daneben das Schließen-X. Titel „Chats“ entfällt.
+- Darunter zwei kleine Schieber (`.tgl` in lib/core.css) in einer niedrigen Zeile: „Alle · n | Modus“ und „Letzte | A–Z“. Der Knopf steht beim aktiven Wort, Tippen irgendwo auf den Schalter wechselt. Die Einstellung bleibt immer sichtbar, kein Rückfall auf „Letzte“. Annahme: das diktierte „alle“ rechts beim zweiten Schalter war „A–Z“.
+- Aluplatte der fünf Knöpfe: Rundung rechts umschließt den letzten Knopf (Abstand 6 px), Platte niedriger (Padding 6 px, Abstand unten 6 px).
+- Tests angepasst (Schalter per Zustand statt per Span-Klick, Lupe ohne Platzhalter, Zeilenhöhe). Nur simuliert getestet, nicht auf dem Handy.
