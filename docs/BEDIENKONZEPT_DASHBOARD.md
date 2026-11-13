@@ -26,7 +26,8 @@ Reihenfolge der Quellen, höchste zuerst:
 Aussagen für die Praxis:
 - Der Heinz Chat wird **allein über die Zuweisung einer Konfiguration** gesteuert (Entscheidung Entwickler 13.11.2026). Den Knopf „In den Chat übernehmen“ gibt es nicht mehr: Er hätte Person und Ton an ein Modell gegeben, das sie nicht annimmt. Zum Ausprobieren im Heinz Chat: Konfiguration speichern, „Im Heinz Chat verwenden“ tippen.
 - Ohne zugewiesene Konfiguration gilt die Standardkonfiguration des Heinz Chat.
-- Die **Laufzeit** einer Konfiguration setzt nur das Dashboard beim Laden. Der Heinz Chat schreibt sie nie in die geteilte Laufzeit.
+- **Kontext und Threads gehören zur Konfiguration** (Abbild der Laufzeit). Das Dashboard setzt sie beim Laden für seine eigene Arbeit; der Heinz Chat liest sie aus seiner Konfiguration (`HeinzProviders.chatRuntime`). Er läuft nie gleichzeitig mit dem Dashboard, deshalb wird nichts geteilt oder still geschrieben. Eine Konfiguration ohne Laufzeit fällt auf die gespeicherten Arbeitswerte zurück.
+- **Laden einer Konfiguration einer anderen Engine** wechselt das Dashboard auf diese Engine (Online-Engines nur mit „Online erlauben“); ist das Modell dort nicht installiert, steht ein Hinweis.
 - Ohne Haken „Online erlauben“ geht keine Anfrage nach außen; eine zugewiesene Online-Konfiguration bleibt dann unwirksam.
 
 ## 3. Letzter Stand (Arbeitsname)
