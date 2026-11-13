@@ -101,7 +101,7 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 15 | `init.js` | `base`, `caps`, `config`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update` |
 | 16 | `main.js` | `actions`, `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, `messages`, `params`, `persist`, `pixelbar`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `state`, `status` |
 
-**Heinz Chat** (`lib/chat/`, 11 Dateien)
+**Heinz Chat** (`lib/chat/`, 10 Dateien)
 
 | Ebene | Datei | importiert |
 |---|---|---|
@@ -109,9 +109,8 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 0 | `state.js` | – |
 | 1 | `actions.js` | `base` |
 | 1 | `i18n.js` | `base` |
-| 1 | `markdown.js` | `base` |
 | 2 | `status.js` | `base`, `i18n`, `state` |
-| 3 | `view.js` | `base`, `i18n`, `markdown`, `state`, `status` |
+| 3 | `view.js` | `base`, `i18n`, `state`, `status` |
 | 4 | `conversations.js` | `base`, `i18n`, `state`, `view` |
 | 5 | `model.js` | `base`, `conversations`, `i18n`, `state`, `view` |
 | 6 | `send.js` | `base`, `conversations`, `i18n`, `model`, `state`, `status`, `view` |
@@ -155,7 +154,11 @@ Gemessen mit denselben Daten in beiden Seiten (Playwright, simuliert): Markup un
 
 **Befunde:** (1) Das Dashboard maskiert Anführungszeichen in `esc` nicht; wo `esc` in Attributwerte geht (zum Beispiel `title="…"`), wäre ein Name mit `"` ein Fehler (nicht behoben, nicht Teil des Auftrags). (2) Der Chat erzeugt `<p><pre>…</pre></p>` (ungültig, Browser korrigiert still).
 
-Stand: Entscheidungsvorlage an den Entwickler offen; ohne Beschluss wird nichts zusammengeführt, was sichtbar ändert. Gleiche Teile ohne Sichtbarkeit (Hilfsfunktionen) werden mit Schritt 2 zusammengelegt, sobald es einen Beschluss zu den sichtbaren gibt.
+**Beschlüsse (Entwickler, 13.11.2026) und Umsetzung in Schritt 2:**
+- Markdown: das Dashboard-Verfahren gilt für beide Seiten (`lib/shared/markdown.js`, CSS in `lib/core.css`). Der Chat zeigt jetzt Überschriften, Tabellen, Zitate, Codeblöcke mit Färbung und Kopierknopf; `lib/chat/markdown.js` entfällt.
+- Unterhaltungsliste: gemeinsame Zeile `savedRow` (`lib/shared/conversations.js`); der Chat zeigt jetzt Pillen mit Beschriftung (breiter), das Mehr-Symbol ist `i sm`. Der Moduspunkt bleibt nur im Dashboard. Datenschlüssel und Datenform bleiben getrennt.
+- Nachrichten zeichnen und Modellblatt: bleiben getrennt; nach dem MVP neu bewerten.
+- Offen beobachten: Beim Streamen rendert der Chat nun das reichere Markdown je Token neu (Geschwindigkeit auf dem Handy prüfen). `esc` bleibt in zwei Varianten (Befund 1).
 
 ## Hub und Tool-Seiten
 

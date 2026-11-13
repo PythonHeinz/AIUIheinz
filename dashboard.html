@@ -10,9 +10,9 @@
     <style>
         html, body { overscroll-behavior-y: none; height: 100%; touch-action: manipulation; }
         body { overflow-x: hidden; overflow-y: hidden; }
-        :root { --m1:#34a853; --m2:#8ab4f8; --m3:#c58af9; --m4:#fdd663; --code:#121212; --code-t:#d4d4d4; --tk-c:#7f8c8d; --tk-s:#98c379; --tk-d:#e5c07b; --tk-n:#d19a66; --tk-k:#c678dd; --tk-b:#61afef; --tk-f:#56b6c2; }
-        :root[data-theme="lt"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285; }
-        @media (prefers-color-scheme: light) { :root[data-theme="auto"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285; } }
+        :root { --m1:#34a853; --m2:#8ab4f8; --m3:#c58af9; --m4:#fdd663; }
+        :root[data-theme="lt"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; }
+        @media (prefers-color-scheme: light) { :root[data-theme="auto"] { --m1:#188038; --m2:#1967d2; --m3:#8430ce; --m4:#b06000; } }
         [hidden] { display: none !important; }
 
         .app { max-width: 600px; margin: 0 auto; height: var(--appH, 100%); max-height: var(--appH, 100dvh); min-height: 560px; box-sizing: border-box; padding-bottom: max(6px, env(safe-area-inset-bottom)) !important; display: flex; flex-direction: column; padding: 0 14px; }
@@ -144,22 +144,9 @@
         .msg-copy { position: absolute; top: 2px; right: 2px; width: 30px; height: 30px; padding: 0; background: none; border: 0; color: var(--muted); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .msg-copy:active { background: var(--card); }
         .placeholder { text-align: center; color: var(--muted); margin: auto 0; font-size: .92rem; }
-        .msg-assistant h1, .msg-assistant h2, .msg-assistant h3, .msg-assistant h4 { margin: 12px 0 5px; font-family: var(--serif); }
         .msg-assistant p { margin: 6px 0; }
         .msg-assistant ul, .msg-assistant ol { margin: 6px 0; padding-left: 22px; }
-        .msg-assistant blockquote { margin: 8px 0; padding: 4px 10px; border-left: 3px solid var(--edge); color: var(--sub); }
-        .msg-assistant hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
         .msg-assistant code { font-family: var(--mono); font-size: .88em; background: var(--code); padding: 2px 5px; border-radius: 4px; }
-        .code-wrap { position: relative; margin: 8px 0; font-family: var(--mono); }
-        .code-wrap pre { background: var(--code); padding: 28px 12px 12px; border-radius: 12px; overflow-x: auto; margin: 0; }
-        .code-wrap pre code { background: none; padding: 0; color: var(--code-t); white-space: pre; font-size: .84rem; }
-        .code-lang { position: absolute; top: 7px; left: 12px; font-size: 11px; color: var(--muted); }
-        .code-copy { position: absolute; top: 4px; right: 6px; background: var(--card); border: 1px solid var(--ol); color: var(--sub); border-radius: 99px; font-size: 11px; padding: 3px 10px; cursor: pointer; font-family: var(--font); }
-        .md-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-family: var(--serif); font-size: .96rem; }
-        .md-table th, .md-table td { border: 1px solid var(--edge); padding: 7px 9px; text-align: left; }
-        .md-table th { background: var(--card); }
-        .tok-c { color: var(--tk-c); font-style: italic; } .tok-s { color: var(--tk-s); } .tok-d { color: var(--tk-d); } .tok-n { color: var(--tk-n); }
-        .tok-k { color: var(--tk-k); font-weight: bold; } .tok-b { color: var(--tk-b); } .tok-f { color: var(--tk-f); }
 
         /* Metrik-Chips: eine Zeile, kein Umbruch */
         .metrics { display: flex; gap: 6px; flex: none; margin: 4px 0 8px; }

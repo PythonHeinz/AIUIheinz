@@ -9,17 +9,20 @@
   --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
   --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --code:#121212; --code-t:#d4d4d4; --tk-c:#7f8c8d; --tk-s:#98c379; --tk-d:#e5c07b; --tk-n:#d19a66; --tk-k:#c678dd; --tk-b:#61afef; --tk-f:#56b6c2;   /* code blocks and syntax colours (Markdown output) */
 }
 :root[data-theme="lt"] {
   color-scheme: light;
   --bg:#f4f6f8; --surf:#fff; --card:#eceff3; --line:#e1e4e8; --edge:#dadce0; --ol:transparent;
   --txt:#202124; --sub:#5f6368; --muted:#80868b; --pri:#1a73e8; --onacc:#fff; --scrim:rgba(32,33,36,.42);
+  --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285;
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme="auto"] {
     color-scheme: light;
     --bg:#f4f6f8; --surf:#fff; --card:#eceff3; --line:#e1e4e8; --edge:#dadce0; --ol:transparent;
     --txt:#202124; --sub:#5f6368; --muted:#80868b; --pri:#1a73e8; --onacc:#fff; --scrim:rgba(32,33,36,.42);
+    --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285;
   }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -228,3 +231,19 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .selbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: var(--surf); border-top: 1px solid var(--edge); }
 .selbar[hidden] { display: none; }
 .selbar span { flex: 1; font-size: .92rem; color: var(--txt); }
+
+/* Markdown output of answers (lib/shared/markdown.js): headings, quote, rule, code block with language label and copy button, table, syntax colours.
+   Used in the answer container of the Dashboard (.msg-assistant) and of the Heinz Chat (.msg.a); paragraphs, lists and inline code stay with the page. */
+:is(.msg-assistant, .msg.a) :is(h1, h2, h3, h4) { margin: 12px 0 5px; font-family: var(--serif); }
+:is(.msg-assistant, .msg.a) blockquote { margin: 8px 0; padding: 4px 10px; border-left: 3px solid var(--edge); color: var(--sub); }
+:is(.msg-assistant, .msg.a) hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+.code-wrap { position: relative; margin: 8px 0; font-family: var(--mono); }
+.code-wrap pre { background: var(--code); padding: 28px 12px 12px; border-radius: 12px; overflow-x: auto; margin: 0; }
+.code-wrap pre code { background: none; padding: 0; color: var(--code-t); white-space: pre; font-size: .84rem; }
+.code-lang { position: absolute; top: 7px; left: 12px; font-size: 11px; color: var(--muted); }
+.code-copy { position: absolute; top: 4px; right: 6px; background: var(--card); border: 1px solid var(--ol); color: var(--sub); border-radius: 99px; font-size: 11px; padding: 3px 10px; cursor: pointer; font-family: var(--font); }
+.md-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-family: var(--serif); font-size: .96rem; }
+.md-table th, .md-table td { border: 1px solid var(--edge); padding: 7px 9px; text-align: left; }
+.md-table th { background: var(--card); }
+.tok-c { color: var(--tk-c); font-style: italic; } .tok-s { color: var(--tk-s); } .tok-d { color: var(--tk-d); } .tok-n { color: var(--tk-n); }
+.tok-k { color: var(--tk-k); font-weight: bold; } .tok-b { color: var(--tk-b); } .tok-f { color: var(--tk-f); }

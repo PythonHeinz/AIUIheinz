@@ -218,6 +218,81 @@ class PageTest(unittest.TestCase):
         page.click("#send-btn")
         page.wait_for_function("document.querySelectorAll('.msg-assistant').length > 0 && !document.querySelector('#send-btn').classList.contains('stopping')")
 
+    # ---------- Markdown shared by the Dashboard and the Heinz Chat (lib/shared/markdown.js, Phase 2, 13.11.2026) ----------
+    MD_SAMPLE = "# Title\n\nSome **bold** and *it* and `code`.\n\n> quote\n\n- a\n- b\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```python\nprint('x')\nfor i in range(3): pass\n```\n"
+    MD_PICK = ("(root) => ['h1', 'p', 'blockquote', 'ul', 'table', '.code-wrap'].map(s => { const e = root.querySelector(s); return e ? e.outerHTML : s + ' missing'; }).join('\\n')")
+    MD_STYLE = ("(root) => ['.code-wrap pre', '.code-wrap pre code', '.tok-k', '.md-table th', '.md-table td', 'blockquote', 'h1'].map(s => { const e = root.querySelector(s); if (!e) return s + ' missing'; const c = getComputedStyle(e); "
+                "return [s, c.backgroundColor, c.color, c.padding, s === '.code-wrap pre code' ? '' : c.borderRadius, c.borderTopColor, ['.code-wrap pre code', '.md-table th', '.md-table td'].includes(s) ? c.fontSize : '', c.margin].join('|'); }).join('\\n')")
+
+    def _markdown_of_both_pages(self, fn):
+        out = {}
+        page = self.new_page()
+        FakeOllama(page, chunks=(self.MD_SAMPLE,))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#log .msg.a .code-wrap")
+        out["chat"] = page.evaluate(fn, page.query_selector("#log .msg.a"))
+        page = self.new_page()
+        FakeOllama(page, chunks=(self.MD_SAMPLE,))
+        page.goto(self.srv.base + "/dashboard.html")
+        self.send(page, "Hi")
+        page.wait_for_selector(".msg-assistant .code-wrap")
+        out["dashboard"] = page.evaluate(fn, page.query_selector(".msg-assistant"))
+        return out
+
+    def test_chat_and_dashboard_render_markdown_with_the_same_markup(self):
+        out = self._markdown_of_both_pages(self.MD_PICK)
+        for v in out.values():
+            self.assertNotIn(" missing", v, "every element of the sample is drawn")
+        self.assertEqual(out["chat"], out["dashboard"])
+        self.assertIn("tok-k", out["chat"], "syntax colouring in the chat")
+
+    def test_chat_and_dashboard_style_markdown_blocks_the_same(self):
+        out = self._markdown_of_both_pages(self.MD_STYLE)
+        for v in out.values():
+            self.assertNotIn(" missing", v)
+        self.assertEqual(out["chat"], out["dashboard"], "code block, table, colours and headings come from lib/core.css")
+
+    def test_code_block_copy_button_works_in_the_chat(self):
+        page = self.new_page()
+        page.add_init_script("Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__copied = t; return Promise.resolve(); } }, configurable: true })")
+        FakeOllama(page, chunks=(self.MD_SAMPLE,))
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#log .msg.a .code-copy")
+        page.click("#log .msg.a .code-copy")
+        page.wait_for_function("document.querySelector('#log .code-copy').textContent === '\u2713'")
+        self.assertEqual(page.evaluate("window.__copied"), "print('x')\nfor i in range(3): pass")
+
+    def test_conversation_row_has_the_same_structure_in_the_chat_and_the_dashboard(self):
+        # one row builder (lib/shared/conversations.js), five pills with symbol and text in both lists (decision of the developer, 13.11.2026)
+        skel = ("(row) => Array.from(row.querySelectorAll('*')).map(e => e.tagName.toLowerCase() + '.' + (e.getAttribute('class') || '').split(' ').filter(c => c !== 'sel').join('.') + (e.dataset.act ? '#' + e.dataset.act : '') "
+                "+ (e.tagName === 'use' ? '=' + e.getAttribute('href').split('#')[1] : '') + (e.tagName === 'SPAN' || e.tagName === 'span' ? ':text' + (e.textContent.trim() ? '' : '-empty') : '')).join(' ')")
+        out = {}
+        page = self.new_page()
+        FakeOllama(page)
+        page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_slim_chats', JSON.stringify([{id: 1, title: 'Hallo', ts: 1762000000000, model: 'gemma2:2b', provider: 'ollama', pinned: true, messages: [{role: 'user', content: 'Hi'}]}])); }")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.click("#hist")
+        page.wait_for_selector("#chats .saved-item")
+        out["chat"] = page.evaluate(skel, page.query_selector("#chats .saved-item"))
+        texts = page.evaluate("Array.from(document.querySelectorAll('#chats .pill span')).map(e => e.textContent)")
+        self.assertEqual(len(texts), 5)
+        self.assertTrue(all(texts), "every pill has a text in the chat list")
+        page = self.new_page()
+        FakeOllama(page)
+        page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_chats', JSON.stringify([{id: 1, title: 'Hallo', ts: '12.11.2026, 10:00:00', model: 'gemma2:2b', provider: 'ollama', mode: 'wilson', pinned: true, messages: [{role: 'user', content: 'Hi'}]}])); }")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_selector("#saved-list .saved-item", state="attached")
+        out["dashboard"] = page.evaluate(skel, page.query_selector("#saved-list .saved-item"))
+        self.assertEqual(out["chat"], out["dashboard"])
+        self.assertIn("#del", out["chat"])
+
     def test_every_module_file_loads_as_the_first_module_of_a_page(self):
         # Cycles between files are allowed (docs/MODULE.md) as long as nothing uses an import while its file loads.
         # Importing each file first, in a fresh page, makes such a use fail (use of a binding before its file ran).

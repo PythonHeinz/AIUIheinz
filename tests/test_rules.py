@@ -195,9 +195,24 @@ class RuleTest(unittest.TestCase):
         # Phase 2 (13.11.2026, docs/MODULE.md): files form layers, imports go only downward; a lower file that must say "draw again" uses a hook
         for folder in ("lib/dashboard", "lib/chat"):
             graph = self._import_graph(folder)
-            self.assertGreater(len(graph), 10)
+            self.assertGreaterEqual(len(graph), 8)
             self.assertEqual(self._cycles(graph), [], "cycle between files of " + folder + " (move the shared part down or use a hook, docs/MODULE.md)")
         self.assertEqual(self._cycles({"a": ["b"], "b": ["a"], "c": []}), [["a", "b"]], "the check itself finds a cycle")
+
+    def test_shared_files_know_neither_the_dashboard_nor_the_chat(self):
+        # lib/shared/ holds what both pages use (Phase 2, 13.11.2026): it may import siblings and libraries, never lib/dashboard or lib/chat
+        files = glob.glob(os.path.join(ROOT, "lib", "shared", "*.js"))
+        self.assertTrue(files)
+        problems = []
+        for f in files:
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            for spec in re.findall(r"""^(?:import|export)\b[^'"\n]*['"]([^'"]+)['"]""", text, re.M):
+                if "dashboard" in spec or "chat" in spec or not (spec.startswith("./") or spec.startswith("../")):
+                    problems.append("%s imports %s" % (os.path.basename(f), spec))
+            if re.search(r"window\.Heinz|document\.getElementById", text):
+                problems.append(os.path.basename(f) + ": reads a page global or a page element (pass it as a parameter)")
+        self.assertEqual(problems, [])
 
     def test_the_module_graph_in_this_document_is_current(self):
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
