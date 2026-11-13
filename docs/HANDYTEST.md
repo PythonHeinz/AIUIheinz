@@ -57,28 +57,28 @@ Echte Modellantworten, Geschwindigkeit, Speicherdruck, Akku, Wake-Lock bei Serie
 Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was du sehen sollst. Regel: Orange LED = „hier ist etwas anders als die Vorgabe“.
 
 **A. Start**
-- [ ] App öffnen. Sieh die Leiste: sechs Knöpfe. Heinz hat eine helle Fläche dahinter und leuchtet mit Ring (gewählt). Keine orange LED irgendwo.
+- [ ] App öffnen. Sieh die Leiste: sechs Knöpfe. Heinz ist in seiner Farbe gefüllt (gewählt) und hat eine helle Fläche dahinter. Keine orange LED irgendwo.
 
 **B. Person wechseln**
-- [ ] Tippe Wilson. Wilson leuchtet mit Ring in seiner Farbe, Heinz leuchtet nicht mehr, hat aber weiter die helle Fläche.
+- [ ] Tippe Wilson. Wilson ist in seiner Farbe gefüllt, Heinz nicht mehr, hat aber weiter die helle Fläche. Noch keine LED im Knopf.
 
 **C. Ton ändern und zurücksetzen**
-- [ ] Menü öffnen (Burger), Reiter „Ton“. Schiebe Temperatur irgendwohin. Erwartung: orange LED am Reiter „Ton“ und am Knopf Wilson; der Reiter „Prompt“ hat keine LED.
-- [ ] Tippe „Reset“ unter den Reglern. Erwartung: Regler springen zurück, beide LEDs aus.
+- [ ] Menü öffnen (Burger), Reiter „Ton“. Schiebe Temperatur irgendwohin. Erwartung: orange LED am Reiter „Ton“ und eine orange LED unten in der Mitte des Knopfes Wilson (auch sichtbar, wenn du das Menü schließt); der Reiter „Prompt“ hat keine LED.
+- [ ] Tippe „Reset“ unter den Reglern. Erwartung: Regler springen zurück, beide LEDs und die LED im Knopf aus.
 
 **D. Prompt ändern und zurücksetzen**
-- [ ] Reiter „Prompt“, tippe ans Ende des Textes „xx“. Erwartung: orange LED am Reiter „Prompt“ und am Knopf Wilson; Reiter „Ton“ ohne LED.
-- [ ] Tippe „Reset“ unter dem Prompt. Erwartung: „xx“ ist weg, Wilson-Prompt steht wieder da, beide LEDs aus.
+- [ ] Reiter „Prompt“, tippe ans Ende des Textes „xx“. Erwartung: orange LED am Reiter „Prompt“ und LED unten im Knopf Wilson; Reiter „Ton“ ohne LED.
+- [ ] Tippe „Reset“ unter dem Prompt. Erwartung: „xx“ ist weg, Wilson-Prompt steht wieder da, beide LEDs und die LED im Knopf aus.
 
 **E. Beides ändern, mit einem Tipp zurück**
-- [ ] Ändere Prompt („xx“) und Temperatur. Beide Reiter-LEDs und die LED am Knopf leuchten.
-- [ ] Tippe im Menü zu, dann nochmal auf den leuchtenden Knopf Wilson. Erwartung: beide Änderungen weg, alle LEDs aus.
+- [ ] Ändere Prompt („xx“) und Temperatur. Beide Reiter-LEDs leuchten und die LED im Knopf Wilson.
+- [ ] Tippe im Menü zu, dann nochmal auf den leuchtenden Knopf Wilson. Erwartung: beide Änderungen weg, alle LEDs und die LED im Knopf aus.
 
 **F. Person wechseln mit Änderungen**
 - [ ] Wilson, Prompt „xx“. Tippe Heinz. Erwartung: Heinz-Prompt, „xx“ ist weg (ohne Rückfrage), keine LED.
 
 **G. Nativ**
-- [ ] Tippe Nativ. Reiter „Prompt“ ist leer, bei „Ton“ stehen die Werte des Modells (oder „–“). Stelle eine Frage: Antwort kommt ohne Persönlichkeit. Schiebe einen Regler: LED am Reiter „Ton“ und am Knopf Nativ; Reset: aus.
+- [ ] Tippe Nativ. Reiter „Prompt“ ist leer, bei „Ton“ stehen die Werte des Modells (oder „–“). Stelle eine Frage: Antwort kommt ohne Persönlichkeit. Schiebe einen Regler: LED am Reiter „Ton“ und LED im Knopf Nativ; Reset: aus.
 
 **H. Laufzeit bleibt**
 - [ ] Reiter „Ton“, ganz unten steht „Laufzeit (gilt für jede Person)“ mit Kontextfenster und Threads. Stelle Kontextfenster auf 4096. Wechsle Wilson, Nativ, Heinz: der Wert bleibt 4096.

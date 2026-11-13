@@ -21,13 +21,13 @@ Festgelegt am 12.11.2026 (Strang AIUIheinz-Aufraeumen, Wunsch des Entwicklers). 
 | **Fundament** | `lib/`, Hub, `server.py`, gemeinsame localStorage-Schlüssel, EN/DE-Verfahren, Kopfzeile, Engine-Aufrufe. Es ändert nur ein Strang zur Zeit. |
 | **Hub** | Startseite der App (`index.html`) mit den Reitern Chat, Werkzeuge, Einrichten. |
 | **Engine** | Ein Modellanbieter in der App: Ollama, LiteRT-LM, Google AI Studio, OpenRouter, Groq, Mistral oder eine eigene. |
-| **Person** (früher Modus; Code: `mode`) | Nur die Auswahl in der Personenleiste: Nativ, Heinz, Wilson, Audit, Code, Kreativ. Sie lädt die Vorgaben für Prompt und Ton und hat selbst keinen Zustand „geändert“. Start immer auf Heinz. **Nativ** = keine Person: kein Prompt, kein Ton, es gelten die Werte des Modells. Gewählt = Leuchtring um die Taste; Heinz hat zusätzlich eine bedruckte Fläche (Ausgangspunkt). |
+| **Person** (früher Modus; Code: `mode`) | Nur die Auswahl in der Personenleiste: Nativ, Heinz, Wilson, Audit, Code, Kreativ. Sie lädt die Vorgaben für Prompt und Ton und hat selbst keinen Zustand „geändert“. Start immer auf Heinz. **Nativ** = keine Person: kein Prompt, kein Ton, es gelten die Werte des Modells. Gewählt = Taste in der Personenfarbe; Heinz hat zusätzlich eine bedruckte Fläche (Ausgangspunkt). |
 | **Prompt** | Der Systemtext, im Menü bearbeitbar (Reiter „Prompt“). Gehört nicht zur Person, sondern wird von ihr vorbelegt. |
 | **Ton** | Temperatur, Top-P, Top-K (Reiter „Ton“). Von der Person vorbelegt. |
 | **Laufzeit** | Threads und Kontextfenster; gilt für jede Person, ein Personenwechsel ändert sie nie. |
 | **Kontextfenster** | Wie viel Text das Modell auf einmal behält (`num_ctx`, Regler unter „Laufzeit“). |
 | **Quelltext** | Das Zusatzfeld über dem Eingabefeld (Audit braucht ihn zwingend). Früher „Kontext“; das Wort „Kontext“ steht allein nirgends mehr. |
-| **LED (geändert)** | Orange LED am Reiter „Prompt“ bzw. „Ton“ (dort weicht etwas von der Vorgabe ab) und am Knopf der gewählten Person (mindestens eines von beiden). Zwei getrennte Angaben, keine Sterne, kein gemerkter Stand. Reset im Reiter wirkt nur dort; Tipp auf die aktive Person setzt beides zurück (Nativ: auf die Werte des Modells). |
+| **LED (geändert)** | Orange LED am Reiter „Prompt“ bzw. „Ton“ (dort weicht etwas von der Vorgabe ab) und als kleine LED unten in der Mitte des Knopfes der gewählten Person (mindestens eines von beiden). Zwei getrennte Angaben, keine Sterne, kein gemerkter Stand. Reset im Reiter wirkt nur dort; Tipp auf die aktive Person setzt beides zurück (Nativ: auf die Werte des Modells). |
 | **Persona** | Rollenbeschreibung als Daten in `lib/personas.js`, wird mit der Anfrage gesendet. |
 | **Aktive Arbeit** | Abschnitt in `STAND.md`, in dem jeder Strang vor der ersten Änderung seine Zeile einträgt. |
 | **Handytest** | Prüfung des Entwicklers auf dem Pixel 9 Pro; nur sie zählt als „am Gerät geprüft“. Alles andere ist „nur simuliert getestet“. |

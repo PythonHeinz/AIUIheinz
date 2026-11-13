@@ -115,12 +115,12 @@
         .mode-pill .mi .i { width: 19px; height: 19px; }
         .mode-pill.active { color: var(--txt); font-weight: 600; }
         .mode-pill.active .mi { background: var(--mc); color: var(--mo); }
-        /* Gerätebild: gewählte Person = LED leuchtet (Leuchtring um die Aussparung); Heinz (Ausgangspunkt der App) = bedruckte Fläche um die Taste */
+        /* Gerätebild: gewählte Person = Taste in der Personenfarbe; Heinz (Ausgangspunkt der App) = bedruckte Fläche um die Taste;
+           orange LED unten in der Mitte der Taste = Prompt oder Ton dieser Person weicht von der Vorgabe ab (sichtbar auch bei geschlossenem Menü) */
         .mode-pill { isolation: isolate; }
-        .mode-pill.active .mi { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--mc), 0 0 10px 2px var(--mc); }
+        .mode-pill .mi { position: relative; }
+        .mode-pill.chg .mi::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 5px 1px var(--orange), inset 0 -1px 1px rgba(0,0,0,.25); }
         .mode-pill.home::before { content: ""; position: absolute; inset: 2px 3px; border-radius: 14px; background: color-mix(in srgb, var(--txt) 16%, transparent); z-index: -1; }
-        /* Änderungs-LED am Personenknopf: Prompt oder Ton weicht von der Vorgabe ab */
-        .mode-pill .led { position: absolute; top: 5px; right: calc(50% - 28px); width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px 1px var(--orange); }
         .mode-pill:disabled { opacity: .5; }
 
         /* Chat-Leiste */
