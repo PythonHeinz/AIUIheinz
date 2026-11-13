@@ -610,3 +610,4 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-13 AIUIheinz-Design: Klingeltaste als Fingernut
 - Der Kreis der Chateinträge ist jetzt eine Fingernut: links Halbkreis, nach rechts Rechteck bis zum rechten Zellenrand, dunkler getönt (schwarzer Verlauf mit Innenschatten). Tippfläche 64 px breit, volle Zeilenhöhe. Nur simuliert getestet.
+- Fingernut reicht jetzt bis zum Rand der Liste (Drawer-/Sheetkante) statt nur bis zur Zelle: Variable `--groove-out` (14 px Dashboard, 16 px Heinz Chat). Nur simuliert getestet.
