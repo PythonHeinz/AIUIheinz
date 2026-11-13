@@ -25,3 +25,9 @@ Entwurf nach Entscheidungen des Entwicklers vom 13.11.2026 im Strang Personen. B
 - Standardkonfiguration sichtbar (mit Schloss) oder unsichtbar.
 - Mehrere Konfigurationen je Modell möglich (eine davon als Zuordnung)? Vorschlag: ja.
 - Gestaltung ist Sache des Designers.
+
+## Ergänzt nach Prüfung durch Tertius (13.11.2026)
+- Beim Laden einer Konfiguration schreibt das Dashboard still die geteilte Laufzeit (Kontextfenster, Threads): sichtbaren Hinweis dazu zeigen.
+- Laden über Engine-Grenzen im Dashboard (heute nur Hinweis).
+- Cloud-Voreinstellungen (Modellstandard, `thinking_level`) stützen sich teils auf Sekundärquellen: vor dem Einbau gegen die offizielle Doku des Anbieters prüfen.
+- B2 (Heinz Chat ohne Antwort bei LiteRT-LM) erst nach Bestätigung am Gerät erledigt; Export als Modelfile und LM-Studio-Preset folgt später.
