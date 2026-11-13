@@ -156,7 +156,7 @@ Gemessen mit denselben Daten in beiden Seiten (Playwright, simuliert): Markup un
 
 **Beschlüsse (Entwickler, 13.11.2026) und Umsetzung in Schritt 2:**
 - Markdown: das Dashboard-Verfahren gilt für beide Seiten (`lib/shared/markdown.js`, CSS in `lib/core.css`). Der Chat zeigt jetzt Überschriften, Tabellen, Zitate, Codeblöcke mit Färbung und Kopierknopf; `lib/chat/markdown.js` entfällt.
-- Unterhaltungsliste: gemeinsame Zeile `savedRow` (`lib/shared/conversations.js`); der Chat zeigt jetzt Pillen mit Beschriftung (breiter), das Mehr-Symbol ist `i sm`. Der Moduspunkt bleibt nur im Dashboard. Datenschlüssel und Datenform bleiben getrennt.
+- Unterhaltungsliste: gemeinsame Zeile `savedRow` (`lib/shared/conversations.js`); der Chat zeigt weiterhin nur Symbole auf den fünf Pillen (Entwickler 13.11.: spart Platz und Übersetzung; die Beschriftung steckt im Markup, `lib/core.css` blendet sie dort aus, sie dient als `title`), das Dashboard zeigt Symbol plus Text; das Mehr-Symbol des Chats ist jetzt `i sm`. Der Moduspunkt bleibt nur im Dashboard. Datenschlüssel und Datenform bleiben getrennt.
 - Nachrichten zeichnen und Modellblatt: bleiben getrennt; nach dem MVP neu bewerten.
 - Offen beobachten: Beim Streamen rendert der Chat nun das reichere Markdown je Token neu (Geschwindigkeit auf dem Handy prüfen). `esc` bleibt in zwei Varianten (Befund 1).
 
