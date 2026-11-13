@@ -18,18 +18,24 @@
   }
  },
  "presets": {
-  "wilson": {
-   "persona": "wilson",
-   "top_k": 40,
+  "native": {
    "stop": [],
-   "ctx": "none",
-   "color": "#00acc1",
+   "ctx": "optional",
+   "color": "#8c919b",
    "on": "#fff"
   },
   "heinz": {
    "persona": "heinz",
    "ctx": "optional",
    "color": "#e91e63",
+   "on": "#fff"
+  },
+  "wilson": {
+   "persona": "wilson",
+   "top_k": 40,
+   "stop": [],
+   "ctx": "none",
+   "color": "#00acc1",
    "on": "#fff"
   },
   "audit": {

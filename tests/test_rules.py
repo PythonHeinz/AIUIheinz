@@ -55,8 +55,10 @@ class RuleTest(unittest.TestCase):
         used = set(re.findall(r"data-(?:click|input|change)=\"(\w+)\"", html))
         for f in glob.glob(os.path.join(ROOT, "lib", "dashboard", "*.js")):   # names set from script, e.g. the send button
             with open(f, encoding="utf-8") as fh:
-                for pair in re.findall(r"data-click', \w+ \? '(\w+)' : '(\w+)'", fh.read()):
+                src = fh.read()
+                for pair in re.findall(r"data-click', \w+ \? '(\w+)' : '(\w+)'", src):
                     used |= set(pair)
+                used |= set(re.findall(r"setAttribute\('data-click', '(\w+)'\)", src))   # fixed name set from script, e.g. the star of the person bar
         self.assertEqual(sorted(used - known), [], "These names have no entry in ACTIONS (lib/dashboard/actions.js)")
         self.assertEqual(sorted(known - used), [], "Unused entries in ACTIONS: remove them")
 

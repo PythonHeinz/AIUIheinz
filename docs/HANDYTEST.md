@@ -51,3 +51,14 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 ## Nur auf dem Gerät prüfbar (nie im Container)
 
 Echte Modellantworten, Geschwindigkeit, Speicherdruck, Akku, Wake-Lock bei Serien, Zwischenablage-Rechte, Installation als App, Verhalten bei Hintergrund und Rückkehr.
+
+## Heinz Dashboard: Personenleiste (Strang Personen, Phase 1, 13.11.2026)
+
+- [ ] Start der App: Leiste zeigt sechs Knöpfe (Nativ, Heinz, Wilson, Audit, Code, Kreativ), Heinz ist gewählt und trägt den Ring
+- [ ] Bei 426 × 803 px: nur Namen unter den Symbolen, nichts überlappt, in Hell und Dunkel, EN und DE
+- [ ] Wilson wählen, dann Nativ: Regler und Prompt zeigen keinen Ton, Antwort kommt ohne Persönlichkeit; Kontext und Threads unverändert
+- [ ] In Nativ einen Regler bewegen: Stern ★ erscheint am Knopf; Tipp auf Nativ springt zurück (☆ gemerkter Stand), Tipp auf ☆ stellt ihn wieder her
+- [ ] Systemprompt im Menü bearbeiten: Stern erscheint; Heinz wählen und zurück: Vorgabe wieder da
+- [ ] Gespeicherte Unterhaltung einer anderen Person laden: Leiste springt auf diese Person, Ton und Prompt passen
+- [ ] Neustart der App mit offener Unterhaltung von Audit: App startet auf Heinz, die Unterhaltung steht in der Liste von Audit
+- [ ] LiteRT-LM: Nativ und Heinz senden wie erwartet (B2 weiterhin offen)

@@ -288,6 +288,7 @@ class PageTest(unittest.TestCase):
         FakeOllama(page)
         page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_chats', JSON.stringify([{id: 1, title: 'Hallo', ts: '12.11.2026, 10:00:00', model: 'gemma2:2b', provider: 'ollama', mode: 'wilson', pinned: true, messages: [{role: 'user', content: 'Hi'}]}])); }")
         page.goto(self.srv.base + "/dashboard.html")
+        page.click("#mode-bar [data-mode=wilson]")   # the list shows the chats of the chosen person; the app starts on Heinz
         page.wait_for_selector("#saved-list .saved-item", state="attached")
         out["dashboard"] = page.evaluate(skel, page.query_selector("#saved-list .saved-item"))
         self.assertEqual(out["chat"], out["dashboard"])
@@ -348,6 +349,7 @@ class PageTest(unittest.TestCase):
         chats = [{"id": 20 + i, "title": "Chat " + str(i), "ts": "12.11.2026, 10:00:0" + str(i), "model": "gemma2:2b", "mode": "wilson", "messages": []} for i in range(2)]
         page.add_init_script("if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('heinz_chats', %s); }" % json.dumps(json.dumps(chats)))
         page.goto(self.srv.base + "/dashboard.html")
+        page.click("#mode-bar [data-mode=wilson]")
         page.wait_for_selector("#saved-list .saved-item", state="attached")
         page.evaluate("document.querySelector('#saved-list .saved-item .more').click()")
         self.assertTrue(page.evaluate("document.querySelector('#saved-list .saved-item').classList.contains('open')"))
@@ -435,8 +437,6 @@ class PageTest(unittest.TestCase):
     def test_mode_switch_sets_prompt_and_params_for_the_chosen_model(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
-        if page.is_checked("#use-default"):
-            page.evaluate("var c=document.getElementById('use-default'); c.checked=false; c.dispatchEvent(new Event('change', {bubbles: true}))")
         self.pick_model(page, "qwen2.5:3b")
         page.click("#mode-bar [data-mode=audit]")
         page.fill("#context", "Some context text")
@@ -477,14 +477,14 @@ class PageTest(unittest.TestCase):
         page.reload()
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertEqual(page.input_value("#param-threads"), "2")
-        # sent even with "default values" (threads are speed, not sampling)
-        page.evaluate("var c=document.getElementById('use-default'); c.checked=true; c.dispatchEvent(new Event('change', {bubbles: true}))")
+        # sent together with the context, whatever the person (threads are speed, not sampling)
+        page.click("#mode-bar [data-mode=native]")
         self.send(page, "three")
-        self.assertEqual(self.ollama.requests[-1]["options"], {"num_thread": 2})
+        self.assertEqual(self.ollama.requests[-1]["options"], {"num_thread": 2, "num_ctx": self.ollama.requests[-1]["options"]["num_ctx"]})
         # 0 = Ollama default: not sent at all
         page.evaluate("var e=document.getElementById('param-threads'); e.value=0; e.dispatchEvent(new Event('input', {bubbles: true}))")
         self.send(page, "four")
-        self.assertNotIn("options", self.ollama.requests[-1])
+        self.assertNotIn("num_thread", self.ollama.requests[-1]["options"])
 
     HF = "hf.co/mradermacher/Qwen2.5-3B-Instruct-abliterated-GGUF:Q4_K_M"
 
@@ -499,7 +499,6 @@ class PageTest(unittest.TestCase):
         page.click("#mode-bar [data-mode=heinz]")
         self.assertEqual(page.input_value("#model-select"), self.HF, "the mode keeps the chosen model")
         self.assertFalse(page.is_disabled("#model-chip"), "model stays selectable in every mode")
-        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.send(page, "Hey")
         body = self.ollama.requests[0]
         self.assertEqual(body["model"], self.HF)
@@ -519,19 +518,18 @@ class PageTest(unittest.TestCase):
             self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", mode)
         self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "qwen2.5:3b", "the shared choice is not changed by a mode click")
 
-    def test_old_model_system_setting_is_reset_once_so_the_persona_is_sent(self):
+    def test_old_source_settings_are_ignored_but_kept_and_the_persona_is_sent(self):
         page = self.new_page(tags=("gemma2:2b", "qwen2.5:3b", self.HF))
-        page.add_init_script("if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('heinz_settings', JSON.stringify({model: 'qwen2.5:3b', mode: 'heinz', sysSrc: 'model', ownSystem: true})); }")
+        page.add_init_script("if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('heinz_settings', JSON.stringify({model: 'qwen2.5:3b', mode: 'heinz', sysSrc: 'model', paramSrcBy: {x: 'own'}, modesOnly: true, useDefault: true, ownSystem: true})); }")
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzDashboard.settings.sysSrc"), "mode")
         self.send(page, "Hey")
         self.assertEqual(self.ollama.requests[0]["messages"][0]["role"], "system")
         self.assertIn("Digger", self.ollama.requests[0]["messages"][0]["content"])
-        page.evaluate("HeinzDashboard.settings.sysSrc = 'model'; HeinzDashboard.saveSettings()")
-        page.reload()
-        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzDashboard.settings.sysSrc"), "model", "a deliberate choice afterwards is kept")
+        self.assertIn("num_ctx", self.ollama.requests[0]["options"], "the old default-values switch no longer drops the context")
+        page.evaluate("HeinzDashboard.saveSettings()")
+        stored = page.evaluate("JSON.parse(localStorage.getItem('heinz_settings'))")
+        self.assertEqual(stored.get("sysSrc"), "model", "old keys stay in the stored settings, unused")
 
     def test_wilson_mode_sends_the_persona_with_its_sampling_to_the_native_gemma(self):
         page = self.new_page()
@@ -541,7 +539,6 @@ class PageTest(unittest.TestCase):
         page.click("#mode-bar [data-mode=creative]")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.input_value("#model-select"), "gemma2:2b")
-        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.send(page, "Hey")
         body = self.ollama.requests[0]
         self.assertTrue(body["messages"][0]["content"].startswith("You are Wilson, an unfiltered"))
@@ -562,6 +559,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("HeinzDashboard.settings.model = 'not-installed:1b'; document.getElementById('model-select').value = 'gemma2:2b'")
+        page.click("#mode-bar [data-mode=audit]")
         page.click("#mode-bar [data-mode=heinz]")
         page.wait_for_function("document.getElementById('model-select').value === 'qwen2.5:3b'")   # the model list refreshes in the background: wait for the suggestion
         self.assertEqual(page.input_value("#model-select"), "qwen2.5:3b", "chosen model gone: the mode's alternative is suggested")
@@ -569,8 +567,7 @@ class PageTest(unittest.TestCase):
     def test_own_system_prompt_sends_no_system_message(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
-        page.evaluate("HeinzDashboard.setSysSrc('model')")
-        page.click("#mode-bar [data-mode=heinz]")
+        page.click("#mode-bar [data-mode=native]")
         page.fill("#context", "Some context")
         self.send(page, "Hey")
         msgs = self.ollama.requests[0]["messages"]
@@ -678,8 +675,9 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         pills = page.query_selector_all("#mode-bar .mode-pill")
-        self.assertEqual([p.get_attribute("data-mode") for p in pills], ["wilson", "heinz", "audit", "code", "creative"])
-        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "wilson")
+        self.assertEqual([p.get_attribute("data-mode") for p in pills], ["native", "heinz", "wilson", "audit", "code", "creative"])
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "heinz", "the app starts on Heinz")
+        self.assertTrue(page.evaluate("document.querySelector('#mode-bar [data-mode=heinz]').classList.contains('home')"), "Heinz carries the ring")
         self.assertFalse(page.is_visible("#mode-select"), "the dropdown is only the hidden state holder")
         self.send(page, "First chat")
         page.click("#mode-bar [data-mode=audit]")
@@ -694,14 +692,14 @@ class PageTest(unittest.TestCase):
         # every pill is on screen width-wise or reachable by sideways scroll, and tall enough to tap
         self.assertGreaterEqual(page.evaluate("document.querySelector('#mode-bar .mode-pill').getBoundingClientRect().height"), 40)
         page.reload()
-        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "audit", "mode survives reload")
+        self.assertEqual(page.evaluate("document.querySelector('#mode-bar .active').dataset.mode"), "heinz", "the app always starts on Heinz, also after a reload")
 
     def test_mode_bar_ignores_taps_while_an_answer_is_running(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.evaluate("HeinzDashboard.generating = true")
         page.click("#mode-bar [data-mode=code]")
-        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "wilson")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
         page.evaluate("HeinzDashboard.generating = false")
         page.click("#mode-bar [data-mode=code]")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "code")
@@ -724,6 +722,7 @@ class PageTest(unittest.TestCase):
     def test_saved_chats_are_listed_per_mode_and_load_into_their_own_mode(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
+        page.click("#mode-bar [data-mode=wilson]")
         self.send(page, "Wilson question")
         page.click("#mode-bar [data-mode=code]")        # saves the Wilson chat
         self.send(page, "Code question")
@@ -732,7 +731,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(titles(), ["Wilson question"], "only the chats of the active mode")
         page.click("#mode-bar [data-mode=audit]")
         self.assertEqual(titles(), [])
-        self.assertIn("this mode", page.text_content("#saved-list"))
+        self.assertIn("this person", page.text_content("#saved-list"))
         page.click("#chats-open")
         page.click("#chats-scope")                       # all modes
         self.assertEqual(sorted(titles()), ["Code question", "Wilson question"])
@@ -743,6 +742,7 @@ class PageTest(unittest.TestCase):
     def test_chat_list_action_pills_of_the_last_entry_stay_fully_visible(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
+        page.click("#mode-bar [data-mode=wilson]")
         page.evaluate("var l=[]; for (let i=0;i<14;i++){ l.push({id:2000+i,title:'Chat '+i,mode:'wilson',messages:[],pinned:false,ts:'',model:'m'}); } HeinzDashboard.lsSet('heinz_chats', l)")
         page.click("#chats-open")
         page.click("#saved-list .saved-item >> nth=-1 >> .more")
@@ -834,41 +834,35 @@ class PageTest(unittest.TestCase):
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzDashboard.togglePin(1004); HeinzDashboard.togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
 
-    def test_three_parameter_views_model_mode_mine_per_model_and_mode(self):
+    def test_native_person_sends_no_tone_until_a_slider_moves_and_the_star_marks_changes(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.menu(page)
-        page.click("#seg-model")
-        page.wait_for_function("document.getElementById('val-topk').innerText == '64'")
-        self.assertEqual(page.inner_text("#val-temp"), "1")
-        self.assertTrue(page.is_disabled("#param-temp"), "model values are locked")
-        page.evaluate("HeinzDashboard.closeAll()")
-        self.send(page, "native")
-        self.menu(page)
-        self.assertNotIn("temperature", self.ollama.requests[-1]["options"], "model view sends nothing")
-        page.click("#seg-mode")
-        self.assertEqual(page.inner_text("#val-temp"), "0.4")
-        self.assertTrue(page.is_disabled("#param-temp"))
-        page.click("#seg-own")
-        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input', {bubbles: true}))")
-        self.assertFalse(page.is_disabled("#q-reset"), "reset is live once my values differ")
-        self.assertIn("act", page.get_attribute("#q-reset", "class"))
-        page.click("#q-save")
-        self.assertTrue(page.is_disabled("#q-reset"))
-        page.reload()
-        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        self.assertEqual(page.evaluate("HeinzDashboard.paramSrc()"), "own", "saved values come back after a reload")
-        self.assertEqual(page.input_value("#param-temp"), "0.3")
-        page.evaluate("HeinzDashboard.closeAll()")
-        page.click("#mode-bar [data-mode=creative]")
-        self.assertEqual(page.evaluate("HeinzDashboard.paramSrc()"), "mode", "own values belong to model + mode")
-        self.assertEqual(page.input_value("#param-temp"), "0.75")
         page.click("#mode-bar [data-mode=wilson]")
-        self.assertEqual(page.input_value("#param-temp"), "0.3")
-        self.menu(page)
-        page.click("#seg-mode")
-        self.assertEqual(page.input_value("#param-temp"), "0.4", "the mode preset is always recoverable")
+        ctx = page.evaluate("HeinzDashboard.settings.params.ctx")
+        page.evaluate("var e=document.getElementById('param-threads'); e.value=3; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        page.click("#mode-bar [data-mode=native]")
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "", "Nativ untouched: no star")
+        self.send(page, "native")
+        opts = self.ollama.requests[-1]["options"]
+        for k in ("temperature", "top_p", "top_k"):
+            self.assertNotIn(k, opts, "Nativ sends no tone")
+        self.assertEqual([m["role"] for m in self.ollama.requests[-1]["messages"]], ["user"], "Nativ sends no system message")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "on")
+        self.assertEqual(page.locator("#mode-bar [data-mode=native] .star.on").count(), 1)
+        page.evaluate("HeinzDashboard.generating = false")
+        self.send(page, "tone")
+        self.assertEqual(self.ollama.requests[-1]["options"]["temperature"], 0.3)
+        page.click("#mode-bar [data-mode=native]")   # tap on the active person: back to its preset
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "mem", "outlined star remembers the old stand")
+        page.click("#mode-bar [data-mode=native] .star.mem")
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "on", "tapping the outlined star restores it")
+        page.click("#mode-bar [data-mode=heinz]")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.input_value("#param-temp"), "0.4")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.params.ctx"), ctx, "the runtime is not touched by a person change")
+        self.assertEqual(page.input_value("#param-threads"), "3")
 
     def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
         page = self.new_page()
@@ -887,24 +881,26 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
         page.click(".burger-btn")
         page.click("[data-pw=prompts]")
-        self.assertIn("Wilson", page.input_value("#ps-text"), "the mode prompt is visible")
-        self.assertTrue(page.is_disabled("#ps-copy") is False)
-        page.click("#ps-own")
-        self.assertTrue(page.is_disabled("#ps-copy"), "nothing to copy while mine is empty")
+        self.assertIn("Wilson", page.input_value("#ps-text"), "the person's prompt is visible and editable")
+        self.assertFalse(page.is_disabled("#ps-copy"))
         page.fill("#ps-text", "You are a test agent.")
+        self.assertEqual(page.evaluate("HeinzDashboard.promptChanged()"), True)
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "on")
         page.evaluate("HeinzDashboard.closeAll()")
         self.send(page, "Hi")
         self.assertEqual(self.ollama.requests[-1]["messages"][0], {"role": "system", "content": "You are a test agent."})
+        page.evaluate("HeinzDashboard.generating = false")
         page.reload()
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), "You are a test agent.", "one own prompt is kept")
+        page.click("#mode-bar [data-mode=native]")
         page.click(".burger-btn")
         page.click("[data-pw=prompts]")
-        page.click("#ps-model")
-        self.assertEqual(page.input_value("#ps-text"), "")
-        self.assertTrue(page.is_disabled("#ps-copy"))
+        self.assertEqual(page.input_value("#ps-text"), "", "Nativ has no prompt of its own")
+        self.assertTrue(page.is_disabled("#ps-copy"), "nothing to copy while the prompt is empty")
 
     def test_status_text_tap_expands_in_place_without_covering_the_page(self):
         page = self.new_page()
@@ -917,18 +913,52 @@ class PageTest(unittest.TestCase):
         self.assertEqual(before, after, "the header does not move or get covered")
         self.assertTrue(page.is_visible("#query"), "the page stays usable")
 
-    def test_mode_presets_only_ignores_my_values_prompt_and_model_but_keeps_threads(self):
+    def test_person_bar_fits_at_phone_width_in_both_themes_and_languages(self):
+        page = self.new_page()
+        page.set_viewport_size({"width": 426, "height": 803})
+        page.goto(self.srv.base + "/dashboard.html")
+        for theme in ("light", "dark"):
+            for lang in ("en", "de"):
+                page.evaluate("(a) => { document.documentElement.dataset.theme = a[0]; HeinzDashboard.settings.lang = a[1]; }", [theme, lang])
+                boxes = page.eval_on_selector_all("#mode-bar .mode-pill", "els => els.map(e => { const r = e.getBoundingClientRect(); return [r.left, r.right]; })")
+                self.assertEqual(len(boxes), 6)
+                for i in range(5):
+                    self.assertLessEqual(boxes[i][1], boxes[i + 1][0] + 0.5, "pills do not overlap (%s/%s)" % (theme, lang))
+                self.assertLessEqual(boxes[-1][1], 426)
+                self.assertGreaterEqual(boxes[0][0], 0)
+
+    def test_the_app_starts_on_heinz_and_parks_an_open_conversation_of_another_person(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.send(page, "Audit question")
+        page.reload()
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.click("#chats-open")
+        self.assertIn("Audit question", page.text_content("#saved-list"), "the open conversation was parked in the list")
+
+    def test_chat_system_empty_string_means_no_prompt_and_missing_means_default(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_function("typeof HeinzProviders !== 'undefined'")
+        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', '')")
+        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "")
+        self.assertNotEqual(page.evaluate("HeinzProviders.chatSystemFor('other:1b')"), "")
+
+    def test_prompt_field_and_every_slider_are_usable_with_every_person(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.evaluate("HeinzDashboard.settings.ownPrompt = 'MY PROMPT'; HeinzDashboard.setSysSrc('own'); HeinzDashboard.settings.modelParams = {}; HeinzDashboard.settings.modelParams[HeinzDashboard.modelKey()] = {temp: 0.2, topp: 0.5, topk: 11, ctx: 4096}; HeinzDashboard.setParamSrc('own'); var th = document.getElementById('param-threads'); th.value = 3; HeinzDashboard.onThreads()")
-        page.evaluate("var c=document.getElementById('modes-only'); c.checked=true; c.dispatchEvent(new Event('change', {bubbles: true}))")
-        self.send(page, "Hi")
-        req = self.ollama.requests[-1]
-        self.assertIn("Wilson", req["messages"][0]["content"])
-        self.assertNotIn("MY PROMPT", json.dumps(req))
-        self.assertEqual(req["options"]["temperature"], 0.4)
-        self.assertEqual(req["options"]["num_thread"], 3, "threads stay a model setting")
+        for m in ("native", "heinz", "wilson", "audit", "code", "creative"):
+            page.click("#mode-bar [data-mode=%s]" % m)
+            self.assertFalse(page.is_disabled("#param-temp"), m)
+            self.assertFalse(page.is_disabled("#param-topp"), m)
+            self.assertFalse(page.is_disabled("#param-topk"), m)
+            page.click(".burger-btn")
+            page.click("[data-pw=prompts]")
+            self.assertFalse(page.is_disabled("#ps-text"), m)
+            page.evaluate("HeinzDashboard.closeAll()")
 
     def test_backup_roundtrip_leaves_keys_out_unless_asked(self):
         page = self.new_page()
@@ -1037,7 +1067,8 @@ class PageTest(unittest.TestCase):
         orr = FakeOpenAI(page, "https://openrouter.ai/**", models=("meta/free-model:free",))
         page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Private earlier question")      # an Ollama chat that must never reach the provider
-        page.click("#mode-bar [data-mode=heinz]")        # saves it to the chat list
+        page.click("#mode-bar [data-mode=wilson]")       # saves it to the chat list
+        page.click("#mode-bar [data-mode=heinz]")        # Heinz sends stop words
         page.click(".burger-btn")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change', {bubbles: true}))")
         page.click("#q-engine")
@@ -2127,6 +2158,8 @@ class PageTest(unittest.TestCase):
     def test_context_card_sits_below_the_prompt_and_only_exists_in_modes_with_context(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
+        self.assertTrue(page.is_visible("#context-wrapper"), "Heinz has an optional context")
+        page.click("#mode-bar [data-mode=wilson]")
         self.assertFalse(page.is_visible("#context-wrapper"), "Wilson has no context")
         page.click("#mode-bar [data-mode=audit]")
         self.assertTrue(page.is_visible("#context-wrapper"))
@@ -2151,6 +2184,8 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         acc = lambda: page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()")
+        self.assertEqual(acc(), "#e91e63", "the app starts on Heinz")
+        page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(acc(), "#00acc1")
         page.click("#mode-bar [data-mode=creative]")
         self.assertEqual(acc(), "#b184ec")
@@ -2201,7 +2236,7 @@ class PageTest(unittest.TestCase):
         page.click(".burger-btn")
         self.assertEqual(page.inner_text("#sh-title"), "Settings")
         self.assertFalse(page.is_visible("#sh-back"))
-        for sw in ("online-on", "modes-only", "fast-mode", "preload-on"):
+        for sw in ("online-on", "fast-mode", "preload-on"):
             self.assertTrue(page.locator("#%s" % sw).count() == 1, sw)
         page.click("#menu-sheet [data-go=look]")
         self.assertFalse(page.is_visible("#online-on"), "sub page replaces the content of the sheet")
@@ -2594,9 +2629,9 @@ class PageTest(unittest.TestCase):
         self.assertEqual(req["options"].get("num_ctx"), 4096)
         self.assertEqual(req["options"].get("num_thread"), 2)
         self.assertEqual(req.get("keep_alive"), "30m")
-        # model defaults chosen on the dashboard (useDefault): no context sent, threads still sent
+        # the old "default values" switch is gone: the context is always sent
         req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({useDefault: true, threads: {'qwen2.5:3b': 2}}))")
-        self.assertNotIn("num_ctx", req["options"])
+        self.assertIn("num_ctx", req["options"])
         self.assertEqual(req["options"].get("num_thread"), 2)
 
     def test_slim_chat_unloads_other_models_before_sending(self):
@@ -2622,7 +2657,6 @@ class PageTest(unittest.TestCase):
         # values as the developer sets them on the dashboard: sliders for context and threads, model qwen2.5:3b
         page.evaluate("""() => { const m = document.getElementById('model-select'); m.value = 'qwen2.5:3b'; m.dispatchEvent(new Event('change', {bubbles: true})); }""")
         page.wait_for_timeout(800)   # the model switch re-applies its parameter source asynchronously
-        page.evaluate("HeinzDashboard.setParamSrc('own')")   # own values: the sliders are the developer's, not the mode preset's
         page.evaluate("""() => { const c = document.getElementById('param-ctx'); c.value = 6144; HeinzDashboard.onSlider(); const t = document.getElementById('param-threads'); t.value = 3; HeinzDashboard.onThreads(); }""")
         self.send(page, "Hi")
         bench = fake.requests[-1]
@@ -2873,7 +2907,6 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
-        page.evaluate("HeinzDashboard.setParamSrc('mode')")
         self.assertTrue(page.is_visible("#to-chat") or page.locator("#to-chat").count() == 1)
         page.evaluate("document.getElementById('to-chat').click()")
         self.assertIn("gemma2:2b", page.text_content("#to-chat-sub"))
@@ -2901,13 +2934,15 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
         self.assertTrue(page.is_hidden("#smp-reset"))
 
-    def test_apply_to_chat_with_model_defaults_clears_the_sampling_values(self):
+    def test_apply_to_chat_with_untouched_native_clears_prompt_and_sampling_values(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.evaluate("HeinzProviders.setChatSampling('gemma2:2b', {temperature: 0.9})")
-        page.evaluate("HeinzDashboard.settings.useDefault = true; HeinzDashboard.applyToChat()")
+        page.click("#mode-bar [data-mode=native]")
+        page.evaluate("HeinzDashboard.applyToChat()")
         self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
+        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "", "empty string = no prompt, not a missing entry")
 
     def test_chat_adds_the_system_text_once_and_only_when_the_messages_have_none(self):
         page = self.new_page()
@@ -2987,6 +3022,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("c => { localStorage.setItem('heinz_chats', JSON.stringify(c)); }", chats)
         page.reload()
         page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
+        page.click("#mode-bar [data-mode=wilson]")
         page.click("#chats-open")
         page.wait_for_selector("#saved-list .saved-item")
         self.assertEqual(page.locator("#sel-bar:not([hidden])").count(), 0)

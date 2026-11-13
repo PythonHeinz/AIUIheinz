@@ -81,9 +81,9 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 2 | `pixelbar.js` | `base`, `i18n`, `state` |
 | 2 | `update.js` | `base`, `i18n`, `state` |
 | 3 | `menu.js` | `base`, `hooks`, `i18n`, `persist`, `state`, `update` |
-| 3 | `params.js` | `base`, `hooks`, `i18n`, `persist`, `sliders`, `state` |
+| 3 | `params.js` | `base`, `hooks`, `persist`, `sliders`, `state` |
 | 4 | `caps.js` | `base`, `hooks`, `i18n`, `menu`, `params`, `persist`, `pixelbar`, `state` |
-| 5 | `build.js` | `base`, `caps`, `state` |
+| 5 | `build.js` | `base`, `caps`, `params`, `state` |
 | 5 | `protocol.js` | `base`, `caps`, `clipboard`, `sliders`, `state` |
 | 5 | `status.js` | `base`, `caps`, `i18n`, `pixelbar`, `state` |
 | 6 | `settings.js` | `base`, `build`, `clipboard`, `hooks`, `i18n`, `params`, `persist`, `state` |
@@ -93,7 +93,7 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 9 | `quick.js` | `base`, `caps`, `engine`, `menu`, `state` |
 | 9 | `speech.js` | `caps`, `engine`, `i18n`, `state` |
 | 10 | `messages.js` | `base`, `caps`, `clipboard`, `i18n`, `menu`, `pixelbar`, `speech`, `state` |
-| 11 | `conversations.js` | `base`, `caps`, `clipboard`, `config`, `hooks`, `i18n`, `menu`, `messages`, `persist`, `state` |
+| 11 | `conversations.js` | `base`, `caps`, `clipboard`, `config`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `state` |
 | 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
 | 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status` |
 | 14 | `series.js` | `base`, `caps`, `clipboard`, `i18n`, `preload`, `protocol`, `send`, `state` |

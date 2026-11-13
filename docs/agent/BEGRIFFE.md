@@ -21,7 +21,8 @@ Festgelegt am 12.11.2026 (Strang AIUIheinz-Aufraeumen, Wunsch des Entwicklers). 
 | **Fundament** | `lib/`, Hub, `server.py`, gemeinsame localStorage-Schlüssel, EN/DE-Verfahren, Kopfzeile, Engine-Aufrufe. Es ändert nur ein Strang zur Zeit. |
 | **Hub** | Startseite der App (`index.html`) mit den Reitern Chat, Werkzeuge, Einrichten. |
 | **Engine** | Ein Modellanbieter in der App: Ollama, LiteRT-LM, Google AI Studio, OpenRouter, Groq, Mistral oder eine eigene. |
-| **Modus** | Bündel aus Ton, Reglern und Regeln im Dashboard (Wilson, Heinz, Audit, Code, Creative). **Wird im Strang AIUIheinz-Personen zu „Person“** (`AUFTRAG_Personen.md`; Code bleibt `mode`). |
+| **Person** (früher Modus; Code: `mode`) | Bündel aus Systemprompt, Ton und Regeln im Dashboard: Nativ, Heinz, Wilson, Audit, Code, Kreativ. Start immer auf Heinz; Tipp auf die aktive Person springt auf ihre Vorgabe zurück. **Nativ** = keine Person: kein Systemprompt, kein Ton, bis ein Regler bewegt wird. Geändertes Stand zeigt ein Stern (★ geändert, ☆ gemerkter alter Stand, Tipp stellt ihn wieder her). |
+| **Ton** | Temperatur, top_p, top_k. Gehört zur Person; die Laufzeit (Threads, Kontext, Engine) ändert ein Personenwechsel nie. |
 | **Persona** | Rollenbeschreibung als Daten in `lib/personas.js`, wird mit der Anfrage gesendet. |
 | **Aktive Arbeit** | Abschnitt in `STAND.md`, in dem jeder Strang vor der ersten Änderung seine Zeile einträgt. |
 | **Handytest** | Prüfung des Entwicklers auf dem Pixel 9 Pro; nur sie zählt als „am Gerät geprüft“. Alles andere ist „nur simuliert getestet“. |

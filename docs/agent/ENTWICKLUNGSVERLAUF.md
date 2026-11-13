@@ -612,3 +612,10 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Der Kreis der Chateinträge ist jetzt eine Fingernut: links Halbkreis, nach rechts Rechteck bis zum rechten Zellenrand, dunkler getönt (schwarzer Verlauf mit Innenschatten). Tippfläche 64 px breit, volle Zeilenhöhe. Nur simuliert getestet.
 - Fingernut reicht jetzt bis zum Rand der Liste (Drawer-/Sheetkante) statt nur bis zur Zelle: Variable `--groove-out` (14 px Dashboard, 16 px Heinz Chat). Nur simuliert getestet.
 - Chateintrag mit ausgefahrenen Buttons (.open) trägt die Markierfarbe der Auswahl (.sel). Nur simuliert getestet.
+
+### 2026-11-13 AIUIheinz-Personen: Phase 1 (Personenleiste, Nativ, „geändert“)
+- Modus heißt jetzt **Person** (Code: `mode`). Neue Person **Nativ** (keine Person, kein Systemprompt, kein Ton bis zur ersten Reglerbewegung); App startet immer auf Heinz (`startOnHeinz`), Tipp auf die aktive Person setzt auf ihre Vorgabe zurück; ein offenes Gespräch einer anderen Person wird beim Start in die Liste geparkt.
+- Stern an der Leiste: ★ geändert (Ton oder Prompt weicht von der Vorgabe ab), ☆ gemerkter alter Stand, Tipp stellt ihn wieder her. Zustand in `heinz_settings`: `toneOn`, `ownOn`, `ownPrompt`, `modelParams[Anbieter|Modell|Person]`.
+- Weggefallen: Quellenwahl Modell/Modus/Eigene, „Standardwerte“, „Nur Modi“, Speichern-Knopf. Prompt-Feld und Regler sind bei jeder Person bedienbar. `num_ctx` wird immer gesendet. Alte Schlüssel bleiben ungenutzt erhalten.
+- Neu: `lib/data/modes.json` (native), Symbol `i-m-native`, Hook `renderMarks`, Begriffe EN/DE (Person, Ton, Nativ). Modulgraph neu erzeugt.
+- Tests: 163 Seitentests; Quellenwahl-Tests ersetzt durch Nativ/Stern, Prompt-Test, „Regler bei jeder Person“, Leiste bei 426 px in beiden Themes und Sprachen, Start auf Heinz mit geparktem Gespräch, leerer Chat-Prompt. **Nur simuliert**; Handytest steht aus (`docs/HANDYTEST.md`). B2 (LiteRT-LM) bleibt unbestätigt.

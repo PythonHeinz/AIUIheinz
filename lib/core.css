@@ -199,6 +199,8 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .grpbox { margin: 8px -4px; padding: 2px 6px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
 /* capability marks on slider cards: blocked (greyed), tag, explanation */
 .slidercard.cap-blocked { opacity: .45; cursor: help; }
+/* „geändert“ (Person weicht von ihrer Vorgabe ab): Stern hinter dem Namen des Reglers bzw. der Seite, ohne Text */
+.slidercard.chg .sc-top b::after, .pw-tabs button.chg::after { content: " ★"; color: var(--acc); font-size: .8em; }
 .slidercard input.cap-lock { pointer-events: none; }
 .cap-tag { border: 0; background: none; padding: 2px 0; font: 600 .66rem var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
 .cap-tag.unk { color: var(--orange); }
