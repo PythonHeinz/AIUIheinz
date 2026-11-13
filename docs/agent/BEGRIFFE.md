@@ -21,7 +21,7 @@ Festgelegt am 12.11.2026 (Strang AIUIheinz-Aufraeumen, Wunsch des Entwicklers). 
 | **Fundament** | `lib/`, Hub, `server.py`, gemeinsame localStorage-Schlüssel, EN/DE-Verfahren, Kopfzeile, Engine-Aufrufe. Es ändert nur ein Strang zur Zeit. |
 | **Hub** | Startseite der App (`index.html`) mit den Reitern Chat, Werkzeuge, Einrichten. |
 | **Engine** | Ein Modellanbieter in der App: Ollama, LiteRT-LM, Google AI Studio, OpenRouter, Groq, Mistral oder eine eigene. |
-| **Modus** | Bündel aus Ton, Reglern und Regeln im Dashboard (Wilson, Heinz, Audit, Code, Creative). |
+| **Modus** | Bündel aus Ton, Reglern und Regeln im Dashboard (Wilson, Heinz, Audit, Code, Creative). **Wird im Strang AIUIheinz-Personen zu „Person“** (`AUFTRAG_Personen.md`; Code bleibt `mode`). |
 | **Persona** | Rollenbeschreibung als Daten in `lib/personas.js`, wird mit der Anfrage gesendet. |
 | **Aktive Arbeit** | Abschnitt in `STAND.md`, in dem jeder Strang vor der ersten Änderung seine Zeile einträgt. |
 | **Handytest** | Prüfung des Entwicklers auf dem Pixel 9 Pro; nur sie zählt als „am Gerät geprüft“. Alles andere ist „nur simuliert getestet“. |
@@ -32,3 +32,7 @@ Festgelegt am 12.11.2026 (Strang AIUIheinz-Aufraeumen, Wunsch des Entwicklers). 
 - „Chat“ steht allein nur noch in Namen: `AIUIheinz-Chat` (Strang), **Heinz Chat** (Seite), Menüpunkt „Chat“ im Hub, Dateinamen und Code (`dashboard.html`, `heinz_chats`).
 - Sonst den passenden Begriff aus der Tabelle verwenden.
 - Der Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App (der weicht teils ab).
+
+## Geplant (13.11.2026, Strang AIUIheinz-Personen; gilt erst nach dem Bau)
+Person (früher Modus, dazu Nativ = keine Person), Ton (Temperatur, top_k, top_p, Wiederholungsstrafe), Laufzeit (Threads, Kontext, Engine, GPU), Konfiguration (Modell + Laufzeit + Person + Ton, benannt, exportierbar). Definitionen: `docs/agent/ANWEISUNG_Personenleiste.md` Abschnitt 2. „Persona“ (`lib/personas.js`) bleibt ein anderer Begriff.
+
