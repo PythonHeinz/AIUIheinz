@@ -2239,6 +2239,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#saved-list .saved-item").count(), 1)
         page.fill("#chat-search", "")
         page.click("#saved-list .saved-item >> nth=0 >> .more")
+        self.assertNotIn("0, 0, 0, 0", page.eval_on_selector("#saved-list .saved-item >> nth=0", "e => getComputedStyle(e).backgroundColor"), "the row being edited is highlighted like a selected one")
         page.click("#saved-list .saved-item >> nth=0 >> .del")
         self.assertEqual(page.locator("#saved-list .saved-item").count(), 1)
         self.assertEqual(len(page.evaluate("HeinzStore.get('heinz_chats', null)")), 1)
