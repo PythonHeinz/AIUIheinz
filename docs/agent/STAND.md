@@ -5,6 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
+- 13.11.2026, AIUIheinz-Personen: Phase 1 (Personenleiste mit Nativ und „geändert“, Begriffe EN/DE, Wegfall der Quellenwahl Modell/Modus/Eigene). Berührt `dashboard.html`, `lib/dashboard/{build,params,settings,caps,init,preload,conversations,i18n,state}.js`, `lib/data/*.json`, `lib/providers.js` (nur `chatSystemFor`-Prüfung), `tests/test_pages.py`, `docs/agent/BEGRIFFE.md`.
 
 Stand: 13.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
