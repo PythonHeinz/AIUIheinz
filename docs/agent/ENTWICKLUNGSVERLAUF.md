@@ -607,3 +607,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Darunter zwei kleine Schieber (`.tgl` in lib/core.css) in einer niedrigen Zeile: „Alle · n | Modus“ und „Letzte | A–Z“. Der Knopf steht beim aktiven Wort, Tippen irgendwo auf den Schalter wechselt. Die Einstellung bleibt immer sichtbar, kein Rückfall auf „Letzte“. Annahme: das diktierte „alle“ rechts beim zweiten Schalter war „A–Z“.
 - Aluplatte der fünf Knöpfe: Rundung rechts umschließt den letzten Knopf (Abstand 6 px), Platte niedriger (Padding 6 px, Abstand unten 6 px).
 - Tests angepasst (Schalter per Zustand statt per Span-Klick, Lupe ohne Platzhalter, Zeilenhöhe). Nur simuliert getestet, nicht auf dem Handy.
+
+### 2026-11-13 AIUIheinz-Design: Klingeltaste als Fingernut
+- Der Kreis der Chateinträge ist jetzt eine Fingernut: links Halbkreis, nach rechts Rechteck bis zum rechten Zellenrand, dunkler getönt (schwarzer Verlauf mit Innenschatten). Tippfläche 64 px breit, volle Zeilenhöhe. Nur simuliert getestet.
