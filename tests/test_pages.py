@@ -834,7 +834,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzDashboard.togglePin(1004); HeinzDashboard.togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
 
-    def test_native_person_sends_no_tone_until_a_slider_moves_and_the_star_marks_changes(self):
+    def test_native_person_sends_no_tone_until_a_slider_moves_and_the_leds_show_changes(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
@@ -842,27 +842,69 @@ class PageTest(unittest.TestCase):
         ctx = page.evaluate("HeinzDashboard.settings.params.ctx")
         page.evaluate("var e=document.getElementById('param-threads'); e.value=3; e.dispatchEvent(new Event('input', {bubbles: true}))")
         page.click("#mode-bar [data-mode=native]")
-        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "", "Nativ untouched: no star")
+        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "", "Nativ untouched: no LED")
+        self.assertEqual(page.locator("#mode-bar .led").count(), 0)
         self.send(page, "native")
         opts = self.ollama.requests[-1]["options"]
         for k in ("temperature", "top_p", "top_k"):
             self.assertNotIn(k, opts, "Nativ sends no tone")
         self.assertEqual([m["role"] for m in self.ollama.requests[-1]["messages"]], ["user"], "Nativ sends no system message")
         page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input', {bubbles: true}))")
-        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "on")
-        self.assertEqual(page.locator("#mode-bar [data-mode=native] .star.on").count(), 1)
+        self.assertEqual(page.locator("#mode-bar [data-mode=native] .led").count(), 1, "the person button shows that something changed")
+        self.assertTrue(page.evaluate("document.getElementById('pp-tab').classList.contains('chg')"), "Tone tab LED on")
+        self.assertFalse(page.evaluate("document.getElementById('ps-tab').classList.contains('chg')"), "Prompt tab LED stays off")
         page.evaluate("HeinzDashboard.generating = false")
         self.send(page, "tone")
         self.assertEqual(self.ollama.requests[-1]["options"]["temperature"], 0.3)
         page.click("#mode-bar [data-mode=native]")   # tap on the active person: back to its preset
-        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "mem", "outlined star remembers the old stand")
-        page.click("#mode-bar [data-mode=native] .star.mem")
-        self.assertEqual(page.evaluate("HeinzDashboard.markState()"), "on", "tapping the outlined star restores it")
+        self.assertEqual(page.locator("#mode-bar .led").count(), 0)
+        self.assertFalse(page.evaluate("document.getElementById('pp-tab').classList.contains('chg')"))
         page.click("#mode-bar [data-mode=heinz]")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.input_value("#param-temp"), "0.4")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.params.ctx"), ctx, "the runtime is not touched by a person change")
         self.assertEqual(page.input_value("#param-threads"), "3")
+
+    def test_prompt_and_tone_have_their_own_led_and_reset(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.click(".burger-btn")
+        page.click("[data-pw=prompts]")
+        self.assertTrue(page.is_disabled("#ps-reset"), "nothing to reset yet")
+        page.fill("#ps-text", "xx")
+        self.assertTrue(page.evaluate("document.getElementById('ps-tab').classList.contains('chg')"), "Prompt LED on")
+        self.assertFalse(page.evaluate("document.getElementById('pp-tab').classList.contains('chg')"), "Tone LED independent")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson] .led").count(), 1)
+        page.click("[data-pw=params]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.9; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        self.assertTrue(page.evaluate("document.getElementById('pp-tab').classList.contains('chg')"))
+        page.click("#q-reset")   # resets only the tone
+        self.assertFalse(page.evaluate("document.getElementById('pp-tab').classList.contains('chg')"))
+        self.assertTrue(page.evaluate("document.getElementById('ps-tab').classList.contains('chg')"), "the prompt is still changed")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson] .led").count(), 1)
+        page.click("[data-pw=prompts]")
+        page.click("#ps-reset")   # resets only the prompt
+        self.assertIn("Wilson", page.input_value("#ps-text"))
+        self.assertEqual(page.locator("#mode-bar .led").count(), 0, "both back to the preset: no light")
+        # changing both, then a tap on the active person resets both
+        page.fill("#ps-text", "yy")
+        page.click("[data-pw=params]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.9; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        page.evaluate("HeinzDashboard.closeAll()")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.locator("#mode-bar .led").count(), 0)
+        self.assertEqual(page.input_value("#param-temp"), "0.4")
+
+    def test_runtime_has_its_own_heading_and_the_source_text_field_is_not_called_context(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.click(".burger-btn")
+        self.assertIn("Context window", page.inner_text("#sc-ctx"))
+        self.assertTrue(page.evaluate("document.getElementById('sc-ctx').previousElementSibling.textContent.startsWith('Runtime')"))
+        self.assertIn("Source text", page.inner_text("#ctx-label"))
+        page.evaluate("HeinzDashboard.closeAll()")
 
     def test_equalizer_tap_shows_the_last_three_status_steps_and_all_count(self):
         page = self.new_page()

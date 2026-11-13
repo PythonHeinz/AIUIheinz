@@ -619,3 +619,9 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - Weggefallen: Quellenwahl Modell/Modus/Eigene, „Standardwerte“, „Nur Modi“, Speichern-Knopf. Prompt-Feld und Regler sind bei jeder Person bedienbar. `num_ctx` wird immer gesendet. Alte Schlüssel bleiben ungenutzt erhalten.
 - Neu: `lib/data/modes.json` (native), Symbol `i-m-native`, Hook `renderMarks`, Begriffe EN/DE (Person, Ton, Nativ). Modulgraph neu erzeugt.
 - Tests: 163 Seitentests; Quellenwahl-Tests ersetzt durch Nativ/Stern, Prompt-Test, „Regler bei jeder Person“, Leiste bei 426 px in beiden Themes und Sprachen, Start auf Heinz mit geparktem Gespräch, leerer Chat-Prompt. **Nur simuliert**; Handytest steht aus (`docs/HANDYTEST.md`). B2 (LiteRT-LM) bleibt unbestätigt.
+
+### 2026-11-13 AIUIheinz-Personen: Korrektur nach Handytest Phase 1 (Gerätebild: LEDs)
+- Anlass (Entwickler): Sterne (gefüllt/umrandet) und „gemerkter Stand“ waren nicht verständlich; Prompt wurde zur Person gerechnet; „Kontext“ stand für zwei Dinge. Beschluss: jedes Bedienelement zeigt seinen Zustand wie eine LED an oder aus.
+- Weg: Stern und gemerkter Stand entfernt (`restoreOwn`, `rememberedTone` weg; `settings.modelParams` nur noch aufbewahrt). Zwei getrennte Zustände: Ton geändert, Prompt geändert. Orange LED am Reiter „Ton“ und „Prompt“ (`.pw-tabs button.chg::after`), am Personenknopf eine LED, wenn eines von beiden an ist (`.led`). Gewählte Person: Leuchtring; Heinz: bedruckte Fläche (`.home::before`).
+- Reset: im Reiter „Ton“ nur Ton, im Reiter „Prompt“ neu nur Prompt (`resetPrompt`); Tipp auf die aktive Person beides. Ein einziger Knopf „Prompt + Ton in den Chat übernehmen“. Reiter heißen „Prompt“ und „Ton“; Abschnitt „Laufzeit (gilt für jede Person)“ mit Kontextfenster und Threads. Das Zusatzfeld heißt „Quelltext“. Personenwechsel verwirft Änderungen ohne Rückfrage.
+- Nur simuliert getestet (Playwright; Leiste als Bild bei 426 px in Hell und Dunkel gesehen). Handytest steht aus.

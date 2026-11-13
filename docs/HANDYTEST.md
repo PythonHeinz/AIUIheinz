@@ -52,13 +52,41 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 
 Echte Modellantworten, Geschwindigkeit, Speicherdruck, Akku, Wake-Lock bei Serien, Zwischenablage-Rechte, Installation als App, Verhalten bei Hintergrund und Rückkehr.
 
-## Heinz Dashboard: Personenleiste (Strang Personen, Phase 1, 13.11.2026)
+## Heinz Dashboard: Personenleiste, Prompt, Ton (Strang Personen, 13.11.2026)
 
-- [ ] Start der App: Leiste zeigt sechs Knöpfe (Nativ, Heinz, Wilson, Audit, Code, Kreativ), Heinz ist gewählt und trägt den Ring
-- [ ] Bei 426 × 803 px: nur Namen unter den Symbolen, nichts überlappt, in Hell und Dunkel, EN und DE
-- [ ] Wilson wählen, dann Nativ: Regler und Prompt zeigen keinen Ton, Antwort kommt ohne Persönlichkeit; Kontext und Threads unverändert
-- [ ] In Nativ einen Regler bewegen: Stern ★ erscheint am Knopf; Tipp auf Nativ springt zurück (☆ gemerkter Stand), Tipp auf ☆ stellt ihn wieder her
-- [ ] Systemprompt im Menü bearbeiten: Stern erscheint; Heinz wählen und zurück: Vorgabe wieder da
-- [ ] Gespeicherte Unterhaltung einer anderen Person laden: Leiste springt auf diese Person, Ton und Prompt passen
-- [ ] Neustart der App mit offener Unterhaltung von Audit: App startet auf Heinz, die Unterhaltung steht in der Liste von Audit
-- [ ] LiteRT-LM: Nativ und Heinz senden wie erwartet (B2 weiterhin offen)
+Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was du sehen sollst. Regel: Orange LED = „hier ist etwas anders als die Vorgabe“.
+
+**A. Start**
+- [ ] App öffnen. Sieh die Leiste: sechs Knöpfe. Heinz hat eine helle Fläche dahinter und leuchtet mit Ring (gewählt). Keine orange LED irgendwo.
+
+**B. Person wechseln**
+- [ ] Tippe Wilson. Wilson leuchtet mit Ring in seiner Farbe, Heinz leuchtet nicht mehr, hat aber weiter die helle Fläche.
+
+**C. Ton ändern und zurücksetzen**
+- [ ] Menü öffnen (Burger), Reiter „Ton“. Schiebe Temperatur irgendwohin. Erwartung: orange LED am Reiter „Ton“ und am Knopf Wilson; der Reiter „Prompt“ hat keine LED.
+- [ ] Tippe „Reset“ unter den Reglern. Erwartung: Regler springen zurück, beide LEDs aus.
+
+**D. Prompt ändern und zurücksetzen**
+- [ ] Reiter „Prompt“, tippe ans Ende des Textes „xx“. Erwartung: orange LED am Reiter „Prompt“ und am Knopf Wilson; Reiter „Ton“ ohne LED.
+- [ ] Tippe „Reset“ unter dem Prompt. Erwartung: „xx“ ist weg, Wilson-Prompt steht wieder da, beide LEDs aus.
+
+**E. Beides ändern, mit einem Tipp zurück**
+- [ ] Ändere Prompt („xx“) und Temperatur. Beide Reiter-LEDs und die LED am Knopf leuchten.
+- [ ] Tippe im Menü zu, dann nochmal auf den leuchtenden Knopf Wilson. Erwartung: beide Änderungen weg, alle LEDs aus.
+
+**F. Person wechseln mit Änderungen**
+- [ ] Wilson, Prompt „xx“. Tippe Heinz. Erwartung: Heinz-Prompt, „xx“ ist weg (ohne Rückfrage), keine LED.
+
+**G. Nativ**
+- [ ] Tippe Nativ. Reiter „Prompt“ ist leer, bei „Ton“ stehen die Werte des Modells (oder „–“). Stelle eine Frage: Antwort kommt ohne Persönlichkeit. Schiebe einen Regler: LED am Reiter „Ton“ und am Knopf Nativ; Reset: aus.
+
+**H. Laufzeit bleibt**
+- [ ] Reiter „Ton“, ganz unten steht „Laufzeit (gilt für jede Person)“ mit Kontextfenster und Threads. Stelle Kontextfenster auf 4096. Wechsle Wilson, Nativ, Heinz: der Wert bleibt 4096.
+
+**I. Namen**
+- [ ] Das Feld über dem Eingabefeld heißt „Quelltext“ (Audit: Pflicht). Das Wort „Kontext“ steht nirgends allein.
+- [ ] Menüpunkt „Prompt + Ton in den Chat übernehmen“: nimmt beides zusammen; im Heinz Chat sind Prompt und Ton danach gesetzt.
+
+**J. Ansicht**
+- [ ] Bei Hell und Dunkel, EN und DE: Leiste überlappt nicht, LEDs gut sichtbar.
+- [ ] Nur LiteRT-LM: Schritt B und G wiederholen (B2 offen).

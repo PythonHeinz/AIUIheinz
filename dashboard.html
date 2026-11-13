@@ -115,12 +115,12 @@
         .mode-pill .mi .i { width: 19px; height: 19px; }
         .mode-pill.active { color: var(--txt); font-weight: 600; }
         .mode-pill.active .mi { background: var(--mc); color: var(--mo); }
-        /* Heinz: Ring um das Symbol = Ausgangspunkt der App (die App startet immer auf Heinz) */
-        .mode-pill.home .mi { box-shadow: 0 0 0 1.5px var(--mc); }
-        .mode-pill.home:not(.active) .mi { border-radius: 14px; }
-        /* Stern an der gewählten Person: gefüllt = geändert, umrandet = gemerkter eigener Stand (Tipp holt ihn zurück) */
-        .mode-pill .star { position: absolute; top: 1px; right: calc(50% - 31px); min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: .9rem; line-height: 1; color: var(--mc); }
-        .mode-pill .star.mem { cursor: pointer; opacity: .85; }
+        /* Gerätebild: gewählte Person = LED leuchtet (Leuchtring um die Aussparung); Heinz (Ausgangspunkt der App) = bedruckte Fläche um die Taste */
+        .mode-pill { isolation: isolate; }
+        .mode-pill.active .mi { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--mc), 0 0 10px 2px var(--mc); }
+        .mode-pill.home::before { content: ""; position: absolute; inset: 2px 3px; border-radius: 14px; background: color-mix(in srgb, var(--txt) 16%, transparent); z-index: -1; }
+        /* Änderungs-LED am Personenknopf: Prompt oder Ton weicht von der Vorgabe ab */
+        .mode-pill .led { position: absolute; top: 5px; right: calc(50% - 28px); width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px 1px var(--orange); }
         .mode-pill:disabled { opacity: .5; }
 
         /* Chat-Leiste */
@@ -396,7 +396,7 @@
                         <div id="pw-prompts" hidden>
                             <textarea id="ps-text" class="inp" rows="7" spellcheck="false" data-input="onOwnPromptInput" data-i18n-ph="psPh" placeholder="Paste or write your system prompt here …"></textarea>
                             <div class="ps-meta"><small id="ps-count"></small></div>
-                            <div class="q-btns"><button class="pill" type="button" id="ps-copy" data-click="copySysPrompt"><span data-i18n="psCopy">Copy system prompt</span></button></div>
+                            <div class="q-btns"><button class="pill" type="button" id="ps-reset" data-click="resetPrompt" data-i18n="qReset">Reset</button><button class="pill" type="button" id="ps-copy" data-click="copySysPrompt"><span data-i18n="psCopy">Copy system prompt</span></button></div>
                             <small class="help" id="ps-note"></small>
                         </div>
                         <div id="pw-params">
@@ -404,13 +404,14 @@
                             <div class="slidercard slider-group" id="sc-temp" data-cap-card="temperature"><div class="sc-top"><b title="Temperature">T°</b><output id="val-temp">0.7</output></div><input type="range" id="param-temp" min="0.0" max="1.0" step="0.05" value="0.7" data-input="onSlider"></div>
                             <div class="slidercard slider-group" id="sc-topp" data-cap-card="top_p"><div class="sc-top"><b>Top-P</b><output id="val-topp">0.9</output></div><input type="range" id="param-topp" min="0.0" max="1.0" step="0.01" value="0.9" data-input="onSlider"></div>
                             <div class="slidercard slider-group" id="sc-topk" data-cap-card="top_k"><div class="sc-top"><b>Top-K</b><output id="val-topk">40</output></div><input type="range" id="param-topk" min="1" max="100" step="1" value="40" data-input="onSlider"></div>
-                            <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" data-input="onSlider"></div>
                         </div>
                         <div class="q-btns" id="q-btn-row">
                             <button class="pill" type="button" id="q-reset" data-click="resetParams" data-i18n="qReset">Reset</button>
                             <button class="pill" type="button" id="q-copy" data-click="copyParams" data-i18n-title="qCopyTip" title="Copies only the settings above"><span data-i18n="qCopy">Copy values</span></button>
                         </div>
                         <small class="help" id="q-note"></small>
+                            <div class="caps" data-i18n="runTitle" style="margin:14px 0 2px">Runtime (applies to every person)</div>
+                            <div class="slidercard slider-group" id="sc-ctx" data-cap-card="num_ctx"><div class="sc-top"><b data-i18n="pCtxS">Context window</b><output id="val-ctx">8192</output></div><input type="range" id="param-ctx" min="2048" max="16384" step="1024" value="8192" data-input="onSlider"></div>
                             <div class="thr"><div class="caps" id="thr-title" style="margin:12px 0 2px"></div>
                             <div class="slidercard param-group" id="sc-threads" data-cap-card="num_thread" data-i18n-title="threadsHelp" title="Speed: fewer threads are often faster on the phone. Saved per model, always sent (also with default values)."><div class="sc-top"><b data-i18n="thS">Threads</b><output id="val-threads">4</output></div><input type="range" id="param-threads" min="0" max="8" step="1" value="4" data-input="onThreads"></div>
                                 <small class="help" id="thr-note"></small></div>
