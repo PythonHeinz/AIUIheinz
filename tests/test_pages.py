@@ -1128,6 +1128,31 @@ class PageTest(unittest.TestCase):
         page.click("#cfg-default [data-act=chat]")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
 
+    def test_configuration_can_be_exported_as_an_ollama_modelfile(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/tools/configs/index.html")
+        page.wait_for_selector("#cfg-default")
+        mf = page.evaluate("""HeinzProviders.exportModelfile(HeinzProviders.saveConfig({name: 'Mf', provider: 'ollama', model: 'qwen2.5:3b', person: 'heinz', prompt: 'Be \\"\\"\\"brief\\"\\"\\".', tone: {temperature: 0.3, top_p: 0.5, top_k: 20}, stop: ['<|im_end|>', 'a\\"b'], runtime: {ctx: 4096, threads: 2}}))""")
+        lines = mf.splitlines()
+        self.assertEqual(lines[1], "FROM qwen2.5:3b")
+        for want in ("PARAMETER temperature 0.3", "PARAMETER top_p 0.5", "PARAMETER top_k 20", "PARAMETER num_ctx 4096", "PARAMETER num_thread 2", 'PARAMETER stop "<|im_end|>"'):
+            self.assertIn(want, lines)
+        self.assertNotIn('PARAMETER stop "a"b"', mf)
+        self.assertIn("SYSTEM " + chr(34) * 3 + "Be " + chr(39) * 3 + "brief" + chr(39) * 3 + "." + chr(34) * 3, mf, "triple quotes inside the prompt cannot stay")
+        # the button exists for the default and for Ollama configurations only, and downloads the file
+        page.reload(); page.wait_for_selector("#cfg-default")
+        self.assertEqual(page.locator("#cfg-default [data-act=modelfile]").count(), 1)
+        page.evaluate("HeinzProviders.saveConfig({name: 'Lite', provider: 'litert', model: 'gemma4-e2b', person: 'native', prompt: '', tone: null, stop: []})")
+        page.reload(); page.wait_for_selector("#cfg-default")
+        self.assertEqual(page.locator(".cfg:not(#cfg-default) [data-act=modelfile]").count(), 1, "only the Ollama configuration, not the LiteRT-LM one")
+        with page.expect_download() as d:
+            page.click("#cfg-default [data-act=modelfile]")
+        self.assertEqual(d.value.suggested_filename, "heinz-default.Modelfile")
+        with open(d.value.path(), encoding="utf-8") as fh:
+            txt = fh.read()
+        self.assertIn("PARAMETER num_ctx 4096", txt)
+        self.assertIn("SYSTEM " + chr(34) * 3, txt)
+
     def test_heinz_chat_uses_the_assigned_configuration_for_model_prompt_and_tone(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")

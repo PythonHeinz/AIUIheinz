@@ -137,3 +137,4 @@ Vorbereitung: `git pull`, `bash start.sh`.
 - [ ] Erste Karte ist die Standardkonfiguration („eingebaut, nicht löschbar“, ohne Löschen). Ohne Zuweisung trägt sie die Markierung „Heinz Chat“, mit Zuweisung die zugewiesene Karte.
 - [ ] „Jetzt parametrieren“ an einer eigenen Konfiguration: Dashboard öffnet sich mit Person, Prompt, Ton, Kontext und Threads dieser Konfiguration (Hinweisband). Bei einer Konfiguration einer anderen Engine wechselt das Dashboard die Engine.
 - [ ] „Jetzt parametrieren“ an der Standardkonfiguration: Qwen-Werte (0,6 / 0,9 / 40, Kontext 4096, Threads 2) im Dashboard; ändern, unter neuem Namen speichern, im Heinz Chat verwenden.
+- [ ] Hub, Knopf „Modelfile“ an der Standardkonfiguration: Datei lädt, enthält FROM, PARAMETER und SYSTEM. Optional in Termux: `ollama create heinz-test -f <Datei>`; danach `ollama rm heinz-test`.
