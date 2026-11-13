@@ -96,7 +96,7 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 9 | `speech.js` | `caps`, `engine`, `i18n`, `state` |
 | 10 | `messages.js` | `base`, `caps`, `clipboard`, `i18n`, `menu`, `pixelbar`, `speech`, `state` |
 | 11 | `conversations.js` | `base`, `caps`, `clipboard`, `config`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `state` |
-| 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
+| 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
 | 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status` |
 | 14 | `series.js` | `base`, `caps`, `clipboard`, `i18n`, `preload`, `protocol`, `send`, `state` |
 | 15 | `actions.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `menu`, `messages`, `params`, `persist`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `state`, `update` |

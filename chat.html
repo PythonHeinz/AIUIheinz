@@ -54,6 +54,7 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
         <button class="ibtn" id="hist" type="button" aria-label="Chats"><svg class="i"><use href="/lib/icons.svg#i-chats"/></svg></button>
     </div>
     <div id="note" hidden></div>
+    <div id="eng-note" class="notice err" role="status" hidden style="margin: 0 0 8px"></div>
     <div id="store-note" class="notice warn" role="status" hidden style="margin: 0 0 8px"></div>
     <div id="log"></div>
     <div class="comp">
@@ -67,19 +68,21 @@ body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--f
     <div class="grab"></div>
     <div class="bs-h"><h3 id="sm-h"></h3><button class="ibtn" type="button" data-click="sheetClose" aria-label="Close"><svg class="i"><use href="/lib/icons.svg#i-x"/></svg></button></div>
     <div class="bs-b">
-        <div class="eng" id="eng"></div>
-        <div class="lst" id="models"></div>
-        <label class="fld" id="free-l" hidden></label>
-        <input class="inp" id="free" type="text" hidden>
-        <div class="swr"><span class="tx" id="onl-t"></span><span class="sw"><input type="checkbox" id="onl"><i></i></span></div>
-        <p class="hint" id="onl-h"></p>
-        <label class="fld" id="sys-l" for="sys"></label>
-        <textarea class="inp" id="sys" rows="4" style="resize:vertical;width:100%;height:auto;padding:10px 12px"></textarea>
-        <button type="button" class="pill" id="sys-reset" style="margin-top:6px"></button>
-        <p class="hint" id="sys-h"></p>
-        <p class="hint" id="smp-h" style="white-space:pre-line"></p>
-        <button type="button" class="pill" id="smp-reset" style="margin-bottom:6px"></button>
-        <p class="hint" id="rt-h" style="white-space:pre-line"></p>
+        <div id="sh-view" hidden>
+            <div id="cfg-rows"></div>
+            <label class="fld" id="cfg-prompt-l" for="cfg-prompt"></label>
+            <textarea class="inp" id="cfg-prompt" rows="4" readonly style="resize:vertical;width:100%;height:auto;padding:10px 12px"></textarea>
+            <p class="hint" id="cfg-hint"></p>
+            <p class="hint" id="cfg-last" style="white-space:pre-line"></p>
+            <a class="pill" id="cfg-manage" href="/tools/configs/index.html"></a>
+        </div>
+        <div id="sh-setup" hidden>
+            <p class="hint" id="setup-hint"></p>
+            <div class="eng" id="eng"></div>
+            <div class="lst" id="models"></div>
+            <label class="fld" id="free-l" hidden></label>
+            <input class="inp" id="free" type="text" hidden>
+        </div>
     </div>
 </section>
 <section class="bsheet" id="sh-hist" aria-label="Chats">

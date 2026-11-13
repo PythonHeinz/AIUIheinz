@@ -299,6 +299,7 @@
         </div>
         <div class="srow"><i class="sdot" id="st-dot"></i><span id="preload-status"></span><canvas id="eq-led" aria-hidden="true"></canvas><div id="st-log" hidden></div></div>
         <div id="store-note" class="notice warn" role="status" hidden></div>
+        <div id="cfg-auto" class="notice" role="status" hidden></div>
         <select id="model-select" data-change="onModelChange" aria-hidden="true" tabindex="-1"></select>
 
         <div class="modes" id="mode-bar" role="tablist">
@@ -421,8 +422,11 @@
                     <div class="q-btns"><button class="pill" type="button" id="last-load" data-click="loadLastStand" data-i18n-title="lastLoadTip" title=""><span data-i18n="lastLoad">Load last state</span></button></div>
                     <div class="caps" style="margin:14px 0 4px"><span data-i18n="cfgTitle">Configuration</span></div>
                     <div class="q-btns" style="gap:8px"><input class="inp" id="cfg-name" type="text" maxlength="80" data-i18n-ph="cfgNamePh" placeholder="Name" style="flex:1;min-width:0;margin:0"><button class="pill" type="button" id="cfg-save" data-click="saveConfig"><span data-i18n="cfgSave">Save</span></button></div>
-                    <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
+                    <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" data-change="renderConfigs" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
+                    <div class="q-btns"><button class="pill" type="button" id="cfg-model" data-click="assignModelConfig"><span id="cfg-model-t" data-i18n="cfgModel">Assign to its model</span></button></div>
+                    <small class="help" data-i18n="cfgModelHelp">Assigned to its model, the configuration loads automatically every time that model loads (also after a restart).</small>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>
+                    <small class="help" data-i18n="cfgUseHelp">The Heinz Chat runs with exactly one configuration of its own, independent of what is loaded here.</small>
                     <small class="help" id="cfg-empty" data-i18n="cfgEmpty">No configuration saved yet.</small>
                     <small class="help" id="cfg-note"></small>
                     <div class="grpbox">

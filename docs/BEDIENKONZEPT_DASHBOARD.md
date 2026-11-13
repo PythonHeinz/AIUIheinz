@@ -20,12 +20,12 @@ Das Dashboard ist ein Bedienfeld mit **drei getrennten Blöcken** und je einer L
 Reihenfolge der Quellen, höchste zuerst:
 1. Quelltext-Feld und Eingabe (nur für die Anfrage).
 2. Dashboard: aktueller Stand der Blöcke (Person-Vorgabe oder Änderung).
-3. Heinz Chat: die dem Chat **zugewiesene Konfiguration** (Engine, Modell, Prompt, Ton).
+3. Heinz Chat: die dem Chat **zugewiesene Konfiguration** (Engine, Modell, Prompt, Ton), sonst seine Standardkonfiguration.
 4. Vorgabe (Standard des Modells bzw. der Seite).
 
 Aussagen für die Praxis:
 - Der Heinz Chat wird **allein über die Zuweisung einer Konfiguration** gesteuert (Entscheidung Entwickler 13.11.2026). Den Knopf „In den Chat übernehmen“ gibt es nicht mehr: Er hätte Person und Ton an ein Modell gegeben, das sie nicht annimmt. Zum Ausprobieren im Heinz Chat: Konfiguration speichern, „Im Heinz Chat verwenden“ tippen.
-- Ohne zugewiesene Konfiguration gilt die Vorgabe der Seite.
+- Ohne zugewiesene Konfiguration gilt die Standardkonfiguration des Heinz Chat.
 - Die **Laufzeit** einer Konfiguration setzt nur das Dashboard beim Laden. Der Heinz Chat schreibt sie nie in die geteilte Laufzeit.
 - Ohne Haken „Online erlauben“ geht keine Anfrage nach außen; eine zugewiesene Online-Konfiguration bleibt dann unwirksam.
 
@@ -39,12 +39,15 @@ Am 13.11.2026 entfernt (Dashboard-Knopf, Funktion und Texte). Alte Schnappschuss
 Benannter, gespeicherter Satz: Engine, Modell, Person (als Ausgangspunkt), Prompt, Ton, Laufzeit. Keine Höchstzahl.
 - **Dashboard** (Menü, Block „Konfiguration“): Name eingeben, „Speichern“ (gleicher Name, Modell und Engine ersetzt den alten Eintrag); in der Auswahl wählen und „Laden“. Laden setzt Person, Prompt, Ton und Laufzeit; Modell und Engine nur innerhalb der aktuellen Engine, sonst Hinweis. Ein Nativ-Eintrag speichert „kein Prompt, kein Ton“.
 - **Startseite → Einrichten → Konfigurationen:** zentrale Verwaltung (umbenennen, zuweisen, exportieren, importieren, löschen mit zweitem Tipp).
-- **Zuweisung zum Heinz Chat** (Knopf „Im Heinz Chat verwenden“ im Dashboard-Menü und auf der Verwaltungsseite, `heinz_chat_config`): Der Chat startet mit der Engine und dem Modell der Konfiguration (online nur bei „Online erlauben“), mit ihrem Prompt und Ton. Zweiter Tipp löst die Zuweisung; danach gilt wieder die Vorgabe.
+- **Zuweisung zum Heinz Chat** (Knopf „Im Heinz Chat verwenden“ im Dashboard-Menü und auf der Verwaltungsseite, `heinz_chat_config`): Der Chat startet mit der Engine und dem Modell der Konfiguration (online nur bei „Online erlauben“), mit ihrem Prompt und Ton. Zweiter Tipp löst die Zuweisung; danach gilt wieder die Standardkonfiguration des Heinz Chat.
 - **Export/Import:** Datei `heinz-configuration` (Format 1, mit Modellname). Import legt immer einen neuen Eintrag an. Export als Ollama-Modelfile oder LM-Studio-Preset: nicht gebaut.
 
-## 6. Zielbild des Entwicklers (13.11.2026, noch nicht gebaut)
-Vollständig beschrieben in `docs/agent/AUFTRAG_Konfiguration.md`: Die Konfiguration gehört zum Modell; der Heinz Chat ist ein eigenes Tool mit genau einer zugewiesenen Konfiguration (Standard ab Auslieferung, nicht löschbar, bei Erstinbetriebnahme festgelegt), ohne Kopplung an das Dashboard; Online-Konfiguration im Heinz Chat nur nach Bestätigung je Sitzung. Heute gebaut: eine Zuweisung an den Heinz Chat, ohne Standardkonfiguration, Laufzeit der Konfiguration wirkt im Chat nicht.
+## 6. Konfiguration je Modell und Heinz Chat als eigenes Tool (gebaut 13.11.2026, Stufen a und b, nur simuliert getestet; Auftrag `docs/agent/AUFTRAG_Konfiguration.md`)
+- **Zuordnung je Modell:** Im Dashboard-Menü „Dem Modell zuordnen“ (zweiter Tipp löst). Das Modell lädt danach bei jedem Laden mit der Konfiguration (App-Start, Modellwechsel): Person, Prompt, Ton, Laufzeit. Ein Band nennt es und die gesetzte Laufzeit („gilt auch für den Heinz Chat“). Ohne Zuordnung lädt das Modell mit seinem Standard; kam das Kontextfenster von der Konfiguration des vorigen Modells, geht es zurück auf den Standard. Das Dashboard startet weiter auf Heinz.
+- **Heinz Chat:** eigenes Tool mit genau einer Konfiguration: der zugewiesenen („Im Heinz Chat verwenden“), sonst der eingebauten **Standardkonfiguration** (nicht löschbar). Er liest das Dashboard nicht; Engine, Modell, Prompt und Ton kommen nur von ihr. Sein Modellblatt ist reine Anzeige (Konfiguration, Engine, Modell, Person, Prompt, Ton, Laufzeit „geteilt, im Dashboard eingestellt“, Status, Link zur Kachel „Konfigurationen“). Hat die Standardkonfiguration noch kein Modell, bietet der Chat einmalig die Modellwahl an und speichert sie dort.
+- **Engine nicht erreichbar:** roter Ring und Hinweis im Chat, nie ein stiller Wechsel auf eine andere Engine oder ein anderes Modell.
+- **Noch nicht gebaut:** Offline/Online-Mauer mit Rückfrage je Sitzung (Stufe c), Hub-Kachel mit deutlicher Kennzeichnung (Stufe d), Laden über Engine-Grenzen.
 
 ## 7. Offen
-- Zuordnung je Modell (Punkt 6); Laden über Engine-Grenzen im Dashboard; Export als Modelfile und LM-Studio-Preset.
+- Offline/Online-Mauer und Hub-Kachel (Punkt 6); Laden über Engine-Grenzen im Dashboard; Export als Modelfile und LM-Studio-Preset.
 - Gestaltung der LED, Farben und Hinweise, was je Person und was nur je Modell gilt: Designer, später.

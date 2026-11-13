@@ -104,3 +104,21 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 - [ ] Startseite, Bereich „Einrichten“: neue Kachel „Konfigurationen“. Öffnen: deine Konfiguration steht mit Modell, Engine und Person da.
 - [ ] Tippe „Im Heinz Chat verwenden“ (geht auch im Dashboard-Menü unter der Auswahl; der Knopf zeigt dann „Im Heinz Chat“), dann Heinz Chat öffnen: Er startet mit dem Modell der Konfiguration und antwortet mit deinem Prompt und Ton. Zurück, nochmal tippen: der Chat nutzt wieder seine eigenen Einstellungen.
 - [ ] Umbenennen (Namen im Feld ändern), „Exportieren“ (Datei mit dem Modellnamen), „Aus Datei importieren“ (neuer Eintrag), „Löschen“ (zweiter Tipp nötig).
+
+## Strang Konfiguration, Stufen (a) und (b) (13.11.2026; nur simuliert getestet)
+Vorbereitung: `git pull`, `bash start.sh`; LiteRT-LM bei Bedarf neu starten: `litert-lm serve --cors-origin http://localhost:3000`. Danach Version im Dashboard-Menü prüfen.
+
+**N. Zuordnung Modell → Konfiguration (Dashboard)**
+- [ ] Dashboard: Modell `gemma2:2b` (oder ein anderes), Person Wilson, Kontextfenster verkleinern, Temperatur ändern. Menü, Konfiguration: Name „Test A“, Speichern, dann „Dem Modell zuordnen“. Erwartung: Knopf zeigt „Dem Modell zugeordnet (tippen zum Lösen)“; der Knopf „Im Heinz Chat verwenden“ bleibt unberührt.
+- [ ] App komplett beenden und neu öffnen. Erwartung: Das Dashboard startet, das Modell lädt, danach schaltet es auf Wilson, Prompt, Ton und Kontextfenster der Konfiguration; ein Band nennt „… mit … geladen. Laufzeit gesetzt: Kontext …, Threads …“. Eine offene Unterhaltung einer anderen Person landet in der Liste (wie bisher).
+- [ ] Anderes Modell ohne Zuordnung wählen. Erwartung: Kontextfenster geht auf den Standard (8192) zurück. Zurück auf das erste Modell: Konfiguration lädt wieder mit.
+- [ ] Zuordnung lösen (zweiter Tipp), App neu starten. Erwartung: Dashboard startet auf Heinz mit dem Standard des Modells.
+
+**O. Heinz Chat als eigenes Tool**
+- [ ] Heinz Chat öffnen, Modellblatt (Tipp aufs Modell oben): Erwartung nur Anzeige (Konfiguration, Engine, Modell, Person, Prompt lesbar nicht änderbar, Ton, Laufzeit „geteilt, im Dashboard eingestellt“, Status, „Zuletzt gesendet“, Link „Konfigurationen verwalten“). Keine Engine-Leiste, keine Modellliste, kein Schalter „Online erlauben“, kein „Auf Standard zurücksetzen“.
+- [ ] Dashboard auf ein Ollama-Modell stellen, Heinz Chat mit einer LiteRT-LM-Konfiguration zuweisen (Dashboard-Menü „Im Heinz Chat verwenden“) und öffnen. Erwartung: Der Chat fragt LiteRT-LM an (nicht Ollama), Modell in der Kopfzeile ist das der Konfiguration. **Offen am Gerät:** ob LiteRT-LM das Modell beim Öffnen vorladen kann; bisher lädt es beim ersten Senden (Ring dann blau). Bitte beobachten, wie lange die erste Antwort braucht.
+- [ ] LiteRT-LM absichtlich nicht starten, Chat mit LiteRT-Konfiguration öffnen. Erwartung: roter Ring und Hinweis „Die Engine … ist nicht erreichbar“, Senden ergibt eine Fehlermeldung, **nie** eine Antwort von Ollama.
+- [ ] Zuweisung lösen (Dashboard-Menü, zweiter Tipp). Erwartung: Chat nutzt seine Standardkonfiguration (Standard-Prompt, kein Ton, sein festgelegtes Modell).
+- [ ] Erstinbetriebnahme (nur wer den Chat noch nie benutzt hat oder in der Entwicklerkonsole `localStorage.removeItem('heinz_chat_default')` ausführt): Der leere Chat zeigt einen Satz und „Modell wählen“; Tipp öffnet die Wahl (Engine, Modell), nach der Wahl gibt es hier nie wieder eine Auswahl.
+- [ ] **B2-Probe (LiteRT-LM):** `litert-lm serve --cors-origin http://localhost:3000` neu starten. Dashboard, Person Audit, Quelltext senden (Modell `gemma4-e2b`). Dann Heinz Chat mit einer Nativ-Konfiguration auf `gemma4-e2b` (im Dashboard Person Nativ, Konfiguration speichern, „Im Heinz Chat verwenden“) und „Hallo“ senden. Erwartung: antwortet normal, nicht im Wortlaut des Audit-Prompts. Der Chat sendet bei Nativ keine System-Nachricht (simuliert geprüft). Zeigt der Server trotzdem die alte Anweisung, melden: dann muss der Chat bei LiteRT-LM einen leeren Systemprompt ausdrücklich senden.
+- [ ] Wechsel Dashboard (Modell A) → Heinz Chat (Modell B) → Dashboard: Ollama lädt jeweils neu (erwartet, kein Fehler); keine Fehlermeldung, die Antworten kommen.

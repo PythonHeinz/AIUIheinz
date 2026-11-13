@@ -164,9 +164,11 @@ class PageTest(unittest.TestCase):
         cls.pw.stop()
         cls.srv.stop()
 
-    def new_page(self, **fake):
+    def new_page(self, chat_model="gemma2:2b", **fake):
         ctx = self.browser.new_context(viewport=VIEWPORT)
         page = ctx.new_page()
+        if chat_model:   # the Heinz Chat has no model until the first start: tests start with the default configuration set (chat_model=None: first start)
+            page.add_init_script("if (!localStorage.getItem('heinz_chat_default')) localStorage.setItem('heinz_chat_default', JSON.stringify({provider: 'ollama', model: '%s'}))" % chat_model)
         self.errors, self.external = [], []
         page.on("pageerror", lambda e: self.errors.append(str(e)))
         page.on("request", lambda r: self.external.append(r.url) if not (
@@ -198,6 +200,13 @@ class PageTest(unittest.TestCase):
         page.click(".burger-btn")
         if pg:
             page.click("#menu-sheet [data-go=%s]" % pg)
+
+    def chat_switch(self, page, model, provider="ollama"):
+        """the Heinz Chat has no model choice: put the model into its default configuration and reload (stands in for the first-start choice)"""
+        page.evaluate("([p, m]) => HeinzProviders.setChatDefaultModel(p, m)", [provider, model])
+        page.reload()
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("m => document.getElementById('mod-t').textContent.indexOf(m) >= 0", arg=model)
 
     def set_model(self, page, name):
         page.click("#model-chip")
@@ -1162,13 +1171,22 @@ class PageTest(unittest.TestCase):
         page.click("#chats-open")
         self.assertIn("Audit question", page.text_content("#saved-list"), "the open conversation was parked in the list")
 
-    def test_chat_system_empty_string_means_no_prompt_and_missing_means_default(self):
-        page = self.new_page()
+    def test_chat_configuration_default_is_built_in_and_an_empty_prompt_means_no_system_message(self):
+        page = self.new_page(chat_model=None)
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_function("typeof HeinzProviders !== 'undefined'")
-        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', '')")
+        c = page.evaluate("HeinzProviders.chatConfig()")
+        self.assertTrue(c["builtin"])
+        self.assertEqual((c["model"], c["tone"]), ("", None))
+        self.assertEqual(c["prompt"], page.evaluate("HeinzProviders.DEFAULT_CHAT_SYSTEM"))
+        # an assigned configuration replaces it; deleting the assigned one brings the default back
+        page.evaluate("HeinzProviders.saveConfig({name: 'Nat', provider: 'ollama', model: 'gemma2:2b', person: 'native', prompt: '', tone: null, stop: []})")
+        page.evaluate("HeinzProviders.setChatConfig(HeinzProviders.configs()[0].id)")
         self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "")
-        self.assertNotEqual(page.evaluate("HeinzProviders.chatSystemFor('other:1b')"), "")
+        self.assertFalse(page.evaluate("!!HeinzProviders.chatConfig().builtin"))
+        page.evaluate("HeinzProviders.deleteConfig(HeinzProviders.configs()[0].id)")
+        self.assertTrue(page.evaluate("HeinzProviders.chatConfig().builtin"))
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
 
     def test_prompt_field_and_every_slider_are_usable_with_every_person(self):
         page = self.new_page()
@@ -2790,17 +2808,12 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('ver').textContent.indexOf('abc1234') >= 0")
         self.assertIn("v1.0", page.inner_text("#ver"))
 
-    def test_slim_chat_sends_streams_and_picks_model_in_bottom_sheet(self):
-        page = self.new_page()
+    def test_slim_chat_sends_and_streams_with_the_model_of_its_configuration(self):
+        page = self.new_page(chat_model="qwen2.5:3b")
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
-        self.assertEqual(page.locator("#sh-model.open").count(), 0)
-        self.assertIn("qwen2.5:3b", page.inner_text("#mod-t"))
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")
         page.fill("#q", "Hi there")
         page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2821,9 +2834,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        self.chat_switch(page, "qwen2.5:3b")
         page.fill("#q", "Hi")
         page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2864,9 +2875,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        self.chat_switch(page, "qwen2.5:3b")
         page.fill("#q", "Hi")
         page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2874,7 +2883,7 @@ class PageTest(unittest.TestCase):
         self.assertNotIn({"model": "qwen2.5:3b", "keep_alive": 0}, fake.unloads, "the chosen model stays")
 
     def test_test_bench_and_slim_chat_send_the_same_load_options_for_the_same_model(self):
-        page = self.new_page()
+        page = self.new_page(chat_model="qwen2.5:3b")
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
@@ -2889,7 +2898,7 @@ class PageTest(unittest.TestCase):
         # the chat page (same browser storage) must send exactly the same load options for the same model
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")   # the bench's model is taken over
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")   # the chat configuration has the same model
         page.fill("#q", "Hi")
         page.click("#send")
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
@@ -2930,9 +2939,7 @@ class PageTest(unittest.TestCase):
         self.assertIn("Model is loaded in RAM", page.evaluate("document.getElementById('ring').title"))
         self.assertEqual(page.evaluate("document.getElementById('ring').getAttribute('href')"), "/", "the ring leads back to the hub")
         # another model: reachable, but asleep -> orange
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        self.chat_switch(page, "qwen2.5:3b")
         page.wait_for_function("document.getElementById('ring').classList.contains('s-orange')")
         # while the model works the ring says so (answer is held back by the fake engine)
         page.unroute("**/localhost:11434/**")
@@ -2951,24 +2958,25 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('ring').classList.contains('s-red')", timeout=15000)
         self.assertEqual(page.evaluate("document.getElementById('mod-dot')"), None, "the old dot is gone")
 
-    def test_slim_chat_model_sheet_shows_what_it_sends_to_ollama(self):
+    def test_heinz_chat_model_sheet_is_a_read_only_display_of_its_configuration(self):
         page = self.new_page()
-        FakeOllama(page)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'gemma2:2b': 2}, params: {ctx: 6144}}))")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
-        txt = page.inner_text("#rt-h")
-        self.assertIn("threads 2", txt)
-        self.assertIn("context 6144", txt)
-        self.assertIn("30m", txt)
-        # another model has its own thread value: the default 4
-        page.click("[data-model='qwen2.5:3b']")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        self.assertIn("threads 4", page.inner_text("#rt-h"))
+        rows = page.inner_text("#cfg-rows")
+        for part in ("Default configuration", "Ollama", "gemma2:2b", "Threads 2, context 6144", "shared, set in the dashboard"):
+            self.assertIn(part, rows)
+        self.assertIn("helpful", page.input_value("#cfg-prompt"))
+        self.assertIsNotNone(page.get_attribute("#cfg-prompt", "readonly"), "the prompt is shown, not edited")
+        self.assertEqual(page.get_attribute("#cfg-manage", "href"), "/tools/configs/index.html")
+        # nothing to choose: no engine bar, no model list, no prompt field, no reset, no online switch
+        self.assertFalse(page.is_visible("#sh-setup"))
+        for gone in ("#sys", "#sys-reset", "#smp-reset", "#onl", "#rt-h", "#sh-model [data-model]", "#sh-model [data-eng]"):
+            self.assertEqual(page.locator(gone).count(), 0, gone)
+        self.assertEqual(page.locator("#models .row").count(), 0)
 
     def test_slim_chat_preloads_the_chosen_model_with_the_shared_runtime_and_shows_it_in_the_ring(self):
         page = self.new_page()
@@ -2986,9 +2994,8 @@ class PageTest(unittest.TestCase):
             fake.handle(route)
         page.route("**/localhost:11434/**", slow)
         n = len(fake.preloads)
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        page.evaluate("HeinzProviders.setChatDefaultModel('ollama', 'qwen2.5:3b')")
+        page.reload()
         page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') >= 0 && document.getElementById('ring').classList.contains('s-orange')")
         page.wait_for_function("document.getElementById('ring').title.indexOf('Preparing model') < 0", timeout=15000)
         self.assertGreater(len(fake.preloads), n)
@@ -2998,27 +3005,23 @@ class PageTest(unittest.TestCase):
         self.assertEqual(pre.get("keep_alive"), "30m")
         self.assertIn({"model": "gemma2:2b", "keep_alive": 0}, fake.unloads, "other models are released before the preload")
 
-    def test_model_choice_is_shared_between_chat_and_test_bench(self):
-        # chat picks qwen -> the dashboard opens with qwen (and does not load another model); and the other way round
-        page = self.new_page()
+    def test_model_choice_is_not_coupled_between_chat_and_dashboard(self):
+        # the chat runs with its own configuration (here: qwen); what the dashboard has loaded or chosen does not move it, and it does not move the dashboard
+        page = self.new_page(chat_model="qwen2.5:3b")
         fake = FakeOllama(page)
-        page.goto(self.srv.base + "/chat.html")
-        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
-        page.wait_for_timeout(500)
         page.goto(self.srv.base + "/dashboard.html")
-        page.wait_for_function("document.getElementById('model-select').value === 'qwen2.5:3b'", timeout=15000)
-        page.wait_for_timeout(1500)
-        self.assertTrue(all(p_["model"] == "qwen2.5:3b" for p_ in fake.preloads[-1:]), "the bench preloads the shared model")
-        # bench changes the model -> the chat takes it over
-        page.evaluate("() => { const s = document.getElementById('model-select'); s.value = 'gemma2:2b'; s.dispatchEvent(new Event('change', {bubbles: true})); }")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.evaluate("() => { const s = document.getElementById('model-select'); s.value = 'gemma:2b'; s.dispatchEvent(new Event('change', {bubbles: true})); }")
         page.wait_for_timeout(500)
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "gemma:2b")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0", timeout=15000)
+        page.wait_for_timeout(1500)
+        self.assertTrue(all(p_["model"] == "qwen2.5:3b" for p_ in fake.preloads[-1:]), "the chat preloads its own model, not the dashboard's")
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "gemma:2b", "the chat does not write the shared choice")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.getElementById('model-select').value === 'gemma:2b'", timeout=15000)
 
     def test_model_sheet_shows_what_bench_and_chat_last_sent_to_ollama(self):
         page = self.new_page()
@@ -3035,7 +3038,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
         page.click("#mod")
         page.wait_for_selector("#sh-model.open")
-        txt = page.inner_text("#rt-h")
+        txt = page.inner_text("#cfg-last")
         import re
         b = re.search(r"Dashboard gemma2:2b: threads 2, context (\d+)", txt)
         c = re.search(r"Chat gemma2:2b: threads 2, context (\d+)", txt)
@@ -3054,7 +3057,7 @@ class PageTest(unittest.TestCase):
         self.assertIn("s-blue", page.get_attribute("#ring", "class"))
         # other threads would reload the model: preload as before
         page.evaluate("() => { const s = JSON.parse(localStorage.getItem('heinz_settings')); s.threads['gemma2:2b'] = 3; localStorage.setItem('heinz_settings', JSON.stringify(s)); }")
-        page.click("#mod"); page.wait_for_selector("#sh-model.open"); page.click("[data-model='qwen2.5:3b']")
+        self.chat_switch(page, "qwen2.5:3b")
         page.wait_for_timeout(1200)
         self.assertGreater(len(fake.preloads), 0, "a model that is not loaded is still preloaded")
 
@@ -3082,24 +3085,76 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.getElementById('model-select').value === 'llama3.2:3b'", timeout=15000)
         page.wait_for_timeout(800)
         self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "llama3.2:3b", "the shared choice is not overwritten")
+        # the Heinz Chat does not take over what the dashboard chose: it runs with its own configuration
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('llama3.2:3b') >= 0", timeout=15000)
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)
+        self.assertEqual(page.evaluate("HeinzProviders.activeModel().model"), "llama3.2:3b", "the chat does not write the shared choice either")
 
-    def test_slim_chat_does_not_offer_the_persona_models(self):
-        page = self.new_page()
-        FakeOllama(page, tags=("heinz-fakt:latest", "heinz-wilson:latest", "gemma2:2b", "qwen2.5:3b"))
-        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'heinz-fakt:latest'}))")
+    def test_heinz_chat_first_start_asks_once_for_a_model_and_has_no_choice_afterwards(self):
+        page = self.new_page(chat_model=None, tags=("heinz-fakt:latest", "heinz-wilson:latest", "gemma2:2b", "qwen2.5:3b"))
+        fake = self.ollama
+        page.add_init_script("if (!localStorage.getItem('heinz_active')) localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'qwen2.5:3b'}))")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0", timeout=15000)   # persona model from the bench is replaced
-        page.click("#mod")
+        # the default configuration has no model yet; what the dashboard chose does not count
+        self.assertEqual(page.evaluate("HeinzProviders.chatConfig().model"), "")
+        self.assertTrue(page.evaluate("HeinzProviders.chatConfig().builtin"))
+        self.assertIn("Choose the model", page.inner_text("#log"))
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#sh-model.open")   # no model: sending opens the one-time choice
+        self.assertEqual(fake.requests, [])
+        page.evaluate("Heinz.sheetClose()")
+        page.click("#log [data-setup]")
         page.wait_for_selector("#sh-model.open")
         page.wait_for_selector("#models [data-model]")
         rows = page.eval_on_selector_all("#models [data-model]", "els => els.map(e => e.dataset.model)")
-        self.assertEqual(sorted(rows), ["gemma2:2b", "qwen2.5:3b"])
+        self.assertEqual(sorted(rows), ["gemma2:2b", "qwen2.5:3b"], "persona models belong to the dashboard")
+        page.click("[data-model='qwen2.5:3b']")
+        self.assertEqual(page.evaluate("HeinzProviders.chatDefault()"), {"provider": "ollama", "model": "qwen2.5:3b"})
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
+        self.assertEqual(fake.requests[-1]["model"], "qwen2.5:3b")
+        # afterwards there is nothing to choose any more, also after a restart
+        page.reload(); page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.click("#mod"); page.wait_for_selector("#sh-model.open")
+        self.assertFalse(page.is_visible("#sh-setup"))
+        self.assertTrue(page.is_visible("#sh-view"))
+        self.assertEqual(self.errors, [])
 
-    def test_slim_chat_sends_the_default_system_prompt_and_it_can_be_changed_per_model(self):
+    def test_heinz_chat_runs_only_with_its_configuration_and_asks_the_engine_of_that_configuration(self):
+        page = self.new_page()
+        lit = FakeOpenAI(page, "**/127.0.0.1:9379/**", models=("gemma4-e2b",))
+        # the dashboard has an Ollama model loaded and chosen; the chat configuration is a LiteRT-LM one
+        page.add_init_script("localStorage.setItem('heinz_active', JSON.stringify({provider: 'ollama', model: 'qwen2.5:3b'}))")
+        page.add_init_script("localStorage.setItem('heinz_configs', JSON.stringify([{id: 'k1', name: 'Lite', provider: 'litert', model: 'gemma4-e2b', person: 'native', prompt: '', tone: null, stop: [], runtime: null}])); localStorage.setItem('heinz_chat_config', JSON.stringify('k1'));")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma4-e2b') >= 0")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hi there') >= 0")
+        self.assertEqual(len(lit.requests), 1)
+        self.assertEqual(lit.requests[0][1]["model"], "gemma4-e2b")
+        self.assertEqual([m["role"] for m in lit.requests[0][1]["messages"]], ["user"], "Native: no system message at all")
+        self.assertEqual(self.ollama.requests, [], "nothing went to Ollama")
+
+    def test_heinz_chat_with_an_unreachable_engine_shows_red_and_a_hint_and_never_switches_engine(self):
+        page = self.new_page()   # LiteRT-LM is not running (aborted) in tests
+        page.add_init_script("localStorage.setItem('heinz_configs', JSON.stringify([{id: 'k1', name: 'Lite', provider: 'litert', model: 'gemma4-e2b', person: 'native', prompt: '', tone: null, stop: [], runtime: null}])); localStorage.setItem('heinz_chat_config', JSON.stringify('k1'));")
+        page.goto(self.srv.base + "/chat.html")
+        page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        page.wait_for_function("document.getElementById('ring').classList.contains('s-red')", timeout=15000)
+        page.wait_for_selector("#eng-note:not([hidden])")
+        self.assertIn("LiteRT", page.inner_text("#eng-note"))
+        self.assertIn("gemma4-e2b", page.inner_text("#mod-t"), "model and engine stay as configured")
+        page.fill("#q", "Hi"); page.click("#send")
+        page.wait_for_selector("#note:not([hidden])")
+        self.assertEqual(self.ollama.requests, [], "no silent switch to Ollama")
+        self.assertEqual(self.ollama.preloads, [])
+        self.assertEqual(page.evaluate("HeinzProviders.chatConfig().provider"), "litert")
+
+    def test_slim_chat_sends_the_default_system_prompt_and_nothing_else_edits_it(self):
         page = self.new_page()
         fake = FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
@@ -3110,21 +3165,12 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Hello world') >= 0")
         self.assertEqual(fake.requests[-1]["messages"][0], {"role": "system", "content": default})
         self.assertEqual(fake.requests[-1]["messages"][-1], {"role": "user", "content": "Hi"})
-        # change it for this model only
-        page.click("#mod"); page.wait_for_selector("#sh-model.open")
-        page.wait_for_selector("#models [data-model]")   # the sheet is redrawn when the model list arrives: fill only after that (flaky on a busy machine, 12.11.2026)
-        page.fill("#sys", "Answer in one word."); page.press("#sys", "Tab")
-        page.evaluate("Heinz.sheetClose()")
-        page.fill("#q", "Again"); page.click("#send")
-        page.wait_for_function("document.querySelectorAll('#log .msg.a').length >= 2")
-        page.wait_for_timeout(600)
-        self.assertEqual(fake.requests[-1]["messages"][0], {"role": "system", "content": "Answer in one word."})
-        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('qwen2.5:3b')"), default, "other models keep the default")
-        # empty = no system prompt; reset = default again
-        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', '')")
-        self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), "")
-        page.evaluate("HeinzProviders.setChatSystem('gemma2:2b', null)")
+        self.assertNotIn("temperature", fake.requests[-1].get("options", {}), "no tone in the default configuration: the model's own values")
+        # old per-model keys are no longer read (and not deleted)
+        page.evaluate("localStorage.setItem('heinz_chat_system', JSON.stringify({'gemma2:2b': 'old text'})); localStorage.setItem('heinz_chat_options', JSON.stringify({'gemma2:2b': {temperature: 0.9}}))")
         self.assertEqual(page.evaluate("HeinzProviders.chatSystemFor('gemma2:2b')"), default)
+        self.assertEqual(page.evaluate("HeinzProviders.chatSamplingFor('gemma2:2b')"), {})
+        self.assertIn("old text", page.evaluate("localStorage.getItem('heinz_chat_system')"))
 
     def test_heinz_chat_sends_prompt_and_tone_of_the_assigned_configuration(self):
         page = self.new_page()
@@ -3143,6 +3189,65 @@ class PageTest(unittest.TestCase):
         self.assertEqual((body["options"]["temperature"], body["options"]["top_p"], body["options"]["top_k"]), (0.2, 0.4, 20))
         self.assertEqual(body["options"]["stop"], ["Als KI", "As an AI"])
         self.assertIn("num_ctx", body["options"])
+
+    def test_model_assignment_loads_the_configuration_with_the_model_and_is_separate_from_the_chat(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.click(".burger-btn")
+        page.click("[data-pw=prompts]")
+        page.fill("#ps-text", "Assigned prompt")
+        page.click("[data-pw=params]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.15; e.dispatchEvent(new Event('input', {bubbles: true})); var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}));")
+        page.fill("#cfg-name", "Wilson on gemma"); page.click("#cfg-save")
+        self.assertIsNone(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"))
+        page.click("#cfg-model")
+        cid = page.evaluate("HeinzProviders.configs()[0].id")
+        self.assertEqual(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"), cid)
+        self.assertIn("on", page.get_attribute("#cfg-model", "class"))
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"), "the model assignment is not the Heinz Chat assignment")
+        # restart: the app starts on Heinz, the assigned configuration loads with the model (person, prompt, tone, runtime) and says so
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("HeinzDashboard.settings.mode === 'wilson'", timeout=15000)
+        page.wait_for_selector("#cfg-auto:not([hidden])")
+        self.assertIn("loaded with gemma2:2b", page.inner_text("#cfg-auto"))
+        self.assertIn("context 4096", page.inner_text("#cfg-auto"), "the silent write of the shared runtime is announced")
+        self.assertEqual(page.input_value("#param-ctx"), "4096")
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.params.temp"), 0.15)
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), "Assigned prompt")
+        self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+        # removing the assignment brings the model's standard: the app starts on Heinz again
+        page.click(".burger-btn")
+        page.click("#cfg-model")
+        self.assertIsNone(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"))
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.wait_for_timeout(500)
+        self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
+        self.assertTrue(page.is_hidden("#cfg-auto"))
+
+    def test_model_assignment_follows_the_model_and_the_runtime_goes_back_for_a_model_without_one(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click(".burger-btn")
+        page.evaluate("var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}));")
+        page.fill("#cfg-name", "Small ctx"); page.click("#cfg-save"); page.click("#cfg-model")
+        page.evaluate("HeinzDashboard.closeAll()")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.wait_for_function("document.getElementById('param-ctx').value === '4096'", timeout=15000)
+        # another model without an assignment: its standard (the context of the other model's configuration does not stay)
+        self.set_model(page, "qwen2.5:3b")
+        page.wait_for_function("document.getElementById('param-ctx').value === '8192'", timeout=15000)
+        # back: the configuration loads again with its model
+        self.set_model(page, "gemma2:2b")
+        page.wait_for_function("document.getElementById('param-ctx').value === '4096'", timeout=15000)
+        # deleting a configuration drops its assignment
+        page.evaluate("HeinzProviders.deleteConfig(HeinzProviders.configs()[0].id)")
+        self.assertEqual(page.evaluate("HeinzProviders.modelConfigs()"), {})
+        self.assertEqual(self.errors, [])
 
     def test_dashboard_has_no_apply_to_chat_button_any_more(self):
         page = self.new_page()
@@ -3171,9 +3276,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
-        page.click("#mod")
-        page.wait_for_selector("#sh-model.open")
-        page.click("[data-model='qwen2.5:3b']")
+        self.chat_switch(page, "qwen2.5:3b")
         page.wait_for_timeout(800)
         self.assertEqual(fake.preloads, [], "switch off: the ring stays as it is, nothing is loaded")
 
