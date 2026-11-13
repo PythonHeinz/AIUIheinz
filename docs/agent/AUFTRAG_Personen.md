@@ -1,5 +1,7 @@
 # AUFTRAG Personen (Strang AIUIheinz-Personen)
 
+> **Abgeschlossen 13.11.2026.** Phase 1 und 2 gebaut, Handytest A bis M bestanden. **Phase 3 (Chat-Standard, Auslieferzustand) entfällt** auf Beschluss des Entwicklers zugunsten von Konfigurationen mit Zuweisung an den Heinz Chat; Fortsetzung in `AUFTRAG_Konfiguration.md`. Die Punkte 1, 3 und 8 dieser Datei, soweit sie vom Chat-Standard handeln, sind dadurch überholt; Punkt 3 (Laufzeit nur lesend geteilt) bleibt gültig.
+
 Angelegt 13.11.2026 im Root-Strang. Grundlage: `docs/agent/ANWEISUNG_Personenleiste.md` (Tertius, Beschlüsse des Entwicklers vom 13.11.2026). Sie ist die Regel, die `KONZEPT.md` 23 Punkt 6 vorsah, und gehört zum MVP intern. Lies sie ganz, bevor du anfängst; dieser Auftrag sagt nur, **was davon in welcher Reihenfolge gebaut wird** und wo der Root-Strang etwas festlegt.
 
 Startsatz: „AIUIheinz-Personen: Phase 1 nach `docs/agent/AUFTRAG_Personen.md`.“

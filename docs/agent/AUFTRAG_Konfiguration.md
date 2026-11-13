@@ -1,4 +1,6 @@
-# AUFTRAG Konfiguration (Strang AIUIheinz-Konfiguration, noch nicht begonnen)
+# AUFTRAG Konfiguration (Strang AIUIheinz-Konfiguration)
+
+> **Freigegeben 13.11.2026** (Entwickler; Tertius hat dem Gesamtkonzept zugestimmt, die Logik der Bedienung ist freigegeben). Startsatz: „AIUIheinz-Konfiguration: nach `docs/agent/AUFTRAG_Konfiguration.md`.“ Die Präzisierungen des Root-Strangs unten (Abschnitt „Root-Entscheidungen“) gelten mit.
 
 Entwurf nach Entscheidungen des Entwicklers vom 13.11.2026 im Strang Personen. Baut erst nach der Beurteilung des Gesamtkonzepts durch Tertius und nach Bestätigung des Entwicklers. Berührt das Fundament (`lib/providers.js`, `lib/chat/*`, Hub), nur ein Strang zur Zeit. Beschreibung der heutigen Funktionsweise: `docs/BEDIENKONZEPT_DASHBOARD.md`.
 
@@ -31,3 +33,13 @@ Entwurf nach Entscheidungen des Entwicklers vom 13.11.2026 im Strang Personen. B
 - Laden über Engine-Grenzen im Dashboard (heute nur Hinweis).
 - Cloud-Voreinstellungen (Modellstandard, `thinking_level`) stützen sich teils auf Sekundärquellen: vor dem Einbau gegen die offizielle Doku des Anbieters prüfen.
 - B2 (Heinz Chat ohne Antwort bei LiteRT-LM) erst nach Bestätigung am Gerät erledigt; Export als Modelfile und LM-Studio-Preset folgt später.
+
+## Root-Entscheidungen (13.11.2026, Querprüfung)
+1. **Reihenfolge der Schritte:** (a) Zuordnung Modell → Konfiguration und Autoladen im Dashboard, (b) Standardkonfiguration und Zuweisung, Heinz Chat liest nur sie, (c) Offline/Online-Mauer, (d) Hub-Kachel. Nach (b) Handytest des Entwicklers, bevor (c) und (d) beginnen. Jede Stufe eigene Commits, Tests grün, Verlauf und STAND ergänzt.
+2. **Erstinbetriebnahme nicht doppelt bauen:** Der Dialog „Modell für den Heinz Chat festlegen“ ist der erste Schritt des späteren Einrichtungsassistenten (`KONZEPT.md` 18.3). Gebaut wird jetzt nur das Minimum: Hat die Standardkonfiguration noch kein Modell, zeigt der Heinz Chat eine Modellwahl (ein Satz, ein Knopf) und speichert die Wahl dort. Kein eigener Mehrschritt-Dialog.
+3. **Modellwechsel im Heinz Chat:** Das Schnellblatt des Chat hat heute eine Modellwahl. Mit „festes Modell“ wird daraus die Wahl der zugewiesenen Konfiguration. Der Strang legt dem Entwickler vor, ob der Chat dafür eine kurze Liste der Konfigurationen anbietet (Vorschlag) oder die Zuweisung nur im Dashboard und im Hub geändert wird.
+4. **Alte Schlüssel:** `heinz_chat_system`, `heinz_chat_options` und `heinz_slim*` werden vom Heinz Chat nicht mehr gelesen und nicht gelöscht (wie `sysSrc` und `modesOnly`). „Eigene Prompt- und Ton-Felder entfallen“ heißt: aus der Oberfläche entfernen, Tests anpassen, nicht ersatzlos streichen.
+5. **Laufzeit bleibt geteilt, Chat liest nur** (`AUFTRAG_Personen.md` Punkt 3). Die Laufzeit einer Konfiguration wirkt nur beim Laden im Dashboard (mit sichtbarem Hinweis, Tertius), nie im Chat.
+6. **B2 am Gerät prüfen:** Hat der Chat „kein Prompt“ (Nativ) und der LiteRT-LM-Server hält eine frühere Systemanweisung aus dem Dashboard, wirkt „kein Prompt“ womöglich nicht. Der Strang prüft zuerst simuliert, was gesendet wird (keine Systemnachricht), und legt dem Entwickler eine Handyprobe vor: Dashboard Audit senden, dann im Heinz Chat mit Nativ-Konfiguration auf `gemma4-e2b`; Server mit `litert-lm serve --cors-origin http://localhost:3000` zuvor neu starten. B2 gilt erst nach seiner Bestätigung als erledigt; ohne Lösung wird entschieden, ob der Chat bei LiteRT-LM einen leeren Systemprompt ausdrücklich senden muss.
+7. **Cloud-Voreinstellungen** (`thinking_level`, Modellstandard) nur bauen, wenn Online im Heinz Chat Ziel ist; vorher an der Anbieterdoku prüfen (Tertius).
+
