@@ -304,8 +304,12 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("#chats .saved-item")
         self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#chats .sr'), '::before').content"), "none", "no dot before the title")
         row = page.locator("#chats .saved-item").first
+        self.assertEqual(page.locator("#chats .ibtn.more").count(), 0, "no three-dots button")
         row.locator(".more").click()
         self.assertTrue(page.evaluate("document.querySelector('#chats .saved-item').classList.contains('open')"))
+        row.locator(".more").click()
+        self.assertFalse(page.evaluate("document.querySelector('#chats .saved-item').classList.contains('open')"), "second tap on the line hides the pills")
+        row.locator(".more").click()
         page.evaluate("window.scrollTo(0, 0)")
         box = page.evaluate("(() => { const r = document.querySelector('#chats .saved-item.open .acts2').getBoundingClientRect(), q = document.querySelector('#chats .saved-item.open').getBoundingClientRect(); return [r.left - q.left, q.right - r.right]; })()")
         self.assertLessEqual(max(box), 1, "the pill row is as wide as the entry")
@@ -819,8 +823,8 @@ class PageTest(unittest.TestCase):
         page.click("#saved-list .saved-item .more")
         page.click("#saved-list .acts2 button:has-text('Pin')")
         self.assertEqual(page.locator("#saved-list .saved-item.pin").count(), 1)
-        self.assertNotEqual(page.evaluate("getComputedStyle(document.querySelector('#saved-list .saved-item.pin')).backgroundImage"), "none", "pinned rows have a grip texture")
-        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#saved-list .saved-item'), '::before').width"), "3px", "mode bar at the left edge")
+        self.assertNotEqual(page.evaluate("getComputedStyle(document.querySelector('#saved-list .saved-item.pin'), '::before').backgroundImage"), "none", "pinned rows have a dotted bar")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#saved-list .saved-item'), '::before').width"), "6px", "mode bar at the left edge, 6 px")
         page.evaluate("var l=HeinzDashboard.getSaved(); for (let i=0;i<6;i++){ l.push({id:1000+i,title:'x'+i,mode:'wilson',messages:[],pinned:i<4,ts:'',model:'m'}); } HeinzDashboard.lsSet('heinz_chats', l)")
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzDashboard.togglePin(1004); HeinzDashboard.togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
@@ -2988,7 +2992,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#saved-list .saved-item.sel").count(), 1)
         page.locator("#saved-list .saved-item .load").nth(1).click()
         self.assertEqual(page.locator("#saved-list .saved-item.sel").count(), 2)
-        self.assertEqual(page.locator("#saved-list .more").count(), 0, "no ⋯ while selecting")
+        self.assertEqual(page.locator("#saved-list .saved-item.open").count(), 0, "no pills while selecting")
         self.assertEqual(page.locator("#sel-bar button").count(), 2, "only delete and cancel: no select-all")
         page.once("dialog", lambda d: d.accept())
         page.click("#sel-del")
@@ -3018,7 +3022,7 @@ class PageTest(unittest.TestCase):
         page.click("#chats [data-more]")
         page.click("#chats [data-act=pin]")
         self.assertEqual(page.locator("#chats .saved-item.pin").count(), 1)
-        self.assertNotEqual(page.evaluate("getComputedStyle(document.querySelector('#chats .saved-item.pin')).backgroundImage"), "none", "pinned rows have a grip texture")
+        self.assertNotEqual(page.evaluate("getComputedStyle(document.querySelector('#chats .saved-item.pin'), '::before').backgroundImage"), "none", "pinned rows have a dotted bar")
         page.click("#chats [data-more]")
         page.click("#chats [data-act=del]")
         self.assertEqual(page.locator("#chats [data-open]").count(), 0)
@@ -3042,21 +3046,22 @@ class PageTest(unittest.TestCase):
         self.assertEqual(got, ["Zebra Idee", "AIUI Chat 2", "AIUI Chat 10", "aiui Design", "Mein Rezept"])
         self.assertEqual(self.errors, [])
 
-    def test_heinz_chat_list_sorts_alphabetically(self):
+    def test_heinz_chat_list_is_always_newest_first_without_a_sort_bar(self):
+        # the sort and scope choices exist only in the dashboard (developer, 13.11.2026)
         page = self.new_page()
         FakeOllama(page)
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
-        page.evaluate("() => localStorage.setItem('heinz_chat_sort', JSON.stringify('az'))")
-        for i, t in enumerate(["Beta", "alpha", "Gamma"]):
+        for t in ["Beta", "alpha", "Gamma"]:
             page.fill("#q", t)
             page.click("#send")
             page.wait_for_function("document.querySelectorAll('#log .msg.a').length >= 1 && !document.querySelector('#log .cur')")
             page.click("#new")
         page.click("#hist")
         page.wait_for_selector("#sh-hist.open")
+        self.assertEqual(page.locator("#sortseg").count(), 0)
         got = page.eval_on_selector_all("#chats .ttl-in", "els => els.map(e => e.textContent)")
-        self.assertEqual(got, ["alpha", "Beta", "Gamma"])
+        self.assertEqual(got, ["Gamma", "alpha", "Beta"])
         self.assertEqual(self.errors, [])
 
     def test_manifest_and_service_worker_installable(self):

@@ -26,7 +26,7 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 - [ ] Abbrechen während der Antwort: Text bleibt, Eingabe frei
 - [ ] Antwort mit Überschrift, Liste, Tabelle und Codeblock (z. B. „Gib mir eine Tabelle und ein Python-Beispiel“): Darstellung lesbar, Kopierknopf am Codeblock kopiert nur den Code
 - [ ] Streamen bleibt flüssig (neu seit Phase 2: reicheres Markdown je Token)
-- [ ] Unterhaltungsliste: keine Punkte, fünf Symbol-Pillen so breit wie der Eintrag, Tipp auf den Titel schließt nur die Pillen, langes Drücken wählt mehrere (Löschen, Abbrechen), Umbenennen, Anpinnen, Kopieren, Export, Löschen
+- [ ] Unterhaltungsliste: keine drei Punkte; Tipp auf den Titel lädt, Tipp auf die Zeile darunter zeigt/versteckt die fünf Symbol-Pillen (so breit wie der Eintrag); angepinnt = Punktbalken links, Dashboard-Modus = Farbbalken; langes Drücken wählt mehrere (Löschen, X)
 - [ ] Unterhaltung laden nach Neustart: Verlauf vollständig
 - [ ] Sprache EN/DE umschalten: alle Texte wechseln
 
