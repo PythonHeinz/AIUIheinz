@@ -1982,8 +1982,13 @@ class PageTest(unittest.TestCase):
         page.click("#upd-btn")
         page.wait_for_function("document.getElementById('upd-status').textContent.includes('up to date')")
         self.assertIn("(abc1234)", page.inner_text("#upd-status"))
+        self.assertEqual(page.evaluate("HeinzDashboard.updState.mode"), "current")
+        page.click("#sh-back")
+        page.click("#menu-sheet [data-go=update]")
+        self.assertEqual(page.evaluate("HeinzDashboard.updState.mode"), "idle", "reopening the entry shows the version, not the old result")
         page.click("#upd-btn")
         page.wait_for_function("document.getElementById('upd-status').textContent.includes('Could not resolve host')")
+        page.wait_for_function("HeinzDashboard.updState.mode === 'idle'", timeout=8000)   # the result fades back to the version
         self.assertFalse(page.is_disabled("#upd-btn"), "button usable again after an error")
         with page.expect_navigation():
             page.click("#upd-btn")
