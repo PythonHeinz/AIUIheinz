@@ -208,15 +208,20 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .prog { height: 4px; border-radius: 99px; background: var(--card); overflow: hidden; margin: 8px 0 14px; }
 .prog i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: 0 0 8px var(--green); transition: width .4s; }
 
-/* Unterhaltungszeile (Dashboard-Liste und Heinz Chat): Titel, Zeile darunter (Tipp zeigt die Pillen), fünf Symbol-Pillen so breit wie der Eintrag; Mehrfachauswahl per langem Drücken */
+/* Unterhaltungszeile (Dashboard-Liste und Heinz Chat): Titel mit Zeile darunter, zarter Kreis rechts (Tippfläche, zeigt die Pillen), fünf Symbol-Pillen so breit wie der Eintrag; Mehrfachauswahl per langem Drücken */
 .saved-item { border-top: 1px solid var(--line); position: relative; }
 /* Markierung links, 6 px breit, nimmt keinen Platz weg: Dashboard = Balken in der Modusfarbe, angepinnt = gleicher Balken nur als Punktreihe (ohne Füllung) */
 .saved-item[data-mode]::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 6px; border-radius: 3px; background: var(--mc, var(--sub)); }
 .saved-item.pin::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 6px; border-radius: 0; background: radial-gradient(circle at 3px 50%, var(--mc, var(--txt)) 2.4px, transparent 2.9px) 0 0 / 6px 12px repeat-y; }
-.saved-item .sr { display: flex; align-items: center; gap: 2px; padding-left: 12px; }
-.saved-item .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.saved-item .load { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--txt); padding: 10px 0 2px; font: inherit; font-size: .95rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.saved-item .more { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 2px 0 10px; color: var(--sub); font: inherit; font-size: .72rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-item .sr { position: relative; display: flex; align-items: center; gap: 2px; padding-left: 12px; }
+/* zarter Kreis hinter dem Text am rechten Rand: Durchmesser halbe Zeilenhöhe, Abstand zum Rand ein Viertel der Zeilenhöhe; leicht plastisch */
+.saved-item .sr::before { content: ""; position: absolute; z-index: 0; right: 0; top: 25%; bottom: 25%; aspect-ratio: 1; border-radius: 50%; transform: translateX(-50%); pointer-events: none; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--txt) 5%, transparent), color-mix(in srgb, var(--txt) 13%, transparent) 75%); box-shadow: inset 0 1px 1px color-mix(in srgb, #fff 30%, transparent), inset 0 -1px 2px color-mix(in srgb, #000 16%, transparent), 0 1px 1px color-mix(in srgb, #000 10%, transparent); }
+.saved-item.nomore .sr::before { display: none; }
+.saved-item .txt { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.saved-item .load { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--txt); padding: 11px 0; font: inherit; font-size: .95rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-item .load small { display: block; color: var(--sub); font-size: .72rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+/* unsichtbare Tippfläche: Quadrat in Zeilenhöhe am rechten Rand, über dem Text */
+.saved-item .more { position: absolute; z-index: 2; right: 0; top: 0; bottom: 0; aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .saved-item .acts2 { display: none; padding: 0 12px 10px; gap: 8px; flex-wrap: wrap; }
 .pin-sep { height: 0; border-top: 1px solid var(--edge); margin: 6px 0 4px; }
 .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
