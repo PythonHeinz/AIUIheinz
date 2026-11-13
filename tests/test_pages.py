@@ -316,7 +316,9 @@ class PageTest(unittest.TestCase):
         row.locator(".more").click()
         page.evaluate("window.scrollTo(0, 0)")
         box = page.evaluate("(() => { const r = document.querySelector('#chats .saved-item.open .acts2').getBoundingClientRect(), q = document.querySelector('#chats .saved-item.open').getBoundingClientRect(); return [r.left - q.left, q.right - r.right]; })()")
-        self.assertLessEqual(max(box), 1, "the pill row is as wide as the entry")
+        self.assertLessEqual(box[0], 1, "the aluminium plate starts at the left edge of the entry")
+        self.assertGreater(box[1], 5, "black ground remains to the right of the plate (plate = 90 % of the pill row)")
+        self.assertLess(box[1], 80)
         row.locator(".load").click()
         self.assertFalse(page.evaluate("document.querySelector('#chats .saved-item').classList.contains('open')"), "tap on the title closes the pills")
         self.assertTrue(page.evaluate("document.getElementById('sh-hist').classList.contains('open')"), "the list stays open")
@@ -3075,6 +3077,31 @@ class PageTest(unittest.TestCase):
         self.assertEqual(g["h"], "22px")
         self.assertEqual(g["pe"], "none", "the fade must not catch taps")
         self.assertIn("blur", g["bf"])
+
+    def test_chat_list_filters_are_two_switches_in_one_row_the_list_is_at_most_three_fifths_wide_and_order_never_falls_back(self):
+        page = self.new_page()
+        FakeOllama(page)
+        chats = [{"id": i, "title": t, "ts": "x", "model": "gemma2:2b", "provider": "ollama", "mode": "wilson", "messages": [{"role": "user", "content": "q"}]} for i, t in ((1, "Zeta"), (2, "Alpha"))]
+        page.goto(self.srv.base + "/dashboard.html")
+        page.evaluate("c => localStorage.setItem('heinz_chats', JSON.stringify(c))", chats)
+        page.reload()
+        page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
+        page.click("#chats-open")
+        page.wait_for_function("document.querySelector('#drawer').getBoundingClientRect().left >= -1")
+        g = page.evaluate("""() => { const a = document.getElementById('chats-scope').getBoundingClientRect(), b = document.getElementById('chats-sort').getBoundingClientRect(), d = document.getElementById('drawer').getBoundingClientRect();
+            return { aMid: a.top + a.height / 2, bMid: b.top + b.height / 2, aTop: a.top, bTop: b.top, drawerW: d.width, vw: innerWidth, vertical: getComputedStyle(document.getElementById('chats-scope')).flexDirection } }""")
+        self.assertEqual(g["vertical"], "column", "scope switch slides top/bottom")
+        self.assertAlmostEqual(g["aMid"], g["bMid"], delta=3, msg="both switches sit in one row")
+        self.assertLessEqual(g["drawerW"], g["vw"] * 0.6 + 1)
+        page.click("#chats-sort span[data-s=az]")
+        page.click("#chat-search")
+        page.fill("#chat-search", "a")
+        page.fill("#chat-search", "")
+        self.assertEqual(page.get_attribute("#chats-sort span.active", "data-s"), "az", "the chosen order stays shown, no fallback to latest")
+        page.reload()
+        page.wait_for_function("window.HeinzStore && document.getElementById('chats-open')")
+        page.click("#chats-open")
+        self.assertEqual(page.get_attribute("#chats-sort span.active", "data-s"), "az")
 
     def test_manifest_and_service_worker_installable(self):
         page = self.new_page()

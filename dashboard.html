@@ -262,12 +262,15 @@
         .mrow.on b { font-weight: 700; } .mrow .ck { color: var(--pri); }
         #model-select, #mode-select { display: none; }
         /* Chatliste von links */
-        .drawer { position: fixed; top: 0; bottom: auto; height: var(--appH, 100dvh); left: 0; z-index: 41; width: min(88vw, 350px); background: var(--surf); border-right: 1px solid var(--ol); transform: translateX(-105%); transition: transform .2s ease; display: flex; flex-direction: column; visibility: hidden; }
+        .drawer { position: fixed; top: 0; bottom: auto; height: var(--appH, 100dvh); left: 0; z-index: 41; width: min(60vw, 350px); background: var(--surf); border-right: 1px solid var(--ol); transform: translateX(-105%); transition: transform .2s ease; display: flex; flex-direction: column; visibility: hidden; }
         .drawer.open { transform: none; visibility: visible; }
         .drawer .dh { display: flex; align-items: center; gap: 6px; height: 56px; padding: 0 8px 0 18px; flex: none; }
         .drawer .dh h3 { flex: 1; margin: 0; font-size: 1.1rem; font-weight: 600; }
         .drawer .dtools { padding: 0 14px 8px; display: flex; flex-direction: column; gap: 8px; flex: none; }
-        .drawer .dtools .lang-btn { width: 100%; } .drawer .dtools .lang-btn span { flex: 1; }
+        /* Two physical switches in one row: scope slides top/bottom (this mode / all), order slides left/right (latest / A-Z). The set position is always shown and never falls back. */
+        .drawer .dtools .frow { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+        .drawer .dtools .lang-btn { width: auto; font-size: 11px; } .drawer .dtools .lang-btn span { padding: 6px 8px; min-width: 0; white-space: nowrap; }
+        .drawer .dtools .lang-btn.v { flex-direction: column; border-radius: 18px; } .drawer .dtools .lang-btn.v span { text-align: center; }
         #saved-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 14px calc(150px + env(safe-area-inset-bottom)); }
         #saved-list > small { display: block; color: var(--muted); padding: 14px 4px; font-size: .86rem; }
         .bar .ttlbox .inline-edit { padding: 2px 6px; font-size: .88rem; font-weight: 600; }
@@ -341,8 +344,8 @@
     <aside id="drawer" class="drawer" aria-label="Chats">
         <div class="dh"><h3 data-i18n="chatsTitle">Chats</h3><button class="ibtn" type="button" data-click="closeAll" data-i18n-title="close" title="Close"><svg class="i"><use href="lib/icons.svg#i-x"/></svg></button></div>
         <div class="dtools">
-            <button id="chats-scope" class="lang-btn" type="button" data-click="toggleChatScope"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" id="scope-all">All</span></button>
-            <button id="chats-sort" class="lang-btn" type="button" data-click="toggleChatSort"><span data-s="time" data-i18n="sortTime">Latest</span><span data-s="az" data-i18n="sortAz">A–Z</span></button>
+            <div class="frow"><button id="chats-scope" class="lang-btn v" type="button" data-click="toggleChatScope"><span data-s="mode" data-i18n="scopeModeS">This mode</span><span data-s="all" id="scope-all">All</span></button>
+            <button id="chats-sort" class="lang-btn" type="button" data-click="toggleChatSort"><span data-s="time" data-i18n="sortTime">Latest</span><span data-s="az" data-i18n="sortAz">A–Z</span></button></div>
             <input id="chat-search" class="inp" type="search" style="margin:0" data-i18n-ph="searchPh" placeholder="Search chats" data-input="renderSavedList">
         </div>
         <div id="saved-list"></div>

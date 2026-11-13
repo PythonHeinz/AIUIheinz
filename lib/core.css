@@ -225,9 +225,12 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .saved-item .acts2 { display: none; padding: 0 12px 10px; gap: 8px; flex-wrap: wrap; }
 .pin-sep { height: 0; border-top: 1px solid var(--edge); margin: 6px 0 4px; }
 .inline-edit { width: 100%; box-sizing: border-box; background: var(--card); color: var(--txt); border: 1px solid var(--acc); border-radius: 10px; padding: 5px 8px; font: inherit; font-size: .9rem; outline: none; }
-.saved-item.open .acts2 { display: flex; }
-.saved-item .acts2 { gap: 6px; flex-wrap: nowrap; padding: 2px 12px 10px; }
-.saved-item .acts2 .pill { flex: 1; min-width: 0; min-height: 32px; height: 32px; padding: 0; }
+.saved-item.open .acts2 { display: flex; animation: plate-out .22s ease-out; }
+/* Aluminiumplatte unter dem Eintrag: faehrt beim Tipp auf den Kreis nach unten aus, ein Stueck heller als der Grund, mit eingelassenen Knoepfen. Sie reicht bis zum linken Zellenrand und rechts nur so weit wie links Platz vor dem ersten Knopf ist (12 px); rechts bleibt schwarzer Grund. Knoepfe 90 % der bisherigen Breite und Hoehe, oben links. */
+.saved-item .acts2 { box-sizing: border-box; width: calc(24px + (100% - 24px) * .9); padding: 8px 12px; gap: 6px; flex-wrap: nowrap; margin: 0 0 10px; position: relative; z-index: 0; border-radius: 0 14px 14px 0; background: linear-gradient(180deg, color-mix(in srgb, var(--txt) 13%, var(--surf)), color-mix(in srgb, var(--txt) 8%, var(--surf))); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent), inset 0 -1px 0 color-mix(in srgb, #000 35%, transparent); }
+.saved-item .acts2 .pill { flex: 1; min-width: 0; min-height: 29px; height: 29px; padding: 0; box-shadow: inset 0 1px 3px color-mix(in srgb, #000 60%, transparent), 0 1px 0 color-mix(in srgb, #fff 12%, transparent); }
+@keyframes plate-out { from { clip-path: inset(0 0 100% 0); opacity: .4; } to { clip-path: inset(0); opacity: 1; } }
+.saved-item[data-mode]::before, .saved-item.pin::before { z-index: 1; }
 .saved-item .acts2 .pill span { display: none; }
 .saved-item .acts2 .pill.danger { background: var(--card); color: var(--red); border-color: var(--red); }
 .saved-item .acts2 .pill.okc { color: var(--green); border-color: var(--green); }
