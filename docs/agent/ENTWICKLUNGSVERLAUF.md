@@ -591,3 +591,7 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 - **Befunde:** `esc` bleibt in zwei Varianten (Dashboard maskiert keine Anführungszeichen); der Chat erzeugte `<p><pre>`, jetzt entfallen. Beim Streamen rendert der Chat das reichere Markdown je Token neu (Tempo am Handy prüfen).
 - **Nur simuliert getestet (Playwright), nichts am Gerät.** B1 und B2 nicht berührt.
 - Handytest-Zwischenstand 13.11.2026 (Entwickler): Chat-Pillen bleiben Symbol-only; Wünsche für Schritt 2b (Chatliste ohne Punkte, Pillen so breit wie der Eintrag, Titel-Tipp schließt nur die Pillen, Mehrfachauswahl auch im Heinz Chat, gleiche Liste in beiden Seiten) und Beobachtung roter Statusring beim Seitenwechsel notiert.
+
+## 13.11.2026 – Dashboard: weicher Textrand unter der Chatleiste (Strang AIUIheinz-Design)
+- Anlass (Entwickler, 02:57): Der Text lief unter der Chatleiste hart abgeschnitten durch, stehende Zeilen am Rand flimmerten. Neu: `.cwrap::before` in `dashboard.html`, 22 px hoch, Verlauf von `--bg` nach durchsichtig mit 3 px Unschärfe (`backdrop-filter`), `pointer-events: none`; der Text blendet sanft aus, die Leiste liegt nicht „im“ Text. Gilt in Hell und Dunkel (Farbe aus `--bg`). Das Chat-Fenster selbst ist unverändert (oberer Innenabstand 19 px, der erste Text bleibt unverdeckt).
+- Test: `test_chat_top_edge_fades_under_the_chat_bar_without_blocking_taps` (Höhe, keine Tippfänger, Unschärfe). Nur simuliert, Wirkung auf dem Pixel nicht gesehen; Werte (22 px, 3 px, 35 %) sind Startwerte zum Nachjustieren.

@@ -3067,6 +3067,15 @@ class PageTest(unittest.TestCase):
         self.assertEqual(got, ["Gamma", "alpha", "Beta"])
         self.assertEqual(self.errors, [])
 
+    def test_chat_top_edge_fades_under_the_chat_bar_without_blocking_taps(self):
+        page = self.new_page()
+        FakeOllama(page)
+        page.goto(self.srv.base + "/dashboard.html")
+        g = page.evaluate("""() => { const c = getComputedStyle(document.querySelector('.cwrap'), '::before'); return { h: c.height, pe: c.pointerEvents, pos: c.position, bf: c.backdropFilter || c.webkitBackdropFilter } }""")
+        self.assertEqual(g["h"], "22px")
+        self.assertEqual(g["pe"], "none", "the fade must not catch taps")
+        self.assertIn("blur", g["bf"])
+
     def test_manifest_and_service_worker_installable(self):
         page = self.new_page()
         page.goto(self.srv.base + "/")
