@@ -1,11 +1,11 @@
-# AUFTRAG docHeinz (Strang AIUIheinz-docHeinz)
+# AUFTRAG docHeinz (Strang AIUIheinz-docHeinz) — zurückgestellt bis nach convert2
 
-Angelegt 14.11.2026 im Root-Strang. Werkzeug: **eBook-Reader**, Anzeigename „docHeinz“, **id `docheinz`** (ein h), Ordner `tools/docheinz/`. Startsatz: „AIUIheinz-docHeinz: nach `docs/agent/AUFTRAG_docHeinz.md`.“ Lies zuerst `docs/agent/NEUES_WERKZEUG.md` (Regeln für jedes neue Werkzeug), `docs/MODULE.md`, `docs/DESIGN.md`, `docs/agent/TECHNIK.md`.
+Angelegt 14.11.2026 im Root-Strang. Werkzeug: **eBook-Reader**, Anzeigename „docHeinz“, **id `docheinz`** (ein h), Ordner `tools/docheinz/`. **Noch nicht starten** (siehe Einordnung). Späterer Startsatz: „AIUIheinz-docHeinz: nach `docs/agent/AUFTRAG_docHeinz.md`.“ Lies zuerst `docs/agent/NEUES_WERKZEUG.md` (Regeln für jedes neue Werkzeug), `docs/MODULE.md`, `docs/DESIGN.md`, `docs/agent/TECHNIK.md`.
 
 ## Einordnung
-- Kein MVP-Bestandteil. Der Reader läuft **parallel** zu den Fundament-Strängen und berührt das Fundament nur über den einen Hub-Eintrag (`NEUES_WERKZEUG.md` 1).
-- **Reihenfolge:** Am 13.11.2026 stand „Reader nach convert2“. Der Entwickler will ihn jetzt parallel beginnen (14.11.2026); diese Fassung gilt, bis er etwas anderes sagt. convert2 wird dadurch nicht vorgezogen oder verdrängt.
-- Hängt nicht von KI, Ollama oder `lib/providers.js` ab. **Gespräche mit einem Buch (Embedding) sind ausdrücklich viel später**, nicht Teil dieses Auftrags.
+- **Status 16.11.2026: zurückgestellt, nicht starten.** Entscheidung des Entwicklers: Erst wird **convert2** in die Webseite aufgenommen (`KONZEPT.md` 23 Punkt 4), der **eBook-Reader ist ein Derivat davon** und entsteht danach. Der Parallelstart vom 14.11.2026 entfällt. Dieser Auftrag bleibt als Vorplanung stehen; vor dem Start schreibt der Root-Strang ihn gegen den Stand von convert2 neu.
+- **Folge für convert2:** Was der Reader später braucht (Dateien einlesen, EPUB/HTML/Text/Markdown parsen und erzeugen, Zip ohne Bibliothek, Metadaten), soll im Auftrag convert2 **als eigene, in sich geschlossene Module** gebaut werden (Ordner mit Einstiegsdatei und Tests, kein Bezug auf die Oberfläche von convert2), damit der Reader sie übernehmen kann. Wo sie dann liegen (weiter unter `tools/convert2/`, kopiert, oder nach Abstimmung in `lib/shared/`), entscheidet der Entwickler beim Reader-Auftrag; **Werkzeug-Seiten importieren keine Dateien aus fremden Werkzeugen** (`NEUES_WERKZEUG.md`, Insel-Regel).
+- Kein MVP-Bestandteil. Hängt nicht von KI, Ollama oder `lib/providers.js` ab. **Gespräche mit einem Buch (Embedding) sind ausdrücklich viel später.**
 
 ## Ziel
 Ein leserorientierter eBook-Reader für den Pixel 9 Pro, offline: eBooks verwalten und hinzufügen, viele Formate lesen, vielfältige Leseeinstellungen wie bei modernen Readern (Schriftgröße, Zeilenabstand, Ränder, Schrift, Theme, mitlaufender Textsatz). Erste Fassung klein halten: eine Bibliothek, ein Lesemodus, Fortschritt je Buch.
