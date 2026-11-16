@@ -264,3 +264,9 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .tgl .trk { position: relative; width: 24px; height: 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--edge); box-shadow: inset 0 1px 2px color-mix(in srgb, #000 55%, transparent); flex: none; box-sizing: border-box; }
 .tgl .trk::after { content: ""; position: absolute; top: 1px; left: 1px; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); transition: transform .15s; }
 .tgl:has(span:last-of-type.active) .trk::after { transform: translateX(12px); }
+
+/* Change LED as hardware slot: 14 x 2.5 px slit in a dark trough (variables for porting). Off = dark slit, on (.chg on the parent or .on on the slit) = warm white core with amber halo. */
+:root { --led-trough: #09090b; --led-off: #27272a; --led-on: #fffbeb; --led-halo: #fbbf24; }
+.led-trough { display: block; box-sizing: content-box; padding: 1.5px; border-radius: 3px; background: var(--led-trough); border: .5px solid rgba(255,255,255,.06); box-shadow: inset 0 1px 2px rgba(0,0,0,.95); line-height: 0; flex: none; }
+.led-slit { display: block; width: 14px; height: 2.5px; border-radius: 1.5px; background: var(--led-off); transition: background-color .18s, box-shadow .18s; }
+.chg > .led-trough .led-slit, .led-slit.on { background: var(--led-on); box-shadow: 0 0 3px var(--led-on), 0 0 7px var(--led-halo), 0 0 10px color-mix(in srgb, var(--led-halo) 80%, transparent); }

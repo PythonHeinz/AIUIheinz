@@ -110,16 +110,16 @@
 
         /* Modusleiste */
         .modes { display: flex; gap: 2px; flex: none; margin-top: 6px; margin-bottom: 0; padding-bottom: 0; }
-        .mode-pill { position: relative; flex: 1 1 0; min-width: 0; height: 58px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .78rem; }
+        .mode-pill { position: relative; flex: 1 1 0; min-width: 0; height: 68px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--sub); cursor: pointer; font-size: .78rem; }
         .mode-pill .mi { width: 44px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
         .mode-pill .mi .i { width: 19px; height: 19px; }
         .mode-pill.active { color: var(--txt); font-weight: 600; }
         .mode-pill.active .mi { background: var(--mc); color: var(--mo); }
         /* Gerätebild: gewählte Person = Taste in der Personenfarbe; Heinz (Ausgangspunkt der App) = bedruckte Fläche um die Taste;
-           orange LED unten in der Mitte der Taste = Prompt oder Ton dieser Person weicht von der Vorgabe ab (sichtbar auch bei geschlossenem Menü) */
+           Schlitz-LED in dunkler Mulde unter dem Namen (aus = unbeleuchtet, an = Prompt oder Ton dieser Person weicht von der Vorgabe ab (sichtbar auch bei geschlossenem Menü)) */
         .mode-pill { isolation: isolate; }
         .mode-pill .mi { position: relative; }
-        .mode-pill.chg .mi::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 5px 1px var(--orange), inset 0 -1px 1px rgba(0,0,0,.25); }
+        /* Change LED (slot LED in a dark trough under the label, off = unlit slot, on = .chg): look in lib/core.css (.led-trough, .led-slit) */
         .mode-pill.home::before { content: ""; position: absolute; inset: 2px 3px; border-radius: 14px; background: color-mix(in srgb, var(--txt) 16%, transparent); z-index: -1; }
         .mode-pill:disabled { opacity: .5; }
 

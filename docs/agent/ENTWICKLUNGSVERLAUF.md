@@ -675,3 +675,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-13 AIUIheinz-Konfiguration: Strang abgeschlossen
 - Entscheidung des Entwicklers (15:28): Strang abgeschlossen, Grundfunktion am Handy bestätigt, keine Bugs. Zurückgestellte Punkte stehen in `STAND.md` 2r und können später einzeln beauftragt werden. Letzter Stand: Commit siehe `git log -1`.
+
+### 2026-11-16 AIUIheinz-Design: Änderungs-LED als Schlitz in dunkler Mulde
+- Vorschlag „Variante B“ (Studie des Entwicklers) für die LED „Prompt oder Ton geändert“ übernommen, nur die Darstellung: unter dem Namen jeder Person eine dunkle Mulde mit Schlitz 14 × 2,5 px (`.led-trough`, `.led-slit` in `lib/core.css`). Aus = dunkler Schlitz, an (`.chg` am Personenknopf) = warmweißer Kern mit Bernstein-Hof. Farben über Variablen `--led-trough/-off/-on/-halo`. Die alte orange Punkt-LED (`.mi::after`) entfällt; Knopfhöhe 58 → 68 px. Personenfarben der Studie wurden nicht übernommen. Katalog-Eintrag `ledslot`. Nur simuliert getestet.
