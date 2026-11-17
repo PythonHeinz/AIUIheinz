@@ -157,3 +157,19 @@ Vorbereitung: `heinz` in Termux (Alias aus der README: `git pull`, Ollama, LiteR
 - [x] Dashboard, Modellblatt (Engine ohne Modellliste): Label „Model name“ / „Modellname“, Hinweis steht als Platzhalter im Feld.
 - [x] Heinz Chat, Modellname oben antippen: Tabelle der Fakten, nichts sieht bedienbar aus, Prompt ohne Ziehgriff, „Konfigurationen verwalten“ oben sichtbar.
 - [x] Hub: Filter, Scan, Studio mit Marke „geplant“; Data Lab und Vitals mit „alt“; Sheet mit „Test“; beide Reiter, EN und DE.
+
+## Strang convert2 (17.11.2026; nur im Container simuliert getestet, Playwright mit 426 × 803 und 426 × 400)
+
+Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2/index.html` (solange der Hub-Eintrag fehlt, per Adresse).
+
+**U. Convert2**
+- [ ] Textdatei laden (Knopf „Datei“): Inhalt erscheint, Erkennung zeigt die Art (Markdown, CSV, JSON, HTML).
+- [ ] Aus einer Webseite oder Tabelle kopieren und im Eingabefeld einfügen: Formatierung wird zu Markdown (Haken „Formatierung beim Einfügen bereinigen“ an), mit Haken aus bleibt der reine Text. Knopf „Einfügen“ fragt die Zwischenablage ab (Berechtigung des Browsers).
+- [ ] Tabelle als Markdown eingeben, Format TSV wählen, „Kopieren“, in Google Sheets einfügen: Zellen landen in Spalten.
+- [ ] Format EPUB wählen, „Herunterladen“, Datei im echten Reader des Handys öffnen (Google Play Books oder anderer): Titel, Inhaltsverzeichnis, Kapitel und Bilder prüfen. Nicht mit `epubcheck` geprüft.
+- [ ] „Lesen“: Vollbild-Leser, Inhaltsverzeichnis, vor/zurück, Schrift größer/kleiner. Flugmodus an: weiter alles nutzbar.
+- [ ] „Drucken / PDF“: Druckdialog des Handys, Ziel „Als PDF speichern“; nur das Blatt erscheint, keine Bedienelemente; Umbruch bei Tabellen und Überschriften.
+- [ ] Großes Dokument (rund 1 MB Text): Tippen bleibt flüssig, Umwandlung ohne Absturz; Entwurf bleibt nach Neuladen erhalten.
+- [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen.
+- [ ] Flugmodus: Seite, EPUB-Erzeugung, Lesen und Drucken ohne Netz (keine Bibliothek aus dem Netz nötig).
+

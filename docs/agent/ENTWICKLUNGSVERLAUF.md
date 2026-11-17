@@ -705,3 +705,10 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: Schritt 2 Startanleitung
 - README: Voraussetzungen (git, python, Ollama, Modell, optional LiteRT-LM), Start mit einem Befehl, Alias `heinz`, App-Installation, Update; `start.sh` in der Seitentabelle. Frischer Klon aus GitHub im Container: `bash tests/run_all.sh` grün (Server 20, Kapazitäten 24, Regeln 13, Speicher 11, Seiten 185). Handytest R bis T in `docs/HANDYTEST.md`. Punkt 5 (DR2) entfällt: Entwickler 17.11.2026, alles ist einer zweiten Person verständlich zeigbar.
+
+### 2026-11-17 AIUIheinz-convert2: Aufnahme als Werkzeug (beta)
+- Inventur der Vorlage (`docs/agent/CONVERT2_INVENTUR.md`), neues Werkzeug `tools/convert2/` mit eigenen Modulen in `mod/` (zip, text, markdown, html, tabellen, epub-schreiben, epub-lesen, erkennen, umwandeln; Insel-Regel, keine Bibliothek aus dem Netz, `lib/shared/markdown.js` unberührt) und Oberfläche in `ui/`. Eigener Zip-Schreiber und -Leser mit `CompressionStream`; EPUB 3 mit nav und NCX, EPUB-Leser (Vollbild); PDF nur über den Druckdialog (Knopf „Drucken / PDF“), kein html2pdf. 16 Zielformate, eingelesen werden CSV, TSV, JSON, HTML, Markdown und EPUB (auch ohne .epub-Endung, am ZIP-Kopf erkannt).
+- Eigene Daten nur `heinz_convert2_…` über `HeinzStore` (fmt, view, font, clean, draft bis 200000 Zeichen, etitle, eauthor, rsize).
+- Tests: `tests/test_convert2.py` (Node-Tests, Python-Gegenprüfung des Zip), `test_convert2_dom.py` (12), `test_convert2_ui.py` (13, Pixel-Viewport, keine Anfragen nach außen); `tests/test_server.py` erwartet `convert2` in der Werkzeugliste. Nur simuliert: Zwischenablage, Teilen, Druck, echter EPUB-Leser; `epubcheck` nicht verfügbar, EPUB nicht damit geprüft.
+- Offen: Hub-Eintrag in `AREAS` (Rückfrage), Handytest U, Abnahme, `_original/` löschen.
+
