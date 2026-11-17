@@ -863,6 +863,8 @@ class PageTest(unittest.TestCase):
         page.click("#mode-bar [data-mode=code]")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 0, "after a reset the stand does not return by itself")
+        page.click("#mode-bar [data-mode=code]")
+        self.assertEqual(page.locator("#mode-bar .mode-pill.kept").count(), 0, "a reset person shows no dim LED when left")
         self.assertEqual(self.errors, [])
 
     def test_text_cursor_has_the_accent_colour_of_the_person(self):
