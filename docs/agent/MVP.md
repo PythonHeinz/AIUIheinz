@@ -2,6 +2,8 @@
 
 Root-Strang, 13.11.2026, nach Abschluss der Stränge Fundament, Personen und Konfiguration. Zielbild: `KONZEPT.md` 23 („erste Fassung für eine zweite Person“). Nur simuliert getestet gilt, wo nicht „am Handy bestätigt“ steht.
 
+**Stand 17.11.2026:** Strang Design fertig (Schritte 0 bis 2, Handytest R bis T bestätigt); Entwickler: alles ist einer zweiten Person verständlich zeigbar. Punkte 4 und 5 sind damit erfüllt, soweit simuliert und am Handy bestätigt. **Offen:** B2-Probe, Handytest N, O, Q und das Abhaken der Grundliste (siehe unten); Zeigen an die zweite Person. Danach: convert2 (`AUFTRAG_convert2.md`), dann Reader.
+
 ## MVP-Zeile (Vorschlag, der Entwickler entscheidet)
 **Der MVP ist erreicht, wenn:**
 1. Hub, Heinz Chat und Heinz Dashboard auf dem Pixel in der installierten App **und** im Browsertab ohne Fehler laufen und nach Neustart nichts verlieren. *(Speicher, Module: am Handy bestätigt; Rest der Grundliste siehe unten)*
