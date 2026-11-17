@@ -40,6 +40,7 @@
 /* Vollbild-Leseansicht (EPUB) */
 .c2-reader { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; background: #f7f3ea; color: #1c1a17; }
 .c2-reader[hidden] { display: none; }
+.pill[hidden], .c2-msg[hidden], #epubopts[hidden] { display: none; }
 .c2-rbar, .c2-rfoot { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #ece6d8; color: #3b372f; }
 .c2-rbar .ibtn { color: #3b372f; }
 .c2-az { font: 700 1rem Georgia, serif; width: 44px; }
