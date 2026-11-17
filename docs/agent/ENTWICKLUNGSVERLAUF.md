@@ -699,3 +699,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: Modellblatt des Heinz Chat als reine Anzeige
 - Konfigurationsansicht (`sh-view`): Tabelle der Fakten statt Zeilen im Stil von Auswahlknöpfen (Bezeichnung links 92 px, Wert rechts, feine Trennlinien, kein Zeigefinger-Cursor; `.kv` in `chat.html`, `row()` in `lib/chat/model.js`). Prompt-Feld ohne Ziehgriff, flach und gedämpft. Der Link „Konfigurationen verwalten“ steht jetzt als Pille oben, ohne Scrollen sichtbar. Nur simuliert getestet; Gliederung wie im Auftrag (Konfiguration, Engine, Modell, Person, Ton, Laufzeit, Status, Prompt).
+
+### 2026-11-17 AIUIheinz-Design: Hub kennzeichnet Unfertiges
+- Hub (`index.html`): Marken an den Kacheln: „geplant“ (Platzhalter, jetzt auch in den Kacheln des Reiters Werkzeuge, nicht nur abgedunkelt), „alt“ (Data Lab, Vitals; `legacy` aus `tool.json`), „Test“ (Sheet; Zuordnung `BADGES` im Hub, keine neuen Schlüssel in `tool.json`/`server.py`). EN und DE. Nur Kennzeichnung, keine Umbauten der Werkzeuge. Nur simuliert getestet.
