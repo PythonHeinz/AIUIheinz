@@ -20,6 +20,8 @@ Der Entwickler muss nicht mehr ins Dashboard, um zu aktualisieren, und sieht im 
 7. **Tests:** `tests/test_server.py` (Check-Endpunkt mit einem lokalen Test-Repo als Quelle statt GitHub, Fehler ohne Netz, ohne `.git`; Tool-Liste mit Version und Datum), `tests/test_pages.py` (Hub zeigt Hinweis und Marke, Knopf ruft den Endpunkt, ohne Haken keine Anfrage nach außen), `tests/test_rules.py` bleibt grün.
 8. **Handytest** in `docs/HANDYTEST.md`: Hub zeigt „Update verfügbar“ nach einem Push, Knopf aktualisiert und lädt neu, Tool-Kacheln zeigen Version und Änderung; ohne Netz kein Fehlerband.
 
+9. **Auseinandergelaufener Verlauf erklären.** Beobachtet am 17.11.2026 am Handy: Der Klon hatte einen lokalen Commit, den es auf GitHub nicht gab; `git pull --ff-only` meldete „Diverging branches“ und das Dashboard zeigte nur die rohe Git-Meldung. Der Server erkennt diesen Fall (`git rev-list --left-right --count HEAD...origin/main`, lokale und entfernte Commits getrennt zählen), die Oberfläche erklärt ihn in einem Satz (EN und DE) und nennt den sicheren Weg (Zweig `sicherung/handy` anlegen, dann `git reset --hard origin/main`). Der Server führt den Abgleich nie von sich aus durch; ein Knopf dafür nur mit ausdrücklicher Rückfrage und nur bei sauberem Arbeitsordner. Test mit einem lokalen Test-Repo mit abweichendem Commit.
+
 ## Grenzen
 - Keine getrennte Installation einzelner Tools, keine Paketverwaltung, keine Bibliothek aus dem Netz.
 - Der Server führt nur feste Git-Befehle aus, nie Eingaben des Browsers.
