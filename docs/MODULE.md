@@ -188,3 +188,17 @@ Eigene, in sich geschlossene Module, damit der eBook-Reader sie später überneh
 | `umwandeln.js` | `FORMAT_LIST` (16 Zielformate, Gruppen data/office/doc), `convertMarkdown(md, id, opts)` → `{text, html, bytes?, ext, mime, kind}`; PDF ist `kind: 'print'` (nur Druckdialog) | `tabellen.js`, `markdown.js`, `epub-schreiben.js`, `text.js` | Node (`tests/convert2/umwandeln.test.mjs`) |
 
 Importgraph (nur abwärts, keine Kreise): `text`, `zip` → `markdown` → `tabellen`, `html` → `erkennen`, `epub-lesen`; `epub-schreiben` importiert `zip`, `markdown`, `text`; `umwandeln` importiert `tabellen`, `markdown`, `epub-schreiben`, `text`. Oberfläche: `tools/convert2/ui/` (`main.js` Einstieg, `base.js` Brücke zu `window.Heinz` und `HeinzStore`, `reader.js` Vollbild-EPUB-Leser, `i18n.js` EN/DE); eigene Daten nur `heinz_convert2_…`. Tests: `bash tests/run_all.sh convert2` (Node-Skripte über `tests/test_convert2.py`, Browsertests in `tests/test_convert2_dom.py`, Oberfläche in `tests/test_convert2_ui.py`, Pixel-Viewport, keine Anfragen nach außen). Nicht mit `epubcheck` geprüft (im Container nicht verfügbar): EPUB nur über den eigenen Leser und die XML-Prüfung.
+
+## Werkzeug docHeinz (`tools/docheinz/`, seit 17.11.2026)
+
+Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.js`, `markdown.js`, `html.js`, `epub-lesen.js` sind **Kopien** aus `tools/convert2/mod/` (erste Zeile nennt das; ein Test prüft, dass sie bis auf diese Zeile gleich sind, Änderungen also an beiden Stellen). Die Module kennen die Oberfläche nicht und importieren nur Module ihres Ordners. Neu und nur hier:
+
+| Modul | Schnittstelle | Braucht | Tests |
+|---|---|---|---|
+| `sauber.js` | `sauber(html, {base})` (Positivliste: keine Skripte, kein `class`/`style`, Bilder nur als `data:image`, Links nach außen nur als Text, innere Verweise als `data-go`), `plain`, `resolvePath` | `DOMParser` | Browser (`tests/test_docheinz.py`) |
+| `buch.js` | `formatOf`, `openSource(bytes, format, name)` → Source (Metadaten, Inhaltsverzeichnis, Kapitel, `html(i)`, `resolve`) für EPUB, Markdown, Text, HTML; `describe` (Textlänge je Kapitel); `BuchFehler` mit Code `pdf`, `unsupported`, `drm`, `unreadable`, `empty` | `epub-lesen.js`, `markdown.js`, `text.js`, `sauber.js` | Browser |
+| `db.js` | `openDb()` (IndexedDB `docheinz`, Stores `books` und `files`), `storage`, `persist`; `put` meldet ein volles Gerät als Fehler `full` | `indexedDB` | Browser |
+| `bibliothek.js` | `makeRecord`, `signature`, `percent` (nach Textlänge gewichtet), `filterSort`, `initial`, `hue` | – | Node (`tests/docheinz/bibliothek.test.mjs`) |
+
+Importgraph (nur abwärts, keine Kreise): `text`, `zip` → `markdown`, `html` → `epub-lesen`; `sauber` (allein); `buch` importiert `epub-lesen`, `markdown`, `text`, `sauber`; `db` und `bibliothek` (allein). Oberfläche: `tools/docheinz/ui/` (`main.js` Einstieg: Bibliothek, `leser.js` Leseansicht im Scrollmodus, `base.js` Brücke zu `window.Heinz` und `HeinzStore`, `i18n.js` EN/DE). Eigene Daten: IndexedDB `docheinz` (große Daten, **nicht** im Backup) und kleine Einstellungen `heinz_docheinz_…` (`size`, `theme`, `sort`; im Backup). Tests: `bash tests/run_all.sh docheinz` (Node-Skripte, Browsertests der Module und der Oberfläche in `tests/test_docheinz.py`, Pixel-Viewport, keine Anfragen nach außen).
+

@@ -1,0 +1,70 @@
+/* tools/docheinz/docheinz.css – nur was nur dieses Werkzeug braucht: Bibliothek und Leseansicht. Alles Übrige kommt aus lib/core.css. Klassen mit Präfix dh-. */
+.dh { padding-bottom: 40px; }
+.dh .panel { background: var(--surf); border-color: var(--line); }
+.dh .pill { border-color: var(--ol); }
+.dh-addbtn { width: 100%; justify-content: center; }
+.dh .scope { text-align: right; }
+body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-offset: 6px; border-radius: 14px; }
+
+.dh-tools { display: flex; gap: 8px; margin: 0 0 10px; align-items: center; }
+.dh-tools[hidden] { display: none; }
+.dh-tools .inp { flex: 1 1 auto; min-width: 0; margin: 0; }
+.dh-tools .sel { flex: 0 0 42%; min-width: 0; }
+.dh-list { display: flex; flex-direction: column; gap: 8px; }
+.dh-book { display: flex; align-items: stretch; background: var(--card); border: 1px solid var(--ol); border-radius: 14px; overflow: hidden; }
+.dh-open { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: center; padding: 10px 6px 10px 10px; background: none; border: 0; color: var(--txt); text-align: left; cursor: pointer; font: inherit; }
+.dh-cover { flex: none; width: 46px; height: 64px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font: 700 1.4rem var(--serif); color: #fff; background: hsl(var(--h) 38% 34%); border: 1px solid rgba(255,255,255,.12); }
+.dh-tx { flex: 1; min-width: 0; display: block; }
+.dh-tx b { display: block; font: 600 1rem/1.25 var(--serif); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dh-tx small { display: block; color: var(--sub); font-size: .76rem; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-tx .dh-pct { color: var(--muted); }
+.dh-bar { display: block; height: 3px; background: var(--line); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+.dh-bar i { display: block; height: 100%; background: var(--green); }
+.dh-del { align-self: center; margin-right: 2px; }
+.dh-book.ask { align-items: center; gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+.dh-ask { flex: 1 1 100%; font-size: .9rem; color: var(--txt); overflow-wrap: anywhere; }
+.dh-book.ask .pill { flex: 1; }
+.dh-empty { color: var(--sub); text-align: center; padding: 28px 10px; margin: 0; font: italic 1rem var(--serif); }
+.dh-empty[hidden] { display: none; }
+.dh-msg { white-space: pre-line; margin-top: 12px; }
+.dh-store { text-align: center; margin-top: 18px; }
+.dh-warn { color: var(--orange); }
+
+/* Leseansicht: Themen über Variablen am Container */
+.dh-reader { --rb: var(--surf); --rt: var(--txt); --rbar: var(--card); --rline: var(--line); --rsub: var(--sub); --rlink: var(--pri); position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; background: var(--rb); color: var(--rt); }
+.dh-reader[hidden] { display: none; }
+.dh-reader[data-rt=lt] { --rb: #fbfbf8; --rt: #1d1d1b; --rbar: #eeeeea; --rline: #d9d9d3; --rsub: #5b5b56; --rlink: #1a56b0; }
+.dh-reader[data-rt=sepia] { --rb: #f4ecd8; --rt: #433422; --rbar: #e9dfc4; --rline: #d3c7a8; --rsub: #7a6a52; --rlink: #8a4b12; }
+.dh-reader[data-rt=dk] { --rb: #1b1b1c; --rt: #d6d6d2; --rbar: #262628; --rline: #36363a; --rsub: #9a9aa0; --rlink: #8ab4f8; }
+.dh-reader[data-rt=black] { --rb: #000; --rt: #b9b9b6; --rbar: #121212; --rline: #262626; --rsub: #86868a; --rlink: #7aa7e8; }
+.dh-rbar, .dh-rfoot { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--rbar); color: var(--rsub); border-color: var(--rline); }
+.dh-rbar { border-bottom: 1px solid var(--rline); padding-top: max(4px, env(safe-area-inset-top)); }
+.dh-rbar .ibtn { color: var(--rt); }
+.dh-rtitle { flex: 1; min-width: 0; text-align: center; font: .86rem var(--serif); color: var(--rsub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dh-rfoot { justify-content: space-between; border-top: 1px solid var(--rline); padding: 6px 12px max(6px, env(safe-area-inset-bottom)); }
+.dh-rfoot .pill { background: var(--rb); color: var(--rt); border: 1px solid var(--rline); }
+.dh-rfoot .pill:disabled { opacity: .35; }
+.dh-rpos { font: .76rem var(--mono); color: var(--rsub); text-align: center; flex: 1; }
+.dh-rset { flex: none; padding: 10px 16px 14px; background: var(--rbar); border-bottom: 1px solid var(--rline); color: var(--rt); }
+.dh-rset[hidden], .dh-toc[hidden] { display: none; }
+.dh-rset .fld { display: block; }
+.dh-rset input[type=range] { width: 100%; margin: 8px 0 4px; }
+.dh-rset .seg2 { margin-top: 6px; }
+.dh-rset .seg2 button { font-size: .8rem; padding: 0 4px; }
+.dh-toc { position: absolute; top: 53px; left: 0; right: 0; bottom: 0; z-index: 2; overflow: auto; overscroll-behavior: contain; background: var(--rb); padding: 8px 14px 30px; }
+.dh-toc button { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--rline); padding: 13px 4px; font: 1rem var(--serif); color: var(--rt); cursor: pointer; }
+.dh-toc button.l2 { padding-left: 20px; font-size: .94rem; } .dh-toc button.l3 { padding-left: 36px; font-size: .9rem; }
+.dh-notoc { color: var(--rsub); font: italic 1rem var(--serif); padding: 20px 4px; }
+.dh-text { flex: 1; overflow: auto; overscroll-behavior: contain; padding: 22px 22px 60px; max-width: 40rem; width: 100%; margin: 0 auto; line-height: 1.65; font-family: var(--serif); outline: none; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.dh-text h1, .dh-text h2, .dh-text h3, .dh-text h4, .dh-text h5, .dh-text h6 { line-height: 1.25; margin: 1.3em 0 .5em; }
+.dh-text h1:first-child, .dh-text h2:first-child { margin-top: .2em; }
+.dh-text p { margin: 0 0 .85em; }
+.dh-text a[data-go] { color: var(--rlink); text-decoration: underline; cursor: pointer; }
+.dh-text img { max-width: 100%; height: auto; display: block; margin: .8em auto; }
+.dh-text table { width: 100%; border-collapse: collapse; margin: .8em 0; font-size: .9em; }
+.dh-text th, .dh-text td { border: 1px solid var(--rline); padding: 5px 7px; text-align: left; vertical-align: top; }
+.dh-text pre { background: var(--rbar); padding: 8px 10px; border-radius: 6px; overflow: auto; font-size: .82em; white-space: pre-wrap; word-break: break-word; }
+.dh-text code { font-family: var(--mono); font-size: .9em; }
+.dh-text blockquote { margin: .9em 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--rline); color: var(--rsub); }
+.dh-text hr { border: 0; border-top: 1px solid var(--rline); margin: 1.4em 0; }
+.dh-text ul, .dh-text ol { padding-left: 1.4em; }

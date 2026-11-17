@@ -173,3 +173,20 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen.
 - [ ] Flugmodus: Seite, EPUB-Erzeugung, Lesen und Drucken ohne Netz (keine Bibliothek aus dem Netz nötig).
 
+## Strang docHeinz, Phase 1 (17.11.2026; nur im Container simuliert getestet, Playwright mit 426 × 803 und 426 × 400)
+
+Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/docheinz/index.html` (noch nicht im Hub, solange die Hub-Zeile fehlt). Testdateien bereithalten: ein EPUB (klein und eines mit mehreren MB samt Bildern), eine Markdown-, eine Text- und eine HTML-Datei, eine PDF-Datei.
+
+**V. docHeinz**
+- [ ] „Bücher hinzufügen“: Dateidialog des Handys, mehrere Dateien auf einmal wählen; Meldung „n hinzugefügt“, jedes Buch erscheint mit Titel, Autor, Format, Größe.
+- [ ] PDF wählen: klare Meldung „PDF wird noch nicht unterstützt“, keine leere Seite. Dieselbe Datei zweimal: Meldung „schon in der Bibliothek“.
+- [ ] EPUB öffnen: Text, Bilder, Überschriften; Inhalt (Menü oben) springt zum Kapitel; Verweis im Text springt, Link nach außen tut nichts.
+- [ ] Schrift mit dem Regler größer und kleiner (stufenlos), Themen Auto, Hell, Sepia, Dunkel, Schwarz; nach Neuladen gilt dieselbe Einstellung.
+- [ ] Lesen, zurück zur Bibliothek (Pfeil und Zurück-Taste des Handys): Prozentzahl und Balken am Buch; erneut öffnen: der Text steht an derselben Stelle.
+- [ ] Hintergrund und Rückkehr: Buch öffnen, in eine andere App wechseln, zurückkehren; Lesestelle und Fortschritt sind erhalten. App beenden und neu starten: ebenso.
+- [ ] Große Datei (mehrere MB EPUB mit Bildern): Hinzufügen und Öffnen ohne Absturz, Scrollen bleibt flüssig.
+- [ ] Löschen: Papierkorb, Rückfrage, danach ist das Buch weg und der Speicherwert unten sinkt.
+- [ ] Suche und Sortierung in der Bibliothek (ab 2 Büchern sichtbar).
+- [ ] Speicherdruck: Zeile „Speicher: … belegt“ unten; bei fast vollem Gerät erscheint die Warnung, ein zu großes Buch meldet „nicht genug Speicher“ statt still zu scheitern.
+- [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen; Flugmodus: alles nutzbar, kein Netz nötig.
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · docHeinz</title>
+<link rel="stylesheet" href="../../lib/core.css">
+<link rel="stylesheet" href="docheinz.css">
+<script src="../../lib/core.js"></script>
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page dh" id="lib">
+    <section class="panel" id="sec-add">
+        <div class="caps grp"><span data-i="s_add"></span><span class="scope" id="count"></span></div>
+        <label class="pill acc dh-addbtn" id="b-add"><svg class="i sm"><use href="../../lib/icons.svg#i-plus"/></svg><span data-i="add"></span><input type="file" id="file" class="sr-only" multiple accept=".epub,.md,.markdown,.txt,.html,.htm,.xhtml,application/epub+zip,text/plain,text/markdown,text/html"></label>
+        <div class="help" data-i="add_help"></div>
+    </section>
+
+    <section class="dh-shelf" id="sec-shelf">
+        <div class="dh-tools" id="tools" hidden>
+            <input id="q" class="inp" type="search" autocomplete="off" spellcheck="false" data-ph="search">
+            <select id="sort" class="sel"></select>
+        </div>
+        <div id="list" class="dh-list" aria-live="polite"></div>
+        <p class="dh-empty" id="empty" hidden></p>
+    </section>
+    <div class="notice" id="msg" role="status" hidden></div>
+    <div class="help dh-store" id="store"></div>
+</main>
+
+<div class="dh-reader" id="reader" data-rt="auto" hidden>
+    <div class="dh-rbar">
+        <button type="button" class="ibtn" id="r-close" data-i-label="r_close"><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg></button>
+        <button type="button" class="ibtn" id="r-toc-b" data-i-label="r_toc"><svg class="i"><use href="../../lib/icons.svg#i-menu"/></svg></button>
+        <span class="dh-rtitle" id="r-title"></span>
+        <button type="button" class="ibtn" id="r-set-b" data-i-label="r_set"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></button>
+    </div>
+    <div class="dh-rset" id="r-set" hidden>
+        <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="14" max="34" step="1"></label>
+        <div class="caps grp"><span data-i="r_theme"></span></div>
+        <div class="seg2" id="seg-theme">
+            <button type="button" data-rt="auto" data-i="t_auto"></button><button type="button" data-rt="lt" data-i="t_lt"></button><button type="button" data-rt="sepia" data-i="t_sepia"></button><button type="button" data-rt="dk" data-i="t_dk"></button><button type="button" data-rt="black" data-i="t_black"></button>
+        </div>
+    </div>
+    <nav class="dh-toc" id="r-toc" hidden></nav>
+    <article class="dh-text" id="r-body" tabindex="-1"></article>
+    <div class="dh-rfoot">
+        <button type="button" class="pill" id="r-prev"><svg class="i sm"><use href="../../lib/icons.svg#i-chev-l"/></svg><span data-i="r_prev"></span></button>
+        <span class="dh-rpos" id="r-pos"></span>
+        <button type="button" class="pill" id="r-next"><span data-i="r_next"></span><svg class="i sm"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
+    </div>
+</div>
+<script type="module" src="ui/main.js"></script>
+</body>
+</html>

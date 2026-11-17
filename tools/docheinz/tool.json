@@ -1,0 +1,18 @@
+{
+  "id": "docheinz",
+  "name": {
+    "en": "docHeinz",
+    "de": "docHeinz"
+  },
+  "desc": {
+    "en": "Your e-book reader: keep books on the phone, read EPUB, Markdown, HTML and text. Offline, no account.",
+    "de": "Dein eBook-Reader: Bücher auf dem Handy verwalten, EPUB, Markdown, HTML und Text lesen. Offline, ohne Konto."
+  },
+  "icon": "•",
+  "entry": "tools/docheinz/index.html",
+  "color": "orange",
+  "status": "beta",
+  "order": 21,
+  "area": "tools",
+  "symbol": "i-doc"
+}
