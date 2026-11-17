@@ -175,7 +175,7 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 
 ## Strang docHeinz, Phase 1 (17.11.2026; nur im Container simuliert getestet, Playwright mit 426 × 803 und 426 × 400)
 
-Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/docheinz/index.html` (noch nicht im Hub, solange die Hub-Zeile fehlt). Testdateien bereithalten: ein EPUB (klein und eines mit mehreren MB samt Bildern), eine Markdown-, eine Text- und eine HTML-Datei, eine PDF-Datei.
+Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Testdateien bereithalten: ein EPUB (klein und eines mit mehreren MB samt Bildern), eine Markdown-, eine Text- und eine HTML-Datei, eine PDF-Datei.
 
 **V. docHeinz**
 - [ ] „Bücher hinzufügen“: Dateidialog des Handys, mehrere Dateien auf einmal wählen; Meldung „n hinzugefügt“, jedes Buch erscheint mit Titel, Autor, Format, Größe.

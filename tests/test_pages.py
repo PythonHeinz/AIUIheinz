@@ -2734,7 +2734,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(ids, ["chat", "dashboard", "lab", "vitals"])
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(set(ids), {"convert2", "sheet", "filter", "scan", "studio"})
+        self.assertEqual(set(ids), {"convert2", "docheinz", "sheet", "filter", "scan", "studio"})
         page.click("[data-area=setup]")
         ids = page.eval_on_selector_all("#main a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(ids[:3], ["setup", "configs", "models"])
@@ -2753,6 +2753,16 @@ class PageTest(unittest.TestCase):
         page.click("#main a.app[data-tool=convert2]")
         page.wait_for_url("**/tools/convert2/index.html")
         page.wait_for_selector("html[data-c2=ready]")
+        self.assertEqual(self.errors, [])
+
+    def test_hub_opens_docheinz_from_the_tools_area(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("#main a[data-tool]")
+        page.click("[data-area=tools]")
+        page.click("#main a.app[data-tool=docheinz]")
+        page.wait_for_url("**/tools/docheinz/index.html")
+        page.wait_for_selector("html[data-dh=ready]")
         self.assertEqual(self.errors, [])
 
     def test_hub_theme_button_cycles(self):
