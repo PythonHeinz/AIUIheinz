@@ -2,7 +2,7 @@
  * Braucht nur die Browser-Schnittstelle DOMParser; Skripte, Event-Handler und Styles werden nie ausgeführt oder übernommen.
  *   looksLikeHtml(raw)     erkennt HTML-Text (Dokument oder mehrere Tags)
  *   htmlToMarkdown(html)   Überschriften, Absätze, Listen (verschachtelt), Tabellen, Zitate, Code, Links (https, mailto), Bilder (https, data:image), fett/kursiv/durchgestrichen
- * Ausgangspunkt war die Funktion aus der Vorlage (tools/convert2/_original); Überschriften jetzt bis Ebene 6, Bilder und Code-Sprache neu. */
+ * Ausgangspunkt war die Funktion aus der Vorlage (frühere Vorlage, nur noch in der Git-Historie); Überschriften jetzt bis Ebene 6, Bilder und Code-Sprache neu. */
 
 export function looksLikeHtml(raw) {
   if (/^\s*<!doctype html|^\s*<html[\s>]/i.test(raw)) return true;
