@@ -14,7 +14,7 @@ Das Dashboard ist ein Bedienfeld mit **drei getrennten Blöcken** und je einer L
 - **Person** hat selbst keinen Zustand, sie ist nur die Auswahl der Vorgaben für Prompt und Ton (Nativ, Heinz, Wilson, Audit, Code, Kreativ). Die LED am Personenknopf ist eine Sammelanzeige: Prompt oder Ton weichen ab.
 - **Vorgabe** = der Standard der gewählten Person. Bei **Nativ** ist die Vorgabe der Standard des Modells: kein Prompt, kein Ton, nur `num_ctx` wird immer gesendet. Ein Regler oder ein eigener Prompt macht daraus „geändert“.
 - **Zurücksetzen:** Reset im Reiter (nur dieser Block), Reset bei Laufzeit (nur Laufzeit), erneutes Tippen auf die aktive Person (Prompt und Ton). Ein Reset ändert nie den jeweils anderen Block.
-- **Personenwechsel** verwirft Änderungen an Prompt und Ton ohne Rückfrage; die letzten Änderungen bleiben als „Letzter Stand“ erhalten (Punkt 3).
+- **Personenwechsel** (ab 17.11.2026, Entscheidung des Entwicklers): Änderungen an Prompt und Ton bleiben je Person und Modell erhalten und kommen beim Zurückwechseln von selbst wieder; die Person trägt dann die volle LED, andere Personen mit gemerktem Stand eine gedimmte bernsteinfarbene (Punkt 3). Ein Tipp auf die aktive Person setzt sie auf die Vorgabe zurück; dieser Stand kommt nicht von selbst wieder, nur über „Letzter Stand laden“.
 
 ## 2. Was gilt wann (Beantwortung „was wird gesendet?“)
 Reihenfolge der Quellen, höchste zuerst:

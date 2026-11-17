@@ -855,6 +855,14 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 0)
         self.assertEqual(page.locator("#mode-bar [data-mode=code].kept, #mode-bar [data-mode=code].chg").count(), 0)
         self.assertEqual(page.locator("#mode-bar .mode-pill.kept").count(), 1)
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 1, "back on the person: its change comes back, LED fully on")
+        self.assertAlmostEqual(float(page.input_value("#param-temp")), 0.3, places=2)
+        page.click("#mode-bar [data-mode=wilson]")   # tap on the active person: reset to the preset
+        self.assertEqual(page.locator("#mode-bar .mode-pill.chg").count(), 0)
+        page.click("#mode-bar [data-mode=code]")
+        page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 0, "after a reset the stand does not return by itself")
         self.assertEqual(self.errors, [])
 
     def test_native_person_sends_no_tone_until_a_slider_moves_and_the_leds_show_changes(self):
@@ -953,7 +961,11 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=heinz]")   # leaving the person stores the changed state
         self.assertEqual(page.locator("#mode-bar .mode-pill.chg").count(), 0)
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].kept").count(), 1)
         page.click("#mode-bar [data-mode=wilson]")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 1, "back on the person: the change returns by itself")
+        self.assertEqual(page.input_value("#param-temp"), "0.9")
+        page.click("#mode-bar [data-mode=wilson]")   # tap on the active person: back to the preset, the stand is kept for the button
         self.assertEqual(page.locator("#mode-bar .mode-pill.chg").count(), 0, "back on the preset")
         self.assertEqual(page.input_value("#param-temp"), "0.4")
         page.click(".burger-btn")
