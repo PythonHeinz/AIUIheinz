@@ -681,3 +681,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: start.sh startet auch LiteRT-LM
 - `start.sh` startet zusätzlich `litert-lm serve --cors-origin http://localhost:3000` im Hintergrund, wenn `litert-lm` installiert ist und Port 9379 nicht antwortet; `OLLAMA_MAX_LOADED_MODELS` ist standardmäßig 1 (vorher von Hand gesetzt). Nur Syntax geprüft, Start nur am Handy testbar.
+
+### 2026-11-17 AIUIheinz-Design: gedimmte LED bei gemerktem Stand
+- Wechselt man die Person, nachdem man Prompt oder Ton einer Person geändert hat, verschwand deren LED. Jetzt zeigt der Personenknopf mit gemerktem „Letzten Stand“ (`settings.lastStand`) die LED gedimmt bernsteinfarben (Klasse `.kept`, `lib/core.css`); voll an bleibt nur für die gewählte, tatsächlich geänderte Person. Tooltip über `ledKept` (EN/DE). Test ergänzt, nur simuliert getestet.

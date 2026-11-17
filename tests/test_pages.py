@@ -843,6 +843,20 @@ class PageTest(unittest.TestCase):
         page.evaluate("var n=0; window.alert=function(){window._alerted=true}; HeinzDashboard.togglePin(1004); HeinzDashboard.togglePin(1005)")
         self.assertTrue(page.evaluate("window._alerted === true"), "at most five pinned chats")
 
+    def test_changed_person_keeps_a_dim_led_while_another_person_is_selected(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        page.click("#mode-bar [data-mode=wilson]")
+        page.evaluate("var e=document.getElementById('param-temp'); e.value=0.3; e.dispatchEvent(new Event('input', {bubbles: true}))")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 1)
+        page.click("#mode-bar [data-mode=code]")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].kept").count(), 1, "the changed person keeps a dim LED")
+        self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 0)
+        self.assertEqual(page.locator("#mode-bar [data-mode=code].kept, #mode-bar [data-mode=code].chg").count(), 0)
+        self.assertEqual(page.locator("#mode-bar .mode-pill.kept").count(), 1)
+        self.assertEqual(self.errors, [])
+
     def test_native_person_sends_no_tone_until_a_slider_moves_and_the_leds_show_changes(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")

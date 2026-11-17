@@ -270,3 +270,4 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .led-trough { display: block; box-sizing: content-box; padding: 1.5px; border-radius: 3px; background: var(--led-trough); border: .5px solid rgba(255,255,255,.06); box-shadow: inset 0 1px 2px rgba(0,0,0,.95); line-height: 0; flex: none; }
 .led-slit { display: block; width: 14px; height: 2.5px; border-radius: 1.5px; background: var(--led-off); transition: background-color .18s, box-shadow .18s; }
 .chg > .led-trough .led-slit, .led-slit.on { background: var(--led-on); box-shadow: 0 0 3px var(--led-on), 0 0 7px var(--led-halo), 0 0 10px color-mix(in srgb, var(--led-halo) 80%, transparent); }
+.kept > .led-trough .led-slit { background: color-mix(in srgb, var(--led-halo) 55%, var(--led-off)); box-shadow: 0 0 4px color-mix(in srgb, var(--led-halo) 45%, transparent); } /* kept own state of a person that is not selected: dim amber */
