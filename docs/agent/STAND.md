@@ -5,6 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
+- 17.11.2026, AIUIheinz-convert2: Inventur (`docs/agent/CONVERT2_INVENTUR.md`), dann Module und Oberfläche; berührt `tools/convert2/`, `tests/` (neue Dateien), `docs/MODULE.md`, `docs/HANDYTEST.md`; am Ende Hub-Zeile `AREAS` in `index.html` (nach Rückfrage).
 
 Stand: 17.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
