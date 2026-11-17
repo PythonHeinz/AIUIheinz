@@ -170,3 +170,20 @@ Im Container simuliert getestet: Senden mit Stream, Abbruch, Serien (Stopp, Fort
 ## Hub und Tool-Seiten
 
 Inline-Module sind erlaubt, weil die Seiten klein sind und keine Funktionen an `window` erwarten. Folgen der Strenge: Funktionen und `var` auf oberster Ebene sind keine `window`-Eigenschaften. Der Design-Katalog (`tools/design/index.html`) setzt deshalb `window.CATALOG` und `window.FUNCS` ausdrücklich, weil Tests sie lesen. Der Beispielknopf des Schnellblatts im Katalog hat keinen Inline-Handler mehr (`id="open-bsheet"` plus Listener, wie beim Blatt); das kopierbare Markup zeigt dadurch nur den Knopf.
+
+## Werkzeug convert2: Formatbausteine (`tools/convert2/mod/`, seit 17.11.2026)
+
+Eigene, in sich geschlossene Module, damit der eBook-Reader sie später übernehmen kann (`docs/agent/AUFTRAG_convert2.md`). Jedes Modul hat eine Einstiegsdatei, **kennt die Oberfläche nicht** (kein `document`, kein `window`; `DOMParser` und `CompressionStream` sind Browser-Schnittstellen, keine Oberfläche) und braucht kein Netz. Sie importieren nur andere Module dieses Ordners, nie `lib/*` und nie Dateien fremder Werkzeuge (Insel-Regel). Die Oberfläche (`tools/convert2/index.html`, `tools/convert2/ui/`) ruft sie nur auf. Ob die Bausteine später hier bleiben, kopiert werden oder nach `lib/shared/` ziehen, entscheidet der Entwickler im Reader-Auftrag.
+
+| Modul | Schnittstelle | Braucht | Tests |
+|---|---|---|---|
+| `zip.js` | `crc32`, `writeZip(entries, {date})`, `readZip(bytes)` (STORE und DEFLATE, kein ZIP64, keine Verschlüsselung) | `CompressionStream`, `DecompressionStream` | Node (`tests/convert2/zip.test.mjs`), Gegenprüfung mit Python `zipfile` (`tests/test_convert2.py`) |
+| `text.js` | `escHtml`, `escXml`, `escLatex`, `escYaml`, `escTypst`, `clean`, `fileName` | – | Node |
+| `markdown.js` | `mdToHtml` (wohlgeformtes XHTML), `mdToPlain`, `sections`, `headings`, `inline`, `isTableSeparator`, `splitTableRow` | `text.js` | Node (XML-Prüfung mit Python `minidom`) |
+| `html.js` | `looksLikeHtml`, `htmlToMarkdown` | `DOMParser` | Browser (`tests/test_convert2_dom.py`) |
+| `tabellen.js` | `parseDelimited`, `detectDelimited`, `rowsToMd`, `jsonToMd`, `extractTables`, `FORMATS` (tsv, csv, asciiBox, json, yaml, latex, typst, asciidoc, ditaxml, bbcode) | `text.js`, `markdown.js` | Node |
+| `epub-schreiben.js` | `markdownToEpub(md, opts)` (EPUB 3 mit `nav.xhtml` und `toc.ncx`, Kapitel je Überschrift, Bilder aus `data:`-URLs) | `zip.js`, `markdown.js`, `text.js` | Node (Struktur, XML, gleiche Bytes bei gleicher Eingabe) |
+| `epub-lesen.js` | `readEpub(bytes)` (Metadaten, Inhaltsverzeichnis aus nav oder NCX, Spine, Kapitel, Bilder), `epubToMarkdown` | `DOMParser`, `zip.js`, `html.js` | Browser (Rundlauf, EPUB 2 mit NCX, Skripte werden entfernt) |
+| `erkennen.js` | `detect(input)` → `{type, md, failed}` | `text.js`, `html.js`, `markdown.js`, `tabellen.js` | Browser |
+
+Importgraph (nur abwärts, keine Kreise): `text`, `zip` → `markdown` → `tabellen`, `html` → `erkennen`, `epub-lesen`; `epub-schreiben` importiert `zip`, `markdown`, `text`. Tests: `bash tests/run_all.sh convert2` (Node-Skripte über `tests/test_convert2.py`, Browsertests in `tests/test_convert2_dom.py`). Nicht mit `epubcheck` geprüft (im Container nicht verfügbar): EPUB nur über den eigenen Leser und die XML-Prüfung.

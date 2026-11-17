@@ -109,6 +109,39 @@ class Convert2DomTests(unittest.TestCase):
         self.assertIn("kein Zip", r[0])
         self.assertIn("kein EPUB", r[1])
 
+    # ---- Erkennen ----
+    def detect(self, text):
+        return self.page.evaluate("async (t) => (await import('/tools/convert2/mod/erkennen.js')).detect(t)", text)
+
+    def test_detect_types(self):
+        cases = [
+            ("", "empty"),
+            ('[{"a":1,"b":"x"},{"a":2,"b":"y"}]', "json"),
+            ("<table><tr><td>1</td></tr></table>", "html"),
+            ("| a | b |\n|---|---|\n| 1 | 2 |", "markdown-table"),
+            ("a\tb\n1\t2", "tsv"),
+            ("a;b\n1;2", "csv"),
+            ("name,qty\noil,5\nsalt,7", "csv"),
+            ("# Titel\n\nText", "markdown"),
+            ("- eins\n- zwei", "markdown"),
+            ("Hallo, Welt.\nWie geht es dir, mein Freund?", "text"),
+            ("Nur ein Satz.", "text"),
+        ]
+        for text, want in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.detect(text)["type"], want)
+
+    def test_detect_normalises_to_markdown(self):
+        self.assertEqual(self.detect('[{"a":1,"b":"x"}]')["md"], "| a | b |\n| --- | --- |\n| 1 | x |")
+        self.assertEqual(self.detect("a\tb\n1\t")["md"], "| a | b |\n| --- | --- |\n| 1 |  |")
+        self.assertEqual(self.detect("<h1>T</h1><p>x</p>")["md"], "# T\n\nx")
+        self.assertEqual(self.detect("```html\n<p>Hallo</p>\n```")["md"], "Hallo")
+        self.assertEqual(self.detect("a\u00a0b\u200bc")["md"], "a bc")
+
+    def test_detect_html_without_text_is_flagged(self):
+        r = self.detect("<html><head><style>p{}</style></head><body><script>x()</script></body></html>")
+        self.assertEqual((r["type"], r["failed"]), ("html", True))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -27,9 +27,9 @@ export function clean(text, opts = {}) {
     if (opts.citations) {
         t = t.replace(/\u3010[^\u3011]*\u3011/g, '').replace(/\[cite(?:_start|_end)?[^\]]*\]/gi, '').replace(/\s?\[(?:\d{1,3}(?:\s*[,\u2013-]\s*\d{1,3})*)\]/g, '');
     }
-    t = t.replace(/[ \t]+$/gm, m => (m.length >= 2 && m.indexOf('\t') < 0 ? '  ' : ''));
+    t = t.replace(/ +$/gm, m => (m.length >= 2 ? '  ' : ''));   // Tabulatoren am Zeilenende bleiben (leere letzte TSV-Zelle)
     t = t.replace(/\n{3,}/g, '\n\n');
-    return t.replace(/^\n+/, '').replace(/\s+$/, '');
+    return t.replace(/^\n+/, '').replace(/[\n ]+$/, '');
 }
 
 export function fileName(title, ext, fallback = 'convert2') {
