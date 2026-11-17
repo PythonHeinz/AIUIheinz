@@ -160,7 +160,7 @@ Vorbereitung: `heinz` in Termux (Alias aus der README: `git pull`, Ollama, LiteR
 
 ## Strang convert2 (17.11.2026; nur im Container simuliert getestet, Playwright mit 426 × 803 und 426 × 400)
 
-Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2/index.html` (solange der Hub-Eintrag fehlt, per Adresse).
+Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2/index.html` (Hub, Reiter Werkzeuge, Kachel Convert2).
 
 **U. Convert2**
 - [ ] Textdatei laden (Knopf „Datei“): Inhalt erscheint, Erkennung zeigt die Art (Markdown, CSV, JSON, HTML).
