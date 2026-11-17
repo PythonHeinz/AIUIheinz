@@ -17,7 +17,7 @@ LOG="$(mktemp -d)"
 pids=(); names=()
 start() { name="$1"; shift; ( "$@" > "$LOG/$name.log" 2>&1 ) & pids+=($!); names+=("$name"); }
 
-for f in test_server test_capabilities test_rules test_store test_convert2; do start "$f" python3 "tests/$f.py"; done
+for f in test_server test_capabilities test_rules test_store test_convert2 test_convert2_dom; do start "$f" python3 "tests/$f.py"; done
 for i in $(seq 0 $((SHARDS - 1))); do HEINZ_SHARD="$i/$SHARDS" start "test_pages-$((i + 1))-of-$SHARDS" python3 tests/test_pages.py; done
 
 fail=0
