@@ -1,0 +1,18 @@
+{
+  "id": "convert2",
+  "name": {
+    "en": "Convert2",
+    "de": "Convert2"
+  },
+  "desc": {
+    "en": "Paste or open text, tables or a book and get clean Markdown, HTML, EPUB, CSV and more. Offline, no model needed.",
+    "de": "Text, Tabellen oder ein Buch einfügen oder öffnen und sauber als Markdown, HTML, EPUB, CSV und mehr ausgeben. Offline, ohne Modell."
+  },
+  "icon": "•",
+  "entry": "tools/convert2/index.html",
+  "color": "green",
+  "status": "beta",
+  "order": 20,
+  "area": "tools",
+  "symbol": "i-refresh"
+}

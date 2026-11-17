@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · Convert2</title>
+<link rel="stylesheet" href="../../lib/core.css">
+<link rel="stylesheet" href="convert2.css">
+<script src="../../lib/core.js"></script>
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page c2">
+    <section class="panel" id="sec-in">
+        <div class="caps grp"><span data-i="s1"></span><span class="scope" id="det"></span></div>
+        <textarea id="in" class="c2-ta" spellcheck="false" autocomplete="off" autocapitalize="off" data-ph="ph"></textarea>
+        <div class="c2-row">
+            <button type="button" class="pill" id="b-paste"><svg class="i sm"><use href="../../lib/icons.svg#i-copy"/></svg><span data-i="paste"></span></button>
+            <label class="pill" id="b-file"><svg class="i sm"><use href="../../lib/icons.svg#i-doc"/></svg><span data-i="file"></span><input type="file" id="file" class="sr-only" accept=".md,.markdown,.txt,.csv,.tsv,.json,.html,.htm,.xml,.epub,text/*,application/json,application/epub+zip"></label>
+            <button type="button" class="pill" id="b-clear"><svg class="i sm"><use href="../../lib/icons.svg#i-trash"/></svg><span data-i="clear"></span></button>
+        </div>
+        <div class="help" id="count"></div>
+        <label class="chkrow"><input type="checkbox" id="cleanpaste" checked><span data-i="cleanPaste"></span></label>
+    </section>
+
+    <section class="panel" id="sec-fmt">
+        <div class="caps grp"><span data-i="s2"></span></div>
+        <select id="fmt" class="sel"></select>
+        <div id="epubopts" hidden>
+            <label class="fld"><span data-i="bookTitle"></span><input id="etitle" class="inp" type="text" autocomplete="off"></label>
+            <label class="fld"><span data-i="bookAuthor"></span><input id="eauthor" class="inp" type="text" autocomplete="off"></label>
+        </div>
+    </section>
+
+    <section class="panel" id="sec-out">
+        <div class="caps grp"><span data-i="s3"></span></div>
+        <div class="c2-bar">
+            <div class="seg2" id="seg-view"><button type="button" data-view="sheet" class="on" data-i="sheet"></button><button type="button" data-view="code" data-i="code"></button></div>
+            <div class="seg2" id="seg-font"><button type="button" data-font="sans" class="on" data-i="sans"></button><button type="button" data-font="serif" data-i="serif"></button></div>
+        </div>
+        <div id="paper" class="c2-paper sans" aria-live="polite"></div>
+        <textarea id="out" class="c2-ta" readonly hidden spellcheck="false"></textarea>
+        <div class="help" id="codehint" hidden></div>
+        <div class="c2-actions">
+            <button type="button" class="pill acc" id="b-copy"><svg class="i sm"><use href="../../lib/icons.svg#i-copy"/></svg><span data-i="copy"></span></button>
+            <button type="button" class="pill" id="b-download"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="download"></span></button>
+            <button type="button" class="pill" id="b-share"><svg class="i sm"><use href="../../lib/icons.svg#i-share"/></svg><span data-i="share"></span></button>
+            <button type="button" class="pill" id="b-reader"><svg class="i sm"><use href="../../lib/icons.svg#i-expand"/></svg><span data-i="reader"></span></button>
+            <button type="button" class="pill" id="b-print"><svg class="i sm"><use href="../../lib/icons.svg#i-doc"/></svg><span data-i="print"></span></button>
+        </div>
+    </section>
+    <div class="notice" id="msg" role="status" hidden></div>
+</main>
+
+<div class="c2-reader" id="reader" hidden>
+    <div class="c2-rbar">
+        <button type="button" class="ibtn" id="r-close" data-i-label="r_close"><svg class="i"><use href="../../lib/icons.svg#i-x"/></svg></button>
+        <button type="button" class="ibtn" id="r-toc" data-i-label="r_toc"><svg class="i"><use href="../../lib/icons.svg#i-menu"/></svg></button>
+        <span class="c2-rpos" id="r-pos"></span>
+        <button type="button" class="ibtn c2-az" id="r-smaller" data-i-label="r_smaller">A&#8722;</button>
+        <button type="button" class="ibtn c2-az" id="r-larger" data-i-label="r_larger">A+</button>
+    </div>
+    <nav class="c2-toc" id="r-tocbox" hidden></nav>
+    <article class="c2-book" id="r-body"></article>
+    <div class="c2-rfoot">
+        <button type="button" class="pill" id="r-prev"><svg class="i sm"><use href="../../lib/icons.svg#i-chev-l"/></svg><span data-i="r_prev"></span></button>
+        <button type="button" class="pill" id="r-next"><span data-i="r_next"></span><svg class="i sm"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
+    </div>
+</div>
+<script type="module" src="ui/main.js"></script>
+</body>
+</html>
