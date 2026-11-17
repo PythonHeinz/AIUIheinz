@@ -11,7 +11,7 @@ import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html"]
+PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html", "/tools/convert2/index.html"]
 
 
 def missing_classes(css, classes):
@@ -2734,7 +2734,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(ids, ["chat", "dashboard", "lab", "vitals"])
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(set(ids), {"sheet", "filter", "scan", "studio"})
+        self.assertEqual(set(ids), {"convert2", "sheet", "filter", "scan", "studio"})
         page.click("[data-area=setup]")
         ids = page.eval_on_selector_all("#main a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(ids[:3], ["setup", "configs", "models"])
@@ -2743,6 +2743,16 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("a.app[data-tool]")
         self.assertEqual(page.get_attribute("[data-area=tools]", "class"), "on")
         self.assertEqual(page.locator("#main a.app[data-tool=sheet]").count(), 1)
+        self.assertEqual(self.errors, [])
+
+    def test_hub_opens_convert2_from_the_tools_area(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("#main a[data-tool]")
+        page.click("[data-area=tools]")
+        page.click("#main a.app[data-tool=convert2]")
+        page.wait_for_url("**/tools/convert2/index.html")
+        page.wait_for_selector("html[data-c2=ready]")
         self.assertEqual(self.errors, [])
 
     def test_hub_theme_button_cycles(self):
