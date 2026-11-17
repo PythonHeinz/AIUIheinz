@@ -678,3 +678,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-16 AIUIheinz-Design: Änderungs-LED als Schlitz in dunkler Mulde
 - Vorschlag „Variante B“ (Studie des Entwicklers) für die LED „Prompt oder Ton geändert“ übernommen, nur die Darstellung: unter dem Namen jeder Person eine dunkle Mulde mit Schlitz 14 × 2,5 px (`.led-trough`, `.led-slit` in `lib/core.css`). Aus = dunkler Schlitz, an (`.chg` am Personenknopf) = warmweißer Kern mit Bernstein-Hof. Farben über Variablen `--led-trough/-off/-on/-halo`. Die alte orange Punkt-LED (`.mi::after`) entfällt; Knopfhöhe 58 → 68 px. Personenfarben der Studie wurden nicht übernommen. Katalog-Eintrag `ledslot`. Nur simuliert getestet.
+
+### 2026-11-17 AIUIheinz-Design: start.sh startet auch LiteRT-LM
+- `start.sh` startet zusätzlich `litert-lm serve --cors-origin http://localhost:3000` im Hintergrund, wenn `litert-lm` installiert ist und Port 9379 nicht antwortet; `OLLAMA_MAX_LOADED_MODELS` ist standardmäßig 1 (vorher von Hand gesetzt). Nur Syntax geprüft, Start nur am Handy testbar.
