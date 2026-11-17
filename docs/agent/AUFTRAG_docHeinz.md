@@ -15,8 +15,11 @@ In `tools/convert2/mod/`, ohne Oberfläche, ohne Netz, mit Tests: `zip.js` (Lese
 2. Reihenfolge: nach convert2. Erledigt. **PDF ist Pflichtformat.** (13.11.2026)
 3. Gespräch mit dem Buch viel später, eigener Auftrag. (13.11.2026)
 4. Schreibweise: id, Ordner, Schlüssel `docheinz`, Anzeigename frei. (13.11.2026)
+5. **A:** Formatbausteine werden **nach `tools/docheinz/mod/` kopiert** (mit Tests); später nach `lib/shared/`, wenn ein drittes Werkzeug sie braucht. (Entwickler 17.11.2026)
+6. **B:** PDF mit **lokalem `pdf.js`** in `tools/docheinz/vendor/` (pdfjs-dist 6.5.438, Apache-2.0, `pdf.min.mjs` 0,47 MB + `pdf.worker.min.mjs` 1,27 MB, ohne Netz), Phase 4. (Entwickler 17.11.2026)
+7. **C:** MOBI/AZW3, FB2, CBZ **weglassen**; Fremdformate und DRM zeigen eine klare Meldung. (Entwickler 17.11.2026)
 
-## Entscheidungsbedarf (dem Entwickler vorlegen, **vor** dem Bau, je 2 bis 3 Sätze Vorschlag)
+## Entscheidungsbedarf (erledigt 17.11.2026, siehe Entscheidungen 5 bis 7) (dem Entwickler vorlegen, **vor** dem Bau, je 2 bis 3 Sätze Vorschlag)
 **A. Wo liegen die Formatbausteine?** Regel: Werkzeug-Seiten importieren keine Dateien aus fremden Werkzeugen. Optionen: (1) **kopieren** nach `tools/docheinz/mod/` (beide Werkzeuge einzeln portierbar, Pflege doppelt, Tests mitkopieren); (2) nach `lib/shared/` ziehen (eine Pflege, berührt das Fundament, convert2 muss umgestellt werden). Vorschlag: **kopieren**, weil Portierbarkeit je Werkzeug beschlossen ist; später nach `lib/shared/`, wenn ein drittes Werkzeug sie braucht.
 **B. PDF.** Im Browser ohne Bibliothek nicht als Seitenbild lesbar. Vorschlag: `pdf.js` (Apache 2.0) lokal in `tools/docheinz/vendor/` mit Lizenz und Version, ohne Build, Worker lokal, **ohne Netz**; Größe vorher nennen (mehrere MB). Das ist die einzige Ausnahme von „keine Bibliothek“ und braucht die ausdrückliche Zustimmung des Entwicklers. Alternative ohne Bibliothek: PDF nur an die Systemansicht des Handys übergeben (kein eigenes Lesen, kein Fortschritt). Phase 4 nur mit Entscheidung.
 **C. MOBI/AZW3, FB2, CBZ:** weglassen, später oder nach Rücksprache; Vorschlag: nicht in den ersten Phasen. Fremdformate zeigen eine klare Meldung (Format, Grund), nie eine leere Seite; DRM wird nicht gelesen.
