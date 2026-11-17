@@ -702,3 +702,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: Hub kennzeichnet Unfertiges
 - Hub (`index.html`): Marken an den Kacheln: „geplant“ (Platzhalter, jetzt auch in den Kacheln des Reiters Werkzeuge, nicht nur abgedunkelt), „alt“ (Data Lab, Vitals; `legacy` aus `tool.json`), „Test“ (Sheet; Zuordnung `BADGES` im Hub, keine neuen Schlüssel in `tool.json`/`server.py`). EN und DE. Nur Kennzeichnung, keine Umbauten der Werkzeuge. Nur simuliert getestet.
+
+### 2026-11-17 AIUIheinz-Design: Schritt 2 Startanleitung
+- README: Voraussetzungen (git, python, Ollama, Modell, optional LiteRT-LM), Start mit einem Befehl, Alias `heinz`, App-Installation, Update; `start.sh` in der Seitentabelle. Frischer Klon aus GitHub im Container: `bash tests/run_all.sh` grün (Server 20, Kapazitäten 24, Regeln 13, Speicher 11, Seiten 185). Handytest R bis T in `docs/HANDYTEST.md`. Punkt 5 (DR2) entfällt: Entwickler 17.11.2026, alles ist einer zweiten Person verständlich zeigbar.
