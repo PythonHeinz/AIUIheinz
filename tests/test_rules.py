@@ -148,7 +148,7 @@ class RuleTest(unittest.TestCase):
         pages = [os.path.relpath(f, ROOT).replace(os.sep, "/") for f in glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "tools", "**", "*.html"), recursive=True)]
         self.assertGreater(len(pages), 12)
         for page in sorted(pages):
-            if page in self.LEGACY_PAGES:
+            if page in self.LEGACY_PAGES or "/_original/" in page:   # _original = Funktionsvorlage bis zur Abnahme (AUFTRAG_convert2.md), wird danach entfernt
                 continue
             with open(os.path.join(ROOT, page), encoding="utf-8") as fh:
                 html = fh.read()
