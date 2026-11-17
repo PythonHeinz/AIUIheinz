@@ -692,3 +692,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: Cursorfarbe
 - Schreibcursor (`caret-color`) aller Eingabefelder in der Akzentfarbe der Seite (`var(--acc)`, im Dashboard die Farbe der Person, im Heinz Chat die der Seite), eine Regel in `lib/core.css`. Test ergänzt. Hell und Dunkel: --acc ist in beiden Themes lesbar gewählt; am Handy ansehen.
+
+### 2026-11-17 AIUIheinz-Design: Label „Model name“
+- Modellblatt des Dashboards: Label nur noch „Model name“ / „Modellname“; der Hinweis „Gilt, falls die Liste leer bleibt“ steht als Platzhalter im Feld (`modelIdPh`, EN und DE). Nur simuliert getestet.

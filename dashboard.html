@@ -472,8 +472,8 @@
                     <a id="prov-keylink" href="#" target="_blank" rel="noopener noreferrer" class="help" style="color:var(--pri)" data-i18n="getKey">Get a key</a>
                 </div>
                 <div id="eng-model" hidden>
-                    <label class="fld" data-i18n="modelId">Model name (if the list stays empty)</label>
-                    <input type="text" id="model-free" class="inp" data-change="onModelFree" style="margin-top:4px">
+                    <label class="fld" data-i18n="modelId">Model name</label>
+                    <input type="text" id="model-free" class="inp" data-i18n-ph="modelIdPh" placeholder="Used if the list stays empty" data-change="onModelFree" style="margin-top:4px">
                     <div class="st-btns" id="ml-pill"><button class="pill" type="button" data-click="loadModels"><svg class="i sm"><use href="lib/icons.svg#i-refresh"/></svg><span data-i18n="reloadModels">Load model list</span></button></div>
                 </div>
                 <div class="st-btns" id="eng-del-row" hidden><button class="pill danger" id="eng-del" type="button" data-click="removeEngineTap"><svg class="i sm"><use href="lib/icons.svg#i-trash"/></svg><span data-i18n="engDel">Remove this engine</span></button></div>
