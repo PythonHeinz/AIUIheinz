@@ -865,6 +865,21 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#mode-bar [data-mode=wilson].chg").count(), 0, "after a reset the stand does not return by itself")
         self.assertEqual(self.errors, [])
 
+    def test_text_cursor_has_the_accent_colour_of_the_person(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_selector("#mode-bar .mode-pill")
+        page.click("#mode-bar [data-mode=heinz]")
+        a = page.evaluate("[getComputedStyle(document.getElementById('query')).caretColor, getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()]")
+        page.click("#mode-bar [data-mode=code]")
+        b = page.evaluate("getComputedStyle(document.getElementById('query')).caretColor")
+        self.assertNotEqual(a[0], "auto")
+        self.assertNotEqual(a[0], b, "the cursor follows the person's colour")
+        page2 = self.new_page()
+        page2.goto(self.srv.base + "/chat.html")
+        page2.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
+        self.assertNotEqual(page2.evaluate("getComputedStyle(document.getElementById('q')).caretColor"), "auto")
+
     def test_native_person_sends_no_tone_until_a_slider_moves_and_the_leds_show_changes(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")

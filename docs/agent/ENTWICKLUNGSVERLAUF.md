@@ -689,3 +689,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 ### 2026-11-17 AIUIheinz-Design: Schritt 0 Rückstau (AUFTRAG_MVP_Abschluss)
 - (a) `start_url` ist `/` (Hub); im Service Worker kein Verweis auf Chat oder Dashboard als Startseite: nichts zu ändern. (b) „Prüfstand“ steht nur noch in Beschreibungen alter Aufträge und im Verlauf, nicht in Code, Oberfläche (EN, DE) oder aktiver Doku: nichts zu ersetzen (Entscheidung des Entwicklers: Geschichte bleibt). (c) `DEFAULT_THREADS` in `lib/providers.js` von 4 auf 2 (Entscheidung des Entwicklers: überall 2); gilt, wenn nichts gespeichert ist, also auch im Browsertab; Test angepasst (eigener Wert jetzt 3). Beachte: Ein bereits gespeicherter Wert gilt weiter. Hinweis: berührt `lib/providers.js` (nur die Konstante, mit Freigabe).
 - Konfiguration einer anderen Person laden: ruft den normalen Personenwechsel auf, die Unterhaltung läuft weiter (Entscheidung des Entwicklers), kein Umbau nötig. Nur simuliert getestet.
+
+### 2026-11-17 AIUIheinz-Design: Cursorfarbe
+- Schreibcursor (`caret-color`) aller Eingabefelder in der Akzentfarbe der Seite (`var(--acc)`, im Dashboard die Farbe der Person, im Heinz Chat die der Seite), eine Regel in `lib/core.css`. Test ergänzt. Hell und Dunkel: --acc ist in beiden Themes lesbar gewählt; am Handy ansehen.
