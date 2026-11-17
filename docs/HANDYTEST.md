@@ -139,21 +139,21 @@ Vorbereitung: `git pull`, `bash start.sh`.
 - [ ] „Jetzt parametrieren“ an der Standardkonfiguration: Qwen-Werte (0,6 / 0,9 / 40, Kontext 4096, Threads 2) im Dashboard; ändern, unter neuem Namen speichern, im Heinz Chat verwenden.
 - [ ] Hub, Knopf „Modelfile“ an der Standardkonfiguration: Datei lädt, enthält FROM, PARAMETER und SYSTEM. Optional in Termux: `ollama create heinz-test -f <Datei>`; danach `ollama rm heinz-test`.
 
-## Strang Design, MVP-Abschluss (17.11.2026; nur simuliert getestet, Punkte mit „am Handy bestätigt“ vom Entwickler)
+## Strang Design, MVP-Abschluss (17.11.2026; am Handy bestätigt vom Entwickler, 12:16: Start mit `heinz`, LED-Verhalten, Cursorfarbe, Modellblatt, Hub-Marken ohne Fehler; offen: Standard 2 Threads im Browsertab, Konfiguration einer anderen Person laden)
 Vorbereitung: `heinz` in Termux (Alias aus der README: `git pull`, Ollama, LiteRT-LM und Server starten).
 
 **R. Start und Standard**
-- [ ] Nach Beenden von Termux: ein Befehl (`heinz` oder `cd ~/AIUIheinz && bash start.sh`) startet Ollama, LiteRT-LM und die Seite; das Dashboard zeigt beide Engines erreichbar. (Am Handy bestätigt 17.11.2026: LiteRT-LM lief, nachdem der Port frei war.)
+- [x] Nach Beenden von Termux: ein Befehl (`heinz` oder `cd ~/AIUIheinz && bash start.sh`) startet Ollama, LiteRT-LM und die Seite; das Dashboard zeigt beide Engines erreichbar. (Am Handy bestätigt 17.11.2026: LiteRT-LM lief, nachdem der Port frei war.)
 - [ ] Im Browsertab (nicht der App) zeigt ein Modell ohne gespeicherte Werte 2 Threads.
 - [ ] Konfiguration einer anderen Person laden: Person wechselt, die laufende Unterhaltung bleibt.
 
 **S. Personenleiste: Änderungs-LED** (am Handy bestätigt 17.11.2026)
 - [x] Schlitz in dunkler Mulde unter jedem Namen; voll an bei geänderter Person, gedimmt bernsteinfarben bei einer mit Änderung verlassenen Person.
 - [x] Zurück zur Person: Änderung kommt von selbst wieder. Tipp auf die aktive Person setzt zurück, danach beim Wechsel keine LED bei ihr.
-- [ ] Heller und dunkler Modus: Schlitz an und gedimmt gut erkennbar.
+- [x] Heller und dunkler Modus: Schlitz an und gedimmt gut erkennbar.
 
 **T. Eingabefelder, Modellblatt, Hub**
-- [ ] Schreibcursor hat die Farbe der Person (Dashboard) beziehungsweise der Seite (Heinz Chat), hell und dunkel sichtbar.
-- [ ] Dashboard, Modellblatt (Engine ohne Modellliste): Label „Model name“ / „Modellname“, Hinweis steht als Platzhalter im Feld.
-- [ ] Heinz Chat, Modellname oben antippen: Tabelle der Fakten, nichts sieht bedienbar aus, Prompt ohne Ziehgriff, „Konfigurationen verwalten“ oben sichtbar.
-- [ ] Hub: Filter, Scan, Studio mit Marke „geplant“; Data Lab und Vitals mit „alt“; Sheet mit „Test“; beide Reiter, EN und DE.
+- [x] Schreibcursor hat die Farbe der Person (Dashboard) beziehungsweise der Seite (Heinz Chat), hell und dunkel sichtbar.
+- [x] Dashboard, Modellblatt (Engine ohne Modellliste): Label „Model name“ / „Modellname“, Hinweis steht als Platzhalter im Feld.
+- [x] Heinz Chat, Modellname oben antippen: Tabelle der Fakten, nichts sieht bedienbar aus, Prompt ohne Ziehgriff, „Konfigurationen verwalten“ oben sichtbar.
+- [x] Hub: Filter, Scan, Studio mit Marke „geplant“; Data Lab und Vitals mit „alt“; Sheet mit „Test“; beide Reiter, EN und DE.
