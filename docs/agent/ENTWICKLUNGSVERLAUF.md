@@ -695,3 +695,6 @@ Neueste Einträge unten. Gehalten werden nur die letzten rund 10 Tage; ältere E
 
 ### 2026-11-17 AIUIheinz-Design: Label „Model name“
 - Modellblatt des Dashboards: Label nur noch „Model name“ / „Modellname“; der Hinweis „Gilt, falls die Liste leer bleibt“ steht als Platzhalter im Feld (`modelIdPh`, EN und DE). Nur simuliert getestet.
+
+### 2026-11-17 AIUIheinz-Design: Modellblatt des Heinz Chat als reine Anzeige
+- Konfigurationsansicht (`sh-view`): Tabelle der Fakten statt Zeilen im Stil von Auswahlknöpfen (Bezeichnung links 92 px, Wert rechts, feine Trennlinien, kein Zeigefinger-Cursor; `.kv` in `chat.html`, `row()` in `lib/chat/model.js`). Prompt-Feld ohne Ziehgriff, flach und gedämpft. Der Link „Konfigurationen verwalten“ steht jetzt als Pille oben, ohne Scrollen sichtbar. Nur simuliert getestet; Gliederung wie im Auftrag (Konfiguration, Engine, Modell, Person, Ton, Laufzeit, Status, Prompt).
