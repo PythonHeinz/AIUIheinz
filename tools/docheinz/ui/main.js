@@ -4,12 +4,13 @@ import { D } from './i18n.js';
 import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial, hue } from '../mod/bibliothek.js';
-import { openReader, close as closeReader, applyTheme, relabel, THEMES } from './leser.js';
+import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
+import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', confirm: '', msgs: [] };
+const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, confirm: '', msgs: [] };
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
 
@@ -32,7 +33,7 @@ function applyI18n() {
     sel.textContent = '';
     SORTS.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = t('so_' + s); sel.appendChild(o); });
     sel.value = state.sort;
-    relabel(t);
+    relabel(t, Heinz.lang);
     render();
     storeLine();
 }
@@ -141,9 +142,9 @@ async function openBook(id) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            t, size: state.size, theme: state.theme,
+            t, lang: () => Heinz.lang, size: state.size, theme: state.theme, font: state.font, btns: state.btns,
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
-            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } },
+            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },
         });
     } catch (e) {
@@ -165,6 +166,8 @@ async function start() {
     state.sort = SORTS.includes(HeinzStore.get(K('sort'))) ? HeinzStore.get(K('sort')) : 'recent';
     const sz = +HeinzStore.get(K('size'), 19); state.size = sz >= 14 && sz <= 34 ? sz : 19;
     state.theme = THEMES.includes(HeinzStore.get(K('theme'))) ? HeinzStore.get(K('theme')) : 'auto';
+    state.font = isFont(HeinzStore.get(K('font'))) ? HeinzStore.get(K('font')) : DEFAULT_FONT;
+    state.btns = +HeinzStore.get(K('btns'), 0) === 1;
     Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
     Heinz.onLang(applyI18n);
     applyTheme(state.theme);

@@ -47,4 +47,9 @@ Schriftgröße stufenlos, Familie (Serife, Sans, Mono), Zeilen- und Absatzabstan
 - **Abschluss je Phase:** `ENTWICKLUNGSVERLAUF.md`, `STAND.md` (Modul- und Strangtabelle, „Aktive Arbeit“ leeren), `MODULE.md`, Hub-Zeile am Ende von Phase 1 nach Rückfrage. Dem Entwickler sagen, was am Handy zu prüfen ist (große Datei, Hintergrund und Rückkehr, Speicherdruck, Dateidialog) und was nur simuliert lief.
 
 ## Nicht im Umfang
-KI-Anbindung und Embedding; Cloud-Dienste, Online-Bibliotheken, Konten; Kopierschutz (DRM); Änderungen an `lib/*`, `server.py`, `sw.js`, `lib/icons.svg` oder gemeinsamen Schlüsseln.
+Embedding und Gespräch mit dem Buch (viel später); KI-Anbindung nur in Phase 2c (Markierungsmenü: Zusammenfassung/Erklärung über `HeinzProviders` mit dem aktiven Modell des Dashboards, Cloud nur mit „Online erlauben“, nur der markierte Abschnitt geht hinaus); Cloud-Dienste, Online-Bibliotheken, Konten; Kopierschutz (DRM); Änderungen an `lib/*`, `server.py`, `sw.js`, `lib/icons.svg` oder gemeinsamen Schlüsseln.
+
+## Entscheidungen 18.11.2026 (Phase 2)
+- D: eBook-Ordner = app-interner Speicher (IndexedDB `docheinz`); Import kopiert, nur importierte Bücher erscheinen; keine Änderung an `server.py`.
+- E: Schriften = wenige lokale Lesefonts (Literata, Lora, Atkinson Hyperlegible, Inter; OFL) plus Systemschriften.
+- F: Reihenfolge in drei Schritten mit Handytest dazwischen: 2a Lesen (Seiten, Tippzonen, Steuerung nur bei Tipp oben, keine Kopfzeile, Schriftwahl), 2b Cover und Speicher, 2c Markierungsmenü mit Suche und KI.

@@ -31,27 +31,35 @@
     <div class="help dh-store" id="store"></div>
 </main>
 
-<div class="dh-reader" id="reader" data-rt="auto" hidden>
-    <div class="dh-rbar">
+<div class="dh-reader" id="reader" data-rt="auto" data-font="serif" hidden>
+    <div class="dh-page" id="r-page"><article class="dh-text" id="r-body" tabindex="-1"></article></div>
+    <div class="dh-ov dh-ovtop" id="r-ov" hidden>
         <button type="button" class="ibtn" id="r-close" data-i-label="r_close"><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg></button>
         <button type="button" class="ibtn" id="r-toc-b" data-i-label="r_toc"><svg class="i"><use href="../../lib/icons.svg#i-menu"/></svg></button>
         <span class="dh-rtitle" id="r-title"></span>
         <button type="button" class="ibtn" id="r-set-b" data-i-label="r_set"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></button>
     </div>
+    <div class="dh-ov dh-ovfoot" id="r-ovfoot" hidden>
+        <span class="dh-rpos" id="r-pos"></span>
+        <span class="dh-bar"><i id="r-prog"></i></span>
+    </div>
     <div class="dh-rset" id="r-set" hidden>
         <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="14" max="34" step="1"></label>
+        <div class="caps grp"><span data-i="r_font"></span></div>
+        <div class="dh-fonts" id="seg-font"></div>
         <div class="caps grp"><span data-i="r_theme"></span></div>
         <div class="seg2" id="seg-theme">
             <button type="button" data-rt="auto" data-i="t_auto"></button><button type="button" data-rt="lt" data-i="t_lt"></button><button type="button" data-rt="sepia" data-i="t_sepia"></button><button type="button" data-rt="dk" data-i="t_dk"></button><button type="button" data-rt="black" data-i="t_black"></button>
         </div>
+        <div class="caps grp"><span data-i="r_btns"></span></div>
+        <div class="seg2" id="seg-btns">
+            <button type="button" data-btns="0" data-i="b_off"></button><button type="button" data-btns="1" data-i="b_on"></button>
+        </div>
+        <p class="help" data-i="r_tips"></p>
     </div>
     <nav class="dh-toc" id="r-toc" hidden></nav>
-    <article class="dh-text" id="r-body" tabindex="-1"></article>
-    <div class="dh-rfoot">
-        <button type="button" class="pill" id="r-prev"><svg class="i sm"><use href="../../lib/icons.svg#i-chev-l"/></svg><span data-i="r_prev"></span></button>
-        <span class="dh-rpos" id="r-pos"></span>
-        <button type="button" class="pill" id="r-next"><span data-i="r_next"></span><svg class="i sm"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
-    </div>
+    <button type="button" class="dh-turn dh-turn-l" id="r-prev" data-i-label="r_prev" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-l"/></svg></button>
+    <button type="button" class="dh-turn dh-turn-r" id="r-next" data-i-label="r_next" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
 </div>
 <script type="module" src="ui/main.js"></script>
 </body>

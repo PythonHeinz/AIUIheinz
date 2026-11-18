@@ -17,7 +17,9 @@ export const D = {
         st: 'Storage: {u} of {q} used', stWarn: 'Storage is almost full: {u} of {q}. Delete books you no longer need.',
         r_close: 'Back to library', r_toc: 'Contents', r_set: 'Reading settings', r_prev: 'Previous', r_next: 'Next', r_size: 'Text size', r_theme: 'Theme',
         t_auto: 'Auto', t_lt: 'Light', t_sepia: 'Sepia', t_dk: 'Dark', t_black: 'Black',
-        r_pos: 'Part {n} of {m}', r_noToc: 'This book has no table of contents.', r_part: 'Part {n}',
+        r_pos: 'Page {p} of {n}', r_posc: 'Part {c} of {m}', r_noToc: 'This book has no table of contents.', r_part: 'Part {n}',
+        r_font: 'Font', r_btns: 'Page-turn buttons', b_off: 'Off', b_on: 'On',
+        r_tips: 'Tap the top edge for these controls. Tap left or right of the text to turn the page.',
     },
     de: {
         sub: 'docHeinz', title: 'docHeinz',
@@ -36,6 +38,8 @@ export const D = {
         st: 'Speicher: {u} von {q} belegt', stWarn: 'Speicher fast voll: {u} von {q}. Lösche Bücher, die du nicht mehr brauchst.',
         r_close: 'Zurück zur Bibliothek', r_toc: 'Inhalt', r_set: 'Leseeinstellungen', r_prev: 'Zurück', r_next: 'Weiter', r_size: 'Schriftgröße', r_theme: 'Thema',
         t_auto: 'Auto', t_lt: 'Hell', t_sepia: 'Sepia', t_dk: 'Dunkel', t_black: 'Schwarz',
-        r_pos: 'Teil {n} von {m}', r_noToc: 'Dieses Buch hat kein Inhaltsverzeichnis.', r_part: 'Teil {n}',
+        r_pos: 'Seite {p} von {n}', r_posc: 'Teil {c} von {m}', r_noToc: 'Dieses Buch hat kein Inhaltsverzeichnis.', r_part: 'Teil {n}',
+        r_font: 'Schrift', r_btns: 'Umblätter-Knöpfe', b_off: 'Aus', b_on: 'An',
+        r_tips: 'Tippe an den oberen Rand für diese Steuerung. Tippe links oder rechts neben den Text zum Umblättern.',
     },
 };

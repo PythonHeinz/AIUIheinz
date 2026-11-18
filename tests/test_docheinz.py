@@ -287,35 +287,113 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
         self.assertEqual(p.locator("#list .dh-tx b").inner_text(), "b")
 
-    def test_reader_opens_epub_cleanly_navigates_and_follows_links(self):
-        p = self.open()
-        self.add(p, ("t.epub", "application/epub+zip", self.epub(chapters=3)))
+    def start_book(self, p, name, mime, data):
+        self.add(p, (name, mime, data))
         p.wait_for_selector("#list .dh-open")
         p.click("#list .dh-open")
         p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+
+    def tap(self, p, where):
+        w, h = 426, p.evaluate("() => innerHeight")
+        x, y = {"next": (w * 0.9, h * 0.5), "prev": (w * 0.1, h * 0.5), "top": (w * 0.5, h * 0.05), "mid": (w * 0.5, h * 0.5)}[where]
+        p.mouse.click(x, y)
+
+    def pg(self, p):
+        return p.evaluate("() => [+document.getElementById('reader').dataset.page, +document.getElementById('reader').dataset.pages, +document.getElementById('reader').dataset.ch]")
+
+    def test_reader_opens_epub_cleanly_navigates_and_follows_links(self):
+        p = self.open()
+        self.start_book(p, "t.epub", "application/epub+zip", self.epub(chapters=3))
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 1')")
         self.assertIn("Part 1 of 3", p.locator("#r-pos").inner_text())
         self.assertTrue(p.locator("#r-prev").is_disabled())
         self.assertEqual(p.evaluate("() => [document.querySelectorAll('#r-body script, #r-body style, #r-body [onclick], #r-body [style], #r-body a[href]').length, window.__x]"), [0, 0])
         p.click("#r-body a[data-go]")
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 2')")
-        p.click("#r-next")
+        self.tap(p, "next")
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 3')")
         self.assertTrue(p.locator("#r-next").is_disabled())
+        self.tap(p, "top")
         p.click("#r-toc-b")
         self.assertEqual(p.locator("#r-toc button").count(), 3)
         p.click("#r-toc button >> nth=0")
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 1')")
-        self.assertTrue(p.locator("#r-toc").is_hidden())
+        self.assertTrue(p.locator("#r-ov").is_hidden())
         self.assertEqual(p.errors, [])
         self.assertEqual(p.external, [])
 
-    def test_reader_settings_size_and_theme_persist(self):
+    def test_pages_without_scrollbar_tap_zones_and_overlay(self):
         p = self.open()
-        self.add(p, ("a.md", "text/markdown", b"# T\n\nText."))
-        p.wait_for_selector("#list .dh-open")
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        page, pages, _ = self.pg(p)
+        self.assertEqual(page, 1)
+        self.assertGreater(pages, 5)
+        # keine Kopfzeile, keine Steuerung, keine Knöpfe im Lesemodus
+        self.assertTrue(p.locator("#r-ov").is_hidden())
+        self.assertTrue(p.locator("#r-next").is_hidden())
+        self.assertTrue(p.evaluate("() => { const b = document.getElementById('r-body'); return b.scrollHeight <= b.clientHeight + 1 && getComputedStyle(b).overflow === 'hidden'; }"))
+        self.assertTrue(p.evaluate("() => document.querySelector('.dh-header, header') === null || getComputedStyle(document.querySelector('#reader')).position === 'fixed'"))
+        self.tap(p, "next"); self.tap(p, "next")
+        self.assertEqual(self.pg(p)[0], 3)
+        self.tap(p, "mid")
+        self.assertEqual(self.pg(p)[0], 3)
+        self.tap(p, "prev")
+        self.assertEqual(self.pg(p)[0], 2)
+        # Steuerung nur bei Tipp oben; Text verschiebt sich dabei nicht
+        before = p.evaluate("() => document.getElementById('r-body').getBoundingClientRect().top")
+        self.tap(p, "top")
+        self.assertTrue(p.locator("#r-ov").is_visible())
+        self.assertEqual(p.evaluate("() => document.getElementById('r-body').getBoundingClientRect().top"), before)
+        self.tap(p, "next")                       # schließt nur die Steuerung
+        self.assertTrue(p.locator("#r-ov").is_hidden())
+        self.assertEqual(self.pg(p)[0], 2)
+        # Tasten
+        p.keyboard.press("ArrowRight")
+        self.assertEqual(self.pg(p)[0], 3)
+        # Fortschritt gespeichert und wiederhergestellt
+        p.wait_for_timeout(700)
+        p.click("#r-close") if p.locator("#r-close").is_visible() else (self.tap(p, "top"), p.click("#r-close"))
+        p.wait_for_selector("#reader", state="hidden")
         p.click("#list .dh-open")
         p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.page === '3'")
+
+    def test_page_count_follows_font_size_and_keeps_position(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        n1 = self.pg(p)[1]
+        for _ in range(n1 // 2):
+            self.tap(p, "next")
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.fill("#r-size", "30")
+        p.wait_for_function("(n) => +document.getElementById('reader').dataset.pages > n", arg=n1)
+        page, pages, _ = self.pg(p)
+        self.assertTrue(abs(page / pages - 0.5) < 0.12, (page, pages))
+
+    def test_optional_turn_buttons(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.click("#seg-btns button[data-btns='1']")
+        self.assertTrue(p.locator("#r-next").is_visible())
+        p.click("#r-next")
+        self.assertEqual(self.pg(p)[0], 2)
+
+    def test_fonts_are_served_and_selectable(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")
+        self.tap(p, "top"); p.click("#r-set-b")
+        self.assertEqual(p.locator("#seg-font button").count(), 7)
+        p.click("#seg-font button[data-font=atkinson]")
+        self.assertEqual(p.get_attribute("#reader", "data-font"), "atkinson")
+        p.wait_for_function("() => document.fonts.check('19px \"Atkinson Hyperlegible\"')")
+        self.assertEqual(p.errors, [])
+
+    def test_reader_settings_size_and_theme_persist(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")
+        self.tap(p, "top")
         p.click("#r-set-b")
         p.fill("#r-size", "27")
         self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('r-body')).fontSize"), "27px")
@@ -324,32 +402,14 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('reader')).backgroundColor"), "rgb(244, 236, 216)")
         p.click("#seg-theme button[data-rt=black]")
         self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('reader')).backgroundColor"), "rgb(0, 0, 0)")
+        p.click("#seg-font button[data-font=lora]")
         p.reload()
         p.wait_for_selector("html[data-dh=ready]")
         p.click("#list .dh-open")
         p.wait_for_selector("#reader:not([hidden])")
         self.assertEqual(p.get_attribute("#reader", "data-rt"), "black")
+        self.assertEqual(p.get_attribute("#reader", "data-font"), "lora")
         self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('r-body')).fontSize"), "27px")
-
-    def test_progress_is_saved_and_restored(self):
-        p = self.open()
-        self.add(p, ("lang.md", "text/markdown", LONG_MD.encode()))
-        p.wait_for_selector("#list .dh-open")
-        p.click("#list .dh-open")
-        p.wait_for_selector("#reader:not([hidden])")
-        p.wait_for_function("() => document.getElementById('r-body').scrollHeight > document.getElementById('r-body').clientHeight * 2")
-        p.evaluate("() => { const b = document.getElementById('r-body'); b.scrollTop = (b.scrollHeight - b.clientHeight) * 0.5; }")
-        p.wait_for_function("() => /50 %|49 %|51 %/.test(document.getElementById('r-pos').textContent)")
-        p.click("#r-close")
-        p.wait_for_selector("#reader", state="hidden")
-        self.assertRegex(p.locator("#list .dh-pct").inner_text(), r"^(49|50|51) %$")
-        p.reload()
-        p.wait_for_selector("html[data-dh=ready]")
-        self.assertRegex(p.locator("#list .dh-pct").inner_text(), r"^(49|50|51) %$")
-        p.click("#list .dh-open")
-        p.wait_for_selector("#reader:not([hidden])")
-        p.wait_for_function("() => document.getElementById('r-body').scrollTop > 100")
-        self.assertRegex(p.locator("#r-pos").inner_text(), r"(49|50|51) %")
 
     def test_back_button_closes_the_reader(self):
         p = self.open()
@@ -369,7 +429,9 @@ class DocHeinzUiTests(DocHeinzBase):
             self.assertTrue(p.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
             p.click("#list .dh-open")
             p.wait_for_selector("#reader:not([hidden])")
-            self.assertTrue(p.evaluate("() => { const r = document.querySelector('.dh-rfoot').getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.height > 20; }"))
+            p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+            self.tap(p, "top")
+            self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-ovfoot').getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.height > 20; }"))
 
 
 if __name__ == "__main__":

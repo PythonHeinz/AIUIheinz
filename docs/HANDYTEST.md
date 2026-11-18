@@ -173,6 +173,20 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen.
 - [ ] Flugmodus: Seite, EPUB-Erzeugung, Lesen und Drucken ohne Netz (keine Bibliothek aus dem Netz nötig).
 
+## Strang docHeinz, Phase 2a (18.11.2026; nur im Container simuliert getestet)
+
+Vorher: `git pull`, `bash start.sh`; docHeinz neu laden (ggf. Cache der App leeren). Ein EPUB und eine lange Markdown-Datei bereithalten.
+
+**W. docHeinz Lesen**
+- [ ] Buch öffnen: Seiten statt Scrollbalken, keine Kopfzeile, Text füllt den Schirm.
+- [ ] Tippen rechts neben der Mitte: nächste Seite; links: zurück; Mitte: nichts. Über das Kapitelende hinaus geht es ins nächste Kapitel, zurück an dessen letzte Seite.
+- [ ] Tippen oben: Steuerung erscheint (Zurück, Inhalt links oben, Einstellungen, Seite x von n, Balken); Text verschiebt sich nicht; nächster Tipp schließt sie, ohne zu blättern.
+- [ ] Langes Drücken auf ein Wort: Markierung (das Menü des Handys; eigenes Menü kommt in 2c); beim Markieren wird nicht geblättert.
+- [ ] Einstellungen: Schriftgröße ändert die Seitenzahl, die Lesestelle bleibt ungefähr; 7 Schriften probieren, Themen Hell, Sepia, Dunkel, Schwarz: Lesbarkeit auf dunklem Schirm bewerten.
+- [ ] Umblätterknöpfe einschalten: erscheinen unten links/rechts und blättern; ausschalten: weg. Einstellung bleibt nach Neustart.
+- [ ] Seite drehen (quer) und App wechseln: Lesestelle bleibt; Zurück-Taste schließt das Buch; Bibliothek zeigt den Prozentwert.
+- [ ] Bilder und breite Tabellen: nichts ragt über die Seite oder wird abgeschnitten.
+
 ## Strang docHeinz, Phase 1 (17.11.2026; nur im Container simuliert getestet, Playwright mit 426 × 803 und 426 × 400)
 
 Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Testdateien bereithalten: ein EPUB (klein und eines mit mehreren MB samt Bildern), eine Markdown-, eine Text- und eine HTML-Datei, eine PDF-Datei.
