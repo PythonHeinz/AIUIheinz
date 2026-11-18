@@ -353,7 +353,7 @@ class DocHeinzUiTests(DocHeinzBase):
         # keine Kopfzeile, keine Steuerung, keine Knöpfe im Lesemodus
         self.assertTrue(p.locator("#r-ov").is_hidden())
         self.assertTrue(p.locator("#r-next").is_hidden())
-        self.assertTrue(p.evaluate("() => { const b = document.getElementById('r-body'); return b.scrollHeight <= b.clientHeight + 1 && getComputedStyle(b).overflow === 'hidden'; }"))
+        self.assertTrue(p.evaluate("() => { const b = document.getElementById('r-body'), c = document.getElementById('r-clip'); return b.scrollHeight <= b.clientHeight + 1 && getComputedStyle(c).overflow === 'clip' && c.scrollLeft === 0; }"))
         self.assertTrue(p.evaluate("() => document.querySelector('.dh-header, header') === null || getComputedStyle(document.querySelector('#reader')).position === 'fixed'"))
         self.tap(p, "next"); self.tap(p, "next")
         self.assertEqual(self.pg(p)[0], 3)
@@ -462,6 +462,19 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => +document.getElementById('reader').dataset.ch >= 3")
         self.assertTrue(p.evaluate("() => !window.Highlight || (CSS.highlights && CSS.highlights.has('dh-hit'))"))
         self.assertEqual(p.errors, [])
+
+    def test_extending_a_selection_never_scrolls_the_page_layout(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.tap(p, "next")
+        before = p.evaluate("() => [document.getElementById('r-body').getBoundingClientRect().left, document.getElementById('r-clip').getBoundingClientRect().left]")
+        # Markierung bis weit hinter die Seite aufziehen und zum Ende scrollen lassen (wie das Ziehen am Griff am Rand)
+        p.evaluate("""() => { const b = document.getElementById('r-body'); const ps = b.querySelectorAll('p'); const r = document.createRange(); r.setStart(ps[3].firstChild, 0); r.setEnd(ps[ps.length - 1].firstChild, 5); const s = getSelection(); s.removeAllRanges(); s.addRange(r); ps[ps.length - 1].scrollIntoView({ inline: 'end' }); b.scrollLeft = 5000; document.getElementById('r-page').scrollLeft = 300; document.getElementById('reader').scrollLeft = 300; }""")
+        p.wait_for_timeout(300)
+        after = p.evaluate("() => [document.getElementById('r-body').getBoundingClientRect().left, document.getElementById('r-clip').getBoundingClientRect().left, document.getElementById('r-body').scrollLeft, document.getElementById('r-page').scrollLeft, document.getElementById('reader').scrollLeft]")
+        self.assertEqual(after[:2], before)
+        self.assertEqual(after[2:], [0, 0, 0])
+        self.assertEqual(self.pg(p)[0], 2)
 
     def test_bar_sits_on_top_unless_the_selection_is_up_there(self):
         p = self.open()

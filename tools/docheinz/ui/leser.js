@@ -22,8 +22,10 @@ function measure() {
 }
 function layout(frac) {
     const b = body(), { w, h } = measure();
+    const cl = $('r-clip');
+    cl.style.width = w + 'px'; cl.style.height = h + 'px';
     b.style.width = w + 'px'; b.style.height = h + 'px'; b.style.columnWidth = w + 'px'; b.style.setProperty('--ph', h + 'px');
-    b.scrollLeft = 0;
+    b.style.transform = 'none';
     S.step = w;
     S.pages = pageCount(b.scrollWidth, w);
     goPage(pageOfFrac(frac, S.pages));
@@ -38,7 +40,7 @@ function scheduleLayout() {
 }
 function goPage(i) {
     S.page = clampPage(i, S.pages);
-    body().scrollLeft = S.page * S.step;
+    body().style.transform = 'translateX(' + (-S.page * S.step) + 'px)';        // Seiten werden verschoben, nie gescrollt: so kann auch die Markierung nichts verrücken
     updatePos();
     save(false);
 }
@@ -76,7 +78,7 @@ async function show(i, anchor, frac, at) {
     layout(frac || 0);
     if (anchor) {
         const el = b.querySelector('[id="' + anchor.replace(/["\\]/g, '') + '"]');
-        if (el) goPage(pageOfOffset(el.getBoundingClientRect().left - b.getBoundingClientRect().left + b.scrollLeft, S.step, S.pages));
+        if (el) goPage(pageOfOffset(el.getBoundingClientRect().left - b.getBoundingClientRect().left, S.step, S.pages));
     } else if (at === 'last') goPage(S.pages - 1);
     const c = src.chapters[i];
     $('r-title').textContent = c.title || S.rec.title;
@@ -105,7 +107,7 @@ async function jump(ch, start, len) {
         if (start < pos + l) {
             const r = document.createRange(), o = start - pos;
             r.setStart(n, o); r.setEnd(n, Math.min(l, o + len));
-            const x = r.getBoundingClientRect().left - b.getBoundingClientRect().left + b.scrollLeft;
+            const x = r.getBoundingClientRect().left - b.getBoundingClientRect().left;
             goPage(pageOfOffset(x, S.step, S.pages));
             try { if (window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('dh-hit', new Highlight(r)); } catch { /* ohne Hervorhebung */ }
             return;
@@ -116,7 +118,7 @@ async function jump(ch, start, len) {
 
 // sichtbarer Text der aktuellen Seite (für „Mit Seitentext“), höchstens 4000 Zeichen
 function pageText() {
-    const b = body(), x0 = S.page * S.step - 1, x1 = x0 + S.step + 2, base = b.getBoundingClientRect().left - b.scrollLeft;
+    const b = body(), x0 = S.page * S.step - 1, x1 = x0 + S.step + 2, base = b.getBoundingClientRect().left;
     const w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT), r = document.createRange();
     let out = '', n;
     while ((n = w.nextNode()) && out.length < 4000) {
@@ -206,7 +208,7 @@ function onTap(e) {
         if (!hit) return;
         if (hit.index === S.ch) {
             const b = body(), el = hit.anchor && b.querySelector('[id="' + hit.anchor.replace(/["\\]/g, '') + '"]');
-            if (el) goPage(pageOfOffset(el.getBoundingClientRect().left - b.getBoundingClientRect().left + b.scrollLeft, S.step, S.pages));
+            if (el) goPage(pageOfOffset(el.getBoundingClientRect().left - b.getBoundingClientRect().left, S.step, S.pages));
             closeUi();
         } else show(hit.index, hit.anchor);
         return;
