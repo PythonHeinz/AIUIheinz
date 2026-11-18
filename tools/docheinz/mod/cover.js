@@ -39,6 +39,21 @@ export async function findCover(bytes) {
             cands.push({ href, type: extType(href) || '', page: true });
         });
         cands.push(items.find(it => isImg(it) && /cover|titel|title/i.test(it.id + ' ' + it.href)));
+        // Rückfall: erstes größeres Bild der Titelseite (erstes Kapitel, wenn es nach Titel oder Umschlag heißt)
+        const first = byName(opf, 'itemref').map(r => items.find(it => it.id === r.getAttribute('idref'))).find(it => it && /html/.test(it.type));
+        if (first && zip.has(first.href)) {
+            const doc = new DOMParser().parseFromString(await zip.text(first.href), 'text/html');
+            const head = ((doc.querySelector('title') || {}).textContent || '') + ' ' + ((doc.querySelector('h1, h2') || {}).textContent || '') + ' ' + first.href;
+            if (/titel|title|cover|umschlag|einband/i.test(head)) {
+                for (const el of Array.from(doc.querySelectorAll('img[src]'))) {
+                    const src = el.getAttribute('src');
+                    if (/^data:/i.test(src)) continue;
+                    const href = resolve(first.href, safeDecode(src.split('#')[0]));
+                    const type = (items.find(it => it.href === href) || {}).type || extType(href);
+                    if (zip.has(href) && COVER_TYPES.includes(type) && (await zip.read(href)).length >= 5000) { cands.push({ href, type }); break; }
+                }
+            }
+        }
         for (const c of cands) {
             if (!c || !zip.has(c.href)) continue;
             let href = c.href, type = c.type;

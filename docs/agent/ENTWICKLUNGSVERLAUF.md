@@ -728,3 +728,6 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Bibliothek zeigt das Bild als Vorschau (Objekt-URLs, beim Neuzeichnen freigegeben); Bücher aus Phase 1 bekommen es beim nächsten Start nachträglich.
 - Leseansicht: Titelseite als erste Seite (Bild oder Titel/Autor-Seite für Bücher ohne Bild); Tippzonen blättern wie sonst, auf Seite 1 führt „zurück“ zur Titelseite. Bücher mit Lesestand öffnen direkt an der Stelle.
 - Speicher: bleibt app-intern (Entscheidung D von 18.11.2026): Import kopiert die Datei in die IndexedDB, nur importierte Bücher erscheinen; keine Änderung an `server.py`. Nur simuliert getestet.
+
+### 2026-11-18 AIUIheinz-docHeinz: Fix Titelbild-Rückfall
+- EPUBs ohne Cover-Markierung (Fund: „Nietzsches Briefe“, Titelblatt nur als Bild im Kapitel „Titelseite“) bekommen das erste Bild ab 5 KB der Titelseite als Titelbild (`mod/cover.js`). Test mit Modus `page` in `tests/test_docheinz.py`; mit der echten Datei im Browser geprüft (GIF, 35 KB). Nur simuliert getestet.

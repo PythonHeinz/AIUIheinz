@@ -11,9 +11,9 @@ URL = "/tools/docheinz/index.html"
 PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
 
-def tiny_png(w=40, h=60):
+def tiny_png(w=40, h=60, noisy=False):
     import struct, zlib
-    raw = b"".join(b"\x00" + bytes([200, 60, 60]) * w for _ in range(h))
+    raw = b"".join(b"\x00" + (os.urandom(3 * w) if noisy else bytes([200, 60, 60]) * w) for _ in range(h))
     def ch(t, d): return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
     return b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(raw)) + ch(b"IEND", b"")
 
@@ -32,14 +32,17 @@ def make_epub(title="Testbuch", author="Frau Test", chapters=2, drm=False, long=
             items_extra = '<item id="cv" href="img/c.png" media-type="image/png"%s/>' % (' properties="cover-image"' if cover == "prop" else '')
             opf = opf.replace('</manifest>', items_extra + '</manifest>')
             if cover == "meta": opf = opf.replace('</metadata>', '<meta name="cover" content="cv"/></metadata>')
-            z.writestr("OEBPS/img/c.png", tiny_png())
+            z.writestr("OEBPS/img/c.png", tiny_png(120, 120, True) if cover == "page" else tiny_png())
         z.writestr("OEBPS/c.opf", opf)
         lis = "".join('<li><a href="text/k%d.xhtml">Kapitel %d</a></li>' % (i, i) for i in range(1, chapters + 1))
         z.writestr("OEBPS/nav.xhtml", '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><body><nav epub:type="toc"><ol>%s</ol></nav></body></html>' % lis)
         for i in range(1, chapters + 1):
             nxt = '<p><a href="k%d.xhtml#ziel">weiter zu Kapitel %d</a></p>' % (i + 1, i + 1) if i < chapters else ""
             filler = "".join("<p>Absatz %d dieses langen Kapitels mit etwas Text, damit die Seite scrollt.</p>" % n for n in range(60)) if long else ""
-            z.writestr("OEBPS/text/k%d.xhtml" % i, '<html xmlns="http://www.w3.org/1999/xhtml"><head><style>body{background:red}</style></head><body><h1 id="ziel">Kapitel %d</h1><p class="x" style="position:fixed;background:url(http://evil.example/a.png)" onclick="window.__x=1">Text von Kapitel %d. <a href="https://evil.example/">extern</a></p>%s<script>window.__x=1</script><img src="http://evil.example/b.png" alt="Fremdbild"/>%s</body></html>' % (i, i, nxt, filler))
+            html = ('<html xmlns="http://www.w3.org/1999/xhtml"><head><style>body{background:red}</style></head><body><h1 id="ziel">Kapitel %d</h1><p class="x" style="position:fixed;background:url(http://evil.example/a.png)" onclick="window.__x=1">Text von Kapitel %d. <a href="https://evil.example/">extern</a></p>%s<script>window.__x=1</script><img src="http://evil.example/b.png" alt="Fremdbild"/>%s</body></html>' % (i, i, nxt, filler))
+            if cover == "page" and i == 1:
+                html = html.replace("<head>", "<head><title>Titelseite</title>").replace("<h1", '<img src="../img/c.png" alt=""/><h1')
+            z.writestr("OEBPS/text/k%d.xhtml" % i, html)
     return buf.getvalue()
 
 
@@ -378,7 +381,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.getElementById('reader').dataset.page === '3'")
 
     def test_cover_page_and_library_preview(self):
-        for mode in ("prop", "meta"):
+        for mode in ("prop", "meta", "page"):
             p = self.open()
             self.start_book(p, "c.epub", "application/epub+zip", self.epub(chapters=2, cover=mode), cover=True)
             self.assertEqual(p.get_attribute("#reader", "data-cover"), "1", mode)
