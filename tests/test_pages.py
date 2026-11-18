@@ -2949,6 +2949,51 @@ class PageTest(unittest.TestCase):
         page.wait_for_selector("#areas [data-area]")
         self.assertEqual(self.errors, [])
 
+    def test_hub_has_the_update_button_with_lcd_at_the_bottom_and_uses_the_same_endpoint(self):
+        page = self.new_page()
+        calls = []
+        answers = [
+            (200, {"ok": True, "changed": False, "files": [], "restarting": False, "from": "abc1234", "to": "abc1234"}),
+            (409, {"ok": False, "error": "git pull failed", "output": "Could not resolve host"}),
+            (200, {"ok": True, "changed": True, "files": ["index.html"], "restarting": False, "from": "abc1234", "to": "def5678"}),
+        ]
+        def handle(route):
+            calls.append((route.request.method, route.request.headers.get("x-heinz")))
+            code, body = answers[len(calls) - 1]
+            route.fulfill(status=code, content_type="application/json", body=json.dumps(body))
+        page.route("**/api/update", handle)
+        page.route("**/api/ping", lambda route: route.fulfill(status=200, content_type="application/json",
+                   body=json.dumps({"ok": True, "version": "1", "app": {"version": "1.0", "commit": "abc1234", "date": "2026-11-09"}})))
+        page.goto(self.srv.base + "/")
+        page.wait_for_function("document.getElementById('ver').textContent.includes('abc1234')")
+        self.assertEqual(page.inner_text("#ver"), "v1.0 · abc1234 · 2026-11-09")
+        self.assertEqual(page.inner_text("#upd-btn"), "UPDATE")
+        box = page.locator("#updbox").bounding_box()
+        self.assertGreater(box["y"] + box["height"], VIEWPORT["height"] - 60, "the update box sits at the bottom of the page")
+        self.assertGreater(page.locator("#upd-led").bounding_box()["width"], 200, "the LCD is drawn with the width of the page")
+        self.assertGreater(page.evaluate("(function(){var c=document.getElementById('upd-led');var d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;var n=0;for(var i=0;i<d.length;i+=4){if(d[i+2]>80)n++;}return n;})()"), 0, "lit LEDs show the version")
+        page.click("#upd-btn")
+        page.wait_for_function("document.getElementById('upd-status').textContent.includes('up to date')")
+        self.assertIn("(abc1234)", page.inner_text("#upd-status"))
+        page.click("#upd-btn")
+        page.wait_for_function("document.getElementById('upd-status').textContent.includes('Could not resolve host')")
+        page.wait_for_function("!document.getElementById('upd-btn').disabled")
+        with page.expect_navigation():
+            page.click("#upd-btn")
+        page.wait_for_selector("#updbox")
+        self.assertEqual(calls, [("POST", "1")] * 3)
+        self.assertEqual(self.errors, [])
+
+    def test_hub_update_texts_follow_the_language_and_the_hub_asks_nothing_outside_on_load(self):
+        page = self.new_page()
+        outside = []
+        page.on("request", lambda r: outside.append(r.url) if not r.url.startswith(self.srv.base) and not r.url.startswith("data:") and "localhost:11434" not in r.url and "127.0.0.1:9379" not in r.url else None)
+        page.goto(self.srv.base + "/")
+        page.wait_for_selector("#upd-btn")
+        page.evaluate("Heinz.setLang('de')")
+        page.wait_for_function("document.getElementById('upd-btn').title.indexOf('Tippen') >= 0")
+        self.assertEqual(outside, [])
+
     def test_start_page_shows_app_version_from_ping(self):
         page = self.new_page()
         page.route("**/api/ping", lambda r: r.fulfill(json={"ok": True, "version": "x", "app": {"version": "1.0", "commit": "abc1234", "date": "2026-11-11 12:30:00"}}))

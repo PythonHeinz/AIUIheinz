@@ -734,3 +734,10 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 
 ### 2026-11-18 AIUIheinz-docHeinz: Reader vorerst abgeschlossen
 - Handytests W (2a) und X (2b, inkl. Titelbild-Rückfall) bestanden. Entwickler schließt den Reader vorerst ab; Verfeinerungen später. Offen: 2c (Markierungsmenü mit Suche und KI über Dashboard-Modelle), Phase 3 (Markierungen, Suche, Export), Phase 4 (PDF mit lokalem pdf.js).
+
+### 2026-11-18 AIUIheinz-Update: Aufgabe 1 (Update-Knopf mit LCD im Hub)
+- Neues gemeinsames Modul `lib/shared/update.js` (`createUpdater`, `readVersion`): Knopflogik (`POST api/update` mit `X-Heinz`, Zustände bereit, prüfe, aktuell, aktualisiert, Neustart, Fehler) und LCD-Anzeige (Pixeldisplay, 11 Zeilen, Pitch 2) an einer Stelle; Texte und Elemente kommen als Parameter (kein `window.Heinz`, kein `getElementById`). Dashboard (`lib/dashboard/update.js`, über `base.js`) und Hub nutzen es; Verhalten des Dashboards unverändert (`state.updState` wird über Rückruf gesetzt).
+- Hub (`index.html`): Knopf UPDATE und LCD in einer Leiste, die unten am Bildrand klebt (`position: sticky`); LCD zeigt im Ruhezustand `v1.0 · abc1234 · Datum`; Texte EN/DE im Wörterbuch des Hubs; die alte Versionszeile ist als unsichtbares `#ver` erhalten (Test). Der Knopf macht nur auf Tipp eine Anfrage an den eigenen Server, die Seite fragt nichts nach außen.
+- Tests: `test_hub_has_the_update_button_with_lcd_at_the_bottom_and_uses_the_same_endpoint`, `test_hub_update_texts_follow_the_language_and_the_hub_asks_nothing_outside_on_load`; vorhandener Dashboard-Test unverändert grün; voller Lauf grün. Nur simuliert getestet, das echte `git pull` auf dem Handy steht aus (Handytest Y).
+- Offen aus `AUFTRAG_Update.md`: Aufgaben 2 bis 9.
+

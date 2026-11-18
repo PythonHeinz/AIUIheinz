@@ -217,3 +217,10 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 - [ ] Speicherdruck: Zeile „Speicher: … belegt“ unten; bei fast vollem Gerät erscheint die Warnung, ein zu großes Buch meldet „nicht genug Speicher“ statt still zu scheitern.
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen; Flugmodus: alles nutzbar, kein Netz nötig.
 
+## Y. Update-Knopf im Hub (18.11.2026, Strang AIUIheinz-Update, Aufgabe 1)
+1. `git pull`, `bash start.sh`, App neu öffnen. Im Hub unten steht der Knopf UPDATE und darunter das LCD mit `v… · Commit · Datum`; beides bleibt beim Scrollen am unteren Rand.
+2. Tipp auf UPDATE ohne neuen Stand: LCD zeigt kurz PRÜFE GITHUB, dann AKTUELL (grün), nach 5 s wieder die Version.
+3. Nach einem Push auf GitHub: Tipp auf UPDATE zeigt AKTUALISIERT und lädt den Hub neu; die Version im LCD ist neu.
+4. Ohne Netz: LCD zeigt FEHLER (rot) und eine Zeile mit der Meldung, danach wieder die Version. Der Knopf im Dashboard (Menü Update) geht weiter wie vorher.
+5. EN/DE-Umschalter: Texte unter dem LCD wechseln mit.
+

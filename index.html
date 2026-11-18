@@ -14,7 +14,7 @@
 <style>
 /* Hub (DR2): start page of the app since 11.11.2026; the old hub is gone (see git history). */
 body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font); }
-.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px 24px; }
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 16px; }
 .top { display: flex; align-items: center; gap: 12px; padding: 16px 0 10px; }
 .top .ttl { flex: 1; min-width: 0; line-height: 1.2; }
 .top .ttl b { font-size: 1.25rem; font-weight: 500; letter-spacing: .01em; display: block; }
@@ -46,6 +46,12 @@ a.row .tile { color: var(--pri); }
 .sec { margin-top: 22px; }
 .foot { margin: 30px 0 10px; color: var(--muted); font-size: .76rem; text-align: center; line-height: 1.5; }
 .notice a.pill { text-decoration: none; }
+html, body { min-height: 100%; }
+.wrap { min-height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; }
+.updbox { position: sticky; bottom: 0; z-index: 5; margin-top: auto; padding: 12px 0 14px; background: var(--bg); }
+.updbox .upd-pill { display: flex; width: 62%; height: 44px; margin: 0 auto; justify-content: center; align-items: center; border-radius: 999px; font-size: .78rem; letter-spacing: .16em; font-weight: 600; color: var(--acc); border: 1px solid var(--acc); background: transparent; box-shadow: 0 0 22px color-mix(in srgb, var(--acc) 26%, transparent); }
+.updbox .led { width: 100%; margin: 12px 0 4px; }
+.updbox .help { min-height: 16px; text-align: center; color: var(--muted); font-size: .76rem; }
 </style>
 </head>
 <body>
@@ -61,17 +67,27 @@ a.row .tile { color: var(--pri); }
 <nav class="areas" id="areas"></nav>
 <main id="main"></main>
 <div class="foot" id="foot"></div>
-<div class="foot" id="ver" title="Version"></div>
+<div class="updbox" id="updbox">
+    <span id="ver" class="sr-only" title="Version"></span>
+    <button class="pill upd-pill" id="upd-btn" type="button"></button>
+    <div class="led" id="upd-led-wrap"><canvas id="upd-led" aria-hidden="true"></canvas></div>
+    <div id="upd-status" class="help"></div>
+</div>
 </div>
 <script type="module">
+import { createUpdater, readVersion } from '/lib/shared/update.js';
 (function () {
     var D = {
         en: { sub: 'Your private AI, on your phone.', aChat: 'Chat', aTools: 'Tools', aSetup: 'Set up',
+            updBtn: 'UPDATE', updTitle: 'Version of this app. Tap to fetch the latest version from GitHub.', pxCheck: 'CHECKING GITHUB', pxRestart: 'RESTARTING SERVER', pxDone: 'UPDATED', pxCurrent: 'UP TO DATE', pxErr: 'ERROR',
+            updRunning: 'Checking GitHub ...', updCurrent: 'Already up to date ({v}).', updDone: 'Updated {a} → {b} ({n} files). Reloading ...', updErr: 'Update failed: {m}',
             soon: 'planned', oldT: 'old', testT: 'test', first: 'No local model found yet. The setup guide takes you from a fresh phone to your first answer.', firstBtn: 'Start the setup guide',
             ollama: 'Ollama', litert: 'LiteRT-LM', up: 'running', down: 'not reachable', models: '{n} models',
             gDev: 'Development', gOld: 'Older versions', design: 'Design building blocks', designD: 'Everything the pages are built from.', modes: 'Mode slider (mockup)', modesD: 'Try the new mode switch.',
             foot: 'By default everything stays on this device. Only if you switch "Allow online" on, the messages of the current chat go to the engine you chose, and nothing else.' },
         de: { sub: 'Deine private KI, auf deinem Handy.', aChat: 'Chat', aTools: 'Werkzeuge', aSetup: 'Einrichten',
+            updBtn: 'UPDATE', updTitle: 'Version dieser App. Tippen holt den neuesten Stand von GitHub.', pxCheck: 'PRÜFE GITHUB', pxRestart: 'SERVER STARTET NEU', pxDone: 'AKTUALISIERT', pxCurrent: 'AKTUELL', pxErr: 'FEHLER',
+            updRunning: 'Prüfe GitHub ...', updCurrent: 'Schon auf dem neuesten Stand ({v}).', updDone: 'Aktualisiert {a} → {b} ({n} Dateien). Lade neu ...', updErr: 'Update fehlgeschlagen: {m}',
             soon: 'geplant', oldT: 'alt', testT: 'Test', first: 'Noch kein lokales Modell gefunden. Die Einrichtung führt dich vom frischen Handy bis zur ersten Antwort.', firstBtn: 'Einrichtung starten',
             ollama: 'Ollama', litert: 'LiteRT-LM', up: 'läuft', down: 'nicht erreichbar', models: '{n} Modelle',
             gDev: 'Entwicklung', gOld: 'Ältere Versionen', design: 'Design-Bausteine', designD: 'Alles, woraus die Seiten gebaut sind.', modes: 'Modus-Schieberegler (Mockup)', modesD: 'Den neuen Modus-Schalter ausprobieren.',
@@ -146,11 +162,14 @@ a.row .tile { color: var(--pri); }
     lbPaint(); render();
     fetch('/api/tools').then(function (r) { return r.json(); }).then(function (j) { tools = j.tools || []; render(); }).catch(function () { tools = []; render(); });
     function poll() { Heinz.pingOllama().then(function (r) { ollama = r; render(); }); Heinz.pingLiteRT().then(function (r) { litert = r; render(); }); }
-    fetch('/api/ping').then(function (r) { return r.json(); }).then(function (j) {
-        var a = j && j.app || {}, p = [];
-        if (a.version) p.push('v' + a.version); if (a.commit) p.push(a.commit); if (a.date) p.push(String(a.date).slice(0, 16));
-        document.getElementById('ver').textContent = p.length ? p.join(' · ') : '';
-    }).catch(function () {});
+    // Update: same logic as the dashboard button (lib/shared/update.js); the display shows the version when idle
+    var upBtn = document.getElementById('upd-btn');
+    var up = createUpdater({ led: document.getElementById('upd-led'), btn: upBtn, status: document.getElementById('upd-status'), t: t });
+    upBtn.addEventListener('click', function () { up.run(); });
+    function updTexts() { upBtn.textContent = t('updBtn'); upBtn.title = t('updTitle'); }
+    updTexts(); Heinz.onLang(function () { updTexts(); up.setState(up.state.mode, up.state.f); });
+    up.setState('idle');
+    readVersion().then(function (v) { document.getElementById('ver').textContent = v; up.setVersion(v); });
     poll(); setInterval(poll, 8000);
 })();
 </script>
