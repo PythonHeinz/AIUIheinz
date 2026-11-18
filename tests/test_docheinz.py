@@ -415,6 +415,197 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("html[data-dh=ready]")
         p.wait_for_selector("#list .dh-cover.has img")
 
+    # ---------- Phase 2c: Markierungsleiste ----------
+    def select_text(self, p, needle):
+        p.evaluate("""(needle) => {
+            const b = document.getElementById('r-body'), w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+            let n; while ((n = w.nextNode())) { const i = n.nodeValue.indexOf(needle); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + needle.length); const s = getSelection(); s.removeAllRanges(); s.addRange(r); return; } }
+            throw new Error('not found');
+        }""", needle)
+
+    def fake_ollama(self, p, chunks=("Das ist", " die Erklärung.")):
+        calls = []
+        def handle(route):
+            url = route.request.url
+            if url.endswith("/api/chat"):
+                calls.append(json.loads(route.request.post_data))
+                lines = [json.dumps({"message": {"role": "assistant", "content": c}, "done": False}) for c in chunks] + [json.dumps({"done": True, "eval_count": 5})]
+                return route.fulfill(status=200, content_type="application/x-ndjson", body="\n".join(lines) + "\n")
+            if url.endswith("/api/ps") or url.endswith("/api/tags"):
+                return route.fulfill(status=200, content_type="application/json", body=json.dumps({"models": []}))
+            return route.fulfill(status=200, content_type="application/json", body="{}")
+        p.route("**/localhost:11434/**", handle)
+        return calls
+
+    def set_active(self, p, provider, model):
+        p.evaluate("([a, b]) => localStorage.setItem('heinz_active', JSON.stringify({ provider: a, model: b }))", [provider, model])
+
+    def test_selection_bar_appears_and_search_jumps_to_the_hit(self):
+        p = self.open()
+        self.start_book(p, "t.epub", "application/epub+zip", self.epub(chapters=3))
+        self.assertTrue(p.locator("#r-sel").is_hidden())
+        self.select_text(p, "Text von Kapitel 1")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        self.assertEqual(p.locator("#r-sel button:visible").count(), 3)
+        p.click("#r-sel [data-sel=search]")
+        p.wait_for_selector("#r-sheet:not([hidden]) .dh-hit")
+        self.assertTrue(p.locator("#r-sel").is_hidden())
+        p.click("#rs-close")
+        self.select_text(p, "Kapitel")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=search]")
+        p.wait_for_selector("#r-sheet .dh-hit")
+        n = p.locator("#rs-body .dh-hit").count()
+        self.assertGreaterEqual(n, 3)
+        p.locator("#rs-body .dh-hit").nth(n - 1).click()
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+        p.wait_for_function("() => +document.getElementById('reader').dataset.ch >= 3")
+        self.assertTrue(p.evaluate("() => !window.Highlight || (CSS.highlights && CSS.highlights.has('dh-hit'))"))
+        self.assertEqual(p.errors, [])
+
+    def test_search_without_hits_and_tap_closes_the_sheet(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
+        self.select_text(p, "kurzer")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=search]")
+        p.wait_for_selector("#r-sheet:not([hidden])")
+        self.assertEqual(p.locator("#rs-body .dh-hit").count(), 1)
+        p.click("#rs-close")
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+        self.select_text(p, "Ein")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=search]")
+        p.wait_for_selector("#r-sheet:not([hidden])")
+        self.tap(p, "mid")                         # Tipp auf den Text schließt nur das Blatt
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+
+    def test_explain_uses_the_active_local_model_and_sends_only_the_passage(self):
+        p = self.open(lang="de")
+        calls = self.fake_ollama(p)
+        self.start_book(p, "a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde.".encode(), )
+        self.set_active(p, "ollama", "test:1b")
+        self.select_text(p, "Übermensch")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_function("() => document.querySelector('#rs-body .dh-sout') && document.querySelector('#rs-body .dh-sout').textContent.includes('Erklärung')")
+        self.assertEqual(len(calls), 1)
+        body = calls[0]
+        self.assertEqual(body["model"], "test:1b")
+        self.assertEqual([m["role"] for m in body["messages"]], ["system", "user"])
+        self.assertIn("Übermensch", body["messages"][1]["content"])
+        self.assertNotIn("Sinn der Erde", body["messages"][1]["content"])
+        self.assertIn("Deutsch", body["messages"][0]["content"])
+        self.assertIn("test:1b", p.locator("#rs-sub").inner_text())
+        self.assertTrue(p.locator("#rs-copy").is_visible())
+        self.assertEqual([u for u in p.external if "localhost:11434" not in u], [])
+
+    def test_ask_more_opens_the_analysis_window_with_history_and_page_context(self):
+        p = self.open(lang="de")
+        calls = self.fake_ollama(p, chunks=("Antwort", " eins."))
+        self.start_book(p, "a.md", "text/markdown", "# Titel\n\nDer Übermensch ist der Sinn der Erde. Seitenumfeld Zebra.".encode())
+        self.set_active(p, "ollama", "test:1b")
+        self.select_text(p, "Übermensch")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_selector("#rs-more:not([hidden])")
+        p.click("#rs-more")
+        p.wait_for_selector("#r-ana:not([hidden])")
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+        self.assertEqual(p.locator("#ra-pass").inner_text(), "Übermensch")
+        self.assertIn("Antwort eins.", p.locator("#ra-body").inner_text())
+        # Nachfrage nur mit der Markierung
+        p.fill("#ra-q", "Warum?")
+        p.click("#ra-send")
+        p.wait_for_function("() => document.querySelectorAll('#ra-body .dh-m.a').length === 2 && !document.getElementById('ra-stop').offsetParent")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual([m["role"] for m in calls[1]["messages"]], ["system", "user", "assistant", "user"])
+        self.assertEqual(calls[1]["messages"][3]["content"], "Warum?")
+        self.assertNotIn("Zebra", json.dumps(calls[1]))
+        # mit Seitentext
+        p.click("#ra-seg [data-ctx='1']")
+        p.fill("#ra-q", "Und weiter?")
+        p.keyboard.press("Enter")
+        p.wait_for_function("() => document.querySelectorAll('#ra-body .dh-m.a').length === 3 && !document.getElementById('ra-stop').offsetParent")
+        self.assertEqual(len(calls), 3)
+        self.assertIn("Zebra", calls[2]["messages"][1]["content"])
+        self.assertEqual([m["role"] for m in calls[2]["messages"]], ["system", "user", "assistant", "user", "assistant", "user"])
+        # Zurück-Taste schließt nur das Fenster, nicht den Reader
+        p.go_back()
+        p.wait_for_selector("#r-ana", state="hidden")
+        self.assertTrue(p.locator("#reader").is_visible())
+        self.assertEqual(self.pg(p)[2], 1)
+        self.assertEqual(p.errors, [])
+
+    def test_analysis_close_button_and_stop(self):
+        p = self.open()
+        self.fake_ollama(p)
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Erklaeren.")
+        self.set_active(p, "ollama", "test:1b")
+        self.select_text(p, "Satz zum")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=summary]")
+        p.wait_for_selector("#rs-more:not([hidden])")
+        p.click("#rs-more")
+        p.wait_for_selector("#r-ana:not([hidden])")
+        p.click("#ra-close")
+        p.wait_for_selector("#r-ana", state="hidden")
+        self.assertTrue(p.locator("#reader").is_visible())
+        self.assertEqual(p.evaluate("() => history.length > 0"), True)
+
+    def test_summary_without_model_gives_a_clear_hint(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Zusammenfassen.")
+        self.select_text(p, "Ein Satz zum")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=summary]")
+        p.wait_for_selector("#r-sheet:not([hidden]) .dh-sline")
+        self.assertIn("Dashboard", p.locator("#rs-body").inner_text())
+
+    def test_online_model_is_blocked_without_allow_online_and_sends_nothing(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Erklaeren.")
+        self.set_active(p, "groq", "llama-x")
+        sent = []
+        p.on("request", lambda r: sent.append(r.url) if "groq.com" in r.url else None)
+        self.select_text(p, "Satz zum")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_selector("#rs-body .dh-sline.err")
+        self.assertIn("Allow online", p.locator("#rs-body").inner_text())
+        self.assertEqual(sent, [])
+
+    def test_online_model_shows_what_is_sent_when_online_is_allowed(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Erklaeren.")
+        p.evaluate("async () => { const m = await import('/lib/providers.js'); m.HeinzProviders.setOnlineAllowed(true); m.HeinzProviders.setKey('groq', 'k'); m.HeinzProviders.setActiveModel('groq', 'llama-x'); }")
+        sent = []
+        def route(r):
+            sent.append(json.loads(r.request.post_data or "{}")) if r.request.method == "POST" else None
+            if r.request.method == "OPTIONS":
+                return r.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
+            lines = ["data: " + json.dumps({"choices": [{"delta": {"content": "Online-Antwort"}}]}), "data: [DONE]"]
+            r.fulfill(status=200, content_type="text/event-stream", headers={"access-control-allow-origin": "*"}, body="\n".join(lines) + "\n")
+        p.route("**/api.groq.com/**", route)
+        self.select_text(p, "Satz zum")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_function("() => document.querySelector('#rs-body .dh-sout') && document.querySelector('#rs-body .dh-sout').textContent.includes('Online-Antwort')")
+        self.assertIn("Groq", p.locator("#rs-body .dh-sline.warn").inner_text())
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent[0]["model"], "llama-x")
+        self.assertNotIn("Zeitgeist", json.dumps(sent[0]))
+
+    def test_sheet_and_bar_fit_the_small_viewport(self):
+        p = self.open(height=400)
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Suchen.")
+        self.select_text(p, "Satz")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-sel').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight; }"))
+        p.click("#r-sel [data-sel=search]")
+        p.wait_for_selector("#r-sheet:not([hidden])")
+        self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-sheet').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth; }"))
+
     def test_page_count_follows_font_size_and_keeps_position(self):
         p = self.open()
         self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())

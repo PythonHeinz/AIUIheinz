@@ -173,6 +173,21 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen.
 - [ ] Flugmodus: Seite, EPUB-Erzeugung, Lesen und Drucken ohne Netz (keine Bibliothek aus dem Netz nötig).
 
+## Strang docHeinz, Phase 2c (18.11.2026; nur im Container simuliert getestet, echtes Modell nicht geprüft)
+
+Vorher: `git pull`, `bash start.sh`, docHeinz neu laden. Im Heinz Dashboard ein lokales Modell wählen (Ollama läuft in Termux). Ein längeres Buch bereithalten.
+
+**Y. docHeinz Markierungsleiste**
+- [ ] Wort lang drücken und markieren: unten erscheint die Leiste „Suchen, Erklären, Zusammenfassen“, ohne die Textauswahl des Handys zu stören; die Leiste verdeckt die Griffe nicht. Tippen im Text blendet sie wieder aus.
+- [ ] Suchen: Trefferliste mit Kapitel und Umgebung; Tipp auf einen Treffer springt auf die Seite, die Stelle ist gelb hervorgehoben; nächstes Umblättern löscht die Hervorhebung. Längere Markierung (über 80 Zeichen): „Suchen“ fehlt.
+- [ ] Erklären eines Wortes und eines Satzes: Antwort läuft wörtlich ein, Stopp bricht ab, Kopieren legt sie in die Zwischenablage. Bei kaltem Modell dauert der erste Text; wie lange?
+- [ ] Zusammenfassen eines längeren Absatzes: Qualität des kleinen Modells bewerten.
+- [ ] „Weiter fragen“ unter der Antwort: Fenster „Analyse“ im Vollbild mit der Markierung oben; Frage tippen und senden (Enter sendet, Umschalt+Enter neue Zeile), Antwort läuft ein, Stopp bricht ab; Kopieren je Antwort; Tastatur verdeckt das Eingabefeld nicht.
+- [ ] Schalter „Mit Seitentext“: Antworten beziehen sich spürbar auf die Seite; Zurück-Taste des Handys schließt zuerst das Fenster, dann erst bleibt das Buch an derselben Stelle.
+- [ ] Ohne gewähltes Modell oder mit ausgeschalteter Engine: klarer Hinweis, nichts bleibt hängen.
+- [ ] Cloud-Modell wählen: ohne „Online erlauben“ Hinweis und keine Anfrage; mit „Online erlauben“ steht „geht an …“, danach die Antwort.
+- [ ] Wechsel zwischen docHeinz und Dashboard: Modell bleibt im Speicher (`ollama ps`, gleiche ID).
+
 ## Strang docHeinz, Phase 2b (18.11.2026; nur im Container simuliert getestet)
 
 Vorher: `git pull`, `bash start.sh`, docHeinz neu laden. Ein EPUB mit Titelbild, eines ohne und eine Markdown-Datei bereithalten.

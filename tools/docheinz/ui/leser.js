@@ -4,6 +4,7 @@
 import { $ } from './base.js';
 import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
+import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black'];
@@ -84,11 +85,49 @@ async function show(i, anchor, frac, at) {
 }
 
 function go(dir) {
+    clearHit();
     if (S.onCover) { if (dir > 0) { showCover(false); save(true); } return; }
     const r = turn({ ch: S.ch, page: S.page }, dir, S.pages, S.src.chapters.length);
     if (!r) { if (dir < 0) showCover(true); return; }
     if (r.ch === S.ch) goPage(r.page);
     else show(r.ch, '', 0, r.page);          // 'first' oder 'last'
+}
+
+// ---------- Fundstelle anspringen (Suche) ----------
+function clearHit() { try { if (window.CSS && CSS.highlights) CSS.highlights.delete('dh-hit'); } catch { /* ohne Hervorhebung */ } }
+async function jump(ch, start, len) {
+    showCover(false);
+    await show(ch, '', 0);
+    const b = body(), w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+    let pos = 0, n;
+    while ((n = w.nextNode())) {
+        const l = n.nodeValue.length;
+        if (start < pos + l) {
+            const r = document.createRange(), o = start - pos;
+            r.setStart(n, o); r.setEnd(n, Math.min(l, o + len));
+            const x = r.getBoundingClientRect().left - b.getBoundingClientRect().left + b.scrollLeft;
+            goPage(pageOfOffset(x, S.step, S.pages));
+            try { if (window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('dh-hit', new Highlight(r)); } catch { /* ohne Hervorhebung */ }
+            return;
+        }
+        pos += l;
+    }
+}
+
+// sichtbarer Text der aktuellen Seite (für „Mit Seitentext“), höchstens 4000 Zeichen
+function pageText() {
+    const b = body(), x0 = S.page * S.step - 1, x1 = x0 + S.step + 2, base = b.getBoundingClientRect().left - b.scrollLeft;
+    const w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT), r = document.createRange();
+    let out = '', n;
+    while ((n = w.nextNode()) && out.length < 4000) {
+        r.selectNodeContents(n);
+        const rc = r.getBoundingClientRect();
+        if (!rc.width && !rc.height) continue;
+        const l = rc.left - base;
+        if (l >= x1) break;
+        if (rc.right - base > x0 + 2) out += n.nodeValue + ' ';
+    }
+    return out.replace(/\s+/g, ' ').trim();
 }
 
 // ---------- Titelseite ----------
@@ -172,6 +211,7 @@ function onTap(e) {
         } else show(hit.index, hit.anchor);
         return;
     }
+    if (!$('r-sheet').hidden) { closeSheet(); return; }
     if (S.ui) { closeUi(); return; }
     const r = $('r-page').getBoundingClientRect();
     const z = zoneOf(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
@@ -198,14 +238,14 @@ function wire() {
     if (window.ResizeObserver) new ResizeObserver(() => { if (S.open) scheduleLayout(); }).observe(pg);
     else window.addEventListener('resize', () => { if (S.open) scheduleLayout(); });
     document.addEventListener('keydown', (e) => {
-        if (!S.open || e.target.matches('input, select, textarea')) return;
-        if (e.key === 'Escape') { if (S.ui) closeUi(); else $('r-close').click(); }
+        if (!S.open || e.target.matches('input, select, textarea') || (anaIsOpen() && e.key !== 'Escape')) return;
+        if (e.key === 'Escape') { if (anaIsOpen()) closeAna(false); else if (!$('r-sheet').hidden) closeSheet(); else if (S.ui) closeUi(); else $('r-close').click(); }
         else if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(1); }
         else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(-1); }
     });
     document.addEventListener('visibilitychange', () => { if (S.open && document.visibilityState === 'hidden') save(true); });
     window.addEventListener('pagehide', () => { if (S.open) save(true); });
-    window.addEventListener('popstate', () => { if (S.open) { S.pushed = false; close(); } });
+    window.addEventListener('popstate', () => { if (consumePop()) return; if (S.open) { S.pushed = false; close(); } });
 }
 
 export async function openReader(rec, src, ctx) {
@@ -220,6 +260,7 @@ export async function openReader(rec, src, ctx) {
     $('reader').hidden = false;
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
+    initSelection({ isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
     setCover(ctx.cover || null);
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);
@@ -229,6 +270,7 @@ export async function openReader(rec, src, ctx) {
 export function close() {
     if (!S.open) return;
     save(true);
+    resetSelection(); clearHit();
     S.open = false; S.seq++;
     cancelAnimationFrame(S.raf);
     $('reader').hidden = true;

@@ -120,3 +120,45 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ctitle { display: flex; flex-direction: column; gap: 14px; text-align: center; max-width: 30ch; font-family: var(--rf); }
 .dh-ctitle b { font-size: 1.7rem; line-height: 1.2; }
 .dh-ctitle span { font-size: 1rem; color: var(--rsub); }
+
+/* Markierungsleiste und Blatt (Suchen, Erklären, Zusammenfassen) */
+.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
+.dh-sel[hidden] { display: none; }
+.dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rt); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.dh-sel button[hidden] { display: none; }
+.dh-sel button:active { background: var(--rline); }
+.dh-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 8; max-height: 62%; display: flex; flex-direction: column; box-sizing: border-box; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--rbar); color: var(--rt); border-top: 1px solid var(--rline); box-shadow: 0 -4px 18px rgba(0,0,0,.4); }
+.dh-sheet[hidden] { display: none; }
+.dh-sheet header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.dh-sheet header b { flex: 1 0 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-sheet header .pill { flex: 1; }
+.dh-sheet .pill[hidden] { display: none; }
+.dh-sheet .help { margin: 4px 0 0; }
+.dh-sbody { margin-top: 8px; overflow: auto; overscroll-behavior: contain; -webkit-user-select: text; user-select: text; line-height: 1.5; }
+.dh-sline { margin: 6px 0; color: var(--rsub); font-size: .9rem; }
+.dh-sline.err { color: #e5736b; }
+.dh-sline.warn { color: #d9a441; }
+.dh-sout { margin: 6px 0; white-space: pre-wrap; }
+.dh-hit { display: block; width: 100%; text-align: left; padding: 8px 4px; border: 0; border-bottom: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; font-size: .92rem; cursor: pointer; }
+.dh-hit small { display: block; color: var(--rsub); margin-bottom: 2px; }
+.dh-hit mark { background: transparent; color: var(--rlink); font-weight: 700; }
+::highlight(dh-hit) { background-color: rgba(250, 204, 21, .45); color: inherit; }
+
+/* Fenster „Analyse“ (Nachfragen) */
+.dh-ana { position: absolute; inset: 0; z-index: 9; display: flex; flex-direction: column; box-sizing: border-box; padding: calc(8px + env(safe-area-inset-top)) 14px calc(10px + env(safe-area-inset-bottom)); background: var(--rb); color: var(--rt); }
+.dh-ana[hidden] { display: none; }
+.dh-ana header { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.dh-ana header b { flex: 1; }
+.dh-ana blockquote { margin: 4px 0 8px; padding: 6px 10px; max-height: 5.2em; overflow: auto; border-left: 3px solid var(--rline); color: var(--rsub); font-size: .9rem; font-family: var(--rf); -webkit-user-select: text; user-select: text; }
+.dh-ana .seg2 { margin: 0 0 4px; }
+.dh-ana .seg2 button { font-size: .8rem; padding: 0 6px; }
+.dh-ana .help { margin: 2px 0 6px; }
+.dh-ana .help:empty { display: none; }
+.dh-abody { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+.dh-m { display: flex; flex-direction: column; align-items: flex-start; max-width: 92%; padding: 8px 12px; border-radius: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
+.dh-m.u { align-self: flex-end; background: var(--rline); }
+.dh-m.a { align-self: flex-start; background: var(--rbar); border: 1px solid var(--rline); }
+.dh-m .pill { margin-top: 6px; min-height: 30px; font-size: .8rem; }
+.dh-aform { display: flex; align-items: flex-end; gap: 8px; padding-top: 8px; }
+.dh-aform textarea { flex: 1; min-width: 0; resize: none; max-height: 7.5em; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--rline); background: var(--rbar); color: var(--rt); font: inherit; font-size: .95rem; }
+.dh-aform .pill[hidden] { display: none; }

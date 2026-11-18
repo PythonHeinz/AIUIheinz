@@ -61,6 +61,24 @@
     <nav class="dh-toc" id="r-toc" hidden></nav>
     <button type="button" class="dh-turn dh-turn-l" id="r-prev" data-i-label="r_prev" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-l"/></svg></button>
     <button type="button" class="dh-turn dh-turn-r" id="r-next" data-i-label="r_next" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
+    <div class="dh-sel" id="r-sel" hidden>
+        <button type="button" data-sel="search" data-i="s_search"></button>
+        <button type="button" data-sel="explain" data-i="s_explain"></button>
+        <button type="button" data-sel="summary" data-i="s_summary"></button>
+    </div>
+    <section class="dh-sheet" id="r-sheet" hidden>
+        <header><b id="rs-title"></b><button type="button" class="pill" id="rs-copy" data-i="s_copy" hidden></button><button type="button" class="pill" id="rs-more" data-i="s_more" hidden></button><button type="button" class="pill" id="rs-stop" data-i="s_stop" hidden></button><button type="button" class="pill" id="rs-close" data-i="s_close"></button></header>
+        <p class="help" id="rs-sub" hidden></p>
+        <div class="dh-sbody" id="rs-body"></div>
+    </section>
+    <section class="dh-ana" id="r-ana" hidden>
+        <header><button type="button" class="ibtn" id="ra-close" data-i-label="s_close"><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg></button><b data-i="s_anaT"></b></header>
+        <blockquote id="ra-pass"></blockquote>
+        <div class="seg2" id="ra-seg"><button type="button" data-ctx="0" class="on" data-i="s_ctx0"></button><button type="button" data-ctx="1" data-i="s_ctx1"></button></div>
+        <p class="help" id="ra-sub"></p>
+        <div class="dh-abody" id="ra-body"></div>
+        <form class="dh-aform" id="ra-form"><textarea id="ra-q" rows="1" data-ph="s_ask" maxlength="1000"></textarea><button type="submit" class="pill" id="ra-send" data-i="s_send"></button><button type="button" class="pill" id="ra-stop" data-i="s_stop" hidden></button></form>
+    </section>
 </div>
 <script type="module" src="ui/main.js"></script>
 </body>

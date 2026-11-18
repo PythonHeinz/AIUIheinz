@@ -741,3 +741,10 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Tests: `test_hub_has_the_update_button_with_lcd_at_the_bottom_and_uses_the_same_endpoint`, `test_hub_update_texts_follow_the_language_and_the_hub_asks_nothing_outside_on_load`; vorhandener Dashboard-Test unverändert grün; voller Lauf grün. Nur simuliert getestet, das echte `git pull` auf dem Handy steht aus (Handytest Y).
 - Offen aus `AUFTRAG_Update.md`: Aufgaben 2 bis 9.
 
+
+### 2026-11-18 AIUIheinz-docHeinz: Phase 2c (Markierungsleiste: Suchen, Erklären, Zusammenfassen)
+- Markierter Text im Reader zeigt unten eine Leiste: Suchen (nur bis 80 Zeichen), Erklären, Zusammenfassen. Tippen auf den Text oder „Schließen“ schließt das Blatt; Pfeil/Esc ebenso.
+- Suche im ganzen Buch (`mod/suche.js`, höchstens 60 Treffer, Kapiteltexte zwischengespeichert), Treffer springt zur Seite und hebt die Stelle mit der CSS-Highlight-API hervor.
+- KI über `HeinzProviders` (neu nur gelesen aufgerufen, `lib/providers.js` unverändert): aktives Modell des Dashboards, `runtime()`, `prepare()`, `chat()` mit Stream, Stopp, Kopieren. Systemprompt kurz und stabil, Antwort in der App-Sprache (`mod/ki.js`). Gesendet wird nur der Abschnitt (bis 6000 Zeichen) mit Buchtitel und Autor. Kein Modell gewählt, Online gesperrt oder fehlender Schlüssel: klarer Hinweis ohne Anfrage. Cloud-Modell mit „Online erlauben“: Zeile „geht an {Anbieter}“.
+- Fenster „Analyse“ (nach Rückfrage des Entwicklers): „Weiter fragen“ im Blatt öffnet ein Vollbild-Fenster mit Markierung, Verlauf (nur bei offenem Fenster), Eingabefeld, Kopieren je Antwort und Schalter „Nur die Markierung“ / „Mit Seitentext“ (sichtbarer Text der Seite, höchstens 3000 Zeichen); Verlauf wird auf 8000 Zeichen gekürzt (`trimHistory` in `mod/ki.js`); Zurück-Taste und Esc schließen zuerst das Fenster.
+- Tests: `tests/test_docheinz.py` (38, mit simuliertem Ollama und Groq), `tests/docheinz/auswahl.test.mjs`. Nur simuliert getestet; echte Modelle laufen nur auf dem Handy.
