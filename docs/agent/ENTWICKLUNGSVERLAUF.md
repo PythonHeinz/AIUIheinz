@@ -731,3 +731,6 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 
 ### 2026-11-18 AIUIheinz-docHeinz: Fix Titelbild-Rückfall
 - EPUBs ohne Cover-Markierung (Fund: „Nietzsches Briefe“, Titelblatt nur als Bild im Kapitel „Titelseite“) bekommen das erste Bild ab 5 KB der Titelseite als Titelbild (`mod/cover.js`). Test mit Modus `page` in `tests/test_docheinz.py`; mit der echten Datei im Browser geprüft (GIF, 35 KB). Nur simuliert getestet.
+
+### 2026-11-18 AIUIheinz-docHeinz: Reader vorerst abgeschlossen
+- Handytests W (2a) und X (2b, inkl. Titelbild-Rückfall) bestanden. Entwickler schließt den Reader vorerst ab; Verfeinerungen später. Offen: 2c (Markierungsmenü mit Suche und KI über Dashboard-Modelle), Phase 3 (Markierungen, Suche, Export), Phase 4 (PDF mit lokalem pdf.js).
