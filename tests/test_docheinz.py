@@ -11,7 +11,14 @@ URL = "/tools/docheinz/index.html"
 PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
 
-def make_epub(title="Testbuch", author="Frau Test", chapters=2, drm=False, long=False):
+def tiny_png(w=40, h=60):
+    import struct, zlib
+    raw = b"".join(b"\x00" + bytes([200, 60, 60]) * w for _ in range(h))
+    def ch(t, d): return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
+    return b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(raw)) + ch(b"IEND", b"")
+
+
+def make_epub(title="Testbuch", author="Frau Test", chapters=2, drm=False, long=False, cover=None):
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
         z.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
@@ -20,7 +27,13 @@ def make_epub(title="Testbuch", author="Frau Test", chapters=2, drm=False, long=
             z.writestr("META-INF/encryption.xml", '<encryption xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><EncryptedData xmlns="http://www.w3.org/2001/04/xmlenc#"><CipherData/></EncryptedData></encryption>')
         items = "".join('<item id="k%d" href="text/k%d.xhtml" media-type="application/xhtml+xml"/>' % (i, i) for i in range(1, chapters + 1))
         spine = "".join('<itemref idref="k%d"/>' % i for i in range(1, chapters + 1))
-        z.writestr("OEBPS/c.opf", '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>%s</dc:title><dc:creator>%s</dc:creator><dc:language>de</dc:language><dc:identifier id="id">x</dc:identifier></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>%s</manifest><spine>%s</spine></package>' % (title, author, items, spine))
+        opf = ('<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>%s</dc:title><dc:creator>%s</dc:creator><dc:language>de</dc:language><dc:identifier id="id">x</dc:identifier></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>%s</manifest><spine>%s</spine></package>' % (title, author, items, spine))
+        if cover:
+            items_extra = '<item id="cv" href="img/c.png" media-type="image/png"%s/>' % (' properties="cover-image"' if cover == "prop" else '')
+            opf = opf.replace('</manifest>', items_extra + '</manifest>')
+            if cover == "meta": opf = opf.replace('</metadata>', '<meta name="cover" content="cv"/></metadata>')
+            z.writestr("OEBPS/img/c.png", tiny_png())
+        z.writestr("OEBPS/c.opf", opf)
         lis = "".join('<li><a href="text/k%d.xhtml">Kapitel %d</a></li>' % (i, i) for i in range(1, chapters + 1))
         z.writestr("OEBPS/nav.xhtml", '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><body><nav epub:type="toc"><ol>%s</ol></nav></body></html>' % lis)
         for i in range(1, chapters + 1):
@@ -287,12 +300,15 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
         self.assertEqual(p.locator("#list .dh-tx b").inner_text(), "b")
 
-    def start_book(self, p, name, mime, data):
+    def start_book(self, p, name, mime, data, cover=False):
         self.add(p, (name, mime, data))
         p.wait_for_selector("#list .dh-open")
         p.click("#list .dh-open")
         p.wait_for_selector("#reader:not([hidden])")
         p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        if not cover:
+            self.tap(p, "next")                 # Titelseite überspringen
+            p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
 
     def tap(self, p, where):
         w, h = 426, p.evaluate("() => innerHeight")
@@ -307,7 +323,6 @@ class DocHeinzUiTests(DocHeinzBase):
         self.start_book(p, "t.epub", "application/epub+zip", self.epub(chapters=3))
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 1')")
         self.assertIn("Part 1 of 3", p.locator("#r-pos").inner_text())
-        self.assertTrue(p.locator("#r-prev").is_disabled())
         self.assertEqual(p.evaluate("() => [document.querySelectorAll('#r-body script, #r-body style, #r-body [onclick], #r-body [style], #r-body a[href]').length, window.__x]"), [0, 0])
         p.click("#r-body a[data-go]")
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 2')")
@@ -329,6 +344,9 @@ class DocHeinzUiTests(DocHeinzBase):
         page, pages, _ = self.pg(p)
         self.assertEqual(page, 1)
         self.assertGreater(pages, 5)
+        self.tap(p, "prev")                     # erste Seite: zurück führt zur Titelseite
+        self.assertEqual(p.get_attribute("#reader", "data-cover"), "1")
+        self.tap(p, "next")
         # keine Kopfzeile, keine Steuerung, keine Knöpfe im Lesemodus
         self.assertTrue(p.locator("#r-ov").is_hidden())
         self.assertTrue(p.locator("#r-next").is_hidden())
@@ -358,6 +376,41 @@ class DocHeinzUiTests(DocHeinzBase):
         p.click("#list .dh-open")
         p.wait_for_selector("#reader:not([hidden])")
         p.wait_for_function("() => document.getElementById('reader').dataset.page === '3'")
+
+    def test_cover_page_and_library_preview(self):
+        for mode in ("prop", "meta"):
+            p = self.open()
+            self.start_book(p, "c.epub", "application/epub+zip", self.epub(chapters=2, cover=mode), cover=True)
+            self.assertEqual(p.get_attribute("#reader", "data-cover"), "1", mode)
+            self.assertTrue(p.locator("#r-cimg").is_visible(), mode)
+            self.assertTrue(p.evaluate("() => document.getElementById('r-cimg').naturalWidth > 0"))
+            self.assertTrue(p.locator("#r-ctitle").is_hidden())
+            self.tap(p, "prev")
+            self.assertEqual(p.get_attribute("#reader", "data-cover"), "1")
+            self.tap(p, "next")
+            self.assertEqual(p.get_attribute("#reader", "data-cover"), "0")
+            p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Kapitel 1')")
+            self.tap(p, "top"); p.click("#r-close")
+            p.wait_for_selector("#reader", state="hidden")
+            self.assertEqual(p.locator("#list .dh-cover.has img").count(), 1, mode)
+            self.assertTrue(p.evaluate("() => document.querySelector('#list .dh-cover img').naturalWidth > 0"))
+            self.assertEqual(p.errors, [])
+
+    def test_title_page_without_cover_image(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# Mein Buch\n\nText.", cover=True)
+        self.assertEqual(p.get_attribute("#reader", "data-cover"), "1")
+        self.assertTrue(p.locator("#r-ctitle").is_visible())
+        self.assertEqual(p.locator("#r-ct").inner_text(), "Mein Buch")
+
+    def test_old_books_get_their_cover_afterwards(self):
+        p = self.open()
+        self.add(p, ("c.epub", "application/epub+zip", self.epub(chapters=1, cover="prop")))
+        p.wait_for_selector("#list .dh-cover.has img")
+        p.evaluate("async () => { const m = await import('/tools/docheinz/mod/db.js'); const d = await m.openDb(); const [b] = await d.list(); await d.update(b.id, { cover: null, coverTried: false }); d.close(); }")
+        p.reload()
+        p.wait_for_selector("html[data-dh=ready]")
+        p.wait_for_selector("#list .dh-cover.has img")
 
     def test_page_count_follows_font_size_and_keeps_position(self):
         p = self.open()

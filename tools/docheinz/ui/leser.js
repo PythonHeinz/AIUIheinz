@@ -7,7 +7,7 @@ import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zo
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black'];
-const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, ui: false };
+const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, ui: false, onCover: false, coverUrl: '' };
 
 const body = () => $('r-body');
 const lastCh = () => S.src.chapters.length - 1;
@@ -43,19 +43,20 @@ function goPage(i) {
 }
 
 function updatePos() {
+    if (S.onCover) return 0;
     const p = percent(S.rec, S.ch, fracEnd(S.page, S.pages));
     $('r-pos').textContent = S.t('r_pos', { p: S.page + 1, n: S.pages }) + (S.rec.chapters > 1 ? ' · ' + S.t('r_posc', { c: S.ch + 1, m: S.rec.chapters }) : '') + ' · ' + S.t('pct', { n: p });
     $('r-prog').style.width = p + '%';
     const r = $('reader');
     r.dataset.page = S.page + 1; r.dataset.pages = S.pages; r.dataset.ch = S.ch + 1;
     const here = { ch: S.ch, page: S.page };
-    $('r-prev').disabled = turn(here, -1, S.pages, S.src.chapters.length) === null;
+    $('r-prev').disabled = false;
     $('r-next').disabled = turn(here, 1, S.pages, S.src.chapters.length) === null;
     return p;
 }
 function save(now) {
     clearTimeout(S.timer);
-    const run = () => { if (!S.rec) return; S.cb.onProgress({ ch: S.ch, frac: fracOfPage(S.page, S.pages), pct: percent(S.rec, S.ch, fracEnd(S.page, S.pages)) }); };
+    const run = () => { if (!S.rec || S.onCover) return; S.cb.onProgress({ ch: S.ch, frac: fracOfPage(S.page, S.pages), pct: percent(S.rec, S.ch, fracEnd(S.page, S.pages)) }); };
     if (now) run(); else S.timer = setTimeout(run, 500);
 }
 
@@ -79,14 +80,34 @@ async function show(i, anchor, frac, at) {
     const c = src.chapters[i];
     $('r-title').textContent = c.title || S.rec.title;
     closeUi();
-    save(true);
+    if (!S.onCover) save(true);
 }
 
 function go(dir) {
+    if (S.onCover) { if (dir > 0) { showCover(false); save(true); } return; }
     const r = turn({ ch: S.ch, page: S.page }, dir, S.pages, S.src.chapters.length);
-    if (!r) return;
+    if (!r) { if (dir < 0) showCover(true); return; }
     if (r.ch === S.ch) goPage(r.page);
     else show(r.ch, '', 0, r.page);          // 'first' oder 'last'
+}
+
+// ---------- Titelseite ----------
+function setCover(blob) {
+    if (S.coverUrl) { URL.revokeObjectURL(S.coverUrl); S.coverUrl = ''; }
+    const img = $('r-cimg');
+    if (blob) { S.coverUrl = URL.createObjectURL(blob); img.src = S.coverUrl; } else img.removeAttribute('src');
+    img.hidden = !blob;
+    $('r-ctitle').hidden = !!blob;
+    $('r-ct').textContent = S.rec.title || '';
+    $('r-ca').textContent = S.rec.author || '';
+}
+function showCover(on) {
+    S.onCover = on;
+    $('r-cover').hidden = !on;
+    $('reader').dataset.cover = on ? '1' : '0';
+    $('r-prev').disabled = on;
+    if (on) { $('r-title').textContent = S.rec.title; $('r-pos').textContent = S.t('r_cover'); $('r-prog').style.width = '0%'; }
+    else updatePos();
 }
 
 // ---------- Steuerung ----------
@@ -106,7 +127,7 @@ function buildToc() {
         btn.type = 'button';
         btn.className = 'l' + Math.min(it.level || 1, 3);
         btn.textContent = it.title || S.t('r_part', { n: hit.index + 1 });
-        btn.addEventListener('click', () => show(hit.index, hit.anchor));
+        btn.addEventListener('click', () => { showCover(false); show(hit.index, hit.anchor); });
         box.appendChild(btn);
     });
 }
@@ -199,7 +220,10 @@ export async function openReader(rec, src, ctx) {
     $('reader').hidden = false;
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
+    setCover(ctx.cover || null);
+    const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);
+    showCover(start);
 }
 
 export function close() {
@@ -210,6 +234,8 @@ export function close() {
     $('reader').hidden = true;
     document.body.style.overflow = '';
     body().textContent = '';
+    $('r-cover').hidden = true; S.onCover = false;
+    if (S.coverUrl) { URL.revokeObjectURL(S.coverUrl); S.coverUrl = ''; }
     S.cb.onClose();
     S.rec = null; S.src = null;
 }

@@ -173,6 +173,19 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen.
 - [ ] Flugmodus: Seite, EPUB-Erzeugung, Lesen und Drucken ohne Netz (keine Bibliothek aus dem Netz nötig).
 
+## Strang docHeinz, Phase 2b (18.11.2026; nur im Container simuliert getestet)
+
+Vorher: `git pull`, `bash start.sh`, docHeinz neu laden. Ein EPUB mit Titelbild, eines ohne und eine Markdown-Datei bereithalten.
+
+**X. docHeinz Titelbild**
+- [ ] Neues EPUB mit Titelbild hinzufügen: in der Bibliothek erscheint das Bild als kleine Vorschau.
+- [ ] Bücher, die schon vorher in der Bibliothek waren (Phase 1): Vorschau erscheint nach einmaligem Neuladen von selbst.
+- [ ] Buch öffnen (noch nicht gelesen): erste Seite ist das Titelbild, Tippen rechts blättert zum Text, auf Text-Seite 1 führt Tippen links zurück zur Titelseite. Steuerung oben funktioniert auch dort.
+- [ ] Buch ohne Bild (Markdown, Text, EPUB ohne Cover): Titelseite zeigt Titel und Autor, in Bibliothek bleibt der Buchstabe.
+- [ ] Ein begonnenes Buch öffnet direkt an der Lesestelle, nicht auf der Titelseite.
+- [ ] Bild sieht in Hell, Sepia, Dunkel und Schwarz sauber aus, ragt nicht über den Rand; Hochformat und Querformat probieren.
+- [ ] Speicherzeile unten: Wert wächst pro Buch nur um das Buch (Bild nur Zehntel-MB).
+
 ## Strang docHeinz, Phase 2a (18.11.2026; nur im Container simuliert getestet)
 
 Vorher: `git pull`, `bash start.sh`; docHeinz neu laden (ggf. Cache der App leeren). Ein EPUB und eine lange Markdown-Datei bereithalten.

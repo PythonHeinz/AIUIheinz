@@ -722,3 +722,9 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Steuerung (Zurück, Inhalt oben links, Titel, Einstellungen, Seite x von n, Balken) schwebt über dem Text, verschiebt ihn nicht; keine Kopfzeile im Lesemodus.
 - Schriften: 4 lokale woff2-Familien (OFL-Lizenzen in `fonts/`, Umlaute und Anführungszeichen geprüft) plus Serif/Sans/Mono des Systems; Einstellung `font`.
 - Tests: `tests/test_docheinz.py` auf Seitenmodus umgestellt (26), `seiten.test.mjs`. Nur simuliert getestet (Playwright 426 × 803 und 426 × 400).
+
+### 2026-11-18 AIUIheinz-docHeinz: Phase 2b (Titelbild, Titelseite)
+- Neues Modul `mod/cover.js`: findet das Titelbild im EPUB (cover-image, Meta „cover“, Guide „cover“, Dateiname); `ui/bild.js` verkleinert es (JPEG, 720 px) und `rec.cover` (Blob) liegt im Buchsatz der eigenen IndexedDB (keine Schemaänderung, `coverTried` verhindert Wiederholungen).
+- Bibliothek zeigt das Bild als Vorschau (Objekt-URLs, beim Neuzeichnen freigegeben); Bücher aus Phase 1 bekommen es beim nächsten Start nachträglich.
+- Leseansicht: Titelseite als erste Seite (Bild oder Titel/Autor-Seite für Bücher ohne Bild); Tippzonen blättern wie sonst, auf Seite 1 führt „zurück“ zur Titelseite. Bücher mit Lesestand öffnen direkt an der Stelle.
+- Speicher: bleibt app-intern (Entscheidung D von 18.11.2026): Import kopiert die Datei in die IndexedDB, nur importierte Bücher erscheinen; keine Änderung an `server.py`. Nur simuliert getestet.

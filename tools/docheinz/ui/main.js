@@ -4,6 +4,8 @@ import { D } from './i18n.js';
 import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial, hue } from '../mod/bibliothek.js';
+import { findCover } from '../mod/cover.js';
+import { scaleCover } from './bild.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
@@ -11,6 +13,7 @@ const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
 const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, confirm: '', msgs: [] };
+const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
 
@@ -58,6 +61,15 @@ function bookRow(b) {
     const cover = document.createElement('span');
     cover.className = 'dh-cover'; cover.textContent = initial(b.title);
     cover.style.setProperty('--h', hue(b.title));
+    if (b.cover instanceof Blob) {
+        const img = document.createElement('img');
+        img.alt = ''; img.decoding = 'async';
+        const u = URL.createObjectURL(b.cover);
+        coverUrls.push(u);
+        img.src = u;
+        cover.textContent = ''; cover.classList.add('has');
+        cover.appendChild(img);
+    }
     const tx = document.createElement('span'); tx.className = 'dh-tx';
     const ti = document.createElement('b'); ti.textContent = b.title;
     const au = document.createElement('small'); au.textContent = [b.author, t('fmt_' + b.format), mb(b.size)].filter(Boolean).join(' · ');
@@ -77,6 +89,7 @@ function bookRow(b) {
 function render() {
     const list = $('list');
     list.textContent = '';
+    coverUrls.splice(0).forEach(u => URL.revokeObjectURL(u));
     const shown = filterSort(state.books, state.q, state.sort);
     shown.forEach(b => list.appendChild(bookRow(b)));
     $('tools').hidden = state.books.length < 2 && !state.q;
@@ -97,6 +110,27 @@ async function storeLine() {
 
 async function reload() { state.books = await state.db.list(); render(); }
 
+// ---------- Titelbild ----------
+async function withCover(rec, bytes) {
+    rec.coverTried = true;
+    const c = await findCover(bytes);
+    const blob = c ? await scaleCover(c.bytes, c.type) : null;
+    if (blob) rec.cover = blob;
+}
+// Bücher aus Phase 1 bekommen ihr Titelbild nachträglich, einmal je Buch
+async function backfillCovers() {
+    for (const b of state.books.filter(x => x.format === 'epub' && !x.cover && !x.coverTried)) {
+        try {
+            const blob = await state.db.file(b.id);
+            const patch = { coverTried: true };
+            if (blob) { const c = await findCover(new Uint8Array(await blob.arrayBuffer())); const sc = c ? await scaleCover(c.bytes, c.type) : null; if (sc) patch.cover = sc; }
+            Object.assign(b, patch);
+            await state.db.update(b.id, patch);
+        } catch { /* dieses Buch bleibt ohne Bild */ }
+    }
+    render();
+}
+
 // ---------- Hinzufügen ----------
 async function addFiles(files) {
     files = Array.from(files || []);
@@ -115,6 +149,7 @@ async function addFiles(files) {
             const src = await openSource(bytes, format, name);
             const { lens } = await describe(src);
             const rec = makeRecord(src, { name, size: f.size, lens });
+            if (format === 'epub') await withCover(rec, bytes);
             await state.db.put(rec, new Blob([bytes], { type: f.type || 'application/octet-stream' }));
             known.add(rec.sig);
             added++;
@@ -142,7 +177,7 @@ async function openBook(id) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            t, lang: () => Heinz.lang, size: state.size, theme: state.theme, font: state.font, btns: state.btns,
+            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, btns: state.btns,
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
             onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },
@@ -194,6 +229,7 @@ async function start() {
     try { state.db = await openDb(); await reload(); }
     catch { msg(t('e_idb'), 'err'); $('b-add').setAttribute('aria-disabled', 'true'); $('file').disabled = true; }
     document.documentElement.setAttribute('data-dh', 'ready');
+    if (state.db) backfillCovers();
 }
 
 start();
