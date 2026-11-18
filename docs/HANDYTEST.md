@@ -178,7 +178,7 @@ Vorher: `git pull`, `bash start.sh`, Seite `http://localhost:3000/tools/convert2
 Vorher: `git pull`, `bash start.sh`, docHeinz neu laden. Im Heinz Dashboard ein lokales Modell wählen (Ollama läuft in Termux). Ein längeres Buch bereithalten.
 
 **Y. docHeinz Markierungsleiste**
-- [ ] Wort lang drücken und markieren: unten erscheint die Leiste „Suchen, Erklären, Zusammenfassen“, ohne die Textauswahl des Handys zu stören; die Leiste verdeckt die Griffe nicht. Tippen im Text blendet sie wieder aus.
+- [ ] Wort lang drücken und markieren: oben am Bildschirm erscheint die Leiste „Suchen, Erklären, Zusammenfassen“ (steht die Markierung selbst ganz oben, sitzt sie unten über dem Chrome-Suchfeld); sie stört weder das Android-Menü noch die Griffe. Tippen im Text blendet sie wieder aus.
 - [ ] Suchen: Trefferliste mit Kapitel und Umgebung; Tipp auf einen Treffer springt auf die Seite, die Stelle ist gelb hervorgehoben; nächstes Umblättern löscht die Hervorhebung. Längere Markierung (über 80 Zeichen): „Suchen“ fehlt.
 - [ ] Erklären eines Wortes und eines Satzes: Antwort läuft wörtlich ein, Stopp bricht ab, Kopieren legt sie in die Zwischenablage. Bei kaltem Modell dauert der erste Text; wie lange?
 - [ ] Zusammenfassen eines längeren Absatzes: Qualität des kleinen Modells bewerten.

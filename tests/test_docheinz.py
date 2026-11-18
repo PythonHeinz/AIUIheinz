@@ -463,6 +463,17 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.evaluate("() => !window.Highlight || (CSS.highlights && CSS.highlights.has('dh-hit'))"))
         self.assertEqual(p.errors, [])
 
+    def test_bar_sits_on_top_unless_the_selection_is_up_there(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        p.evaluate("""() => { const ps = document.querySelectorAll('#r-body p'); const n = ps[ps.length > 8 ? 8 : ps.length - 1].firstChild; const r = document.createRange(); r.setStart(n, 0); r.setEnd(n, 6); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }""")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        self.assertEqual(p.evaluate("() => document.getElementById('r-sel').classList.contains('low')"), False)
+        self.assertLess(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 40)
+        self.select_text(p, "Langes Buch")
+        p.wait_for_function("() => document.getElementById('r-sel').classList.contains('low')")
+        self.assertGreater(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 400)
+
     def test_search_without_hits_and_tap_closes_the_sheet(self):
         p = self.open()
         self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
@@ -601,7 +612,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.start_book(p, "a.md", "text/markdown", b"# T\n\nEin Satz zum Suchen.")
         self.select_text(p, "Satz")
         p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-sel').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight; }"))
+        self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-sel').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && r.top >= 0; }"))
         p.click("#r-sel [data-sel=search]")
         p.wait_for_selector("#r-sheet:not([hidden])")
         self.assertTrue(p.evaluate("() => { const r = document.getElementById('r-sheet').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth; }"))

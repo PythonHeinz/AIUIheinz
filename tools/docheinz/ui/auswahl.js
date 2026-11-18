@@ -10,6 +10,14 @@ const MAX_QUERY = 80;
 const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', timer: 0, ac: null, cache: new Map(), run: 0, wired: false };
 
 const sel = () => (window.getSelection ? window.getSelection() : null);
+// Chrome blendet bei einer Markierung unten ein eigenes Suchfeld („Tippen, um Suchergebnisse zu sehen“) und über der Markierung sein Menü ein.
+// Darum sitzt die Leiste oben; steht die Markierung selbst weit oben, wandert sie nach unten über das Chrome-Feld.
+function placeBar() {
+    const s = sel();
+    if (!s || !s.rangeCount) return;
+    const r = s.getRangeAt(0).getBoundingClientRect();
+    $('r-sel').classList.toggle('low', r.top < 190);
+}
 function selectedText() {
     const s = sel();
     if (!s || s.isCollapsed || !s.rangeCount) return '';
@@ -21,6 +29,7 @@ function selectedText() {
 function updateBar() {
     A.text = A.env && A.env.isOpen() && $('r-sheet').hidden ? selectedText() : '';
     const bar = $('r-sel');
+    if (A.text) placeBar();
     if (bar.hidden === !A.text) { if (A.text) bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY; return; }
     bar.hidden = !A.text;
     bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY;

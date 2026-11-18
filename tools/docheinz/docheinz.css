@@ -122,7 +122,8 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ctitle span { font-size: 1rem; color: var(--rsub); }
 
 /* Markierungsleiste und Blatt (Suchen, Erklären, Zusammenfassen) */
-.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
+.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
+.dh-sel.low { top: auto; bottom: calc(150px + env(safe-area-inset-bottom)); }
 .dh-sel[hidden] { display: none; }
 .dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rt); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; }
 .dh-sel button[hidden] { display: none; }
