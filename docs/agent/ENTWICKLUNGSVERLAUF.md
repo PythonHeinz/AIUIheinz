@@ -756,3 +756,6 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 ### 2026-11-19 AIUIheinz-docHeinz-Fix: Markierung erweitern verschob das Seitenbild
 - Meldung (Screenshot): Zieht man beim Markieren den Griff an den Rand, scrollt der Browser den Textkasten (`overflow: hidden` lässt Auto-Scrollen zu), Spalten stehen halb verschoben, Markierungsfläche zerrissen; nur Verlassen des Readers half.
 - Änderung: Seiten werden nicht mehr per `scrollLeft` gewechselt, sondern per `transform: translateX` in einem Ausschnitt `#r-clip` mit `overflow: clip` (auch `#r-page`, `#reader`): nichts ist scrollbar, die Markierung kann das Bild nicht verrücken. Folge: Eine Markierung reicht nur über die sichtbare Seite. Test `test_extending_a_selection_never_scrolls_the_page_layout`. Nur simuliert getestet.
+
+### 2026-11-19 AIUIheinz-docHeinz: Konzept Android-Hülle vorbereitet
+- Neu `docs/agent/AUFTRAG_Huelle.md`: Anlass (Chrome-Eigenheiten bei Markierung), Optionen A bis D (PWA, eigene WebView-App, Capacitor, TWA), Anforderungen, offene Fragen, Risiken, Vorgehen. Nichts gebaut; Strang `AIUIheinz-Huelle` in `STAND.md` als „nur Konzept“ eingetragen.
