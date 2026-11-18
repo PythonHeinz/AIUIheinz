@@ -5,6 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
+- 18.11.2026, AIUIheinz-Update: Update-Knopf mit LCD unten im Hub (Aufgabe 1 aus `AUFTRAG_Update.md`); gemeinsame Logik `lib/shared/update.js`, Dashboard nutzt sie mit. Berührt: `index.html`, `lib/shared/update.js`, `lib/dashboard/update.js`, `lib/data/dashboard.i18n.json`, Tests.
 
 Stand: 17.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
