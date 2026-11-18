@@ -21,6 +21,7 @@ function selectedText() {
 function updateBar() {
     A.text = A.env && A.env.isOpen() && $('r-sheet').hidden ? selectedText() : '';
     const bar = $('r-sel');
+    if (bar.hidden === !A.text) { if (A.text) bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY; return; }
     bar.hidden = !A.text;
     bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY;
 }
@@ -213,7 +214,10 @@ export function initSelection(env) {
     A.cache.clear();
     if (A.wired) return;
     A.wired = true;
+    // Auf dem Handy feuert die Markierung nicht in jedem Browser zuverlässig `selectionchange`: zusätzlich nach Fingerheben und im Takt prüfen.
     document.addEventListener('selectionchange', () => { clearTimeout(A.timer); A.timer = setTimeout(updateBar, 120); });
+    ['pointerup', 'touchend', 'contextmenu'].forEach(ev => $('r-page').addEventListener(ev, () => setTimeout(updateBar, 250)));
+    setInterval(() => { if (A.env && A.env.isOpen()) updateBar(); }, 500);
     $('r-sel').addEventListener('pointerdown', (e) => e.preventDefault());       // Markierung bleibt beim Tippen auf die Leiste
     $('r-sel').addEventListener('click', (e) => {
         const b = e.target.closest('button[data-sel]');
