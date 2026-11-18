@@ -1,6 +1,6 @@
 # AUFTRAG Update (Strang AIUIheinz-Update)
 
-Neuer Strang, angelegt 17.11.2026 im Strang AIUIheinz-convert2 auf Wunsch des Entwicklers. Strangname: **AIUIheinz-Update**. Startet nach Abschluss von convert2 (Hub-Eintrag ist gesetzt). Berührt das Fundament (Hub, `server.py`, Schema `tool.json`): läuft allein, Zeile unter „Aktive Arbeit“, vorher beim Entwickler nachfragen.
+Neuer Strang, angelegt 17.11.2026 im Strang AIUIheinz-convert2 auf Wunsch des Entwicklers. Strangname: **AIUIheinz-Update**. convert2 ist abgeschlossen (17.11.). Start möglich, sobald kein anderer Strang `index.html` bearbeitet (docHeinz berührt nur `AREAS`; vor dem Start „Aktive Arbeit“ lesen). Berührt das Fundament (Hub, `server.py`, Schema `tool.json`): läuft allein, Zeile unter „Aktive Arbeit“, vorher beim Entwickler nachfragen.
 
 ## Ausgangslage (geprüft 17.11.2026)
 - Der Server liefert alle Seiten und Tools aus dem Ordner auf dem Handy aus (`server.py`, ohne Cache für Seiten). Der Service Worker (`sw.js`) holt zuerst aus dem Netz, der Cache ist nur Rückfall.
@@ -10,8 +10,14 @@ Neuer Strang, angelegt 17.11.2026 im Strang AIUIheinz-convert2 auf Wunsch des En
 ## Ziel
 Der Entwickler muss nicht mehr ins Dashboard, um zu aktualisieren, und sieht im Hub, was sich geändert hat. Alle Tools bleiben in einem Repo und einem Stand (keine getrennten Versionen der Tools, weil sie `lib/` teilen).
 
+## Entscheidungen des Entwicklers (18.11.2026)
+- **Dashboard-Knopf bleibt** unverändert bestehen.
+- **Hub: Update-Knopf unten auf der Hauptseite, mit LCD-Anzeige wie im Dashboard** (gleiche Pixeldisplay-Zeile/Zustände: bereit, prüfe, Update verfügbar, aktuell, Fehler). Kein eigener Bereich „Einrichten“ dafür; der Knopf sitzt fest unten im Hub.
+- **Später (nicht jetzt):** ein zentrales Menü „Info · Sicherung · Update“ für die ganze App ersetzt die verstreuten Stellen. Der Knopf im Hub und die gemeinsame Update-Logik unter `lib/` sind so zu bauen, dass sie dort einfach einziehen können (kein Hub-spezifischer Code in der Logik, nur in der Darstellung).
+- Beide Knöpfe nutzen dieselbe Logik und denselben Endpunkt `POST /api/update`; es bleibt **ein** Stand für alle Tools.
+
 ## Aufgaben
-1. **Update im Hub (Vorschlag A).** Der Hub zeigt, ob es einen neueren Stand auf GitHub gibt, und bietet einen Knopf, der denselben Endpunkt `POST /api/update` nutzt wie das Dashboard. Das Dashboard behält seinen Knopf, beide rufen dieselbe Funktion; die Logik liegt an einer Stelle (neues Modul unter `lib/`, nicht in zwei Seiten kopieren).
+1. **Update im Hub (beschlossen: Knopf unten mit LCD, siehe oben).** Der Hub zeigt, ob es einen neueren Stand auf GitHub gibt, und bietet einen Knopf, der denselben Endpunkt `POST /api/update` nutzt wie das Dashboard. Das Dashboard behält seinen Knopf, beide rufen dieselbe Funktion; die Logik liegt an einer Stelle (neues Modul unter `lib/`, nicht in zwei Seiten kopieren).
 2. **Prüfen nur mit Haken.** Die Prüfung („gibt es Neues?“) macht der Server per `git fetch` und vergleicht Commits; sie braucht Netz und läuft nur bei gesetztem Haken „Online erlauben“ (Standard aus) oder auf ausdrücklichen Tipp des Entwicklers. Neuer Endpunkt `GET /api/update/check` (nur lesend, fester Befehl, keine Eingabe). Ohne Haken bleibt der Knopf „Update“ von Hand. Die Seite selbst stellt keine Anfrage nach außen.
 3. **Optional:** `start.sh` macht beim Start `git pull --ff-only`, wenn Netz da ist, und startet auch ohne Netz fehlerfrei. Vorher mit dem Entwickler abstimmen.
 4. **Versionsfeld je Tool.** `tool.json` bekommt `version` (Text, optional). Der Hub zeigt sie je Kachel klein an. Alle bestehenden `tool.json` ergänzen (Beschluss mit dem Entwickler: Startwert `0.1`, convert2 `0.1 beta`).
