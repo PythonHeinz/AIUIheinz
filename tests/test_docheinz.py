@@ -417,11 +417,19 @@ class DocHeinzUiTests(DocHeinzBase):
 
     # ---------- Phase 2c: Markierungsleiste ----------
     def select_text(self, p, needle):
-        p.evaluate("""(needle) => {
+        """Eigene Auswahl wie am Handy: langer Druck auf das erste Wort, dann ans Ende der Fundstelle ziehen."""
+        pts = p.evaluate("""(needle) => {
             const b = document.getElementById('r-body'), w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
-            let n; while ((n = w.nextNode())) { const i = n.nodeValue.indexOf(needle); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + needle.length); const s = getSelection(); s.removeAllRanges(); s.addRange(r); return; } }
+            let n; while ((n = w.nextNode())) { const i = n.nodeValue.indexOf(needle); if (i >= 0) {
+                const a = document.createRange(); a.setStart(n, i); a.setEnd(n, i + 1);
+                const z = document.createRange(); z.setStart(n, i + needle.length - 1); z.setEnd(n, i + needle.length);
+                const ra = a.getClientRects()[0], rz = z.getClientRects()[0];
+                return [ra.left + 2, ra.top + ra.height / 2, rz.right - 2, rz.top + rz.height / 2]; } }
             throw new Error('not found');
         }""", needle)
+        p.mouse.move(pts[0], pts[1]); p.mouse.down(); p.wait_for_timeout(560)
+        p.mouse.move(pts[2], pts[3], steps=4); p.mouse.up()
+        p.wait_for_selector("#r-sel:not([hidden])")
 
     def fake_ollama(self, p, chunks=("Das ist", " die Erklärung.")):
         calls = []
@@ -447,7 +455,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#r-sel").is_hidden())
         self.select_text(p, "Text von Kapitel 1")
         p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertEqual(p.locator("#r-sel button:visible").count(), 3)
+        self.assertEqual(p.locator("#r-sel button:visible").count(), 4)
         p.click("#r-sel [data-sel=search]")
         p.wait_for_selector("#r-sheet:not([hidden]) .dh-hit")
         self.assertTrue(p.locator("#r-sel").is_hidden())
@@ -464,31 +472,46 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.evaluate("() => !window.Highlight || (CSS.highlights && CSS.highlights.has('dh-hit'))"))
         self.assertEqual(p.errors, [])
 
-    def test_extending_a_selection_never_scrolls_the_page_layout(self):
+    def test_native_selection_is_off_and_long_press_selects_a_word_with_handles(self):
         p = self.open()
         self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('r-body')).userSelect"), "none")
+        self.select_text(p, "Langes")
+        self.assertEqual(p.evaluate("() => getSelection().toString()"), "")
+        self.assertTrue(p.locator("#r-h1").is_visible() and p.locator("#r-h2").is_visible())
+        # Tippen hebt die Markierung nur auf, blättert nicht
+        before = self.pg(p)[0]
         self.tap(p, "next")
-        before = p.evaluate("() => [document.getElementById('r-body').getBoundingClientRect().left, document.getElementById('r-clip').getBoundingClientRect().left]")
-        # Markierung bis weit hinter die Seite aufziehen und zum Ende scrollen lassen (wie das Ziehen am Griff am Rand)
-        p.evaluate("""() => { const b = document.getElementById('r-body'); const ps = b.querySelectorAll('p'); const r = document.createRange(); r.setStart(ps[3].firstChild, 0); r.setEnd(ps[ps.length - 1].firstChild, 5); const s = getSelection(); s.removeAllRanges(); s.addRange(r); ps[ps.length - 1].scrollIntoView({ inline: 'end' }); b.scrollLeft = 5000; document.getElementById('r-page').scrollLeft = 300; document.getElementById('reader').scrollLeft = 300; }""")
-        p.wait_for_timeout(300)
-        after = p.evaluate("() => [document.getElementById('r-body').getBoundingClientRect().left, document.getElementById('r-clip').getBoundingClientRect().left, document.getElementById('r-body').scrollLeft, document.getElementById('r-page').scrollLeft, document.getElementById('reader').scrollLeft]")
-        self.assertEqual(after[:2], before)
-        self.assertEqual(after[2:], [0, 0, 0])
-        self.assertEqual(self.pg(p)[0], 2)
+        self.assertTrue(p.locator("#r-sel").is_hidden())
+        self.assertEqual(self.pg(p)[0], before)
 
-    def test_bar_sits_low_by_default_and_moves_up_on_collision(self):
+    def test_dragging_a_handle_extends_the_selection_without_moving_the_layout(self):
         p = self.open()
         self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
-        self.select_text(p, "Langes Buch")
+        self.select_text(p, "Langes")
+        before = p.evaluate("() => document.getElementById('r-body').getBoundingClientRect().left")
+        h = p.locator("#r-h2").bounding_box()
+        p.mouse.move(h["x"] + h["width"] / 2, h["y"] + 14); p.mouse.down()
+        p.mouse.move(380, h["y"] + 80 + 20, steps=6); p.mouse.move(60, h["y"] + 180 + 20, steps=6); p.mouse.up()
         p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertEqual(p.evaluate("() => document.getElementById('r-sel').classList.contains('top')"), False)
-        self.assertGreater(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 400)
-        # Markierung genau dort, wo die untere Leiste läge → Leiste wandert nach oben
-        ok = p.evaluate("""() => { for (const n of document.querySelectorAll('#r-body p')) { const r = n.getBoundingClientRect(); if (r.left >= 0 && r.left < 400 && r.top > 560 && r.top < 660) { const t = n.firstChild; const g = document.createRange(); g.setStart(t, 0); g.setEnd(t, 4); const s = getSelection(); s.removeAllRanges(); s.addRange(g); return true; } } return false; }""")
-        if ok:
-            p.wait_for_function("() => document.getElementById('r-sel').classList.contains('top')")
-            self.assertLess(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 40)
+        self.assertEqual(p.evaluate("() => document.getElementById('r-body').getBoundingClientRect().left"), before)
+        p.click("#r-sel [data-sel=copy]")
+        self.assertTrue(p.locator("#r-sel").is_hidden())
+
+    def test_bar_floats_above_the_selection_or_below_when_there_is_no_room(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.select_text(p, "Langes")
+        bar = p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().toJSON()")
+        handle = p.evaluate("() => document.getElementById('r-h1').getBoundingClientRect().top")
+        self.assertGreater(bar["top"], handle)          # Titel ganz oben: kein Platz darüber, Leiste unter den Griffen
+        self.tap(p, "mid")
+        self.select_text(p, "Absatz 3")
+        bar = p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().toJSON()")
+        handle = p.evaluate("() => document.getElementById('r-h1').getBoundingClientRect().top")
+        self.assertLess(bar["bottom"], handle)          # genug Platz darüber: Leiste über der Markierung
+        self.assertGreaterEqual(bar["left"], 0)
+        self.assertLessEqual(bar["right"], 426)
 
     def test_search_without_hits_and_tap_closes_the_sheet(self):
         p = self.open()
@@ -673,10 +696,12 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#seg-ai button")
         p.click("#seg-ai button[data-m='qwen:7b']")
         self.assertIn("qwen:7b", p.inner_text("#ai-cur"))
+        self.assertEqual(p.get_attribute("#reader", "data-gap"), "0")
+        p.click("#seg-gap button[data-gap='1']")
         self.assertEqual(p.get_attribute("#reader", "data-gap"), "1")
         p.click("#seg-gap button[data-gap='0']")
         self.assertEqual(p.get_attribute("#reader", "data-gap"), "0")
-        self.tap(p, "top")
+        p.keyboard.press("Escape")
         self.select_text(p, "kurzer")
         p.wait_for_selector("#r-sel:not([hidden])")
         p.click("#r-sel [data-sel=explain]")

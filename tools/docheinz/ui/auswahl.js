@@ -5,40 +5,115 @@ import { $, HeinzStore } from './base.js';
 import { HeinzProviders as PV } from '../../../lib/providers.js';
 import { findAll, normalizeQuery } from '../mod/suche.js';
 import { buildRequest, trimHistory } from '../mod/ki.js';
+import { wordBounds } from '../mod/wahl.js';
 
 const MAX_QUERY = 80;
 const AI_KEY = 'heinz_docheinz_ai';
-const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', timer: 0, ac: null, cache: new Map(), run: 0, wired: false };
+const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', range: null, drag: null, lp: 0, sup: false, pressing: false, anchor: null, px: 0, py: 0, pid: 0, timer: 0, ac: null, cache: new Map(), run: 0, wired: false };
 
-const sel = () => (window.getSelection ? window.getSelection() : null);
-// Chrome blendet bei einer Markierung unten ein eigenes Suchfeld („Tippen, um Suchergebnisse zu sehen“) und über der Markierung sein Menü ein.
-// Darum sitzt die Leiste oben; steht die Markierung selbst weit oben, wandert sie nach unten über das Chrome-Feld.
-function placeBar() {
-    const s = sel();
-    if (!s || !s.rangeCount) return;
-    const r = s.getRangeAt(0).getBoundingClientRect(), bar = $('r-sel');
-    const gap = $('reader').dataset.gap === '1';
-    const h = 52, low = innerHeight - (gap ? 118 : 14) - h;
-    // Standard: unten über dem Chrome-Feld. Liegt dort die Markierung samt Chrome-Menü (darüber) und Griffen (darunter), wandert die Leiste nach oben.
-    bar.classList.toggle('top', low < r.bottom + 50 && low + h > r.top - 90);
+// ---------- Eigene Auswahl ----------
+// Die native Auswahl ist im Lesetext abgeschaltet (Chrome blendet dort Menü und Suchfeld ein). Langer Druck markiert ein Wort, zwei Griffe ziehen die Markierung auf;
+// gezeichnet wird mit der CSS-Highlight-API, die Aktionsleiste sitzt an der Markierung. Reichweite: nur die sichtbare Seite.
+const LONG_MS = 450, MOVE_PX = 10, HANDLE_DY = 20;
+const body = () => $('r-body');
+const hl = (on) => { try { if (window.CSS && CSS.highlights) { if (on) CSS.highlights.set('dh-sel', new Highlight(A.range)); else CSS.highlights.delete('dh-sel'); } } catch { /* ohne Hervorhebung */ } };
+function caretAt(x, y) {
+    let n = null, o = 0;
+    if (document.caretPositionFromPoint) { const c = document.caretPositionFromPoint(x, y); if (c) { n = c.offsetNode; o = c.offset; } }
+    else if (document.caretRangeFromPoint) { const c = document.caretRangeFromPoint(x, y); if (c) { n = c.startContainer; o = c.startOffset; } }
+    if (!n || n.nodeType !== 3 || !body().contains(n)) return null;
+    return { node: n, off: o };
 }
-function selectedText() {
-    const s = sel();
-    if (!s || s.isCollapsed || !s.rangeCount) return '';
-    const b = $('r-body');
-    const r = s.getRangeAt(0);
-    if (!b.contains(r.commonAncestorContainer)) return '';
-    return s.toString().replace(/\s+/g, ' ').trim();
+function wordAt(x, y) {
+    const c = caretAt(x, y);
+    if (!c) return null;
+    const w = wordBounds(c.node.nodeValue, c.off);
+    if (!w) return null;
+    const r = document.createRange(); r.setStart(c.node, w[0]); r.setEnd(c.node, w[1]);
+    return r;
 }
-function updateBar() {
-    A.text = A.env && A.env.isOpen() && $('r-sheet').hidden ? selectedText() : '';
+const before = (an, ao, bn, bo) => { const r = document.createRange(); r.setStart(an, ao); r.setEnd(an, ao); const q = document.createRange(); q.setStart(bn, bo); q.setEnd(bn, bo); return r.compareBoundaryPoints(Range.START_TO_START, q) <= 0; };
+function rangeOf(sn, so, en, eo) {
+    const r = document.createRange();
+    if (before(sn, so, en, eo)) { r.setStart(sn, so); r.setEnd(en, eo); } else { r.setStart(en, eo); r.setEnd(sn, so); }
+    return r;
+}
+function rects() { return Array.from(A.range.getClientRects()).filter(r => r.width > 0 && r.height > 0); }
+function selectedText() { return A.range ? A.range.toString().replace(/\s+/g, ' ').trim() : ''; }
+export const hasWahl = () => !!A.range;
+export function clearWahl() {
+    A.range = null; A.text = ''; A.drag = null; clearTimeout(A.lp);
+    hl(false);
+    ['r-sel', 'r-h1', 'r-h2'].forEach(id => { const e = $(id); if (e) e.hidden = true; });
+}
+function placeUi(showBar) {
+    const rs = A.range ? rects() : [];
+    if (!rs.length) { clearWahl(); return; }
+    const first = rs[0], last = rs[rs.length - 1];
+    const h1 = $('r-h1'), h2 = $('r-h2');
+    h1.hidden = h2.hidden = false;
+    h1.style.left = first.left + 'px'; h1.style.top = first.bottom + 'px';
+    h2.style.left = last.right + 'px'; h2.style.top = last.bottom + 'px';
     const bar = $('r-sel');
-    if (A.text) placeBar();
-    if (bar.hidden === !A.text) { if (A.text) bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY; return; }
-    bar.hidden = !A.text;
+    bar.hidden = !showBar;
+    if (!showBar) return;
+    A.text = selectedText();
     bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY;
+    const bw = bar.offsetWidth || 260, bh = bar.offsetHeight || 48, top0 = 64 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0);
+    let y = first.top - bh - 12;
+    if (y < top0) y = last.bottom + 40;                                   // oben kein Platz: unter die Markierung samt Griffen
+    y = Math.min(y, innerHeight - bh - 8);
+    const cx = (first.left + last.right) / 2;
+    bar.style.left = Math.max(8, Math.min(innerWidth - bw - 8, (rs.length > 1 ? innerWidth / 2 : cx) - bw / 2)) + 'px';
+    bar.style.top = Math.max(8, y) + 'px';
 }
+function setRange(r, showBar = true) { A.range = r; hl(true); placeUi(showBar); }
 const hideBar = () => { A.text = ''; $('r-sel').hidden = true; };
+function startPress(e) {
+    A.sup = false; clearTimeout(A.lp);
+    if (!A.env || !A.env.isOpen() || e.button > 0 || !$('r-sheet').hidden) return;
+    A.px = e.clientX; A.py = e.clientY; A.pid = e.pointerId;
+    A.lp = setTimeout(() => {
+        const w = wordAt(A.px, A.py);
+        if (!w) return;
+        A.sup = true; A.pressing = true; A.anchor = w;
+        setRange(w, false);
+        try { navigator.vibrate && navigator.vibrate(12); } catch { /* ohne Vibration */ }
+    }, LONG_MS);
+}
+function movePress(e) {
+    if (e.pointerId !== A.pid) return;
+    if (A.pressing) {                                                       // Finger bleibt unten: Markierung vom ersten Wort aus aufziehen
+        const c = caretAt(e.clientX, e.clientY - 4);
+        if (!c) return;
+        const w = wordBounds(c.node.nodeValue, c.off);
+        const e0 = w ? (before(A.anchor.startContainer, A.anchor.startOffset, c.node, w[0]) ? [c.node, w[1]] : [c.node, w[0]]) : [c.node, c.off];
+        const sa = before(A.anchor.startContainer, A.anchor.startOffset, c.node, e0[1]) ? [A.anchor.startContainer, A.anchor.startOffset] : [A.anchor.endContainer, A.anchor.endOffset];
+        setRange(rangeOf(sa[0], sa[1], e0[0], e0[1]), false);
+        return;
+    }
+    if (A.lp && Math.hypot(e.clientX - A.px, e.clientY - A.py) > MOVE_PX) { clearTimeout(A.lp); A.lp = 0; }
+}
+function endPress(e) {
+    clearTimeout(A.lp); A.lp = 0;
+    if (A.pressing) { A.pressing = false; if (A.range) placeUi(true); }
+}
+function dragHandle(which, ev) {
+    ev.preventDefault(); ev.stopPropagation();
+    A.drag = which; $('r-sel').hidden = true;
+    ev.target.setPointerCapture && ev.target.setPointerCapture(ev.pointerId);
+}
+function moveHandle(ev) {
+    if (!A.drag || !A.range) return;
+    const c = caretAt(ev.clientX, ev.clientY - HANDLE_DY);
+    if (!c) return;
+    const fixed = A.drag === 'start' ? [A.range.endContainer, A.range.endOffset] : [A.range.startContainer, A.range.startOffset];
+    if (fixed[0] === c.node && fixed[1] === c.off) return;
+    const startFirst = before(c.node, c.off, fixed[0], fixed[1]);
+    A.drag = startFirst ? 'start' : 'end';
+    setRange(rangeOf(c.node, c.off, fixed[0], fixed[1]), false);
+}
+function dropHandle() { if (A.drag) { A.drag = null; if (A.range) placeUi(true); } }
 
 function openSheet(title, sub) {
     const sh = $('r-sheet');
@@ -48,8 +123,7 @@ function openSheet(title, sub) {
     $('rs-body').textContent = '';
     $('rs-stop').hidden = true; $('rs-copy').hidden = true; $('rs-more').hidden = true;
     sh.hidden = false;
-    hideBar();
-    const s = sel(); if (s) s.removeAllRanges();
+    clearWahl();
 }
 export function closeSheet() {
     A.run++;
@@ -262,16 +336,20 @@ export function initSelection(env) {
     A.cache.clear();
     if (A.wired) return;
     A.wired = true;
-    // Auf dem Handy feuert die Markierung nicht in jedem Browser zuverlässig `selectionchange`: zusätzlich nach Fingerheben und im Takt prüfen.
-    document.addEventListener('selectionchange', () => { clearTimeout(A.timer); A.timer = setTimeout(updateBar, 120); });
-    ['pointerup', 'touchend', 'contextmenu'].forEach(ev => $('r-page').addEventListener(ev, () => setTimeout(updateBar, 250)));
-    setInterval(() => { if (A.env && A.env.isOpen()) updateBar(); }, 500);
+    const pg = $('r-page');
+    pg.addEventListener('pointerdown', startPress);
+    pg.addEventListener('pointermove', movePress);
+    ['pointerup', 'pointercancel'].forEach(ev => pg.addEventListener(ev, endPress));
+    pg.addEventListener('contextmenu', (e) => e.preventDefault());
+    pg.addEventListener('click', (e) => { if (A.sup) { A.sup = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+    [['r-h1', 'start'], ['r-h2', 'end']].forEach(([id, w]) => { const h = $(id); h.addEventListener('pointerdown', (e) => dragHandle(w, e)); h.addEventListener('pointermove', moveHandle); ['pointerup', 'pointercancel'].forEach(ev => h.addEventListener(ev, dropHandle)); });
     $('r-sel').addEventListener('pointerdown', (e) => e.preventDefault());       // Markierung bleibt beim Tippen auf die Leiste
     $('r-sel').addEventListener('click', (e) => {
         const b = e.target.closest('button[data-sel]');
         if (!b || !A.text) return;
         const text = A.text;
-        if (b.dataset.sel === 'search') search(text); else ask(b.dataset.sel, text);
+        if (b.dataset.sel === 'copy') { try { navigator.clipboard.writeText(text); } catch { /* keine Berechtigung */ } clearWahl(); }
+        else if (b.dataset.sel === 'search') search(text); else ask(b.dataset.sel, text);
     });
     $('rs-close').addEventListener('click', closeSheet);
     $('rs-more').addEventListener('click', openAna);
@@ -284,4 +362,4 @@ export function initSelection(env) {
     $('rs-stop').addEventListener('click', () => { if (A.ac) A.ac.abort(); });
     $('rs-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('rs-body').querySelector('.dh-sout').textContent); } catch { /* keine Berechtigung */ } });
 }
-export function resetSelection() { closeAna(true); A.conv = null; closeSheet(); hideBar(); A.cache.clear(); }
+export function resetSelection() { closeAna(true); A.conv = null; closeSheet(); clearWahl(); A.cache.clear(); }

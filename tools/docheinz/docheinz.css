@@ -66,9 +66,9 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-reader[data-font=mono] { --rf: var(--mono); }
 
 /* Seite: Rand um den Text; der Text (dh-text) ist genau eine Spalte breit, weitere Spalten sind die nächsten Seiten (waagerecht verschoben, nie sichtbar gescrollt) */
-.dh-page { position: absolute; inset: 0; overflow: clip; box-sizing: border-box; padding: calc(16px + env(safe-area-inset-top)) 22px calc(16px + env(safe-area-inset-bottom)); touch-action: manipulation; }
+.dh-page { position: absolute; inset: 0; overflow: clip; box-sizing: border-box; padding: calc(16px + env(safe-area-inset-top)) 22px calc(16px + env(safe-area-inset-bottom)); touch-action: none; }
 .dh-clip { margin: 0 auto; overflow: clip; position: relative; }
-.dh-text { display: block; margin: 0; overflow: visible; will-change: transform; column-gap: 0; column-fill: auto; line-height: 1.65; font-family: var(--rf); outline: none; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; user-select: text; -webkit-user-select: text; }
+.dh-text { display: block; margin: 0; overflow: visible; will-change: transform; column-gap: 0; column-fill: auto; line-height: 1.65; font-family: var(--rf); outline: none; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .dh-text h1, .dh-text h2, .dh-text h3, .dh-text h4, .dh-text h5, .dh-text h6 { line-height: 1.25; margin: 1.3em 0 .5em; break-after: avoid; }
 .dh-text h1:first-child, .dh-text h2:first-child { margin-top: .2em; }
 .dh-text p { margin: 0 0 .85em; orphans: 2; widows: 2; }
@@ -123,9 +123,7 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ctitle span { font-size: 1rem; color: var(--rsub); }
 
 /* Markierungsleiste und Blatt (Suchen, Erklären, Zusammenfassen) */
-.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
-.dh-reader[data-gap='1'] .dh-sel { bottom: calc(118px + env(safe-area-inset-bottom)); }
-.dh-reader .dh-sel.top { bottom: auto; top: calc(10px + env(safe-area-inset-top)); }
+.dh-sel { position: absolute; left: 0; top: 0; z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
 .dh-sel[hidden] { display: none; }
 .dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rt); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; }
 .dh-sel button[hidden] { display: none; }
@@ -173,3 +171,10 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ai button { text-align: left; min-height: 40px; padding: 6px 12px; border-radius: 12px; border: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; font-size: .88rem; cursor: pointer; }
 .dh-ai button.on { border-color: var(--rlink); color: var(--rlink); font-weight: 600; }
 .dh-ai small { color: var(--rsub); display: block; }
+
+/* Eigene Auswahl: Hervorhebung und Griffe (die native Auswahl ist im Lesetext aus) */
+::highlight(dh-sel) { background-color: color-mix(in srgb, var(--rlink) 32%, transparent); color: inherit; }
+.dh-h { position: absolute; z-index: 7; width: 30px; height: 34px; margin: 0 0 0 -15px; touch-action: none; }
+.dh-h[hidden] { display: none; }
+.dh-h::before { content: ''; position: absolute; left: 50%; top: 2px; width: 2px; height: 10px; margin-left: -1px; background: var(--rlink); }
+.dh-h::after { content: ''; position: absolute; left: 50%; top: 10px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--rlink); }

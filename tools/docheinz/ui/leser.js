@@ -4,11 +4,11 @@
 import { $ } from './base.js';
 import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
-import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips } from './auswahl.js';
+import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black'];
-const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: true, ui: false, onCover: false, coverUrl: '' };
+const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: false, ui: false, onCover: false, coverUrl: '' };
 
 const body = () => $('r-body');
 const lastCh = () => S.src.chapters.length - 1;
@@ -32,6 +32,7 @@ function layout(frac) {
 }
 function relayout() {
     if (!S.open || !S.src) return;
+    clearWahl();
     layout(fracOfPage(S.page, S.pages));
 }
 function scheduleLayout() {
@@ -87,7 +88,7 @@ async function show(i, anchor, frac, at) {
 }
 
 function go(dir) {
-    clearHit();
+    clearHit(); clearWahl();
     if (S.onCover) { if (dir > 0) { showCover(false); save(true); } return; }
     const r = turn({ ch: S.ch, page: S.page }, dir, S.pages, S.src.chapters.length);
     if (!r) { if (dir < 0) showCover(true); return; }
@@ -200,8 +201,7 @@ export async function applyFont(id) {
 
 function onTap(e) {
     const hadSel = S.hadSel; S.hadSel = false;
-    const sel = window.getSelection && window.getSelection();
-    if (hadSel || (sel && !sel.isCollapsed && sel.toString().trim())) return;     // Markierung aktiv: nicht blättern
+    if (hadSel || hasWahl()) { clearWahl(); return; }                                 // Markierung aktiv: Tippen hebt sie nur auf, kein Blättern
     const a = e.target.closest && e.target.closest('a[data-go]');
     if (a) {
         e.preventDefault();
@@ -237,7 +237,7 @@ function wire() {
     document.querySelectorAll('#seg-btns button').forEach(b => b.addEventListener('click', () => { applyBtns(b.dataset.btns === '1'); S.cb.onSettings({ btns: S.btns }); }));
     $('seg-font').addEventListener('click', (e) => { const b = e.target.closest('button[data-font]'); if (!b) return; applyFont(b.dataset.font); S.cb.onSettings({ font: S.font }); });
     const pg = $('r-page');
-    pg.addEventListener('pointerdown', () => { const s = window.getSelection && window.getSelection(); S.hadSel = !!(s && !s.isCollapsed && s.toString().trim()); }, true);
+    pg.addEventListener('pointerdown', () => { S.hadSel = hasWahl(); }, true);
     pg.addEventListener('click', onTap);
     if (window.ResizeObserver) new ResizeObserver(() => { if (S.open) scheduleLayout(); }).observe(pg);
     else window.addEventListener('resize', () => { if (S.open) scheduleLayout(); });
@@ -255,7 +255,7 @@ function wire() {
 export async function openReader(rec, src, ctx) {
     wire();
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
-    applyTheme(ctx.theme); applySize(ctx.size); applyBtns(ctx.btns); applyGap(ctx.gap !== false);
+    applyTheme(ctx.theme); applySize(ctx.size); applyBtns(ctx.btns); applyGap(ctx.gap === true);
     buildFonts();
     await applyFont(ctx.font);
     buildToc();

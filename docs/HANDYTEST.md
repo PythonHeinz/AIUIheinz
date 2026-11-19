@@ -245,3 +245,10 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 2. Text markieren: Leiste erscheint unten über dem Chrome-Suchfeld (oder oben, wenn die Markierung unten liegt). Überdeckt das Android-Menü sie?
 3. Erklären antippen: Blatt und „Weiter fragen“-Eingabe müssen über dem Chrome-Streifen liegen; sonst „Platz lassen“ prüfen.
 4. Antwortqualität mit dem gewählten Modell beurteilen (nur das Handy zeigt das echte Verhalten).
+
+### Y3. docHeinz: eigene Auswahl (19.11.2026)
+1. Reader öffnen, Finger auf ein Wort halten (ca. ½ s): Wort wird markiert, zwei Griffe erscheinen, kurze Vibration. Kein Android-Menü, kein Chrome-Suchfeld.
+2. Finger gehalten weiterziehen oder Griffe ziehen: Markierung wächst; die Seite darf sich nicht verschieben.
+3. Leiste: Suchen, Erklären, Zusammenfassen, Kopieren; sitzt über der Markierung, unter ihr bei Text ganz oben.
+4. Einmal tippen hebt die Markierung auf, ohne zu blättern. Blättern per Zonen und Tippen oben wie bisher.
+5. Kopieren: Text in ein anderes Feld einfügen. Wirkt Zoomen per Zwei-Finger-Geste nicht mehr? (touch-action: none, gewollt.)
