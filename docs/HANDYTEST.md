@@ -6,17 +6,17 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 
 ## Allgemein (jede Seite)
 
-- [ ] Start der installierten App (Startbildschirm-Symbol): Seite erscheint, keine weiße Fläche
+- [x] Start der installierten App (Startbildschirm-Symbol): Seite erscheint, keine weiße Fläche – bestätigt 19.11.2026 (Entwickler)
 - [ ] Start im Browser-Tab, danach hartes Neuladen: gleiche Ansicht, Einstellungen bleiben
-- [ ] Nach Neustart von Termux und Browser: Einstellungen und Unterhaltungen sind noch da
+- [x] Nach Neustart von Termux und Browser: Einstellungen und Unterhaltungen sind noch da – bestätigt 19.11.2026 (Entwickler)
 - [ ] Flugmodus (ohne „Online erlauben“): Seite lädt und arbeitet, keine Fehlermeldung zu Netz
-- [ ] Hell, Dunkel, Automatisch: Farben lesbar, kein weißer Blitz beim Laden
-- [ ] Aktualisieren-Knopf: meldet Stand, lädt nach Update neu
-- [ ] Tastatur: Eingabefeld bleibt sichtbar, Leiste springt nicht
+- [x] Hell, Dunkel, Automatisch: Farben lesbar, kein weißer Blitz beim Laden – bestätigt 19.11.2026 (Entwickler)
+- [x] Aktualisieren-Knopf: meldet Stand, lädt nach Update neu – bestätigt 19.11.2026 (Entwickler)
+- [x] Tastatur: Eingabefeld bleibt sichtbar, Leiste springt nicht – bestätigt 19.11.2026 (Entwickler)
 
 ## Hub
 
-- [ ] Kacheln erreichbar, jede öffnet ihre Seite und führt zurück
+- [x] Kacheln erreichbar, jede öffnet ihre Seite und führt zurück – bestätigt 19.11.2026 (Entwickler)
 - [ ] Kopfzeile (Logo, Titel, Sprache EN/DE) auf allen Seiten gleich
 
 ## Heinz Chat (chat.html)
@@ -24,21 +24,21 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 - [ ] Modell wählen, Modellblatt öffnet und schließt (Tippen daneben)
 - [ ] Nachricht senden: erste Antwort nach 4–6 s, Text läuft, Cursor blinkt
 - [ ] Abbrechen während der Antwort: Text bleibt, Eingabe frei
-- [ ] Antwort mit Überschrift, Liste, Tabelle und Codeblock (z. B. „Gib mir eine Tabelle und ein Python-Beispiel“): Darstellung lesbar, Kopierknopf am Codeblock kopiert nur den Code
+- [x] Antwort mit Überschrift, Liste, Tabelle und Codeblock (z. B. „Gib mir eine Tabelle und ein Python-Beispiel“): Darstellung lesbar, Kopierknopf am Codeblock kopiert nur den Code – bestätigt 19.11.2026 (Entwickler)
 - [ ] Streamen bleibt flüssig (neu seit Phase 2: reicheres Markdown je Token)
 - [ ] Unterhaltungsliste: keine drei Punkte; Tipp auf Titel oder Zeile darunter lädt, Tipp auf den zarten Kreis rechts zeigt/versteckt die fünf Symbol-Pillen (so breit wie der Eintrag); angepinnt = Punktbalken links, Dashboard-Modus = Farbbalken; langes Drücken wählt mehrere (Löschen, X)
 - [ ] Unterhaltung laden nach Neustart: Verlauf vollständig
-- [ ] Sprache EN/DE umschalten: alle Texte wechseln
+- [x] Sprache EN/DE umschalten: alle Texte wechseln – bestätigt 19.11.2026 (Entwickler)
 
 ## Heinz Dashboard (dashboard.html)
 
-- [ ] Engine Ollama: Modell laden, Antwort, Kennzahlen (Token/s, Zeit bis zur ersten Antwort)
-- [ ] Engine LiteRT-LM: dasselbe
+- [x] Engine Ollama: Modell laden, Antwort, Kennzahlen (Token/s, Zeit bis zur ersten Antwort) – bestätigt 19.11.2026 (Entwickler)
+- [x] Engine LiteRT-LM: dasselbe – bestätigt 19.11.2026 (Entwickler)
 - [ ] Regler (Temperatur, Kontext, Threads): Wert bleibt nach Neustart, „Standard“-Haken schaltet um
 - [ ] Chatmenü: Gruppen und Geltungsbereich lesbar, Tippen daneben schließt
 - [ ] Unterhaltungsliste: Suche, Alle/Modus, langes Drücken (Mehrfachauswahl), Moduspunkt
 - [ ] Antwort: Kopieren, Herunterladen, Vorlesen, Testprotokoll
-- [ ] Serie starten, stoppen, nach Neuladen fortsetzen
+- [x] Serie starten, stoppen, nach Neuladen fortsetzen – bestätigt 19.11.2026 (Entwickler)
 - [ ] Modellblatt (von rechts): Filter, Laden-Knopf
 
 ## Tool-Seiten
@@ -109,20 +109,20 @@ Du brauchst nichts vorher zu wissen. Jeder Schritt sagt, was du tippst und was d
 Vorbereitung: `git pull`, `bash start.sh`; LiteRT-LM bei Bedarf neu starten: `litert-lm serve --cors-origin http://localhost:3000`. Danach Version im Dashboard-Menü prüfen.
 
 **N. Zuordnung Modell → Konfiguration (Dashboard)**
-- [ ] Dashboard: Modell `gemma2:2b` (oder ein anderes), Person Wilson, Kontextfenster verkleinern, Temperatur ändern. Menü, Konfiguration: Name „Test A“, Speichern, dann „Dem Modell zuordnen“. Erwartung: Knopf zeigt „Dem Modell zugeordnet (tippen zum Lösen)“; der Knopf „Im Heinz Chat verwenden“ bleibt unberührt.
-- [ ] App komplett beenden und neu öffnen. Erwartung: Das Dashboard startet, das Modell lädt, danach schaltet es auf Wilson, Prompt, Ton und Kontextfenster der Konfiguration; ein Band nennt „… mit … geladen. Laufzeit gesetzt: Kontext …, Threads …“. Eine offene Unterhaltung einer anderen Person landet in der Liste (wie bisher).
-- [ ] Anderes Modell ohne Zuordnung wählen. Erwartung: Kontextfenster geht auf den Standard (8192) zurück. Zurück auf das erste Modell: Konfiguration lädt wieder mit.
-- [ ] Zuordnung lösen (zweiter Tipp), App neu starten. Erwartung: Dashboard startet auf Heinz mit dem Standard des Modells.
+- [x] Dashboard: Modell `gemma2:2b` (oder ein anderes), Person Wilson, Kontextfenster verkleinern, Temperatur ändern. Menü, Konfiguration: Name „Test A“, Speichern, dann „Dem Modell zuordnen“. Erwartung: Knopf zeigt „Dem Modell zugeordnet (tippen zum Lösen)“; der Knopf „Im Heinz Chat verwenden“ bleibt unberührt. – bestätigt 19.11.2026 (Entwickler)
+- [x] App komplett beenden und neu öffnen. Erwartung: Das Dashboard startet, das Modell lädt, danach schaltet es auf Wilson, Prompt, Ton und Kontextfenster der Konfiguration; ein Band nennt „… mit … geladen. Laufzeit gesetzt: Kontext …, Threads …“. Eine offene Unterhaltung einer anderen Person landet in der Liste (wie bisher). – bestätigt 19.11.2026 (Entwickler)
+- [x] Anderes Modell ohne Zuordnung wählen. Erwartung: Kontextfenster geht auf den Standard (8192) zurück. Zurück auf das erste Modell: Konfiguration lädt wieder mit. – bestätigt 19.11.2026 (Entwickler)
+- [x] Zuordnung lösen (zweiter Tipp), App neu starten. Erwartung: Dashboard startet auf Heinz mit dem Standard des Modells. – bestätigt 19.11.2026 (Entwickler)
 
 **O. Heinz Chat als eigenes Tool**
-- [ ] Heinz Chat öffnen, Modellblatt (Tipp aufs Modell oben): Erwartung nur Anzeige (Konfiguration, Engine, Modell, Person, Prompt lesbar nicht änderbar, Ton, Laufzeit „Teil der Konfiguration“ (Threads 2, Kontext 4096), Status, „Zuletzt gesendet“, Link „Konfigurationen verwalten“). Keine Engine-Leiste, keine Modellliste, kein Schalter „Online erlauben“, kein „Auf Standard zurücksetzen“.
-- [ ] Dashboard auf ein Ollama-Modell stellen, Heinz Chat mit einer LiteRT-LM-Konfiguration zuweisen (Dashboard-Menü „Im Heinz Chat verwenden“) und öffnen. Erwartung: Der Chat fragt LiteRT-LM an (nicht Ollama), Modell in der Kopfzeile ist das der Konfiguration. **Offen am Gerät:** ob LiteRT-LM das Modell beim Öffnen vorladen kann; bisher lädt es beim ersten Senden (Ring dann blau). Bitte beobachten, wie lange die erste Antwort braucht.
-- [ ] LiteRT-LM absichtlich nicht starten, Chat mit LiteRT-Konfiguration öffnen. Erwartung: roter Ring und Hinweis „Die Engine … ist nicht erreichbar“, Senden ergibt eine Fehlermeldung, **nie** eine Antwort von Ollama.
-- [ ] Zuweisung lösen (Dashboard-Menü, zweiter Tipp). Erwartung: Chat nutzt seine Standardkonfiguration (Markdown-Prompt, Ton 0,6/0,9/40, Threads 2, Kontext 4096, Qwen oder das früher gewählte Modell).
-- [ ] Standardkonfiguration (Zuweisung lösen, in der Entwicklerkonsole `localStorage.removeItem('heinz_chat_default')`, Seite neu laden): Der Chat startet ohne Modellwahl mit `qwen2.5:3b`, Ton 0,6/0,9/40, Threads 2, Kontext 4096 (Modellblatt). Prüfen: Antworten kommen in sauberem Markdown (Liste, Tabelle, Code), er verweigert nicht ohne Grund und sagt offen, wenn er etwas nicht weiß; Tempo etwa wie im Tempo-Test (2 Threads).
-- [ ] Dashboard, Menü Konfiguration: eine LiteRT-LM-Konfiguration laden, während Ollama aktiv ist. Erwartung: Das Dashboard wechselt auf LiteRT-LM, wählt das Modell, Hinweis „Engine auf … gewechselt“.
-- [ ] **B2-Probe (LiteRT-LM):** `litert-lm serve --cors-origin http://localhost:3000` neu starten. Dashboard, Person Audit, Quelltext senden (Modell `gemma4-e2b`). Dann Heinz Chat mit einer Nativ-Konfiguration auf `gemma4-e2b` (im Dashboard Person Nativ, Konfiguration speichern, „Im Heinz Chat verwenden“) und „Hallo“ senden. Erwartung: antwortet normal, nicht im Wortlaut des Audit-Prompts. Der Chat sendet bei Nativ keine System-Nachricht (simuliert geprüft). Zeigt der Server trotzdem die alte Anweisung, melden: dann muss der Chat bei LiteRT-LM einen leeren Systemprompt ausdrücklich senden.
-- [ ] Wechsel Dashboard (Modell A) → Heinz Chat (Modell B) → Dashboard: Ollama lädt jeweils neu (erwartet, kein Fehler); keine Fehlermeldung, die Antworten kommen.
+- [x] Heinz Chat öffnen, Modellblatt (Tipp aufs Modell oben): Erwartung nur Anzeige (Konfiguration, Engine, Modell, Person, Prompt lesbar nicht änderbar, Ton, Laufzeit „Teil der Konfiguration“ (Threads 2, Kontext 4096), Status, „Zuletzt gesendet“, Link „Konfigurationen verwalten“). Keine Engine-Leiste, keine Modellliste, kein Schalter „Online erlauben“, kein „Auf Standard zurücksetzen“. – bestätigt 19.11.2026 (Entwickler)
+- [x] Dashboard auf ein Ollama-Modell stellen, Heinz Chat mit einer LiteRT-LM-Konfiguration zuweisen (Dashboard-Menü „Im Heinz Chat verwenden“) und öffnen. Erwartung: Der Chat fragt LiteRT-LM an (nicht Ollama), Modell in der Kopfzeile ist das der Konfiguration. **Offen am Gerät:** ob LiteRT-LM das Modell beim Öffnen vorladen kann; bisher lädt es beim ersten Senden (Ring dann blau). Bitte beobachten, wie lange die erste Antwort braucht. – bestätigt 19.11.2026 (Entwickler)
+- [x] LiteRT-LM absichtlich nicht starten, Chat mit LiteRT-Konfiguration öffnen. Erwartung: roter Ring und Hinweis „Die Engine … ist nicht erreichbar“, Senden ergibt eine Fehlermeldung, **nie** eine Antwort von Ollama. – bestätigt 19.11.2026 (Entwickler)
+- [x] Zuweisung lösen (Dashboard-Menü, zweiter Tipp). Erwartung: Chat nutzt seine Standardkonfiguration (Markdown-Prompt, Ton 0,6/0,9/40, Threads 2, Kontext 4096, Qwen oder das früher gewählte Modell). – bestätigt 19.11.2026 (Entwickler)
+- [x] Standardkonfiguration (Zuweisung lösen, in der Entwicklerkonsole `localStorage.removeItem('heinz_chat_default')`, Seite neu laden): Der Chat startet ohne Modellwahl mit `qwen2.5:3b`, Ton 0,6/0,9/40, Threads 2, Kontext 4096 (Modellblatt). Prüfen: Antworten kommen in sauberem Markdown (Liste, Tabelle, Code), er verweigert nicht ohne Grund und sagt offen, wenn er etwas nicht weiß; Tempo etwa wie im Tempo-Test (2 Threads). – bestätigt 19.11.2026 (Entwickler)
+- [x] Dashboard, Menü Konfiguration: eine LiteRT-LM-Konfiguration laden, während Ollama aktiv ist. Erwartung: Das Dashboard wechselt auf LiteRT-LM, wählt das Modell, Hinweis „Engine auf … gewechselt“. – bestätigt 19.11.2026 (Entwickler)
+- [x] **B2-Probe (LiteRT-LM):** `litert-lm serve --cors-origin http://localhost:3000` neu starten. Dashboard, Person Audit, Quelltext senden (Modell `gemma4-e2b`). Dann Heinz Chat mit einer Nativ-Konfiguration auf `gemma4-e2b` (im Dashboard Person Nativ, Konfiguration speichern, „Im Heinz Chat verwenden“) und „Hallo“ senden. Erwartung: antwortet normal, nicht im Wortlaut des Audit-Prompts. Der Chat sendet bei Nativ keine System-Nachricht (simuliert geprüft). Zeigt der Server trotzdem die alte Anweisung, melden: dann muss der Chat bei LiteRT-LM einen leeren Systemprompt ausdrücklich senden. – bestätigt 19.11.2026 (Entwickler)
+- [x] Wechsel Dashboard (Modell A) → Heinz Chat (Modell B) → Dashboard: Ollama lädt jeweils neu (erwartet, kein Fehler); keine Fehlermeldung, die Antworten kommen. – bestätigt 19.11.2026 (Entwickler)
 
 ## Strang Konfiguration, Stufen (c) und (d) (13.11.2026; nur simuliert getestet)
 Vorbereitung: `git pull`, `bash start.sh`.
@@ -134,18 +134,18 @@ Vorbereitung: `git pull`, `bash start.sh`.
 - [ ] Lokale Konfiguration zuweisen: nie eine Rückfrage.
 
 **Q. Hub-Kachel „Konfigurationen“**
-- [ ] Erste Karte ist die Standardkonfiguration („eingebaut, nicht löschbar“, ohne Löschen). Ohne Zuweisung trägt sie die Markierung „Heinz Chat“, mit Zuweisung die zugewiesene Karte.
-- [ ] „Jetzt parametrieren“ an einer eigenen Konfiguration: Dashboard öffnet sich mit Person, Prompt, Ton, Kontext und Threads dieser Konfiguration (Hinweisband). Bei einer Konfiguration einer anderen Engine wechselt das Dashboard die Engine.
-- [ ] „Jetzt parametrieren“ an der Standardkonfiguration: Qwen-Werte (0,6 / 0,9 / 40, Kontext 4096, Threads 2) im Dashboard; ändern, unter neuem Namen speichern, im Heinz Chat verwenden.
-- [ ] Hub, Knopf „Modelfile“ an der Standardkonfiguration: Datei lädt, enthält FROM, PARAMETER und SYSTEM. Optional in Termux: `ollama create heinz-test -f <Datei>`; danach `ollama rm heinz-test`.
+- [x] Erste Karte ist die Standardkonfiguration („eingebaut, nicht löschbar“, ohne Löschen). Ohne Zuweisung trägt sie die Markierung „Heinz Chat“, mit Zuweisung die zugewiesene Karte. – bestätigt 19.11.2026 (Entwickler)
+- [x] „Jetzt parametrieren“ an einer eigenen Konfiguration: Dashboard öffnet sich mit Person, Prompt, Ton, Kontext und Threads dieser Konfiguration (Hinweisband). Bei einer Konfiguration einer anderen Engine wechselt das Dashboard die Engine. – bestätigt 19.11.2026 (Entwickler)
+- [x] „Jetzt parametrieren“ an der Standardkonfiguration: Qwen-Werte (0,6 / 0,9 / 40, Kontext 4096, Threads 2) im Dashboard; ändern, unter neuem Namen speichern, im Heinz Chat verwenden. – bestätigt 19.11.2026 (Entwickler)
+- [x] Hub, Knopf „Modelfile“ an der Standardkonfiguration: Datei lädt, enthält FROM, PARAMETER und SYSTEM. Optional in Termux: `ollama create heinz-test -f <Datei>`; danach `ollama rm heinz-test`. – bestätigt 19.11.2026 (Entwickler)
 
 ## Strang Design, MVP-Abschluss (17.11.2026; am Handy bestätigt vom Entwickler, 12:16: Start mit `heinz`, LED-Verhalten, Cursorfarbe, Modellblatt, Hub-Marken ohne Fehler; offen: Standard 2 Threads im Browsertab, Konfiguration einer anderen Person laden)
 Vorbereitung: `heinz` in Termux (Alias aus der README: `git pull`, Ollama, LiteRT-LM und Server starten).
 
 **R. Start und Standard**
 - [x] Nach Beenden von Termux: ein Befehl (`heinz` oder `cd ~/AIUIheinz && bash start.sh`) startet Ollama, LiteRT-LM und die Seite; das Dashboard zeigt beide Engines erreichbar. (Am Handy bestätigt 17.11.2026: LiteRT-LM lief, nachdem der Port frei war.)
-- [ ] Im Browsertab (nicht der App) zeigt ein Modell ohne gespeicherte Werte 2 Threads.
-- [ ] Konfiguration einer anderen Person laden: Person wechselt, die laufende Unterhaltung bleibt.
+- [x] Im Browsertab (nicht der App) zeigt ein Modell ohne gespeicherte Werte 2 Threads. – bestätigt 19.11.2026 (Entwickler)
+- [x] Konfiguration einer anderen Person laden: Person wechselt, die laufende Unterhaltung bleibt. – bestätigt 19.11.2026 (Entwickler)
 
 **S. Personenleiste: Änderungs-LED** (am Handy bestätigt 17.11.2026)
 - [x] Schlitz in dunkler Mulde unter jedem Namen; voll an bei geänderter Person, gedimmt bernsteinfarben bei einer mit Änderung verlassenen Person.
@@ -232,7 +232,7 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 - [ ] Speicherdruck: Zeile „Speicher: … belegt“ unten; bei fast vollem Gerät erscheint die Warnung, ein zu großes Buch meldet „nicht genug Speicher“ statt still zu scheitern.
 - [ ] Hell, dunkel, EN und DE; kein waagerechtes Scrollen; Flugmodus: alles nutzbar, kein Netz nötig.
 
-## Y. Update-Knopf im Hub (18.11.2026, Strang AIUIheinz-Update, Aufgabe 1)
+## Y. Update-Knopf im Hub (18.11.2026, Strang AIUIheinz-Update, Aufgabe 1) – **am Handy bestätigt 19.11.2026 (Entwickler)**
 1. `git pull`, `bash start.sh`, App neu öffnen. Im Hub unten steht der Knopf UPDATE und darunter das LCD mit `v… · Commit · Datum`; beides bleibt beim Scrollen am unteren Rand.
 2. Tipp auf UPDATE ohne neuen Stand: LCD zeigt kurz PRÜFE GITHUB, dann AKTUELL (grün), nach 5 s wieder die Version.
 3. Nach einem Push auf GitHub: Tipp auf UPDATE zeigt AKTUALISIERT und lädt den Hub neu; die Version im LCD ist neu.
@@ -240,27 +240,27 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 5. EN/DE-Umschalter: Texte unter dem LCD wechseln mit.
 
 
-### Y2. docHeinz: Leiste, Platz unten, Modellwahl (19.11.2026)
+### Y2. docHeinz: Leiste, Platz unten, Modellwahl (19.11.2026) – **am Handy bestätigt 19.11.2026 (Entwickler)**
 1. Reader öffnen, Einstellungen (oben tippen, Zahnrad): unter „KI-Modell für Erklären/Analyse“ ein Modell antippen (am besten 3B oder größer); „Verwendet: …“ erscheint.
 2. Text markieren: Leiste erscheint unten über dem Chrome-Suchfeld (oder oben, wenn die Markierung unten liegt). Überdeckt das Android-Menü sie?
 3. Erklären antippen: Blatt und „Weiter fragen“-Eingabe müssen über dem Chrome-Streifen liegen; sonst „Platz lassen“ prüfen.
 4. Antwortqualität mit dem gewählten Modell beurteilen (nur das Handy zeigt das echte Verhalten).
 
-### Y3. docHeinz: eigene Auswahl (19.11.2026)
+### Y3. docHeinz: eigene Auswahl (19.11.2026) – **am Handy bestätigt 19.11.2026 (Entwickler)**
 1. Reader öffnen, Finger auf ein Wort halten (ca. ½ s): Wort wird markiert, zwei Griffe erscheinen, kurze Vibration. Kein Android-Menü, kein Chrome-Suchfeld.
 2. Finger gehalten weiterziehen oder Griffe ziehen: Markierung wächst; die Seite darf sich nicht verschieben.
 3. Leiste: Suchen, Erklären, Zusammenfassen, Kopieren; sitzt über der Markierung, unter ihr bei Text ganz oben.
 4. Einmal tippen hebt die Markierung auf, ohne zu blättern. Blättern per Zonen und Tippen oben wie bisher.
 5. Kopieren: Text in ein anderes Feld einfügen. Wirkt Zoomen per Zwei-Finger-Geste nicht mehr? (touch-action: none, gewollt.)
 
-### Y4. docHeinz: Satzspiegel (19.11.2026)
+### Y4. docHeinz: Satzspiegel (19.11.2026) – **am Handy bestätigt 19.11.2026 (Entwickler)**
 1. Reader, Zahnrad: oben Umschalter „Alle Bücher / Nur dieses Buch“; Gruppen Abstände, Ränder und Breite, Text und Umbruch, Spalten, Farben, Profile aufklappen. Der Text über dem Blatt folgt live.
 2. Zeilenabstand, Rand, Blocksatz, Silbentrennung ausprobieren; Zwei Spalten bei quer gehaltenem Handy.
 3. Eigene Farben: Wirkt Thema „Eigene“, bleibt der Text lesbar? Helligkeit testen.
 4. Profil speichern, etwas ändern, Profil anwenden. „Nur dieses Buch“: andere Bücher bleiben unverändert; „Zurücksetzen“ im Buch-Modus löscht nur die Überschreibung.
 5. Zurück-Pfeil/-Geste: schließt zuerst das Blatt, dann erst das Buch.
 
-## Y5 docHeinz: Vorab-Frage und Einstellungsmenü
+## Y5 docHeinz: Vorab-Frage und Einstellungsmenü – **am Handy bestätigt 19.11.2026 (Entwickler)**
 1. Text lang drücken: Leiste vollständig sichtbar (Search, Explain, Summarize, Copy).
 2. Explain tippen: Fragefeld erscheint; leer senden = Antwort wie bisher; mit Frage = Antwort auf die Frage. Schalter „Vorab eine Frage stellen" aus = sofort Antwort.
 3. Einstellungen: Formatierung / KI-Funktionen, Untermenüs öffnen per Tipp, Zurück-Pfeil geht eine Ebene zurück, Buch bleibt sichtbar (Live-Vorschau).

@@ -2,6 +2,8 @@
 
 Root-Strang, 13.11.2026, nach Abschluss der Stränge Fundament, Personen und Konfiguration. Zielbild: `KONZEPT.md` 23 („erste Fassung für eine zweite Person“). Nur simuliert getestet gilt, wo nicht „am Handy bestätigt“ steht.
 
+**Stand 19.11.2026 (Entwickler am Handy bestätigt):** B2 erledigt; N, O (auch rote Anzeige, Zuweisung lösen) und Q bestanden; Design-Reste (2 Threads im Browsertab, Konfiguration einer anderen Person laden) bestanden; Grundliste Allgemein (App-Start, Neustart, Hell/Dunkel, Tastatur, Aktualisieren), Hub, Heinz Chat (Tabelle/Code, Sprache), Dashboard (Ollama, LiteRT-LM, Serie) bestanden; Update-Knopf im Hub (Y) und docHeinz Y2 bis Y5 bestanden. **Offen nur noch:** P (Mauer mit echter Cloud-Konfiguration, darf warten), Tool-Seiten der Grundliste, einzelne nicht erfragte Zeilen der Grundliste (z. B. Flugmodus, Kopfzeile auf allen Seiten, Unterhaltungsliste). Der MVP ist damit nach den eigenen Kriterien erreicht, sobald die Grundliste vollständig abgehakt und die zweite Person gefunden ist.
+
 **Stand 17.11.2026:** Strang Design fertig (Schritte 0 bis 2, Handytest R bis T bestätigt); Entwickler: alles ist einer zweiten Person verständlich zeigbar. Punkte 4 und 5 sind damit erfüllt, soweit simuliert und am Handy bestätigt. **Offen:** B2-Probe, Handytest N, O, Q und das Abhaken der Grundliste (siehe unten); Zeigen an die zweite Person. Danach: convert2 (`AUFTRAG_convert2.md`), dann Reader.
 
 ## MVP-Zeile (Vorschlag, der Entwickler entscheidet)
@@ -22,6 +24,7 @@ Root-Strang, 13.11.2026, nach Abschluss der Stränge Fundament, Personen und Kon
 | Personenwechsel durch Laden einer Konfiguration startet neue Unterhaltung (zu prüfen) | Entscheidung, kleine Korrektur | 15 Min |
 
 ## Ausstehende Tests (nur der Entwickler, am Handy)
+**19.11.2026: Punkte 1 bis 3 bestätigt, Punkt 4 weitgehend; Rest siehe Stand oben.** Die ursprüngliche Liste:
 1. **O, Reste**: Chat öffnet mit seinem Modell, Ollama-Wechsel erwartet, rote Anzeige bei nicht gestartetem LiteRT-LM, Zuweisung lösen.
 2. **B2-Probe** (`HANDYTEST.md` O): LiteRT-LM neu starten, Audit im Dashboard, dann Chat mit Nativ. Entscheidet, ob B2 erledigt ist.
 3. **N** (Zuordnung Modell → Konfiguration, Autoladen nach Neustart) und **Q** (Hub-Kachel, „Jetzt parametrieren“, Modelfile).
