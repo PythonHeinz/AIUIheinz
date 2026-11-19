@@ -140,6 +140,7 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-sline.err { color: #e5736b; }
 .dh-sline.warn { color: #d9a441; }
 .dh-sout { margin: 6px 0; white-space: pre-wrap; }
+.dh-sout.dh-md, .dh-mc.dh-md { white-space: normal; }
 .dh-hit { display: block; width: 100%; text-align: left; padding: 8px 4px; border: 0; border-bottom: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; font-size: .92rem; cursor: pointer; }
 .dh-hit small { display: block; color: var(--rsub); margin-bottom: 2px; }
 .dh-hit mark { background: transparent; color: var(--rlink); font-weight: 700; }
@@ -178,3 +179,13 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-h[hidden] { display: none; }
 .dh-h::before { content: ''; position: absolute; left: 50%; top: 2px; width: 2px; height: 10px; margin-left: -1px; background: var(--rlink); }
 .dh-h::after { content: ''; position: absolute; left: 50%; top: 10px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--rlink); }
+
+/* Markdown in den KI-Antworten */
+.dh-md > :first-child { margin-top: 0; } .dh-md > :last-child { margin-bottom: 0; }
+.dh-md p { margin: 0 0 .7em; } .dh-md ul, .dh-md ol { margin: 0 0 .7em; padding-left: 1.3em; } .dh-md li { margin: .15em 0; }
+.dh-md h1, .dh-md h2, .dh-md h3, .dh-md h4 { margin: .9em 0 .4em; line-height: 1.25; font-size: 1.05em; }
+.dh-md strong { font-weight: 700; } .dh-md hr { border: 0; border-top: 1px solid var(--rline); margin: .8em 0; }
+.dh-md code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; padding: 1px 4px; border-radius: 5px; background: var(--rline); }
+.dh-md pre { margin: 0 0 .7em; padding: 8px 10px; border-radius: 8px; background: var(--rline); overflow-x: auto; } .dh-md pre code { padding: 0; background: none; }
+.dh-md blockquote { margin: 0 0 .7em; padding-left: 10px; border-left: 3px solid var(--rline); color: var(--rsub); }
+.dh-md table { border-collapse: collapse; margin: 0 0 .7em; font-size: .9em; } .dh-md th, .dh-md td { border: 1px solid var(--rline); padding: 3px 7px; }

@@ -6,6 +6,8 @@ import { HeinzProviders as PV } from '../../../lib/providers.js';
 import { findAll, normalizeQuery } from '../mod/suche.js';
 import { buildRequest, trimHistory } from '../mod/ki.js';
 import { wordBounds } from '../mod/wahl.js';
+import { mdToHtml } from '../mod/markdown.js';
+import { sauber } from '../mod/sauber.js';
 
 const MAX_QUERY = 80;
 const AI_KEY = 'heinz_docheinz_ai';
@@ -131,6 +133,13 @@ export function closeSheet() {
     $('r-sheet').hidden = true;
 }
 const t = (k, v) => A.env.t(k, v);
+// Antworten der Modelle sind Markdown: eigener Parser, dann durch die Positivliste (keine Skripte, Links nur als Text). Das Original bleibt in data-raw zum Kopieren.
+function renderMd(el, text) {
+    el.dataset.raw = text;
+    el.classList.add('dh-md');
+    try { el.innerHTML = sauber(mdToHtml(text)); } catch { el.textContent = text; }
+}
+const rawOf = (el) => (el && (el.dataset.raw || el.textContent)) || '';
 const line = (cls, text) => { const p = document.createElement('p'); p.className = cls; p.textContent = text; return p; };
 
 // ---------- Modellwahl für Erklären und Analyse ----------
@@ -164,30 +173,17 @@ export async function buildAiChips() {
     };
     box.textContent = '';
     cur.textContent = A.env.t('r_aiLoad');
-    const provs = PV.list().filter(p => p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(p.id)))));
-    let any = false;
-    const usable = (id) => provs.some(p => p.id === id);
-    PV.configs().filter(f => usable(f.provider)).forEach(f => {
-        any = true;
+    // Nur Konfigurationen aus dem Dashboard (Modell, Prompt, Ton, Laufzeit); die Modellflut der Anbieter erscheint hier nicht.
+    const ok = (id) => { const p = PV.get(id); return !!p && !!p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(id)))); };
+    const list = PV.configs().filter(f => ok(f.provider));
+    list.forEach(f => {
         const b = document.createElement('button');
         b.type = 'button'; b.dataset.c = f.id;
-        b.append(document.createTextNode(f.name), Object.assign(document.createElement('small'), { textContent: f.model + ' · ' + PV.get(f.provider).name }));
+        b.append(document.createTextNode(f.name), Object.assign(document.createElement('small'), { textContent: f.model + ' · ' + PV.get(f.provider).name + (PV.get(f.provider).local ? '' : ' · online') }));
         b.addEventListener('click', async () => { await setAi(f.provider, f.model, f.id); show(); });
         box.appendChild(b);
     });
-    await Promise.all(provs.map(async (p) => {
-        let names = [];
-        try { names = await PV.models(p.id); } catch { names = []; }
-        names.forEach(m => {
-            any = true;
-            const b = document.createElement('button');
-            b.type = 'button'; b.dataset.p = p.id; b.dataset.m = m;
-            b.append(document.createTextNode(m), Object.assign(document.createElement('small'), { textContent: p.name + (p.local ? '' : ' · online') }));
-            b.addEventListener('click', async () => { await setAi(p.id, m); show(); });
-            box.appendChild(b);
-        });
-    }));
-    if (!any) { cur.textContent = A.env.t('r_aiFail'); return; }
+    if (!list.length) { cur.textContent = A.env.t('r_aiFail'); return; }
     show();
 }
 
@@ -248,7 +244,7 @@ async function ask(kind, passage) {
         box.appendChild(line('dh-sline warn', t('s_sent', { p: p.name })));
     }
     if (req.clipped) box.appendChild(line('dh-sline', t('s_clipped')));
-    const out = document.createElement('p'); out.className = 'dh-sout';
+    const out = document.createElement('div'); out.className = 'dh-sout';
     box.appendChild(out);
     const wait = line('dh-sline', t('s_working')); box.appendChild(wait);
     const ac = A.ac = new AbortController();
@@ -257,7 +253,7 @@ async function ask(kind, passage) {
     try {
         await PV.prepare(act.provider, act.model);
         await PV.chat(act.provider, { model: act.model, system: req.system, messages: req.messages, options: as.options, keepAlive: as.keepAlive, stream: true, signal: ac.signal,
-            onDelta: (d) => { if (my !== A.run) return; text += d; out.textContent = text; if (wait.parentNode) wait.remove(); } });
+            onDelta: (d) => { if (my !== A.run) return; text += d; renderMd(out, text); if (wait.parentNode) wait.remove(); } });
         if (my !== A.run) return;
         if (!text.trim()) out.textContent = t('s_empty');
         else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
@@ -276,7 +272,7 @@ async function ask(kind, passage) {
 function addMsg(role, text) {
     const d = document.createElement('div');
     d.className = 'dh-m ' + (role === 'user' ? 'u' : 'a');
-    const sp = document.createElement('span'); sp.textContent = text; d.appendChild(sp);
+    const sp = document.createElement('div'); sp.className = 'dh-mc'; if (role === 'user') sp.textContent = text; else renderMd(sp, text); d.appendChild(sp);
     $('ra-body').appendChild(d);
     $('ra-body').scrollTop = $('ra-body').scrollHeight;
     return d;
@@ -284,7 +280,7 @@ function addMsg(role, text) {
 function addCopy(d) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'pill'; b.textContent = t('s_copy');
-    b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(d.querySelector('span').textContent); } catch { /* keine Berechtigung */ } });
+    b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(rawOf(d.querySelector('.dh-mc'))); } catch { /* keine Berechtigung */ } });
     d.appendChild(b);
 }
 function ctxOn() { return $('ra-seg').querySelector('button.on').dataset.ctx === '1'; }
@@ -332,14 +328,14 @@ async function followUp(q) {
     const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system });
     const hist = trimHistory([first.messages[0]].concat(c.msgs.slice(1)).concat([{ role: 'user', content: q }]));
     const out = addMsg('assistant', t('s_working'));
-    const span = out.querySelector('span');
+    const span = out.querySelector('.dh-mc');
     const ac = A.anaAc = new AbortController();
     $('ra-stop').hidden = false; $('ra-send').hidden = true; $('ra-q').value = '';
     let text = '';
     try {
         await PV.prepare(c.provider, c.model);
         await PV.chat(c.provider, { model: c.model, system: first.system, messages: hist, options: as.options, keepAlive: as.keepAlive, stream: true, signal: ac.signal,
-            onDelta: (d) => { if (my !== A.anaRun) return; text += d; span.textContent = text; $('ra-body').scrollTop = $('ra-body').scrollHeight; } });
+            onDelta: (d) => { if (my !== A.anaRun) return; text += d; renderMd(span, text); $('ra-body').scrollTop = $('ra-body').scrollHeight; } });
         if (my !== A.anaRun) return;
         if (!text.trim()) span.textContent = t('s_empty');
     } catch (e) {
@@ -383,6 +379,6 @@ export function initSelection(env) {
     $('ra-q').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; });
     $('ra-q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); followUp($('ra-q').value); } });
     $('rs-stop').addEventListener('click', () => { if (A.ac) A.ac.abort(); });
-    $('rs-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('rs-body').querySelector('.dh-sout').textContent); } catch { /* keine Berechtigung */ } });
+    $('rs-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(rawOf($('rs-body').querySelector('.dh-sout'))); } catch { /* keine Berechtigung */ } });
 }
 export function resetSelection() { closeAna(true); A.conv = null; closeSheet(); clearWahl(); A.cache.clear(); }

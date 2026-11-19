@@ -778,3 +778,9 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Anfrage: Buchtitel und Autor gehen nicht mehr mit (kleine Modelle redeten nur über das Buch); Textstelle in Anführungszeichen, Auftrag danach, eingebauter Prompt verbietet Nennung von Buch/Autor. Das macht kleine Modelle nicht klüger; Prompt und Modell bestimmt der Entwickler selbst.
 - Leiste: invertiert (Textfarbe als Grund), fetter Text, stärkerer Schatten.
 - Tests: `test_dashboard_configuration_decides_model_prompt_and_tone`, Node-Test für eigenen Systemprompt. Nur simuliert getestet.
+
+### 2026-11-19 AIUIheinz-docHeinz: Markdown in KI-Antworten, nur Konfigurationen wählbar
+- Meldung (Handy, Cloud-Modell): Markdown wurde als Rohtext mit `**` angezeigt; die Auswahl listete alle Modelle aller Anbieter.
+- Antworten (Blatt und Analyse) werden mit `mod/markdown.js` gerendert und durch `sauber()` geführt (keine Skripte, Links nur als Text); das Original liegt in `data-raw` und wird kopiert. Während des Streams wird bei jedem Stück neu gerendert.
+- Die Auswahl „KI für Erklären und Analyse“ zeigt nur noch Konfigurationen aus dem Dashboard (Anbieter erreichbar bzw. Online erlaubt); ohne Konfiguration gilt das Dashboard-Modell. Ein früher gespeichertes Einzelmodell wirkt weiter, bis eine Konfiguration gewählt wird.
+- Tests: `test_answers_render_markdown_and_copy_keeps_the_raw_text`, AI-Test auf Konfigurationen umgestellt. Nur simuliert getestet.

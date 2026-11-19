@@ -691,10 +691,12 @@ class DocHeinzUiTests(DocHeinzBase):
     def test_ai_model_assignment_is_used_for_explain_and_gap_setting_persists(self):
         p = self.open()
         calls = self.fake_ollama(p)
+        p.evaluate("""() => localStorage.setItem('heinz_configs', JSON.stringify([{ id: 'c9', name: 'Q7', provider: 'ollama', model: 'qwen:7b', person: 'heinz', prompt: '', tone: null, stop: [], runtime: null }]))""")
         self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
         self.tap(p, "top"); p.click("#r-set-b")
         p.wait_for_selector("#seg-ai button")
-        p.click("#seg-ai button[data-m='qwen:7b']")
+        self.assertEqual(p.locator("#seg-ai button").count(), 1)       # nur Konfigurationen, keine Modellflut
+        p.click("#seg-ai button[data-c='c9']")
         self.assertIn("qwen:7b", p.inner_text("#ai-cur"))
         self.assertEqual(p.get_attribute("#reader", "data-gap"), "0")
         p.click("#seg-gap button[data-gap='1']")
@@ -728,6 +730,19 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(body["messages"][0]["content"].startswith("Erkläre wie für ein Kind. Buch "))
         self.assertEqual(body["options"]["temperature"], 0.2)
         self.assertNotIn("Titel", body["messages"][1]["content"])
+
+    def test_answers_render_markdown_and_copy_keeps_the_raw_text(self):
+        p = self.open()
+        self.fake_ollama(p, chunks=("Das ist **fett** und\n\n", "* eins\n* zwei <script>window.__x=1</script>"))
+        self.set_active(p, "ollama", "test:1b")
+        self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
+        self.select_text(p, "kurzer")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_selector("#rs-body .dh-sout strong")
+        self.assertEqual(p.locator("#rs-body .dh-sout li").count(), 2)
+        self.assertFalse(p.evaluate("() => !!window.__x"))
+        self.assertEqual(p.locator("#rs-body .dh-sout script").count(), 0)
+        self.assertIn("**fett**", p.evaluate("() => document.querySelector('#rs-body .dh-sout').dataset.raw"))
 
     def test_reader_settings_size_and_theme_persist(self):
         p = self.open()
