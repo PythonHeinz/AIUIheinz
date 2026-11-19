@@ -12,7 +12,7 @@ import { openReader, close as closeReader, applyTheme, applySize, applyBtns, rel
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, confirm: '', msgs: [] };
+const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [] };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -177,7 +177,15 @@ async function openBook(id) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, btns: state.btns, gap: state.gap,
+            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, gap: state.gap,
+            onLook: ({ global, book }) => {
+                state.size = global.size; state.theme = global.theme; state.font = global.font;
+                HeinzStore.set(K('size'), global.size); HeinzStore.set(K('theme'), global.theme); HeinzStore.set(K('font'), global.font);
+                state.look = Object.fromEntries(Object.entries(global).filter(([k]) => !['size', 'theme', 'font'].includes(k))); HeinzStore.set(K('look'), state.look);
+                if (book) state.bookLook[id] = book; else delete state.bookLook[id];
+                HeinzStore.set(K('booklook'), state.bookLook);
+            },
+            onProfiles: (list) => { state.profiles = list; HeinzStore.set(K('profiles'), list); },
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
             onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },
@@ -190,6 +198,7 @@ async function openBook(id) {
 
 async function remove(id) {
     await state.db.remove(id);
+    if (state.bookLook[id]) { delete state.bookLook[id]; HeinzStore.set(K('booklook'), state.bookLook); }
     state.confirm = '';
     await reload();
     storeLine();
@@ -199,7 +208,8 @@ async function remove(id) {
 async function start() {
     await HeinzStore.open();
     state.sort = SORTS.includes(HeinzStore.get(K('sort'))) ? HeinzStore.get(K('sort')) : 'recent';
-    const sz = +HeinzStore.get(K('size'), 19); state.size = sz >= 14 && sz <= 34 ? sz : 19;
+    const sz = +HeinzStore.get(K('size'), 19); state.size = sz >= 10 && sz <= 60 ? sz : 19;
+    state.look = HeinzStore.get(K('look'), {}) || {}; state.bookLook = HeinzStore.get(K('booklook'), {}) || {}; state.profiles = HeinzStore.get(K('profiles'), []) || [];
     state.theme = THEMES.includes(HeinzStore.get(K('theme'))) ? HeinzStore.get(K('theme')) : 'auto';
     state.font = isFont(HeinzStore.get(K('font'))) ? HeinzStore.get(K('font')) : DEFAULT_FONT;
     state.btns = +HeinzStore.get(K('btns'), 0) === 1;

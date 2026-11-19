@@ -769,6 +769,92 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#r-set").is_visible())
         self.assertEqual(p.get_attribute("#reader", "data-set"), "1")
 
+    def look(self, p, k, v):
+        p.evaluate("""([k, v]) => { const i = document.querySelector('#r-look label[data-k=' + k + '] input'); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }""", [k, v])
+
+    def seg(self, p, k, v):
+        p.evaluate("""([k, v]) => document.querySelector('#r-look label[data-k=' + k + '] button[data-v=\"' + v + '\"]').click()""", [k, v])
+
+    def open_set(self, p):
+        self.tap(p, "top"); p.click("#r-set-b")
+
+    def test_spacing_alignment_and_margins_change_the_page(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        n0 = self.pg(p)[1]
+        self.open_set(p)
+        self.look(p, "lh", 2.4)
+        self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('r-body')).lineHeight"), str(round(2.4 * 19, 2)).rstrip("0").rstrip(".") + "px")
+        p.wait_for_function("(n) => +document.getElementById('reader').dataset.pages > n", arg=n0)
+        self.seg(p, "just", 1)
+        self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('r-body')).textAlign"), "justify")
+        self.seg(p, "hyph", 0)
+        self.assertEqual(p.get_attribute("#reader", "data-hyph"), "0")
+        self.look(p, "ind", 2)
+        self.assertEqual(p.evaluate("() => getComputedStyle(document.querySelector('#r-body p')).textIndent"), "38px")
+        self.look(p, "mx", 60)
+        self.assertEqual(p.evaluate("() => parseFloat(getComputedStyle(document.getElementById('r-page')).paddingLeft)"), 60)
+        self.look(p, "maxw", 300)
+        p.wait_for_function("() => document.getElementById('r-clip').getBoundingClientRect().width <= 300")
+
+    def test_two_columns_per_page(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.open_set(p)
+        self.seg(p, "cols", 2)
+        p.wait_for_function("() => getComputedStyle(document.getElementById('r-body')).columnGap === '28px'")
+        cw = p.evaluate("() => { const b = document.getElementById('r-body'); return [parseFloat(getComputedStyle(b).columnWidth), parseFloat(getComputedStyle(b).columnGap), b.getBoundingClientRect().width]; }")
+        self.assertEqual(round(2 * cw[0] + cw[1]), round(cw[2]))
+        p.keyboard.press("Escape")
+        before = self.pg(p)[0]
+        self.tap(p, "next")
+        self.assertEqual(self.pg(p)[0], before + 1)
+        self.assertEqual(p.evaluate("() => document.getElementById('r-body').scrollLeft"), 0)
+
+    def test_book_scope_overrides_only_that_book_and_reset_clears_it(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# Buch A\n\n" + b"Absatz mit Text.\n\n" * 40)
+        self.open_set(p)
+        p.click("#seg-scope button[data-scope='1']")
+        self.look(p, "lh", 2.6)
+        self.assertEqual(p.evaluate("() => document.querySelector('#r-look label[data-k=lh] input').value"), "2.6")
+        p.click("#r-close"); p.click("#r-close")                       # Feld zu, dann Reader zu
+        p.wait_for_selector("#reader", state="hidden")
+        self.add(p, ("b.md", "text/markdown", b"# Buch B\n\nAndere Seite."))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-open').length === 2")
+        p.locator("#list .dh-open", has_text="Buch B").click()
+        p.wait_for_selector("#reader:not([hidden])")
+        self.open_set(p)
+        self.assertEqual(p.evaluate("() => document.querySelector('#r-look label[data-k=lh] input').value"), "1.65")
+        p.click("#r-close"); p.click("#r-close")
+        p.wait_for_selector("#reader", state="hidden")
+        p.locator("#list .dh-open", has_text="Buch A").click()
+        p.wait_for_selector("#reader:not([hidden])")
+        self.open_set(p)
+        self.assertEqual(p.evaluate("() => document.querySelector('#r-look label[data-k=lh] input').value"), "2.6")
+        p.click("#look-reset")
+        self.assertEqual(p.evaluate("() => document.querySelector('#r-look label[data-k=lh] input').value"), "1.65")
+
+    def test_custom_colors_brightness_and_profiles(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
+        self.open_set(p)
+        p.evaluate("""() => { const i = document.querySelector('#r-look label[data-k=bgc] input'); i.value = '#102030'; i.dispatchEvent(new Event('input', { bubbles: true })); }""")
+        self.assertEqual(p.get_attribute("#reader", "data-rt"), "custom")
+        self.assertEqual(p.evaluate("() => getComputedStyle(document.getElementById('reader')).backgroundColor"), "rgb(16, 32, 48)")
+        self.look(p, "bri", 80)
+        self.assertEqual(p.evaluate("() => document.getElementById('r-page').style.filter"), "brightness(0.8)")
+        self.look(p, "lh", 2)
+        p.evaluate("() => document.querySelector('#r-look details[data-g=prof]').open = true")
+        p.fill("#prof-name", "Nacht"); p.click("#prof-save")
+        self.assertEqual(p.locator("#prof-list .dh-prow").count(), 1)
+        self.look(p, "lh", 1.2)
+        p.click("#prof-list .dh-prow button >> nth=0")
+        self.assertEqual(p.evaluate("() => document.querySelector('#r-look label[data-k=lh] input').value"), "2")
+        p.click("#prof-list .x")
+        self.assertEqual(p.locator("#prof-list .dh-prow").count(), 0)
+        self.assertEqual(p.errors, [])
+
     def test_reader_settings_size_and_theme_persist(self):
         p = self.open()
         self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")

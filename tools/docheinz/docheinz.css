@@ -57,6 +57,7 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-reader[data-rt=sepia] { --rb: #f4ecd8; --rt: #433422; --rbar: #e9dfc4; --rline: #d3c7a8; --rsub: #7a6a52; --rlink: #8a4b12; }
 .dh-reader[data-rt=dk] { --rb: #1b1b1c; --rt: #d6d6d2; --rbar: #262628; --rline: #36363a; --rsub: #9a9aa0; --rlink: #8ab4f8; }
 .dh-reader[data-rt=black] { --rb: #000; --rt: #b9b9b6; --rbar: #121212; --rline: #262626; --rsub: #86868a; --rlink: #7aa7e8; }
+.dh-reader[data-rt=custom] { --rb: var(--cbg, #fbfbf8); --rt: var(--cfg, #1d1d1b); --rbar: color-mix(in srgb, var(--rb) 90%, var(--rt)); --rline: color-mix(in srgb, var(--rb) 78%, var(--rt)); --rsub: color-mix(in srgb, var(--rt) 62%, var(--rb)); --rlink: color-mix(in srgb, var(--rt) 70%, #3b82f6); }
 .dh-reader[data-font=serif] { --rf: var(--serif); }
 .dh-reader[data-font=literata] { --rf: 'Literata', Georgia, serif; }
 .dh-reader[data-font=lora] { --rf: 'Lora', Georgia, serif; }
@@ -66,12 +67,15 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-reader[data-font=mono] { --rf: var(--mono); }
 
 /* Seite: Rand um den Text; der Text (dh-text) ist genau eine Spalte breit, weitere Spalten sind die nächsten Seiten (waagerecht verschoben, nie sichtbar gescrollt) */
-.dh-page { position: absolute; inset: 0; overflow: clip; box-sizing: border-box; padding: calc(16px + env(safe-area-inset-top)) 22px calc(16px + env(safe-area-inset-bottom)); touch-action: none; }
+.dh-page { position: absolute; inset: 0; overflow: clip; box-sizing: border-box; padding: calc(var(--my, 16px) + env(safe-area-inset-top)) var(--mx, 22px) calc(var(--my, 16px) + env(safe-area-inset-bottom)); touch-action: none; }
 .dh-clip { margin: 0 auto; overflow: clip; position: relative; }
-.dh-text { display: block; margin: 0; overflow: visible; will-change: transform; column-gap: 0; column-fill: auto; line-height: 1.65; font-family: var(--rf); outline: none; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.dh-text { display: block; margin: 0; overflow: visible; will-change: transform; column-gap: 0; column-fill: auto; line-height: var(--lh, 1.65); word-spacing: var(--ws, 0); letter-spacing: var(--ls, 0); font-weight: var(--fw, 400); font-family: var(--rf); outline: none; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .dh-text h1, .dh-text h2, .dh-text h3, .dh-text h4, .dh-text h5, .dh-text h6 { line-height: 1.25; margin: 1.3em 0 .5em; break-after: avoid; }
 .dh-text h1:first-child, .dh-text h2:first-child { margin-top: .2em; }
-.dh-text p { margin: 0 0 .85em; orphans: 2; widows: 2; }
+.dh-text p { margin: 0 0 var(--ps, .85em); text-indent: var(--ind, 0); orphans: 2; widows: 2; }
+.dh-reader[data-wid='0'] .dh-text p { orphans: 1; widows: 1; }
+.dh-reader[data-just='1'] .dh-text { text-align: justify; }
+.dh-reader[data-hyph='0'] .dh-text { hyphens: manual; -webkit-hyphens: manual; }
 .dh-text a[data-go] { color: var(--rlink); text-decoration: underline; cursor: pointer; }
 .dh-text img { max-width: 100%; max-height: var(--ph, 100%); width: auto; height: auto; object-fit: contain; display: block; margin: .8em auto; break-inside: avoid; }
 .dh-text table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: .8em 0; font-size: .9em; }
@@ -190,3 +194,13 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-md pre { margin: 0 0 .7em; padding: 8px 10px; border-radius: 8px; background: var(--rline); overflow-x: auto; } .dh-md pre code { padding: 0; background: none; }
 .dh-md blockquote { margin: 0 0 .7em; padding-left: 10px; border-left: 3px solid var(--rline); color: var(--rsub); }
 .dh-md table { border-collapse: collapse; margin: 0 0 .7em; font-size: .9em; } .dh-md th, .dh-md td { border: 1px solid var(--rline); padding: 3px 7px; }
+
+/* Satzspiegel-Regler im Einstellungsblatt */
+.dh-scope { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .dh-scope .seg2 { flex: 1; margin: 0; }
+.dh-grp { margin-top: 10px; border-top: 1px solid var(--rline); padding-top: 8px; }
+.dh-grp summary { cursor: pointer; font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; color: var(--rsub); min-height: 32px; display: flex; align-items: center; }
+.dh-grp .fld { margin: 6px 0 10px; } .dh-grp .fld .v { color: var(--rsub); font-weight: 600; }
+.dh-grp input[type=color] { width: 100%; height: 38px; padding: 2px; border: 1px solid var(--rline); border-radius: 10px; background: transparent; }
+.dh-pform { display: flex; gap: 8px; margin: 6px 0; } .dh-pform input { flex: 1; min-width: 0; min-height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--rline); background: var(--rb); color: var(--rt); font: inherit; }
+.dh-prow { display: flex; gap: 6px; margin: 4px 0; } .dh-prow button { min-height: 38px; border-radius: 10px; border: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; padding: 0 12px; cursor: pointer; text-align: left; }
+.dh-prow button:first-child { flex: 1; } .dh-prow .x { width: 40px; text-align: center; padding: 0; }

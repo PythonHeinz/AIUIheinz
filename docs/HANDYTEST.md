@@ -252,3 +252,10 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 3. Leiste: Suchen, Erklären, Zusammenfassen, Kopieren; sitzt über der Markierung, unter ihr bei Text ganz oben.
 4. Einmal tippen hebt die Markierung auf, ohne zu blättern. Blättern per Zonen und Tippen oben wie bisher.
 5. Kopieren: Text in ein anderes Feld einfügen. Wirkt Zoomen per Zwei-Finger-Geste nicht mehr? (touch-action: none, gewollt.)
+
+### Y4. docHeinz: Satzspiegel (19.11.2026)
+1. Reader, Zahnrad: oben Umschalter „Alle Bücher / Nur dieses Buch“; Gruppen Abstände, Ränder und Breite, Text und Umbruch, Spalten, Farben, Profile aufklappen. Der Text über dem Blatt folgt live.
+2. Zeilenabstand, Rand, Blocksatz, Silbentrennung ausprobieren; Zwei Spalten bei quer gehaltenem Handy.
+3. Eigene Farben: Wirkt Thema „Eigene“, bleibt der Text lesbar? Helligkeit testen.
+4. Profil speichern, etwas ändern, Profil anwenden. „Nur dieses Buch“: andere Bücher bleiben unverändert; „Zurücksetzen“ im Buch-Modus löscht nur die Überschreibung.
+5. Zurück-Pfeil/-Geste: schließt zuerst das Blatt, dann erst das Buch.

@@ -4,11 +4,13 @@
 import { $ } from './base.js';
 import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
+import { buildLookUi, sync as syncLook } from './satz.js';
+import { DEFAULTS, clean, full } from '../mod/satz.js';
 import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
-export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black'];
-const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: false, ui: false, onCover: false, coverUrl: '' };
+export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black', 'custom'];
+const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: false, g: { ...DEFAULTS }, b: null, bookOn: false, prof: [], maxw: 640, cols: 1, ui: false, onCover: false, coverUrl: '' };
 
 const body = () => $('r-body');
 const lastCh = () => S.src.chapters.length - 1;
@@ -18,16 +20,18 @@ function measure() {
     const pg = $('r-page'), cs = getComputedStyle(pg);
     const iw = pg.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const ih = pg.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    return { w: Math.max(120, Math.floor(Math.min(iw, 640))), h: Math.max(120, Math.floor(ih)) };
+    return { w: Math.max(120, Math.floor(Math.min(iw, S.maxw || 640))), h: Math.max(120, Math.floor(ih)) };
 }
 function layout(frac) {
     const b = body(), { w, h } = measure();
     const cl = $('r-clip');
-    cl.style.width = w + 'px'; cl.style.height = h + 'px';
-    b.style.width = w + 'px'; b.style.height = h + 'px'; b.style.columnWidth = w + 'px'; b.style.setProperty('--ph', h + 'px');
+    // Eine Seite = eine oder zwei Spalten; die nächste Seite beginnt hinter dem Spaltenabstand g (bei einer Spalte g = 0)
+    const two = S.cols === 2 && w >= 180, g = two ? 28 : 0, cw = two ? Math.floor((w - g) / 2) : w, W = two ? 2 * cw + g : w;
+    cl.style.width = W + 'px'; cl.style.height = h + 'px';
+    b.style.width = W + 'px'; b.style.height = h + 'px'; b.style.columnWidth = cw + 'px'; b.style.columnGap = g + 'px'; b.style.setProperty('--ph', h + 'px');
     b.style.transform = 'none';
-    S.step = w;
-    S.pages = pageCount(b.scrollWidth, w);
+    S.step = W + g;
+    S.pages = pageCount(b.scrollWidth + g, S.step);
     goPage(pageOfFrac(frac, S.pages));
 }
 function relayout() {
@@ -193,8 +197,47 @@ function buildFonts() {
 }
 
 export function applyTheme(theme) { S.theme = THEMES.includes(theme) ? theme : 'auto'; $('reader').setAttribute('data-rt', S.theme); document.querySelectorAll('#seg-theme button').forEach(b => b.classList.toggle('on', b.dataset.rt === S.theme)); }
+// ---------- Aussehen: global, pro Buch überschreibbar ----------
+const CTX = { themes: THEMES, isFont };
+const eff = () => full(S.g, S.bookOn ? S.b : null);
+function applyTypo(e) {
+    const r = $('reader'), st = r.style;
+    st.setProperty('--lh', e.lh); st.setProperty('--ps', e.ps + 'em'); st.setProperty('--ind', e.ind + 'em'); st.setProperty('--mx', e.mx + 'px'); st.setProperty('--my', e.my + 'px');
+    st.setProperty('--ws', e.ws + 'em'); st.setProperty('--ls', e.ls + 'em'); st.setProperty('--fw', e.fw); st.setProperty('--cfg', e.fgc); st.setProperty('--cbg', e.bgc);
+    r.dataset.just = e.just; r.dataset.hyph = e.hyph; r.dataset.wid = e.wid;
+    $('r-page').style.filter = e.bri === 100 ? '' : 'brightness(' + e.bri / 100 + ')';
+    S.maxw = e.maxw; S.cols = e.cols;
+    if (S.open) scheduleLayout();
+}
+function applyLook() {
+    const e = eff();
+    applyTheme(e.theme); applySize(e.size); applyFont(e.font); applyTypo(e);
+    syncLook();
+}
+function saveLook() { if (S.cb.onLook) S.cb.onLook({ global: S.g, book: S.bookOn && S.b && Object.keys(S.b).length ? S.b : null }); }
+function setLook(k, v) {
+    const o = clean({ [k]: v }, CTX);
+    if (!(k in o)) return;
+    const put = (key, val) => { if (S.bookOn) S.b = Object.assign(S.b || {}, { [key]: val }); else S.g[key] = val; };
+    put(k, o[k]);
+    if (k === 'fgc' || k === 'bgc') put('theme', 'custom');
+    applyLook(); saveLook();
+}
+const lookApi = () => ({
+    t: S.t,
+    get: (k) => eff()[k],
+    set: setLook,
+    scope: () => S.bookOn,
+    setScope: (book) => { S.bookOn = !!book; S.b = book ? (S.b || {}) : null; applyLook(); saveLook(); },
+    reset: () => { if (S.bookOn) S.b = {}; else S.g = { ...DEFAULTS }; applyLook(); saveLook(); },
+    profiles: () => S.prof,
+    saveProfile: (name) => { const look = clean(eff(), CTX); const same = S.prof.find(p => p.name === name); if (same) same.look = look; else S.prof.push({ id: 'p' + Date.now().toString(36), name, look }); S.cb.onProfiles && S.cb.onProfiles(S.prof); },
+    applyProfile: (id) => { const p = S.prof.find(x => x.id === id); if (!p) return; if (S.bookOn) S.b = { ...p.look }; else S.g = { ...S.g, ...p.look }; applyLook(); saveLook(); },
+    deleteProfile: (id) => { S.prof = S.prof.filter(p => p.id !== id); S.cb.onProfiles && S.cb.onProfiles(S.prof); },
+});
+
 export function applyGap(on) { S.gap = !!on; $('reader').dataset.gap = S.gap ? '1' : '0'; document.querySelectorAll('#seg-gap button').forEach(b => b.classList.toggle('on', (b.dataset.gap === '1') === S.gap)); }
-export function applySize(px) { S.size = Math.max(14, Math.min(34, Math.round(px) || 19)); body().style.fontSize = S.size + 'px'; $('r-size').value = S.size; $('r-sizev').textContent = S.size; if (S.open) scheduleLayout(); }
+export function applySize(px) { S.size = Math.max(10, Math.min(60, Math.round(px) || 19)); body().style.fontSize = S.size + 'px'; $('r-size').value = S.size; $('r-sizev').textContent = S.size; if (S.open) scheduleLayout(); }
 export function applyBtns(on) { S.btns = !!on; $('r-prev').hidden = $('r-next').hidden = !S.btns; document.querySelectorAll('#seg-btns button').forEach(b => b.classList.toggle('on', (b.dataset.btns === '1') === S.btns)); }
 export async function applyFont(id) {
     S.font = isFont(id) ? id : DEFAULT_FONT;
@@ -239,10 +282,12 @@ function wire() {
     document.querySelectorAll('#seg-gap button').forEach(b => b.addEventListener('click', () => { applyGap(b.dataset.gap === '1'); S.cb.onSettings({ gap: S.gap }); }));
     $('r-prev').addEventListener('click', () => go(-1));
     $('r-next').addEventListener('click', () => go(1));
-    $('r-size').addEventListener('input', (e) => { applySize(+e.target.value); S.cb.onSettings({ size: S.size }); });
-    document.querySelectorAll('#seg-theme button').forEach(b => b.addEventListener('click', () => { applyTheme(b.dataset.rt); S.cb.onSettings({ theme: S.theme }); }));
+    $('r-size').addEventListener('input', (e) => setLook('size', +e.target.value));
+    document.querySelectorAll('#seg-theme button').forEach(b => b.addEventListener('click', () => setLook('theme', b.dataset.rt)));
+    document.querySelectorAll('#seg-scope button').forEach(b => b.addEventListener('click', () => lookApi().setScope(b.dataset.scope === '1')));
+    $('look-reset').addEventListener('click', () => lookApi().reset());
     document.querySelectorAll('#seg-btns button').forEach(b => b.addEventListener('click', () => { applyBtns(b.dataset.btns === '1'); S.cb.onSettings({ btns: S.btns }); }));
-    $('seg-font').addEventListener('click', (e) => { const b = e.target.closest('button[data-font]'); if (!b) return; applyFont(b.dataset.font); S.cb.onSettings({ font: S.font }); });
+    $('seg-font').addEventListener('click', (e) => { const b = e.target.closest('button[data-font]'); if (!b) return; setLook('font', b.dataset.font); });
     const pg = $('r-page');
     pg.addEventListener('pointerdown', () => { S.hadSel = hasWahl(); }, true);
     pg.addEventListener('click', onTap);
@@ -269,9 +314,16 @@ function wire() {
 export async function openReader(rec, src, ctx) {
     wire();
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
-    applyTheme(ctx.theme); applySize(ctx.size); applyBtns(ctx.btns); applyGap(ctx.gap === true);
+    S.g = { ...DEFAULTS, ...clean({ size: ctx.size, theme: ctx.theme, font: ctx.font, ...(ctx.look || {}) }, CTX) };
+    S.b = ctx.bookLook && Object.keys(clean(ctx.bookLook, CTX)).length ? clean(ctx.bookLook, CTX) : null;
+    S.bookOn = !!S.b;
+    S.prof = Array.isArray(ctx.profiles) ? ctx.profiles.slice() : [];
+    applyBtns(ctx.btns); applyGap(ctx.gap === true);
     buildFonts();
-    await applyFont(ctx.font);
+    buildLookUi($('r-look'), lookApi());
+    applyTypo(eff()); applyTheme(eff().theme); applySize(eff().size);
+    await applyFont(eff().font);
+    syncLook();
     buildToc();
     S.open = true;
     showUi(false);
@@ -300,4 +352,4 @@ export function close() {
     S.rec = null; S.src = null;
 }
 export const isOpen = () => S.open;
-export function relabel(t, lang) { S.t = t; if (lang) S.lang = () => lang; buildFonts(); if (S.open) updatePos(); }
+export function relabel(t, lang) { S.t = t; if (lang) S.lang = () => lang; buildFonts(); if (S.open) { updatePos(); buildLookUi($('r-look'), lookApi()); } }

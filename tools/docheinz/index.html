@@ -45,13 +45,15 @@
         <span class="dh-bar"><i id="r-prog"></i></span>
     </div>
     <div class="dh-rset" id="r-set" hidden>
-        <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="14" max="34" step="1"></label>
+        <div class="dh-scope"><div class="seg2" id="seg-scope"><button type="button" data-scope="0" data-i="l_all"></button><button type="button" data-scope="1" data-i="l_book"></button></div><button type="button" class="pill" id="look-reset" data-i="l_reset"></button></div>
+        <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="10" max="60" step="1"></label>
         <div class="caps grp"><span data-i="r_font"></span></div>
         <div class="dh-fonts" id="seg-font"></div>
         <div class="caps grp"><span data-i="r_theme"></span></div>
         <div class="seg2" id="seg-theme">
-            <button type="button" data-rt="auto" data-i="t_auto"></button><button type="button" data-rt="lt" data-i="t_lt"></button><button type="button" data-rt="sepia" data-i="t_sepia"></button><button type="button" data-rt="dk" data-i="t_dk"></button><button type="button" data-rt="black" data-i="t_black"></button>
+            <button type="button" data-rt="auto" data-i="t_auto"></button><button type="button" data-rt="lt" data-i="t_lt"></button><button type="button" data-rt="sepia" data-i="t_sepia"></button><button type="button" data-rt="dk" data-i="t_dk"></button><button type="button" data-rt="black" data-i="t_black"></button><button type="button" data-rt="custom" data-i="t_custom"></button>
         </div>
+        <div id="r-look"></div>
         <div class="caps grp"><span data-i="r_btns"></span></div>
         <div class="seg2" id="seg-btns">
             <button type="button" data-btns="0" data-i="b_off"></button><button type="button" data-btns="1" data-i="b_on"></button>
