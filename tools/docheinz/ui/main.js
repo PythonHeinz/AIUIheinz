@@ -3,7 +3,7 @@ import { Heinz, HeinzStore, $ } from './base.js';
 import { D } from './i18n.js';
 import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
-import { makeRecord, signature, filterSort, percent, initial, hue } from '../mod/bibliothek.js';
+import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
 import { scaleCover } from './bild.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
@@ -44,7 +44,7 @@ function applyI18n() {
 // ---------- Liste ----------
 function bookRow(b) {
     const row = document.createElement('div');
-    row.className = 'dh-book';
+    row.className = 'row dh-book';
     row.dataset.id = b.id;
     if (state.confirm === b.id) {
         row.classList.add('ask');
@@ -59,8 +59,7 @@ function bookRow(b) {
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'dh-open'; open.dataset.act = 'open';
     const cover = document.createElement('span');
-    cover.className = 'dh-cover'; cover.textContent = initial(b.title);
-    cover.style.setProperty('--h', hue(b.title));
+    cover.className = 'tile dh-cover'; cover.textContent = initial(b.title);
     if (b.cover instanceof Blob) {
         const img = document.createElement('img');
         img.alt = ''; img.decoding = 'async';
@@ -72,12 +71,14 @@ function bookRow(b) {
     }
     const tx = document.createElement('span'); tx.className = 'dh-tx';
     const ti = document.createElement('b'); ti.textContent = b.title;
-    const au = document.createElement('small'); au.textContent = [b.author, t('fmt_' + b.format), mb(b.size)].filter(Boolean).join(' · ');
+    const au = document.createElement('small'); au.className = 'dh-meta';
+    const mt = document.createElement('span'); mt.textContent = [b.author, t('fmt_' + b.format), mb(b.size)].filter(Boolean).join(' · ');
     const p = percent(b, b.ch, b.frac);
-    const pr = document.createElement('small'); pr.className = 'dh-pct';
+    const pr = document.createElement('span'); pr.className = 'dh-pct';
     pr.textContent = b.done || p >= 99 ? t('done') : (p > 0 || b.lastRead ? t('pct', { n: p }) : t('unread'));
-    const bar = document.createElement('span'); bar.className = 'dh-bar'; const fill = document.createElement('i'); fill.style.width = (b.done ? 100 : p) + '%'; bar.appendChild(fill);
-    tx.append(ti, au, pr, bar);
+    au.append(mt, pr);
+    tx.append(ti, au);
+    if (b.done || p > 0) { const bar = document.createElement('span'); bar.className = 'dh-bar'; const fill = document.createElement('i'); fill.style.width = (b.done ? 100 : p) + '%'; bar.appendChild(fill); tx.appendChild(bar); }   // kein leerer Balken bei 0 %
     open.append(cover, tx);
     const del = document.createElement('button');
     del.type = 'button'; del.className = 'ibtn dh-del'; del.dataset.act = 'del'; del.setAttribute('aria-label', t('del') + ': ' + b.title); del.title = t('del');
