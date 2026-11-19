@@ -4,6 +4,10 @@
 import { $ } from './base.js';
 import { LIMITS } from '../mod/satz.js';
 
+const PALETTE = {
+    bgc: [['#fbfbf8', 'c_paper'], ['#f4ecd8', 'c_sepia'], ['#e9e4d6', 'c_cream'], ['#d8d8d4', 'c_gray'], ['#3a3a38', 'c_dgray'], ['#1c1c1a', 'c_dark'], ['#1e1913', 'c_warm'], ['#140f0a', 'c_ember'], ['#000000', 'c_black']],
+    fgc: [['#1d1d1b', 'c_ink'], ['#3b3228', 'c_brown'], ['#4a4a46', 'c_dtext'], ['#000000', 'c_black'], ['#e6e2d8', 'c_ltext'], ['#c9c4b8', 'c_lgray'], ['#d9c7a0', 'c_candle'], ['#b8a98a', 'c_amber'], ['#a67c52', 'c_dim']],
+};
 const GROUPS = [
     { id: 'space', items: [{ k: 'lh', step: 0.05, d: 2 }, { k: 'ps', step: 0.05, d: 2 }, { k: 'ind', step: 0.1, d: 1 }] },
     { id: 'margin', items: [{ k: 'mx', step: 1, d: 0 }, { k: 'my', step: 1, d: 0 }, { k: 'maxw', step: 10, d: 0 }] },
@@ -37,9 +41,26 @@ function row(it) {
         sel.addEventListener('change', () => { API.set(it.k, +sel.value); sync(false); });
         lab.appendChild(sel);
     } else if (it.color) {
+        const box = document.createElement('div'); box.className = 'dh-sw';
+        const row = document.createElement('div'); row.className = 'dh-swr';
+        PALETTE[it.k].forEach(([hex, key]) => {
+            const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-swb'; b.dataset.c = hex;
+            b.style.background = hex; b.title = t(key); b.setAttribute('aria-label', t(key) + ' ' + hex);
+            b.addEventListener('click', () => { API.set(it.k, hex); sync(false); });
+            row.appendChild(b);
+        });
+        const more = document.createElement('button'); more.type = 'button'; more.className = 'dh-swb dh-swm'; more.textContent = '…'; more.title = t('c_custom');
+        more.setAttribute('aria-label', t('c_custom'));
+        row.appendChild(more);
+        const cust = document.createElement('div'); cust.className = 'dh-swc'; cust.hidden = true;
         const i = document.createElement('input'); i.type = 'color';
         i.addEventListener('input', () => { API.set(it.k, i.value); sync(false); });
-        lab.appendChild(i);
+        const hx = document.createElement('input'); hx.type = 'text'; hx.className = 'dh-hex'; hx.maxLength = 7; hx.placeholder = '#rrggbb'; hx.setAttribute('aria-label', t('c_hex'));
+        hx.addEventListener('change', () => { let v = hx.value.trim(); if (/^[0-9a-f]{6}$/i.test(v)) v = '#' + v; if (/^#[0-9a-f]{6}$/i.test(v)) { API.set(it.k, v.toLowerCase()); } sync(false); });
+        cust.append(i, hx);
+        more.addEventListener('click', () => { cust.hidden = !cust.hidden; });
+        box.append(row, cust);
+        lab.appendChild(box);
     } else {
         const i = document.createElement('input'); i.type = 'range'; i.min = LIMITS[it.k][0]; i.max = LIMITS[it.k][1]; i.step = it.step;
         i.addEventListener('input', () => { API.set(it.k, +i.value); sync(false); });
@@ -72,6 +93,12 @@ export function sync(full = true) {
         const out = l.querySelector('.v');
         if (it.sw) l.querySelector('input').checked = !!+v;
         else if (it.select) l.querySelector('select').value = String(v);
+        else if (it.color) {
+            const c = String(v).toLowerCase();
+            l.querySelectorAll('.dh-swb[data-c]').forEach(b => b.classList.toggle('on', b.dataset.c === c));
+            l.querySelector('input[type=color]').value = c; const hx = l.querySelector('.dh-hex'); if (hx !== document.activeElement) hx.value = c;
+            if (out) out.textContent = c;
+        }
         else { const i = l.querySelector('input'); if (full || i !== document.activeElement) i.value = v; if (out) out.textContent = it.color ? '' : (+v).toFixed(it.d); }
     });
     const sc = $('sel-scope'); if (sc) sc.value = API.scope() ? '1' : '0';

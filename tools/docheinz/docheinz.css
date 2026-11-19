@@ -201,6 +201,13 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-grp { margin-top: 10px; border-top: 1px solid var(--rline); padding-top: 8px; }
 .dh-grp summary { cursor: pointer; font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; color: var(--rsub); min-height: 32px; display: flex; align-items: center; }
 .dh-grp .fld { margin: 6px 0 10px; } .dh-grp .fld .v { color: var(--rsub); font-weight: 600; }
+.dh-sw { margin-top: 6px; }
+.dh-swr { display: flex; flex-wrap: wrap; gap: 10px; }
+.dh-swb { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--rline); padding: 0; cursor: pointer; color: var(--rsub); font-size: 1.1rem; line-height: 1; background: transparent; }
+.dh-swb.on { outline: 2px solid var(--ra, #6d8fd6); outline-offset: 2px; }
+.dh-swc { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+.dh-swc input[type=color] { width: 48px; height: 36px; padding: 2px; border: 1px solid var(--rline); border-radius: 10px; background: transparent; }
+.dh-hex { flex: 1; min-width: 0; height: 36px; border: 1px solid var(--rline); border-radius: 10px; background: transparent; color: inherit; padding: 0 10px; font: inherit; }
 .dh-grp input[type=color] { width: 100%; height: 38px; padding: 2px; border: 1px solid var(--rline); border-radius: 10px; background: transparent; }
 .dh-pform { display: flex; gap: 8px; margin: 6px 0; } .dh-pform input { flex: 1; min-width: 0; min-height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--rline); background: var(--rb); color: var(--rt); font: inherit; }
 .dh-prow { display: flex; gap: 6px; margin: 4px 0; } .dh-prow button { min-height: 38px; border-radius: 10px; border: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; padding: 0 12px; cursor: pointer; text-align: left; }
@@ -218,3 +225,4 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-rset .row { min-height: 52px; } .dh-rset .row + .row { border-top: 1px solid var(--rline); }
 .dh-rset select.sel { background: var(--rline); color: var(--rt); border-color: var(--rline); height: 42px; }
 .dh-rset .fld { margin-top: 10px; }
+.dh-swc[hidden] { display: none; }

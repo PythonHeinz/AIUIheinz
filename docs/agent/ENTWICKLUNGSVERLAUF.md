@@ -808,3 +808,6 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 
 ### docHeinz: Strang abgeschlossen (19.11.2026)
 Entwickler hat Phase 1 bis 2e am Handy abgenommen. Offen: Design-Pflege später; Phase 3 und 4 nur bei Bedarf.
+
+### docHeinz-Fix: Farbauswahl mit sinnvollen Vorgaben (19.11.2026)
+Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarbe je eine Palette (9 Töne: Papier, Sepia, Creme, Grautöne, gedämpfte Texttöne; für abends warme, blauarme Töne wie Warmdunkel, Glut, Kerzenlicht, gedämpftes Bernstein) plus „…" für eigene Farbe (Farbfeld + Hex-Eingabe). Nur simuliert getestet.
