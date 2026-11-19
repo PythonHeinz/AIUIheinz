@@ -805,3 +805,6 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Auswahlleiste bricht nicht mehr ab (4 Schaltflächen passen in die Breite, auch 426 px).
 - „Vorab eine Frage stellen" (Schalter, Standard an): nach Tippen auf Erklären/Zusammenfassen erscheint ein optionales Eingabefeld; leer abgeschickt = bisheriges Verhalten, mit Text ersetzt die Frage die Standardaufgabe (`buildRequest(..., {question})`).
 - Einstellungen: Hauptmenü mit „Formatierung" und „KI-Funktionen"; Untermenüs Schrift/Thema, Abstände, Ränder/Spalten, Satz/Umbruch, Farben, Bedienung, Profile. Auswahlfelder und Schalter statt vieler Pillen, Zurück-Pfeil geht eine Ebene hoch. Alles simuliert getestet (Playwright), nicht auf dem Gerät.
+
+### docHeinz: Strang abgeschlossen (19.11.2026)
+Entwickler hat Phase 1 bis 2e am Handy abgenommen. Offen: Design-Pflege später; Phase 3 und 4 nur bei Bedarf.
