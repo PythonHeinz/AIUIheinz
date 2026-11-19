@@ -744,6 +744,31 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(p.locator("#rs-body .dh-sout script").count(), 0)
         self.assertIn("**fett**", p.evaluate("() => document.querySelector('#rs-body .dh-sout').dataset.raw"))
 
+    def test_back_from_settings_stays_in_the_book(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.tap(p, "top"); p.click("#r-set-b")
+        self.assertTrue(p.locator("#r-set").is_visible())
+        p.click("#r-close")                                   # Pfeil schließt nur das Feld
+        self.assertTrue(p.locator("#r-set").is_hidden())
+        self.assertTrue(p.locator("#reader").is_visible())
+        p.click("#r-set-b")
+        p.go_back()                                           # Zurück-Geste schließt zuerst die Einstellungen
+        p.wait_for_function("() => document.getElementById('r-set').hidden")
+        self.assertTrue(p.locator("#reader").is_visible())
+        p.go_back()                                           # dann erst den Reader
+        p.wait_for_function("() => document.getElementById('reader').hidden")
+
+    def test_settings_open_as_bottom_sheet_so_the_text_stays_visible(self):
+        p = self.open()
+        self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
+        self.tap(p, "top"); p.click("#r-set-b")
+        box = p.locator("#r-set").bounding_box()
+        self.assertGreater(box["y"], 300)                     # Blatt unten, obere Hälfte zeigt den Text
+        p.fill("#r-size", "30")
+        self.assertTrue(p.locator("#r-set").is_visible())
+        self.assertEqual(p.get_attribute("#reader", "data-set"), "1")
+
     def test_reader_settings_size_and_theme_persist(self):
         p = self.open()
         self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")

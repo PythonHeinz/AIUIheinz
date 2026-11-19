@@ -91,7 +91,8 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-rtitle { flex: 1; min-width: 0; text-align: center; font: .86rem var(--serif); color: var(--rsub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dh-rpos { font: .76rem var(--mono); color: var(--rsub); text-align: center; }
 .dh-ovfoot .dh-bar { margin: 0; background: var(--rline); }
-.dh-rset { position: absolute; top: var(--bh); left: 0; right: 0; z-index: 3; max-height: calc(100% - var(--bh)); overflow: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 10px 16px 14px; background: var(--rbar); border-bottom: 1px solid var(--rline); color: var(--rt); }
+.dh-rset { position: absolute; bottom: 0; left: 0; right: 0; z-index: 4; max-height: 46%; overflow: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--rbar); border-top: 1px solid var(--rline); box-shadow: 0 -6px 20px rgba(0,0,0,.35); color: var(--rt); }
+.dh-reader[data-set='1'] .dh-ovfoot { display: none; }
 .dh-rset[hidden], .dh-toc[hidden] { display: none; }
 .dh-rset .fld { display: block; }
 .dh-rset input[type=range] { width: 100%; margin: 8px 0 4px; }

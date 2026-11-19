@@ -153,7 +153,13 @@ function showCover(on) {
 }
 
 // ---------- Steuerung ----------
-function showUi(on) { S.ui = on; $('r-ov').hidden = !on; $('r-ovfoot').hidden = !on; if (!on) { $('r-set').hidden = true; $('r-toc').hidden = true; } }
+function showUi(on) { S.ui = on; $('r-ov').hidden = !on; $('r-ovfoot').hidden = !on; if (!on) { $('r-set').hidden = true; $('r-toc').hidden = true; } $('reader').dataset.set = !$('r-set').hidden ? '1' : '0'; }
+function panel(which) {                 // 'set' | 'toc': eines auf, das andere zu; zweiter Aufruf schließt es wieder (Leiste bleibt)
+    const a = $(which === 'set' ? 'r-set' : 'r-toc'), b = $(which === 'set' ? 'r-toc' : 'r-set');
+    b.hidden = true; a.hidden = !a.hidden;
+    $('reader').dataset.set = !$('r-set').hidden ? '1' : '0';
+    return !a.hidden;
+}
 function closeUi() { if (S.ui || !$('r-set').hidden || !$('r-toc').hidden) showUi(false); }
 
 function buildToc() {
@@ -226,9 +232,10 @@ function onTap(e) {
 function wire() {
     if (S.wired) return;
     S.wired = true;
-    $('r-close').addEventListener('click', () => { if (S.pushed) history.back(); else close(); });
-    $('r-toc-b').addEventListener('click', () => { $('r-set').hidden = true; $('r-toc').hidden = !$('r-toc').hidden; });
-    $('r-set-b').addEventListener('click', () => { $('r-toc').hidden = true; $('r-set').hidden = !$('r-set').hidden; if (!$('r-set').hidden) buildAiChips(); });
+    // Pfeil: bei offenem Einstellungs- oder Inhaltsfeld nur dieses schließen (zurück ins Buch), sonst den Reader verlassen
+    $('r-close').addEventListener('click', () => { if (!$('r-set').hidden || !$('r-toc').hidden) { $('r-set').hidden = true; $('r-toc').hidden = true; $('reader').dataset.set = '0'; return; } if (S.pushed) { S.leaving = true; history.back(); } else close(); });
+    $('r-toc-b').addEventListener('click', () => { panel('toc'); });
+    $('r-set-b').addEventListener('click', () => { if (panel('set')) buildAiChips(); });
     document.querySelectorAll('#seg-gap button').forEach(b => b.addEventListener('click', () => { applyGap(b.dataset.gap === '1'); S.cb.onSettings({ gap: S.gap }); }));
     $('r-prev').addEventListener('click', () => go(-1));
     $('r-next').addEventListener('click', () => go(1));
@@ -249,7 +256,14 @@ function wire() {
     });
     document.addEventListener('visibilitychange', () => { if (S.open && document.visibilityState === 'hidden') save(true); });
     window.addEventListener('pagehide', () => { if (S.open) save(true); });
-    window.addEventListener('popstate', () => { if (consumePop()) return; if (S.open) { S.pushed = false; close(); } });
+    window.addEventListener('popstate', () => {
+        if (consumePop()) return;
+        if (!S.open) return;
+        // Zurück-Geste: erst Einstellungen/Inhalt/Leiste schließen, im Buch bleiben; erst danach den Reader verlassen
+        const leaving = S.leaving; S.leaving = false;
+        if (!leaving && (S.ui || !$('r-set').hidden || !$('r-toc').hidden)) { history.pushState({ dh: 1 }, ''); closeUi(); return; }
+        S.pushed = false; close();
+    });
 }
 
 export async function openReader(rec, src, ctx) {

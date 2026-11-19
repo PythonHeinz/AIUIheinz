@@ -784,3 +784,8 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 - Antworten (Blatt und Analyse) werden mit `mod/markdown.js` gerendert und durch `sauber()` geführt (keine Skripte, Links nur als Text); das Original liegt in `data-raw` und wird kopiert. Während des Streams wird bei jedem Stück neu gerendert.
 - Die Auswahl „KI für Erklären und Analyse“ zeigt nur noch Konfigurationen aus dem Dashboard (Anbieter erreichbar bzw. Online erlaubt); ohne Konfiguration gilt das Dashboard-Modell. Ein früher gespeichertes Einzelmodell wirkt weiter, bis eine Konfiguration gewählt wird.
 - Tests: `test_answers_render_markdown_and_copy_keeps_the_raw_text`, AI-Test auf Konfigurationen umgestellt. Nur simuliert getestet.
+
+### 2026-11-19 AIUIheinz-docHeinz-Fix: Einstellungen führten aus dem Buch heraus
+- Meldung: Nach Änderungen in den Einstellungen landete der Entwickler beim Zurück in der Bibliothek, nicht im Buch; er will die Wirkung live im Seitentext sehen.
+- Pfeil oben links schließt bei offenem Einstellungs- oder Inhaltsfeld nur dieses (Buch bleibt), sonst verlässt er den Reader. Zurück-Geste: erst Feld/Leiste schließen (neuer Verlaufseintrag wird nachgeschoben), erst danach den Reader. Der Pfeil-Weg zum Verlassen setzt `S.leaving`, damit er nicht selbst als „nur Leiste schließen“ gilt.
+- Einstellungen sind ein unteres Blatt (höchstens 46 % Höhe, Fortschrittsleiste währenddessen ausgeblendet): die obere Hälfte der Seite bleibt sichtbar, Schriftgröße, Schrift und Thema wirken live. Tests: `test_back_from_settings_stays_in_the_book`, `test_settings_open_as_bottom_sheet_so_the_text_stays_visible`. Nur simuliert getestet.
