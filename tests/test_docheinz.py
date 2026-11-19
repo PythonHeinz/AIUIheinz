@@ -432,9 +432,10 @@ class DocHeinzUiTests(DocHeinzBase):
                 lines = [json.dumps({"message": {"role": "assistant", "content": c}, "done": False}) for c in chunks] + [json.dumps({"done": True, "eval_count": 5})]
                 return route.fulfill(status=200, content_type="application/x-ndjson", body="\n".join(lines) + "\n")
             if url.endswith("/api/ps") or url.endswith("/api/tags"):
-                return route.fulfill(status=200, content_type="application/json", body=json.dumps({"models": []}))
+                return route.fulfill(status=200, content_type="application/json", body=json.dumps({"models": [{"name": "qwen:7b"}] if url.endswith("/api/tags") else []}))
             return route.fulfill(status=200, content_type="application/json", body="{}")
         p.route("**/localhost:11434/**", handle)
+        p.route("**/127.0.0.1:9379/**", lambda r: r.fulfill(status=200, content_type="application/json", body='{"data": []}'))
         return calls
 
     def set_active(self, p, provider, model):
@@ -476,16 +477,18 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(after[2:], [0, 0, 0])
         self.assertEqual(self.pg(p)[0], 2)
 
-    def test_bar_sits_on_top_unless_the_selection_is_up_there(self):
+    def test_bar_sits_low_by_default_and_moves_up_on_collision(self):
         p = self.open()
         self.start_book(p, "lang.md", "text/markdown", LONG_MD.encode())
-        p.evaluate("""() => { const ps = document.querySelectorAll('#r-body p'); const n = ps[ps.length > 8 ? 8 : ps.length - 1].firstChild; const r = document.createRange(); r.setStart(n, 0); r.setEnd(n, 6); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }""")
-        p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertEqual(p.evaluate("() => document.getElementById('r-sel').classList.contains('low')"), False)
-        self.assertLess(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 40)
         self.select_text(p, "Langes Buch")
-        p.wait_for_function("() => document.getElementById('r-sel').classList.contains('low')")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        self.assertEqual(p.evaluate("() => document.getElementById('r-sel').classList.contains('top')"), False)
         self.assertGreater(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 400)
+        # Markierung genau dort, wo die untere Leiste läge → Leiste wandert nach oben
+        ok = p.evaluate("""() => { for (const n of document.querySelectorAll('#r-body p')) { const r = n.getBoundingClientRect(); if (r.left >= 0 && r.left < 400 && r.top > 560 && r.top < 660) { const t = n.firstChild; const g = document.createRange(); g.setStart(t, 0); g.setEnd(t, 4); const s = getSelection(); s.removeAllRanges(); s.addRange(g); return true; } } return false; }""")
+        if ok:
+            p.wait_for_function("() => document.getElementById('r-sel').classList.contains('top')")
+            self.assertLess(p.evaluate("() => document.getElementById('r-sel').getBoundingClientRect().top"), 40)
 
     def test_search_without_hits_and_tap_closes_the_sheet(self):
         p = self.open()
@@ -653,12 +656,32 @@ class DocHeinzUiTests(DocHeinzBase):
 
     def test_fonts_are_served_and_selectable(self):
         p = self.open()
+        self.fake_ollama(p)
         self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")
         self.tap(p, "top"); p.click("#r-set-b")
         self.assertEqual(p.locator("#seg-font button").count(), 7)
         p.click("#seg-font button[data-font=atkinson]")
         self.assertEqual(p.get_attribute("#reader", "data-font"), "atkinson")
         p.wait_for_function("() => document.fonts.check('19px \"Atkinson Hyperlegible\"')")
+        self.assertEqual(p.errors, [])
+
+    def test_ai_model_assignment_is_used_for_explain_and_gap_setting_persists(self):
+        p = self.open()
+        calls = self.fake_ollama(p)
+        self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.wait_for_selector("#seg-ai button")
+        p.click("#seg-ai button[data-m='qwen:7b']")
+        self.assertIn("qwen:7b", p.inner_text("#ai-cur"))
+        self.assertEqual(p.get_attribute("#reader", "data-gap"), "1")
+        p.click("#seg-gap button[data-gap='0']")
+        self.assertEqual(p.get_attribute("#reader", "data-gap"), "0")
+        self.tap(p, "top")
+        self.select_text(p, "kurzer")
+        p.wait_for_selector("#r-sel:not([hidden])")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_function("() => document.getElementById('rs-body').innerText.includes('Erklärung')")
+        self.assertEqual(calls[-1]["model"], "qwen:7b")
         self.assertEqual(p.errors, [])
 
     def test_reader_settings_size_and_theme_persist(self):

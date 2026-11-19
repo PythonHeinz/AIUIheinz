@@ -239,3 +239,9 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 4. Ohne Netz: LCD zeigt FEHLER (rot) und eine Zeile mit der Meldung, danach wieder die Version. Der Knopf im Dashboard (Menü Update) geht weiter wie vorher.
 5. EN/DE-Umschalter: Texte unter dem LCD wechseln mit.
 
+
+### Y2. docHeinz: Leiste, Platz unten, Modellwahl (19.11.2026)
+1. Reader öffnen, Einstellungen (oben tippen, Zahnrad): unter „KI-Modell für Erklären/Analyse“ ein Modell antippen (am besten 3B oder größer); „Verwendet: …“ erscheint.
+2. Text markieren: Leiste erscheint unten über dem Chrome-Suchfeld (oder oben, wenn die Markierung unten liegt). Überdeckt das Android-Menü sie?
+3. Erklären antippen: Blatt und „Weiter fragen“-Eingabe müssen über dem Chrome-Streifen liegen; sonst „Platz lassen“ prüfen.
+4. Antwortqualität mit dem gewählten Modell beurteilen (nur das Handy zeigt das echte Verhalten).

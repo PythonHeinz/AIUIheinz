@@ -1,12 +1,13 @@
 /* tools/docheinz/ui/auswahl.js – Markierungsleiste der Leseansicht: Suchen im Buch, Erklären und Zusammenfassen über das aktive Modell des Dashboards.
  * Sprachmodelle nur über lib/providers.js (HeinzProviders, docs/LOKALE_MODELLE.md): activeModel, runtime, prepare, chat. Nichts wird dort geändert.
  * Es geht nur der markierte Abschnitt (und Buchtitel/Autor) an das Modell; Cloud-Anbieter nur mit „Online erlauben“. */
-import { $ } from './base.js';
+import { $, HeinzStore } from './base.js';
 import { HeinzProviders as PV } from '../../../lib/providers.js';
 import { findAll, normalizeQuery } from '../mod/suche.js';
 import { buildRequest, trimHistory } from '../mod/ki.js';
 
 const MAX_QUERY = 80;
+const AI_KEY = 'heinz_docheinz_ai';
 const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', timer: 0, ac: null, cache: new Map(), run: 0, wired: false };
 
 const sel = () => (window.getSelection ? window.getSelection() : null);
@@ -15,8 +16,11 @@ const sel = () => (window.getSelection ? window.getSelection() : null);
 function placeBar() {
     const s = sel();
     if (!s || !s.rangeCount) return;
-    const r = s.getRangeAt(0).getBoundingClientRect();
-    $('r-sel').classList.toggle('low', r.top < 190);
+    const r = s.getRangeAt(0).getBoundingClientRect(), bar = $('r-sel');
+    const gap = $('reader').dataset.gap === '1';
+    const h = 52, low = innerHeight - (gap ? 118 : 14) - h;
+    // Standard: unten über dem Chrome-Feld. Liegt dort die Markierung samt Chrome-Menü (darüber) und Griffen (darunter), wandert die Leiste nach oben.
+    bar.classList.toggle('top', low < r.bottom + 50 && low + h > r.top - 90);
 }
 function selectedText() {
     const s = sel();
@@ -54,6 +58,41 @@ export function closeSheet() {
 }
 const t = (k, v) => A.env.t(k, v);
 const line = (cls, text) => { const p = document.createElement('p'); p.className = cls; p.textContent = text; return p; };
+
+// ---------- Modellwahl für Erklären und Analyse ----------
+// Eigene Zuweisung des Werkzeugs; ohne sie gilt das im Dashboard aktive Modell. Gewählt wird wie bei allen Tools auch als aktives Modell gesetzt (Regel 4, docs/LOKALE_MODELLE.md).
+export function aiChoice() {
+    const c = HeinzStore.get(AI_KEY, null);
+    if (c && c.provider && c.model && PV.get(c.provider)) return c;
+    return PV.activeModel();
+}
+async function setAi(provider, model) {
+    await HeinzStore.set(AI_KEY, { provider, model });
+    PV.setActiveModel(provider, model);
+}
+function aiLabel(c) { const p = c && PV.get(c.provider); return c && p ? c.model + ' · ' + p.name : ''; }
+export async function buildAiChips() {
+    const box = $('seg-ai'), cur = $('ai-cur');
+    const show = () => { const c = HeinzStore.get(AI_KEY, null); const act = aiChoice(); cur.textContent = c && PV.get(c.provider) ? A.env.t('r_aiCur', { m: aiLabel(c) }) : (act ? A.env.t('r_aiCur', { m: aiLabel(act) }) + ' · ' : '') + A.env.t('r_aiNone'); box.querySelectorAll('button').forEach(b => b.classList.toggle('on', !!c && b.dataset.p === c.provider && b.dataset.m === c.model)); };
+    box.textContent = '';
+    cur.textContent = A.env.t('r_aiLoad');
+    const provs = PV.list().filter(p => p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(p.id)))));
+    let any = false;
+    await Promise.all(provs.map(async (p) => {
+        let names = [];
+        try { names = await PV.models(p.id); } catch { names = []; }
+        names.forEach(m => {
+            any = true;
+            const b = document.createElement('button');
+            b.type = 'button'; b.dataset.p = p.id; b.dataset.m = m;
+            b.append(document.createTextNode(m), Object.assign(document.createElement('small'), { textContent: p.name + (p.local ? '' : ' · online') }));
+            b.addEventListener('click', async () => { await setAi(p.id, m); show(); });
+            box.appendChild(b);
+        });
+    }));
+    if (!any) { cur.textContent = A.env.t('r_aiFail'); return; }
+    show();
+}
 
 // ---------- Suchen ----------
 async function chapterText(i) {
@@ -100,7 +139,7 @@ async function ask(kind, passage) {
     const my = ++A.run;
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
-    const act = PV.activeModel();
+    const act = aiChoice();
     const p = act && PV.get(act.provider);
     if (!p) { box.appendChild(line('dh-sline', t('s_noModel'))); return; }
     const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author });

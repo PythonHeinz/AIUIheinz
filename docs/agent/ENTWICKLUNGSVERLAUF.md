@@ -759,3 +759,9 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 
 ### 2026-11-19 AIUIheinz-docHeinz: Konzept Android-Hülle vorbereitet
 - Neu `docs/agent/AUFTRAG_Huelle.md`: Anlass (Chrome-Eigenheiten bei Markierung), Optionen A bis D (PWA, eigene WebView-App, Capacitor, TWA), Anforderungen, offene Fragen, Risiken, Vorgehen. Nichts gebaut; Strang `AIUIheinz-Huelle` in `STAND.md` als „nur Konzept“ eingetragen.
+
+### 2026-11-19 AIUIheinz-docHeinz-Fix: Leiste/Fenster vs. Chrome-Einblendungen, Modellzuweisung
+- Meldung (Screenshots): Die Leiste oben lag unter dem Android-Auswahlmenü, das Blatt und das Eingabefeld unter Chromes „Tippen, um Suchergebnisse zu sehen“. Erklären/Analyse nutzten das im Dashboard aktive Modell (z. B. gemma:2b) mit sinnlosen Antworten.
+- Leiste: Standard unten über dem Chrome-Streifen; sie wandert nach oben (`.top`), nur wenn die Markierung samt Menü darüber und Griffen darunter dort läge (`placeBar()`). Der Test `test_bar_sits_low_by_default_and_moves_up_on_collision` ersetzt den alten.
+- Neue Einstellung „Platz lassen für das Chrome-Suchfeld“ (`heinz_docheinz_gap`, Standard an, `#reader[data-gap]`): Blatt und Analyse-Eingabe sitzen ca. 100 px über dem unteren Rand.
+- Eigene Modellzuweisung (`heinz_docheinz_ai` = `{provider, model}`) in den Reader-Einstellungen als Liste „Modell · Anbieter“ (lokale Anbieter, Online nur mit Haken); setzt auch das aktive Modell (Regel 4); ohne Zuweisung gilt das Dashboard-Modell. Test `test_ai_model_assignment_is_used_for_explain_and_gap_setting_persists`. Nur simuliert getestet; Chrome-Einblendungen lassen sich nicht abschalten, nur umgehen (Hülle siehe `AUFTRAG_Huelle.md`).

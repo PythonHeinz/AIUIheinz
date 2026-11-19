@@ -4,11 +4,11 @@
 import { $ } from './base.js';
 import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
-import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen } from './auswahl.js';
+import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black'];
-const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, ui: false, onCover: false, coverUrl: '' };
+const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: true, ui: false, onCover: false, coverUrl: '' };
 
 const body = () => $('r-body');
 const lastCh = () => S.src.chapters.length - 1;
@@ -186,6 +186,7 @@ function buildFonts() {
 }
 
 export function applyTheme(theme) { S.theme = THEMES.includes(theme) ? theme : 'auto'; $('reader').setAttribute('data-rt', S.theme); document.querySelectorAll('#seg-theme button').forEach(b => b.classList.toggle('on', b.dataset.rt === S.theme)); }
+export function applyGap(on) { S.gap = !!on; $('reader').dataset.gap = S.gap ? '1' : '0'; document.querySelectorAll('#seg-gap button').forEach(b => b.classList.toggle('on', (b.dataset.gap === '1') === S.gap)); }
 export function applySize(px) { S.size = Math.max(14, Math.min(34, Math.round(px) || 19)); body().style.fontSize = S.size + 'px'; $('r-size').value = S.size; $('r-sizev').textContent = S.size; if (S.open) scheduleLayout(); }
 export function applyBtns(on) { S.btns = !!on; $('r-prev').hidden = $('r-next').hidden = !S.btns; document.querySelectorAll('#seg-btns button').forEach(b => b.classList.toggle('on', (b.dataset.btns === '1') === S.btns)); }
 export async function applyFont(id) {
@@ -227,7 +228,8 @@ function wire() {
     S.wired = true;
     $('r-close').addEventListener('click', () => { if (S.pushed) history.back(); else close(); });
     $('r-toc-b').addEventListener('click', () => { $('r-set').hidden = true; $('r-toc').hidden = !$('r-toc').hidden; });
-    $('r-set-b').addEventListener('click', () => { $('r-toc').hidden = true; $('r-set').hidden = !$('r-set').hidden; });
+    $('r-set-b').addEventListener('click', () => { $('r-toc').hidden = true; $('r-set').hidden = !$('r-set').hidden; if (!$('r-set').hidden) buildAiChips(); });
+    document.querySelectorAll('#seg-gap button').forEach(b => b.addEventListener('click', () => { applyGap(b.dataset.gap === '1'); S.cb.onSettings({ gap: S.gap }); }));
     $('r-prev').addEventListener('click', () => go(-1));
     $('r-next').addEventListener('click', () => go(1));
     $('r-size').addEventListener('input', (e) => { applySize(+e.target.value); S.cb.onSettings({ size: S.size }); });
@@ -253,7 +255,7 @@ function wire() {
 export async function openReader(rec, src, ctx) {
     wire();
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
-    applyTheme(ctx.theme); applySize(ctx.size); applyBtns(ctx.btns);
+    applyTheme(ctx.theme); applySize(ctx.size); applyBtns(ctx.btns); applyGap(ctx.gap !== false);
     buildFonts();
     await applyFont(ctx.font);
     buildToc();

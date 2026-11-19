@@ -123,8 +123,9 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ctitle span { font-size: 1rem; color: var(--rsub); }
 
 /* Markierungsleiste und Blatt (Suchen, Erklären, Zusammenfassen) */
-.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
-.dh-sel.low { top: auto; bottom: calc(150px + env(safe-area-inset-bottom)); }
+.dh-sel { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
+.dh-reader[data-gap='1'] .dh-sel { bottom: calc(118px + env(safe-area-inset-bottom)); }
+.dh-reader .dh-sel.top { bottom: auto; top: calc(10px + env(safe-area-inset-top)); }
 .dh-sel[hidden] { display: none; }
 .dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rt); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; }
 .dh-sel button[hidden] { display: none; }
@@ -164,3 +165,11 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-aform { display: flex; align-items: flex-end; gap: 8px; padding-top: 8px; }
 .dh-aform textarea { flex: 1; min-width: 0; resize: none; max-height: 7.5em; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--rline); background: var(--rbar); color: var(--rt); font: inherit; font-size: .95rem; }
 .dh-aform .pill[hidden] { display: none; }
+
+/* Platz für das Suchfeld, das Chrome bei Markierungen unten einblendet (Einstellung „Platz lassen“, Standard an) */
+.dh-reader[data-gap='1'] .dh-sheet { bottom: calc(100px + env(safe-area-inset-bottom)); padding-bottom: 12px; border-radius: 16px; border: 1px solid var(--rline); left: 8px; right: 8px; max-height: 52%; }
+.dh-reader[data-gap='1'] .dh-ana { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+.dh-ai { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.dh-ai button { text-align: left; min-height: 40px; padding: 6px 12px; border-radius: 12px; border: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; font-size: .88rem; cursor: pointer; }
+.dh-ai button.on { border-color: var(--rlink); color: var(--rlink); font-weight: 600; }
+.dh-ai small { color: var(--rsub); display: block; }

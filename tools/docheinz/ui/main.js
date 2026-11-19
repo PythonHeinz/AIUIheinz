@@ -12,7 +12,7 @@ import { openReader, close as closeReader, applyTheme, applySize, applyBtns, rel
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, confirm: '', msgs: [] };
+const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, gap: true, confirm: '', msgs: [] };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -177,9 +177,9 @@ async function openBook(id) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, btns: state.btns,
+            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, btns: state.btns, gap: state.gap,
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
-            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
+            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },
         });
     } catch (e) {
@@ -203,6 +203,7 @@ async function start() {
     state.theme = THEMES.includes(HeinzStore.get(K('theme'))) ? HeinzStore.get(K('theme')) : 'auto';
     state.font = isFont(HeinzStore.get(K('font'))) ? HeinzStore.get(K('font')) : DEFAULT_FONT;
     state.btns = +HeinzStore.get(K('btns'), 0) === 1;
+    state.gap = +HeinzStore.get(K('gap'), 1) !== 0;
     Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
     Heinz.onLang(applyI18n);
     applyTheme(state.theme);
