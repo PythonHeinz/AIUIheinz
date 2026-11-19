@@ -44,30 +44,45 @@
         <span class="dh-rpos" id="r-pos"></span>
         <span class="dh-bar"><i id="r-prog"></i></span>
     </div>
-    <div class="dh-rset" id="r-set" hidden>
-        <div class="dh-scope"><div class="seg2" id="seg-scope"><button type="button" data-scope="0" data-i="l_all"></button><button type="button" data-scope="1" data-i="l_book"></button></div><button type="button" class="pill" id="look-reset" data-i="l_reset"></button></div>
-        <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="10" max="60" step="1"></label>
-        <div class="caps grp"><span data-i="r_font"></span></div>
-        <div class="dh-fonts" id="seg-font"></div>
-        <div class="caps grp"><span data-i="r_theme"></span></div>
-        <div class="seg2" id="seg-theme">
-            <button type="button" data-rt="auto" data-i="t_auto"></button><button type="button" data-rt="lt" data-i="t_lt"></button><button type="button" data-rt="sepia" data-i="t_sepia"></button><button type="button" data-rt="dk" data-i="t_dk"></button><button type="button" data-rt="black" data-i="t_black"></button><button type="button" data-rt="custom" data-i="t_custom"></button>
-        </div>
-        <div id="r-look"></div>
-        <div class="caps grp"><span data-i="r_btns"></span></div>
-        <div class="seg2" id="seg-btns">
-            <button type="button" data-btns="0" data-i="b_off"></button><button type="button" data-btns="1" data-i="b_on"></button>
-        </div>
-        <div class="caps grp"><span data-i="r_gap"></span></div>
-        <div class="seg2" id="seg-gap">
-            <button type="button" data-gap="0" data-i="b_off"></button><button type="button" data-gap="1" data-i="b_on"></button>
-        </div>
-        <div class="caps grp"><span data-i="r_ai"></span></div>
-        <p class="help" data-i="r_aiHint"></p>
-        <p class="help"><a href="../../dashboard.html" data-i="r_aiDash"></a></p>
-        <p class="help" id="ai-cur"></p>
-        <div class="dh-ai" id="seg-ai"></div>
-        <p class="help" data-i="r_tips"></p>
+    <div class="dh-rset" id="r-set" data-pg="main" hidden>
+        <div class="dh-rhead"><button type="button" class="ibtn" id="rs-back" data-i-label="r_back" hidden><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg></button><b id="rs-ttl"></b></div>
+        <section class="dh-sp" data-p="main">
+            <button type="button" class="row" data-go="fmt"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i="m_fmt"></b><small data-i="m_fmtS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="ai"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="m_ai"></b><small data-i="m_aiS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <p class="help" data-i="r_tips"></p>
+        </section>
+        <section class="dh-sp" data-p="fmt" hidden>
+            <label class="fld"><span data-i="l_scope"></span><select class="sel" id="sel-scope"><option value="0" data-i="l_all"></option><option value="1" data-i="l_book"></option></select></label>
+            <button type="button" class="row" data-go="font"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-doc"/></svg></span><span class="tx"><b data-i="m_font"></b><small data-i="m_fontS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="space"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-layers"/></svg></span><span class="tx"><b data-i="m_space"></b><small data-i="m_spaceS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="layout"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-expand"/></svg></span><span class="tx"><b data-i="m_layout"></b><small data-i="m_layoutS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="text"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-pencil"/></svg></span><span class="tx"><b data-i="m_text"></b><small data-i="m_textS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="color"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-contrast"/></svg></span><span class="tx"><b data-i="m_color"></b><small data-i="m_colorS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="ctl"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-gauge"/></svg></span><span class="tx"><b data-i="m_ctl"></b><small data-i="m_ctlS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" data-go="prof"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-save"/></svg></span><span class="tx"><b data-i="m_prof"></b><small data-i="m_profS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
+            <button type="button" class="row" id="look-reset"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-refresh"/></svg></span><span class="tx"><b data-i="l_reset"></b><small data-i="l_resetS"></small></span></button>
+        </section>
+        <section class="dh-sp" data-p="font" hidden>
+            <label class="fld"><span><span data-i="r_size"></span> <b id="r-sizev"></b></span><input type="range" id="r-size" min="10" max="60" step="1"></label>
+            <label class="fld"><span data-i="r_font"></span><select class="sel" id="sel-font"></select></label>
+            <label class="fld"><span data-i="r_theme"></span><select class="sel" id="sel-theme"><option value="auto" data-i="t_auto"></option><option value="lt" data-i="t_lt"></option><option value="sepia" data-i="t_sepia"></option><option value="dk" data-i="t_dk"></option><option value="black" data-i="t_black"></option><option value="custom" data-i="t_custom"></option></select></label>
+        </section>
+        <section class="dh-sp" data-p="space" hidden><div id="lk-space"></div></section>
+        <section class="dh-sp" data-p="layout" hidden><div id="lk-margin"></div><div id="lk-cols"></div></section>
+        <section class="dh-sp" data-p="text" hidden><div id="lk-text"></div></section>
+        <section class="dh-sp" data-p="color" hidden><div id="lk-color"></div></section>
+        <section class="dh-sp" data-p="ctl" hidden>
+            <label class="row"><span class="tx"><b data-i="r_btns"></b><small data-i="r_btnsS"></small></span><span class="sw"><input type="checkbox" id="sw-btns"><i></i></span></label>
+            <label class="row"><span class="tx"><b data-i="r_gap"></b></span><span class="sw"><input type="checkbox" id="sw-gap"><i></i></span></label>
+        </section>
+        <section class="dh-sp" data-p="prof" hidden><div id="lk-prof"></div></section>
+        <section class="dh-sp" data-p="ai" hidden>
+            <label class="fld"><span data-i="r_aiSel"></span><select class="sel" id="sel-ai"></select></label>
+            <p class="help" id="ai-cur"></p>
+            <label class="row"><span class="tx"><b data-i="r_askFirst"></b><small data-i="r_askFirstS"></small></span><span class="sw"><input type="checkbox" id="sw-askfirst"><i></i></span></label>
+            <p class="help" data-i="r_aiHint"></p>
+            <p class="help"><a href="../../dashboard.html" data-i="r_aiDash"></a></p>
+        </section>
     </div>
     <nav class="dh-toc" id="r-toc" hidden></nav>
     <button type="button" class="dh-turn dh-turn-l" id="r-prev" data-i-label="r_prev" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-l"/></svg></button>

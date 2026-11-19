@@ -800,3 +800,8 @@ Entscheidungen des Entwicklers (17.11.2026, in `AUFTRAG_docHeinz.md` Nr. 5 bis 7
 ### 2026-11-19 AIUIheinz-docHeinz-Fix: Bibliothek nach dem Design-Katalog
 - Meldung: Die Bibliothek wirkte unruhig gegenüber Convert2 und Dashboard (bunte Cover-Kacheln, grüner Balken, Kasten je Buch, Georgia in der Liste). Maßgeblich ist `docs/DESIGN.md` Abschnitt 7 (zuerst in den Katalog sehen) und `lib/core.css`.
 - Änderung (nur `tools/docheinz/`): Liste in einem einzigen `.panel`, jedes Buch eine `.row` mit `.tile` (Katalogfläche, Initiale in `--sub`, Inter statt Georgia), Trennung nur durch eine Haarlinie `--line`; Lesefortschritt in `--pri` (kein Balken bei 0 %); Prozent rechtsbündig in der Metazeile; Löschen als `.ibtn` in `--muted`; echte Cover leicht entsättigt mit Haarlinie, Hochformat; Platzhalter ohne Farbton (`hue` entfällt). Suchfeld und Auswahl nutzen unverändert `.inp`/`select.sel`. Klassen `dh-book`, `dh-open`, `dh-tx`, `dh-del` bleiben für die Tests. Nur simuliert getestet (Screenshot bei 426 × 803, dunkel).
+
+### docHeinz: Auswahlleiste, Vorab-Frage, Einstellungsmenü neu gegliedert
+- Auswahlleiste bricht nicht mehr ab (4 Schaltflächen passen in die Breite, auch 426 px).
+- „Vorab eine Frage stellen" (Schalter, Standard an): nach Tippen auf Erklären/Zusammenfassen erscheint ein optionales Eingabefeld; leer abgeschickt = bisheriges Verhalten, mit Text ersetzt die Frage die Standardaufgabe (`buildRequest(..., {question})`).
+- Einstellungen: Hauptmenü mit „Formatierung" und „KI-Funktionen"; Untermenüs Schrift/Thema, Abstände, Ränder/Spalten, Satz/Umbruch, Farben, Bedienung, Profile. Auswahlfelder und Schalter statt vieler Pillen, Zurück-Pfeil geht eine Ebene hoch. Alles simuliert getestet (Playwright), nicht auf dem Gerät.

@@ -259,3 +259,8 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 3. Eigene Farben: Wirkt Thema „Eigene“, bleibt der Text lesbar? Helligkeit testen.
 4. Profil speichern, etwas ändern, Profil anwenden. „Nur dieses Buch“: andere Bücher bleiben unverändert; „Zurücksetzen“ im Buch-Modus löscht nur die Überschreibung.
 5. Zurück-Pfeil/-Geste: schließt zuerst das Blatt, dann erst das Buch.
+
+## Y5 docHeinz: Vorab-Frage und Einstellungsmenü
+1. Text lang drücken: Leiste vollständig sichtbar (Search, Explain, Summarize, Copy).
+2. Explain tippen: Fragefeld erscheint; leer senden = Antwort wie bisher; mit Frage = Antwort auf die Frage. Schalter „Vorab eine Frage stellen" aus = sofort Antwort.
+3. Einstellungen: Formatierung / KI-Funktionen, Untermenüs öffnen per Tipp, Zurück-Pfeil geht eine Ebene zurück, Buch bleibt sichtbar (Live-Vorschau).

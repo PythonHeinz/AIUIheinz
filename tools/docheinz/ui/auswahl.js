@@ -164,26 +164,27 @@ function aiSettings(act) {
 }
 function aiLabel(c) { const p = c && PV.get(c.provider); if (!c || !p) return ''; const f = c.config ? PV.configById(c.config) : null; return (f ? f.name + ' · ' : '') + c.model + ' · ' + p.name; }
 export async function buildAiChips() {
-    const box = $('seg-ai'), cur = $('ai-cur');
-    const show = () => {
-        const c = HeinzStore.get(AI_KEY, null), act = aiChoice();
-        const own = !!c && !!c.provider && (c.config ? !!PV.configById(c.config) : !!PV.get(c.provider));
-        cur.textContent = own ? A.env.t('r_aiCur', { m: aiLabel(act) }) : (act ? A.env.t('r_aiCur', { m: aiLabel(act) }) + ' · ' : '') + A.env.t('r_aiNone');
-        box.querySelectorAll('button').forEach(b => b.classList.toggle('on', own && (c.config ? b.dataset.c === c.config : !b.dataset.c && b.dataset.p === c.provider && b.dataset.m === c.model)));
-    };
-    box.textContent = '';
-    cur.textContent = A.env.t('r_aiLoad');
+    const sel = $('sel-ai'), cur = $('ai-cur'), sw = $('sw-askfirst');
+    sw.checked = askFirstOn();
+    sel.textContent = '';
     // Nur Konfigurationen aus dem Dashboard (Modell, Prompt, Ton, Laufzeit); die Modellflut der Anbieter erscheint hier nicht.
     const ok = (id) => { const p = PV.get(id); return !!p && !!p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(id)))); };
-    const list = PV.configs().filter(f => ok(f.provider));
-    list.forEach(f => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.dataset.c = f.id;
-        b.append(document.createTextNode(f.name), Object.assign(document.createElement('small'), { textContent: f.model + ' · ' + PV.get(f.provider).name + (PV.get(f.provider).local ? '' : ' · online') }));
-        b.addEventListener('click', async () => { await setAi(f.provider, f.model, f.id); show(); });
-        box.appendChild(b);
-    });
-    if (!list.length) { cur.textContent = A.env.t('r_aiFail'); return; }
+    sel.appendChild(Object.assign(document.createElement('option'), { value: '', textContent: A.env.t('r_aiDefault') }));
+    PV.configs().filter(f => ok(f.provider)).forEach(f => sel.appendChild(Object.assign(document.createElement('option'), { value: f.id, textContent: f.name + ' · ' + f.model + (PV.get(f.provider).local ? '' : ' · online') })));
+    const show = () => {
+        const c = HeinzStore.get(AI_KEY, null), act = aiChoice();
+        sel.value = c && c.config && PV.configById(c.config) ? c.config : '';
+        cur.textContent = act ? A.env.t('r_aiCur', { m: aiLabel(act) }) : A.env.t('r_aiNone');
+    };
+    if (!sel.dataset.wired) {
+        sel.dataset.wired = '1';
+        sel.addEventListener('change', async () => {
+            if (!sel.value) { await HeinzStore.set(AI_KEY, null); }
+            else { const f = PV.configById(sel.value); if (f) await setAi(f.provider, f.model, f.id); }
+            show();
+        });
+        sw.addEventListener('change', () => HeinzStore.set(ASKFIRST, sw.checked ? 1 : 0));
+    }
     show();
 }
 
@@ -228,7 +229,20 @@ async function search(query) {
 }
 
 // ---------- Erklären, Zusammenfassen ----------
-async function ask(kind, passage) {
+const ASKFIRST = 'heinz_docheinz_askfirst';
+export const askFirstOn = () => +HeinzStore.get(ASKFIRST, 1) !== 0;
+// Erst ein Feld für eine eigene Frage (leer = Standardauftrag, wie bisher), dann die Antwort.
+function askFirst(kind, passage) {
+    openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
+    const box = $('rs-body');
+    const f = document.createElement('form'); f.className = 'dh-qform';
+    const q = document.createElement('input'); q.type = 'text'; q.id = 'rs-q'; q.placeholder = t('s_askPh'); q.autocomplete = 'off'; q.maxLength = 500;
+    const go = document.createElement('button'); go.type = 'submit'; go.className = 'pill acc'; go.id = 'rs-go'; go.textContent = t('s_go');
+    f.append(q, go);
+    f.addEventListener('submit', (e) => { e.preventDefault(); ask(kind, passage, q.value.trim()); });
+    box.appendChild(f);
+}
+async function ask(kind, passage, question = '') {
     const my = ++A.run;
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
@@ -236,7 +250,7 @@ async function ask(kind, passage) {
     const p = act && PV.get(act.provider);
     if (!p) { box.appendChild(line('dh-sline', t('s_noModel'))); return; }
     const as = aiSettings(act);
-    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, system: as.system });
+    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, system: as.system, question });
     $('rs-sub').textContent = aiLabel(act);
     $('rs-sub').hidden = false;
     if (!p.local) {
@@ -256,9 +270,9 @@ async function ask(kind, passage) {
             onDelta: (d) => { if (my !== A.run) return; text += d; renderMd(out, text); if (wait.parentNode) wait.remove(); } });
         if (my !== A.run) return;
         if (!text.trim()) out.textContent = t('s_empty');
-        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
+        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
     } catch (e) {
-        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
+        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
         else {
             const code = e && e.code;
             box.appendChild(line('dh-sline err', code === 'ONLINE_BLOCKED' ? t('s_blocked') : code === 'NO_KEY' ? t('s_nokey') : t('s_err')));
@@ -325,7 +339,7 @@ async function followUp(q) {
     if (!q || !c || A.anaAc) return;
     addMsg('user', q);
     const as = aiSettings({ provider: c.provider, model: c.model, config: c.config });
-    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system });
+    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system, question: c.question || '' });
     const hist = trimHistory([first.messages[0]].concat(c.msgs.slice(1)).concat([{ role: 'user', content: q }]));
     const out = addMsg('assistant', t('s_working'));
     const span = out.querySelector('.dh-mc');
@@ -368,7 +382,7 @@ export function initSelection(env) {
         if (!b || !A.text) return;
         const text = A.text;
         if (b.dataset.sel === 'copy') { try { navigator.clipboard.writeText(text); } catch { /* keine Berechtigung */ } clearWahl(); }
-        else if (b.dataset.sel === 'search') search(text); else ask(b.dataset.sel, text);
+        else if (b.dataset.sel === 'search') search(text); else if (askFirstOn()) askFirst(b.dataset.sel, text); else ask(b.dataset.sel, text);
     });
     $('rs-close').addEventListener('click', closeSheet);
     $('rs-more').addEventListener('click', openAna);

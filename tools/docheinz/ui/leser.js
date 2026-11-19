@@ -164,6 +164,16 @@ function panel(which) {                 // 'set' | 'toc': eines auf, das andere 
     $('reader').dataset.set = !$('r-set').hidden ? '1' : '0';
     return !a.hidden;
 }
+const PAGES = { main: null, fmt: 'main', ai: 'main', font: 'fmt', space: 'fmt', layout: 'fmt', text: 'fmt', color: 'fmt', ctl: 'fmt', prof: 'fmt' };
+function setPage(name) {                // Untermenüs im selben Blatt; name null = eine Ebene zurück
+    const box = $('r-set'), cur = box.dataset.pg || 'main', to = name === null ? PAGES[cur] : name;
+    if (!to || !(to in PAGES)) return;
+    box.dataset.pg = to;
+    box.querySelectorAll('.dh-sp').forEach(sp => { sp.hidden = sp.dataset.p !== to; });
+    $('rs-back').hidden = to === 'main';
+    $('rs-ttl').textContent = S.t(to === 'main' ? 'm_set' : 'm_' + to);
+    box.scrollTop = 0;
+}
 function closeUi() { if (S.ui || !$('r-set').hidden || !$('r-toc').hidden) showUi(false); }
 
 function buildToc() {
@@ -185,18 +195,14 @@ function buildToc() {
 }
 
 function buildFonts() {
-    const box = $('seg-font');
-    box.textContent = '';
+    const sel = $('sel-font');
+    sel.textContent = '';
     const lang = S.lang() === 'de' ? 'de' : 'en';
-    FONTS.forEach(f => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.dataset.font = f.id; b.textContent = f.label[lang];
-        b.classList.toggle('on', f.id === S.font);
-        box.appendChild(b);
-    });
+    FONTS.forEach(f => sel.appendChild(Object.assign(document.createElement('option'), { value: f.id, textContent: f.label[lang] })));
+    sel.value = S.font;
 }
 
-export function applyTheme(theme) { S.theme = THEMES.includes(theme) ? theme : 'auto'; $('reader').setAttribute('data-rt', S.theme); document.querySelectorAll('#seg-theme button').forEach(b => b.classList.toggle('on', b.dataset.rt === S.theme)); }
+export function applyTheme(theme) { S.theme = THEMES.includes(theme) ? theme : 'auto'; $('reader').setAttribute('data-rt', S.theme); $('sel-theme').value = S.theme; }
 // ---------- Aussehen: global, pro Buch überschreibbar ----------
 const CTX = { themes: THEMES, isFont };
 const eff = () => full(S.g, S.bookOn ? S.b : null);
@@ -236,13 +242,13 @@ const lookApi = () => ({
     deleteProfile: (id) => { S.prof = S.prof.filter(p => p.id !== id); S.cb.onProfiles && S.cb.onProfiles(S.prof); },
 });
 
-export function applyGap(on) { S.gap = !!on; $('reader').dataset.gap = S.gap ? '1' : '0'; document.querySelectorAll('#seg-gap button').forEach(b => b.classList.toggle('on', (b.dataset.gap === '1') === S.gap)); }
+export function applyGap(on) { S.gap = !!on; $('reader').dataset.gap = S.gap ? '1' : '0'; $('sw-gap').checked = S.gap; }
 export function applySize(px) { S.size = Math.max(10, Math.min(60, Math.round(px) || 19)); body().style.fontSize = S.size + 'px'; $('r-size').value = S.size; $('r-sizev').textContent = S.size; if (S.open) scheduleLayout(); }
-export function applyBtns(on) { S.btns = !!on; $('r-prev').hidden = $('r-next').hidden = !S.btns; document.querySelectorAll('#seg-btns button').forEach(b => b.classList.toggle('on', (b.dataset.btns === '1') === S.btns)); }
+export function applyBtns(on) { S.btns = !!on; $('r-prev').hidden = $('r-next').hidden = !S.btns; $('sw-btns').checked = S.btns; }
 export async function applyFont(id) {
     S.font = isFont(id) ? id : DEFAULT_FONT;
     $('reader').setAttribute('data-font', S.font);
-    document.querySelectorAll('#seg-font button').forEach(b => b.classList.toggle('on', b.dataset.font === S.font));
+    $('sel-font').value = S.font;
     const spec = fontOf(S.font).load;
     if (spec) { try { await Promise.all(spec.map(x => document.fonts.load(x))); } catch { /* Rückfall auf die nächste Schrift der Liste */ } }
     if (S.open) scheduleLayout();
@@ -276,18 +282,20 @@ function wire() {
     if (S.wired) return;
     S.wired = true;
     // Pfeil: bei offenem Einstellungs- oder Inhaltsfeld nur dieses schließen (zurück ins Buch), sonst den Reader verlassen
-    $('r-close').addEventListener('click', () => { if (!$('r-set').hidden || !$('r-toc').hidden) { $('r-set').hidden = true; $('r-toc').hidden = true; $('reader').dataset.set = '0'; return; } if (S.pushed) { S.leaving = true; history.back(); } else close(); });
+    $('r-close').addEventListener('click', () => { if (!$('r-set').hidden && ($('r-set').dataset.pg || 'main') !== 'main') { setPage(null); return; } if (!$('r-set').hidden || !$('r-toc').hidden) { $('r-set').hidden = true; $('r-toc').hidden = true; $('reader').dataset.set = '0'; return; } if (S.pushed) { S.leaving = true; history.back(); } else close(); });
     $('r-toc-b').addEventListener('click', () => { panel('toc'); });
-    $('r-set-b').addEventListener('click', () => { if (panel('set')) buildAiChips(); });
-    document.querySelectorAll('#seg-gap button').forEach(b => b.addEventListener('click', () => { applyGap(b.dataset.gap === '1'); S.cb.onSettings({ gap: S.gap }); }));
+    $('r-set-b').addEventListener('click', () => { if (panel('set')) { setPage('main'); buildAiChips(); } });
+    $('sw-gap').addEventListener('change', (e) => { applyGap(e.target.checked); S.cb.onSettings({ gap: S.gap }); });
     $('r-prev').addEventListener('click', () => go(-1));
     $('r-next').addEventListener('click', () => go(1));
     $('r-size').addEventListener('input', (e) => setLook('size', +e.target.value));
-    document.querySelectorAll('#seg-theme button').forEach(b => b.addEventListener('click', () => setLook('theme', b.dataset.rt)));
-    document.querySelectorAll('#seg-scope button').forEach(b => b.addEventListener('click', () => lookApi().setScope(b.dataset.scope === '1')));
+    $('sel-theme').addEventListener('change', (e) => setLook('theme', e.target.value));
+    $('sel-scope').addEventListener('change', (e) => lookApi().setScope(e.target.value === '1'));
     $('look-reset').addEventListener('click', () => lookApi().reset());
-    document.querySelectorAll('#seg-btns button').forEach(b => b.addEventListener('click', () => { applyBtns(b.dataset.btns === '1'); S.cb.onSettings({ btns: S.btns }); }));
-    $('seg-font').addEventListener('click', (e) => { const b = e.target.closest('button[data-font]'); if (!b) return; setLook('font', b.dataset.font); });
+    $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });
+    $('sel-font').addEventListener('change', (e) => setLook('font', e.target.value));
+    $('r-set').addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) setPage(g.dataset.go); });
+    $('rs-back').addEventListener('click', () => setPage(null));
     const pg = $('r-page');
     pg.addEventListener('pointerdown', () => { S.hadSel = hasWahl(); }, true);
     pg.addEventListener('click', onTap);
@@ -320,7 +328,7 @@ export async function openReader(rec, src, ctx) {
     S.prof = Array.isArray(ctx.profiles) ? ctx.profiles.slice() : [];
     applyBtns(ctx.btns); applyGap(ctx.gap === true);
     buildFonts();
-    buildLookUi($('r-look'), lookApi());
+    buildLookUi(lookApi());
     applyTypo(eff()); applyTheme(eff().theme); applySize(eff().size);
     await applyFont(eff().font);
     syncLook();
@@ -352,4 +360,4 @@ export function close() {
     S.rec = null; S.src = null;
 }
 export const isOpen = () => S.open;
-export function relabel(t, lang) { S.t = t; if (lang) S.lang = () => lang; buildFonts(); if (S.open) { updatePos(); buildLookUi($('r-look'), lookApi()); } }
+export function relabel(t, lang) { S.t = t; if (lang) S.lang = () => lang; buildFonts(); if (S.open) { updatePos(); buildLookUi(lookApi()); } }
