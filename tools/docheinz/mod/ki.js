@@ -14,23 +14,25 @@ export function clip(text, max = MAX_CHARS) {
 }
 
 const SYSTEM = {
-    en: 'You help a reader with passages from a book. Use only the passage and, if given, the page text. Answer briefly and plainly in English. Do not invent facts.',
-    de: 'Du hilfst einer Leserin oder einem Leser bei Textstellen aus einem Buch. Nutze nur die Textstelle und, falls angegeben, den Seitentext. Antworte kurz und klar auf Deutsch. Erfinde nichts.',
+    en: 'You help a reader understand a passage. Work only with the passage given. Never say which book or author it is from and do not repeat the passage. Answer briefly and plainly in English. Do not invent facts.',
+    de: 'Du hilfst einer Leserin oder einem Leser, eine Textstelle zu verstehen. Arbeite nur mit der gegebenen Textstelle. Nenne nie, aus welchem Buch oder von welchem Autor sie stammt, und wiederhole sie nicht. Antworte kurz und klar auf Deutsch. Erfinde nichts.',
 };
 const TASK = {
-    en: { explain: 'Explain this passage in simple words. If it is a single word or term, give its meaning in this context.', summary: 'Summarize this passage in a few sentences.' },
-    de: { explain: 'Erkläre diese Textstelle in einfachen Worten. Ist es ein einzelnes Wort oder ein Begriff, nenne seine Bedeutung in diesem Zusammenhang.', summary: 'Fasse diese Textstelle in wenigen Sätzen zusammen.' },
+    en: { explain: 'Explain in simple words what this passage means. If it is a single word or term, give its meaning in this context.', summary: 'Summarize what this passage says in two or three sentences.' },
+    de: { explain: 'Erkläre in einfachen Worten, was diese Textstelle bedeutet. Ist es ein einzelnes Wort oder ein Begriff, nenne seine Bedeutung in diesem Zusammenhang.', summary: 'Fasse in zwei bis drei Sätzen zusammen, was diese Textstelle sagt.' },
 };
 
-export function buildRequest(kind, passage, { lang = 'en', title = '', author = '', page = '' } = {}) {
+// system: eigener Systemprompt (z. B. aus einer Dashboard-Konfiguration); leer = eingebauter. {title} und {author} werden darin ersetzt.
+// Titel und Autor gehen sonst nicht mit: kleine Modelle reden dann nur über „das Buch von …“.
+export function buildRequest(kind, passage, { lang = 'en', title = '', author = '', page = '', system = '' } = {}) {
     if (!KINDS.includes(kind)) throw new Error('ki: unbekannte Art ' + kind);
     const l = lang === 'de' ? 'de' : 'en';
     const c = clip(passage);
-    const book = [title, author].filter(Boolean).join(l === 'de' ? ' von ' : ' by ');
-    const head = book ? (l === 'de' ? 'Buch: ' : 'Book: ') + book + '\n' : '';
     const pg = clip(page, MAX_PAGE).text;
     const ctx = pg ? (l === 'de' ? 'Seitentext zum Zusammenhang:\n' : 'Page text for context:\n') + pg + '\n\n' : '';
-    return { system: SYSTEM[l], messages: [{ role: 'user', content: head + ctx + TASK[l][kind] + '\n\n' + c.text }], clipped: c.clipped };
+    const sys = String(system || '').trim() ? String(system).replace(/\{title\}/g, title).replace(/\{author\}/g, author) : SYSTEM[l];
+    const content = ctx + (l === 'de' ? 'Textstelle:\n"""\n' : 'Passage:\n"""\n') + c.text + '\n"""\n\n' + TASK[l][kind];
+    return { system: sys, messages: [{ role: 'user', content }], clipped: c.clipped };
 }
 
 // Verlauf für Nachfragen: erste Nachricht bleibt, dazu die jüngsten Nachrichten, zusammen höchstens max Zeichen (ältere Paare fallen zuerst weg)

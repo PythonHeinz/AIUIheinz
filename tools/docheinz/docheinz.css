@@ -123,11 +123,11 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ctitle span { font-size: 1rem; color: var(--rsub); }
 
 /* Markierungsleiste und Blatt (Suchen, Erklären, Zusammenfassen) */
-.dh-sel { position: absolute; left: 0; top: 0; z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rbar); border: 1px solid var(--rline); box-shadow: 0 2px 12px rgba(0,0,0,.4); max-width: calc(100% - 20px); }
+.dh-sel { position: absolute; left: 0; top: 0; z-index: 7; display: flex; gap: 2px; padding: 4px; border-radius: 22px; background: var(--rt); color: var(--rb); border: 1px solid var(--rb); box-shadow: 0 4px 18px rgba(0,0,0,.55); max-width: calc(100% - 20px); }
 .dh-sel[hidden] { display: none; }
-.dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rt); font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.dh-sel button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: var(--rb); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .dh-sel button[hidden] { display: none; }
-.dh-sel button:active { background: var(--rline); }
+.dh-sel button:active { background: color-mix(in srgb, var(--rb) 22%, transparent); }
 .dh-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 8; max-height: 62%; display: flex; flex-direction: column; box-sizing: border-box; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--rbar); color: var(--rt); border-top: 1px solid var(--rline); box-shadow: 0 -4px 18px rgba(0,0,0,.4); }
 .dh-sheet[hidden] { display: none; }
 .dh-sheet header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }

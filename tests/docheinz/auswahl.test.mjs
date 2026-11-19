@@ -19,11 +19,11 @@ test('search respects max and offset and does not overlap', () => {
     assert.equal(findAll('x abc', 'abc', { offset: 100 })[0].start, 102);
     assert.equal(normalizeQuery('  a \n b  '), 'a b');
 });
-test('request contains only the passage, title and author', () => {
-    const r = buildRequest('explain', 'Ein  Satz.', { lang: 'de', title: 'T', author: 'A' });
+test('request contains only the passage, no title or author', () => {
+    const r = buildRequest('explain', 'Ein  Satz.', { lang: 'de', title: 'Titel', author: 'Autor' });
     assert.equal(r.messages.length, 1);
-    assert.match(r.messages[0].content, /Buch: T von A/);
-    assert.match(r.messages[0].content, /Ein Satz\.$/);
+    assert.doesNotMatch(r.messages[0].content, /Titel|Autor/);
+    assert.match(r.messages[0].content, /Ein Satz\./);
     assert.match(r.system, /Deutsch/);
     assert.deepEqual(KINDS, ['explain', 'summary']);
     assert.match(buildRequest('summary', 'x', { lang: 'en' }).messages[0].content, /Summarize/);
@@ -54,4 +54,10 @@ test('history keeps the first message and drops the oldest pairs when too long',
     assert.equal(t[1].role, 'assistant');
     assert.ok(t.length < big.length);
     assert.deepEqual(trimHistory([]), []);
+});
+
+test('custom system prompt replaces the built-in one and fills {title}/{author}', () => {
+    const r = buildRequest('explain', 'x', { lang: 'de', title: 'T', author: 'A', system: 'Buch {title} von {author}. Sei knapp.' });
+    assert.equal(r.system, 'Buch T von A. Sei knapp.');
+    assert.match(buildRequest('explain', 'x', { lang: 'en', system: '   ' }).system, /Never say which book/);
 });

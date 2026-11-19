@@ -137,21 +137,44 @@ const line = (cls, text) => { const p = document.createElement('p'); p.className
 // Eigene Zuweisung des Werkzeugs; ohne sie gilt das im Dashboard aktive Modell. Gewählt wird wie bei allen Tools auch als aktives Modell gesetzt (Regel 4, docs/LOKALE_MODELLE.md).
 export function aiChoice() {
     const c = HeinzStore.get(AI_KEY, null);
-    if (c && c.provider && c.model && PV.get(c.provider)) return c;
+    if (c && c.config) { const f = PV.configById(c.config); if (f && PV.get(f.provider)) return { provider: f.provider, model: f.model, config: f.id }; }
+    if (c && c.provider && c.model && PV.get(c.provider)) return { provider: c.provider, model: c.model };
     return PV.activeModel();
 }
-async function setAi(provider, model) {
-    await HeinzStore.set(AI_KEY, { provider, model });
+async function setAi(provider, model, config) {
+    await HeinzStore.set(AI_KEY, config ? { provider, model, config } : { provider, model });
     PV.setActiveModel(provider, model);
 }
-function aiLabel(c) { const p = c && PV.get(c.provider); return c && p ? c.model + ' · ' + p.name : ''; }
+// Aus der gewählten Dashboard-Konfiguration: Systemprompt (leer = eingebauter), Ton, Stopp, Laufzeit (Kontext, Threads).
+function aiSettings(act) {
+    const cfg = act && act.config ? PV.configById(act.config) : null;
+    const rt = PV.runtime(act.provider, act.model, undefined, cfg && cfg.runtime);
+    const options = Object.assign({}, rt.options);
+    if (cfg) { if (cfg.tone) Object.assign(options, cfg.tone); if (cfg.stop && cfg.stop.length) options.stop = cfg.stop.slice(); }
+    return { system: cfg && cfg.prompt ? cfg.prompt : '', options, keepAlive: rt.keepAlive, cfg };
+}
+function aiLabel(c) { const p = c && PV.get(c.provider); if (!c || !p) return ''; const f = c.config ? PV.configById(c.config) : null; return (f ? f.name + ' · ' : '') + c.model + ' · ' + p.name; }
 export async function buildAiChips() {
     const box = $('seg-ai'), cur = $('ai-cur');
-    const show = () => { const c = HeinzStore.get(AI_KEY, null); const act = aiChoice(); cur.textContent = c && PV.get(c.provider) ? A.env.t('r_aiCur', { m: aiLabel(c) }) : (act ? A.env.t('r_aiCur', { m: aiLabel(act) }) + ' · ' : '') + A.env.t('r_aiNone'); box.querySelectorAll('button').forEach(b => b.classList.toggle('on', !!c && b.dataset.p === c.provider && b.dataset.m === c.model)); };
+    const show = () => {
+        const c = HeinzStore.get(AI_KEY, null), act = aiChoice();
+        const own = !!c && !!c.provider && (c.config ? !!PV.configById(c.config) : !!PV.get(c.provider));
+        cur.textContent = own ? A.env.t('r_aiCur', { m: aiLabel(act) }) : (act ? A.env.t('r_aiCur', { m: aiLabel(act) }) + ' · ' : '') + A.env.t('r_aiNone');
+        box.querySelectorAll('button').forEach(b => b.classList.toggle('on', own && (c.config ? b.dataset.c === c.config : !b.dataset.c && b.dataset.p === c.provider && b.dataset.m === c.model)));
+    };
     box.textContent = '';
     cur.textContent = A.env.t('r_aiLoad');
     const provs = PV.list().filter(p => p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(p.id)))));
     let any = false;
+    const usable = (id) => provs.some(p => p.id === id);
+    PV.configs().filter(f => usable(f.provider)).forEach(f => {
+        any = true;
+        const b = document.createElement('button');
+        b.type = 'button'; b.dataset.c = f.id;
+        b.append(document.createTextNode(f.name), Object.assign(document.createElement('small'), { textContent: f.model + ' · ' + PV.get(f.provider).name }));
+        b.addEventListener('click', async () => { await setAi(f.provider, f.model, f.id); show(); });
+        box.appendChild(b);
+    });
     await Promise.all(provs.map(async (p) => {
         let names = [];
         try { names = await PV.models(p.id); } catch { names = []; }
@@ -216,8 +239,9 @@ async function ask(kind, passage) {
     const act = aiChoice();
     const p = act && PV.get(act.provider);
     if (!p) { box.appendChild(line('dh-sline', t('s_noModel'))); return; }
-    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author });
-    $('rs-sub').textContent = act.model + ' · ' + p.name;
+    const as = aiSettings(act);
+    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, system: as.system });
+    $('rs-sub').textContent = aiLabel(act);
     $('rs-sub').hidden = false;
     if (!p.local) {
         if (!PV.onlineAllowed()) { box.appendChild(line('dh-sline err', t('s_blocked'))); return; }
@@ -231,15 +255,14 @@ async function ask(kind, passage) {
     $('rs-stop').hidden = false;
     let text = '';
     try {
-        const rt = PV.runtime(act.provider, act.model);
         await PV.prepare(act.provider, act.model);
-        await PV.chat(act.provider, { model: act.model, system: req.system, messages: req.messages, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: ac.signal,
+        await PV.chat(act.provider, { model: act.model, system: req.system, messages: req.messages, options: as.options, keepAlive: as.keepAlive, stream: true, signal: ac.signal,
             onDelta: (d) => { if (my !== A.run) return; text += d; out.textContent = text; if (wait.parentNode) wait.remove(); } });
         if (my !== A.run) return;
         if (!text.trim()) out.textContent = t('s_empty');
-        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
+        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
     } catch (e) {
-        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
+        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
         else {
             const code = e && e.code;
             box.appendChild(line('dh-sline err', code === 'ONLINE_BLOCKED' ? t('s_blocked') : code === 'NO_KEY' ? t('s_nokey') : t('s_err')));
@@ -305,7 +328,8 @@ async function followUp(q) {
     q = String(q || '').trim();
     if (!q || !c || A.anaAc) return;
     addMsg('user', q);
-    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '' });
+    const as = aiSettings({ provider: c.provider, model: c.model, config: c.config });
+    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system });
     const hist = trimHistory([first.messages[0]].concat(c.msgs.slice(1)).concat([{ role: 'user', content: q }]));
     const out = addMsg('assistant', t('s_working'));
     const span = out.querySelector('span');
@@ -313,9 +337,8 @@ async function followUp(q) {
     $('ra-stop').hidden = false; $('ra-send').hidden = true; $('ra-q').value = '';
     let text = '';
     try {
-        const rt = PV.runtime(c.provider, c.model);
         await PV.prepare(c.provider, c.model);
-        await PV.chat(c.provider, { model: c.model, system: first.system, messages: hist, options: rt.options, keepAlive: rt.keepAlive, stream: true, signal: ac.signal,
+        await PV.chat(c.provider, { model: c.model, system: first.system, messages: hist, options: as.options, keepAlive: as.keepAlive, stream: true, signal: ac.signal,
             onDelta: (d) => { if (my !== A.anaRun) return; text += d; span.textContent = text; $('ra-body').scrollTop = $('ra-body').scrollHeight; } });
         if (my !== A.anaRun) return;
         if (!text.trim()) span.textContent = t('s_empty');

@@ -709,6 +709,26 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(calls[-1]["model"], "qwen:7b")
         self.assertEqual(p.errors, [])
 
+    def test_dashboard_configuration_decides_model_prompt_and_tone(self):
+        p = self.open()
+        calls = self.fake_ollama(p)
+        p.evaluate("""() => localStorage.setItem('heinz_configs', JSON.stringify([{ id: 'c1', name: 'Leser', provider: 'ollama', model: 'qwen:7b', person: 'heinz', prompt: 'Erkläre wie für ein Kind. Buch {title}.', tone: { temperature: 0.2 }, stop: [], runtime: null }]))""")
+        self.start_book(p, "a.md", "text/markdown", b"# Titel\n\nEin kurzer Text.")
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.wait_for_selector("#seg-ai button[data-c='c1']")
+        p.click("#seg-ai button[data-c='c1']")
+        self.assertIn("Leser", p.inner_text("#ai-cur"))
+        p.keyboard.press("Escape")
+        self.select_text(p, "kurzer")
+        p.click("#r-sel [data-sel=explain]")
+        p.wait_for_function("() => document.getElementById('rs-body').innerText.includes('Erklärung')")
+        body = calls[-1]
+        self.assertEqual(body["model"], "qwen:7b")
+        self.assertEqual(body["messages"][0]["role"], "system")
+        self.assertTrue(body["messages"][0]["content"].startswith("Erkläre wie für ein Kind. Buch "))
+        self.assertEqual(body["options"]["temperature"], 0.2)
+        self.assertNotIn("Titel", body["messages"][1]["content"])
+
     def test_reader_settings_size_and_theme_persist(self):
         p = self.open()
         self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")
