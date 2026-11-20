@@ -381,6 +381,27 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("Dies ist der erste Absatz", txt)
         self.assertEqual(p.errors, [])
 
+    def test_photos_become_one_book_and_are_recognized(self):
+        import pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        p = self.open(lang="de")
+        self.add(p, ("foto2.jpg", "image/jpeg", (fx / "foto2.jpg").read_bytes()), ("foto1.jpg", "image/jpeg", (fx / "foto1.jpg").read_bytes()))
+        p.wait_for_selector("#o-go")                           # Formular der Texterkennung öffnet sich von selbst
+        self.assertEqual(self.rows(p), 1)
+        self.assertIn("Fotos", p.locator("#list .dh-xh").inner_text())
+        p.click("#o-go")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=90000)
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.tap(p, "next")
+        p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
+        txt = p.evaluate("() => document.getElementById('r-body').textContent")
+        self.assertIn("Heißluftfritteuse", txt)                # Seite 1 zuerst (nach Dateiname sortiert)
+        self.assertLess(txt.index("Heißluftfritteuse"), txt.index("Sicherheitshinweisen"))
+        self.assertEqual(p.external, [])
+        self.assertEqual(p.errors, [])
+
     def test_delete_asks_first_and_removes_the_book(self):
         p = self.open()
         self.add(p, ("a.txt", "text/plain", b"Hallo."), ("b.txt", "text/plain", b"Welt."))

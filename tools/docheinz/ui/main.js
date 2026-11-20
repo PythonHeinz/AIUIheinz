@@ -5,7 +5,8 @@ import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
-import { scaleCover } from './bild.js';
+import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
+import { imagesToPdf } from '../mod/bilder-pdf.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { exportBook, FORMATS } from '../mod/exportieren.js';
 import { LANGS, makeRecognizer } from '../mod/ocr.js';
@@ -134,6 +135,7 @@ async function runOcr(id, lang) {
         for (let p = (rec.ocr || []).length + 1; p <= rec.ocrTotal && !job.stop; p++) {
             job.i = p; msg(t('o_page', { i: p, n: rec.ocrTotal }), 'ok'); render();
             await src.pdf.render(p, canvas, 1800, 1).done;
+            if (rec.photo) enhanceForOcr(canvas);
             const text = await rz.recognize(canvas);
             rec.ocr = (rec.ocr || []).concat([text.trim() ? text : ' ']);
             await state.db.update(id, { ocr: rec.ocr });
@@ -258,6 +260,20 @@ async function addFiles(files) {
     files = Array.from(files || []);
     if (!files.length) return;
     const lines = [];
+    // Fotos von Buchseiten: alle Bilder dieser Auswahl werden ein Buch (Bilder -> PDF -> Texterkennung)
+    let photoName = '';
+    const isImg = f => /^image\//.test(f.type || '') || /\.(jpe?g|png|webp|bmp|gif|heic|heif)$/i.test(f.name || '');
+    const imgs = files.filter(isImg).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+    if (imgs.length) {
+        files = files.filter(f => !isImg(f));
+        try {
+            const pages = [];
+            for (let i = 0; i < imgs.length; i++) { msg(t('p_reading', { i: i + 1, n: imgs.length }), 'ok'); pages.push(await photoToPage(imgs[i])); }
+            const d = new Date(), z = n => String(n).padStart(2, '0');
+            photoName = t('p_name') + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + z(d.getMinutes()) + '.pdf';
+            files.unshift(new File([imagesToPdf(pages)], photoName, { type: 'application/pdf' }));
+        } catch { lines.push(t('p_err')); }
+    }
     let added = 0;
     persist();
     const known = new Set(state.books.map(b => b.sig));
@@ -274,7 +290,7 @@ async function addFiles(files) {
             catch (e) { if (e instanceof BuchFehler && e.code === 'scanned') { src = await openSource(bytes, format, name, { ocr: [] }); scan = true; } else throw e; }
             const { lens } = await describe(src, (i, n) => { if (n > 1) msg(t('m_reading', { name }) + ' ' + Math.round(100 * i / n) + ' %', 'ok'); });
             const rec = makeRecord(src, { name, size: f.size, lens });
-            if (scan) { rec.ocr = []; rec.ocrTotal = src.pages; lines.push(t('o_scanAdded', { name })); }
+            if (scan) { rec.ocr = []; rec.ocrTotal = src.pages; if (name === photoName) { rec.photo = true; rec.title = name.replace(/\.pdf$/, ''); } else lines.push(t('o_scanAdded', { name })); }
             if (format === 'epub') await withCover(rec, bytes);
             await state.db.put(rec, new Blob([bytes], { type: f.type || 'application/octet-stream' }));
             known.add(rec.sig);
@@ -287,6 +303,7 @@ async function addFiles(files) {
     }
     await reload();
     storeLine();
+    if (photoName) { const pb = state.books.find(b => b.name === photoName); if (pb && pb.ocrTotal) { state.ocrAsk = pb.id; state.confirm = ''; state.exp = ''; render(); } }
     if (added) lines.unshift(t('m_added', { n: added }));
     else if (!lines.length) lines.push(t('m_none'));
     msg(lines, added && lines.length === 1 ? 'ok' : (added ? 'warn' : 'err'));

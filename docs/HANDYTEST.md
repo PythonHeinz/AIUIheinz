@@ -309,3 +309,8 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. OCR antippen, Sprache wählen, Start. Bildschirm anlassen. Zeit je Seite notieren (Pixel 9 Pro) und ob der Akku/Wärme auffällt. Beim ersten Mal lädt der Kern und die Sprachdaten (wenige Sekunden).
 3. Zwischendurch ■ drücken: es hält nach der Seite an, später mit OCR weitermachen. Seite neu laden und weitermachen geht ebenfalls.
 4. Fertig: Buch öffnen, Text prüfen (Umlaute, Zahlen, Spalten). Originalansicht zeigt das Bild der Seite.
+
+## Y10 docHeinz: Fotos von Buchseiten (nur simuliert getestet, 20.11.2026)
+1. „Bücher hinzufügen“, im Dateiwähler Bilder (oder „Kamera“) wählen, mehrere Seiten auf einmal; Reihenfolge = Dateiname. Es entsteht ein Buch „Fotos …“, das Formular der Texterkennung öffnet sich.
+2. Sprache wählen, Start. Zeit je Seite notieren. Danach lesen: Umlaute, Zahlen, Zeilenumbrüche, Silbentrennung?
+3. Gutes Foto: Seite gerade, gleichmäßig hell, Schrift füllt das Bild. Wie schlecht wird es bei schiefem Foto oder Schatten? (Perspektivkorrektur gibt es noch nicht.)
