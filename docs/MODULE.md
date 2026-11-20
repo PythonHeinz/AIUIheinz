@@ -209,3 +209,18 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 
 Importgraph (nur abwärts, keine Kreise): `text`, `zip` → `markdown`, `html` → `epub-lesen`; `sauber` (allein); `cover` → `zip`; `buch` importiert `epub-lesen`, `markdown`, `text`, `sauber`; `db` und `bibliothek` (allein). Oberfläche: `tools/docheinz/ui/` (`main.js` Einstieg: Bibliothek, `leser.js` Leseansicht im Seitenmodus (Tippzonen, Overlay-Steuerung), `base.js` Brücke zu `window.Heinz` und `HeinzStore`, `i18n.js` EN/DE). Eigene Daten: IndexedDB `docheinz` (große Daten, **nicht** im Backup) und kleine Einstellungen `heinz_docheinz_…` (`size`, `theme`, `font`, `btns`, `sort`; im Backup). Tests: `bash tests/run_all.sh docheinz` (Node-Skripte, Browsertests der Module und der Oberfläche in `tests/test_docheinz.py`, Pixel-Viewport, keine Anfragen nach außen).
 
+## Werkzeug Filter (`tools/filter/`, seit 20.11.2026)
+
+Eigene Insel (Nachfolger des Data Lab, `docs/agent/AUFTRAG_Filter.md`). Die Module in `mod/` kennen die Oberfläche nicht und importieren nur Module ihres Ordners; Modellzugriff geschieht ausschließlich in `ui/ergebnis.js` über `HeinzProviders` (`prepare`, `runtime`, `chat` mit `format`), die Logik ruft eine übergebene Funktion `senden` auf.
+
+| Modul | Schnittstelle | Braucht | Tests |
+|---|---|---|---|
+| `einlesen.js` | `einlesen(text, name, {absatz})` → `{kind, format, headers, rows}` (CSV/TSV, JSON, RSS/Atom, Klartext), `eintraege(data, cols)`, `parseCSV`, `detectDelim` | nichts (Node und Browser) | Node (`tests/filter/einlesen.test.mjs`) |
+| `bewerten.js` | `baueSchema`, `baueAnfrage`, `pruefeAntwort` (nicht erlaubtes Etikett = unklar), `lauf` (Schleife, Abbruch, Wiederaufnahme, fatale Fehler) | nichts | Node |
+| `auswerten.js` | `mitKontrolle`, `zaehlen`, `trefferquote`, `verwechslung`, `stichprobe` (fester Startwert), `filtern`, `sortieren` | nichts | Node |
+| `ausgabe.js` | `tabelle`, `zuCSV`, `zuTSV`, `zuMarkdown`, `zuJSON`, `exportiere` | nichts | Node |
+| `presets.js` | `PRESETS` (Stimmung, Dringlichkeit, Nachrichtenart, Thema; EN/DE) | nichts | über Seitentest |
+| `db.js` | `dbGet`, `dbPut`, `dbDel` (IndexedDB `heinz_filter`, Rückfall Speicher der Seite) | `indexedDB` | Browser (Seitentest, Neuladen) |
+
+Importgraph: Module untereinander ohne Verweise (keine Kreise). Oberfläche: `ui/main.js` (Einstieg) → `eingabe.js`, `regel.js`, `ergebnis.js` → `state.js` (Zustand, Ereignisse, Speichern), `base.js` (Brücke zu `Heinz`, `HeinzStore`, `HeinzProviders`), `i18n.js`. `regel.js` wird von `ergebnis.js` importiert (Etiketten, Online-Stand). Eigene Daten: `heinz_filter_settings` (HeinzStore) und IndexedDB `heinz_filter` (nicht im Backup). Tests: `bash tests/run_all.sh filter` (Node-Tests über `tests/test_filter.py`, Seitentests mit simuliertem Ollama, keine Anfragen nach außen).
+

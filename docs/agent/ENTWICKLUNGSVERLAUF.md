@@ -811,3 +811,14 @@ Entwickler hat Phase 1 bis 2e am Handy abgenommen. Offen: Design-Pflege später;
 
 ### docHeinz-Fix: Farbauswahl mit sinnvollen Vorgaben (19.11.2026)
 Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarbe je eine Palette (9 Töne: Papier, Sepia, Creme, Grautöne, gedämpfte Texttöne; für abends warme, blauarme Töne wie Warmdunkel, Glut, Kerzenlicht, gedämpftes Bernstein) plus „…" für eigene Farbe (Farbfeld + Hex-Eingabe). Nur simuliert getestet.
+
+### 2026-11-20 AIUIheinz-Filter: Nachfolger des Data Lab (nur simuliert getestet)
+- Auftrag `AUFTRAG_Filter.md`, Inventur `FILTER_INVENTUR.md`. Entscheidungen des Entwicklers: Qwen 2.5 3B als Vorgabe, Modell frei wählbar (auch LiteRT-LM); `lib/providers.js` darf `format` durchreichen; Preset „Rohstoffe“ entfällt; Online-Modelle erlaubt, aber nur über die globale Einstellung „Online erlauben“ (Sitzungsfreigabe nur im Heinz Chat und im Dashboard).
+- **Fundament (Mini-Commit):** `chatOllama` in `lib/providers.js` sendet `req.format` (JSON-Schema mit `enum`) an Ollama; für LiteRT-LM wird kein `response_format` gesendet (nicht gesichert): Rückfall auf Prompt und Prüfung der Antwort, „unklar“ im Ergebnis, Hinweis im Ergebnis.
+- **Module** `tools/filter/mod/`: `einlesen`, `bewerten`, `auswerten`, `ausgabe`, `presets`, `db`; **Oberfläche** `ui/` mit drei Schritten (Eingabe, Regel, Ergebnis). Ein Eintrag je Anfrage, Temperatur 0 als Standard; Antwort wird nie geraten, nur geparst und gegen die erlaubten Etiketten geprüft. Zufallswahl mit festem Startwert, Kontrollspalte mit Trefferquote und Verwechslungstabelle, Kacheln als Filter, Export folgt der gezeigten Auswahl (CSV, TSV, JSON, Markdown, Kopieren für Sheets), Fortsetzen nach Abbruch und nach Neuladen (IndexedDB `heinz_filter`).
+- **Abweichung vom Auftrag:** Kontext und Threads sind nicht einstellbar, nur angezeigt (Regel 2 in `LOKALE_MODELLE.md`: eigene Werte würden Ollama zum Neuladen zwingen); Antwortgrenze (`num_predict`) und Temperatur sind frei.
+- Fehlerbehandlung: einzelne Fehler zählen als unklar und der Lauf geht weiter; Netz, 404, 401/403 und gesperrtes Online stoppen den Lauf (Fortsetzen möglich). Eine Kontrolle gegen Fließtext mit Kommas (kein CSV) wurde gegenüber dem Lab verbessert.
+- Fallstrick: `.pill`, `.chkrow` setzen `display` und überschreiben das Attribut `hidden`; Filter ergänzt `.fl [hidden] { display: none !important; }`.
+- `tool.json` auf `beta`; der Hub-Test `test_language_toggle_switches_hub_and_persists` prüft nicht mehr den Platzhaltertext.
+- Tests: 25 Node-Tests (`tests/filter/`), 8 in `tests/test_filter.py` (davon 6 Seitentests: Lauf und Anfrageform, Kontrolle, Filter und Exporte, Fehler und unklar, Abbrechen und Fortsetzen, Neuladen, Online-Sperre); voller Lauf grün. **Nur simuliert**, nichts am Gerät: Handytest Z (`docs/HANDYTEST.md`). Offen: Messwerte (Tempo, Trefferquote), Lab entfernen nach Abnahme.
+

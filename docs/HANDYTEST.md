@@ -264,3 +264,16 @@ Vorher: `git pull`, `bash start.sh`, Hub, Reiter Werkzeuge, Kachel docHeinz. Tes
 1. Text lang drücken: Leiste vollständig sichtbar (Search, Explain, Summarize, Copy).
 2. Explain tippen: Fragefeld erscheint; leer senden = Antwort wie bisher; mit Frage = Antwort auf die Frage. Schalter „Vorab eine Frage stellen" aus = sofort Antwort.
 3. Einstellungen: Formatierung / KI-Funktionen, Untermenüs öffnen per Tipp, Zurück-Pfeil geht eine Ebene zurück, Buch bleibt sichtbar (Live-Vorschau).
+
+## Z. Filter (20.11.2026) – nur simuliert getestet, Handytest steht aus
+Vorbereitung: `git pull`, `bash start.sh`, Ollama mit `qwen2.5:3b` und `gemma2:2b`; optional `litert-lm serve --cors-origin http://localhost:3000`.
+1. Hub, Werkzeuge, Filter öffnen. „Beispiel“ tippen: 12 Einträge; Regel „Stimmung“; Auswerten. Tempo je Eintrag notieren (Sekunden), Ergebnis mit eigenem Urteil vergleichen.
+2. Datei laden (CSV mit Kopfzeile aus dem Dateimanager): Spaltenwahl, Kontrollspalte wählen, Auswerten; Trefferquote und Verwechslungstabelle ansehen.
+3. Einfügen aus der Zwischenablage (Tabelle aus Sheets, Text mit Zeilen): „Einfügen“ und Einfügen ins Feld.
+4. Abbrechen mitten im Lauf, „Fortsetzen“; App in den Hintergrund schicken und zurückkehren; Seite neu laden: Eingabe und Ergebnisse sind da, Fortsetzen geht.
+5. Mit Gemma (`gemma2:2b`) und mit LiteRT-LM wiederholen: Bei LiteRT-LM wird das Antwortformat nicht erzwungen; zählen „unklar“-Antworten, Hinweis im Ergebnis.
+6. Kacheln antippen, „Nur die gewählten Einträge zeigen“, Export CSV/TSV/JSON/Markdown, „Für Sheets kopieren“ und in Sheets einfügen (Spalten korrekt?).
+7. Online: Haken „Online erlauben“ aus: nur lokale Engines in der Liste. An: Online-Engine wählbar, vor dem Lauf kommt die Rückfrage.
+8. Hell/Dunkel, EN/DE, quer gehaltenes Handy.
+Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang melden; sie kommen in `docs/OLLAMA_UND_MODELLE.md`.
+

@@ -5,13 +5,13 @@
     "de": "Filter"
   },
   "desc": {
-    "en": "Rate lists and texts by your rule (successor of Data Lab). Placeholder.",
-    "de": "Listen und Texte nach deiner Regel bewerten (Nachfolger des Data Lab). Platzhalter."
+    "en": "Rate lists and texts by a one-sentence rule with a small local model; code counts, checks and exports (successor of Data Lab).",
+    "de": "Listen und Texte nach einer Regel in einem Satz mit einem kleinen lokalen Modell bewerten; Zählen, Prüfen und Export macht der Code (Nachfolger des Data Lab)."
   },
   "icon": "🧪",
   "entry": "tools/filter/index.html",
   "color": "yellow",
-  "status": "placeholder",
+  "status": "beta",
   "order": 30,
   "area": "tools",
   "symbol": "i-layers"

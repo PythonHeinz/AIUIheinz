@@ -5,7 +5,6 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 20.11.2026, AIUIheinz-Filter: Inventur gelesen, Zuschnitt zur Bestätigung; danach Bau in `tools/filter/`, `tests/filter/`; `lib/providers.js` nur lesend (Mini-Commit `format` erst nach Freigabe/Aktive-Arbeit-Prüfung); Hub-Eintrag und Statuswechsel am Ende mit Rückfrage.
 
 Stand: 17.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -49,7 +48,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | AIUIheinz-Personen | Personenleiste, Laufzeit, Konfigurationen; `AUFTRAG_Personen.md`, `ANWEISUNG_Personenleiste.md`, `docs/BEDIENKONZEPT_DASHBOARD.md` | **fertig 13.11.2026** (Handytest A bis M bestanden, Phase 3 ersetzt durch Konfigurationen) |
 | AIUIheinz-Konfiguration | Konfiguration je Modell, Standardkonfiguration und Zuweisung für den Heinz Chat als eigenes Tool, Mauer Offline/Online; `AUFTRAG_Konfiguration.md` | **Abgeschlossen 13.11.2026** (Stufen a bis d, Export als Modelfile; Handytest P, Q und N, O, B2 offen, Rest als Vormerkung in 2r) |
 | AIUIheinz-convert2 | Aufnahme von Convert2 als Werkzeug (id `convert2`), Formatbausteine als eigene Module; `AUFTRAG_convert2.md` | **abgeschlossen 17.11.2026** (Handytest U bestanden, Abnahme durch den Entwickler, `_original/` entfernt) |
-| AIUIheinz-Filter | Nachfolger des Data Lab (Listen und Texte nach Regel bewerten, Kontrolle, Export); `AUFTRAG_Filter.md` | **beauftragt 20.11.2026**, Inventur `FILTER_INVENTUR.md`; Entscheidungen: Qwen 2.5 3B Vorgabe und frei wählbar auch LiteRT-LM, `lib/providers.js` darf `format` durchreichen (Mini-Commit), Preset Rohstoffe entfällt; Startsatz im Auftrag; Lab bleibt bis zur Abnahme |
+| AIUIheinz-Filter | Nachfolger des Data Lab (Listen und Texte nach Regel bewerten, Kontrolle, Export); `AUFTRAG_Filter.md`, `FILTER_INVENTUR.md` | **gebaut 20.11.2026, Status beta, nur simuliert getestet; Handytest Z steht aus** (`docs/HANDYTEST.md`). Entscheidungen: Qwen 2.5 3B Vorgabe, Modell frei wählbar (auch LiteRT-LM), nur globale Einstellung „Online erlauben“ (Sitzungsfreigabe nur Heinz Chat und Dashboard), `lib/providers.js` reicht `format` an Ollama durch (Mini-Commit). Lab bleibt bis zur Abnahme |
 | AIUIheinz-Update | Update im Hub (Prüfung nur mit Haken „Online erlauben“), Versionsfeld und Änderungsdatum je Tool; `AUFTRAG_Update.md` | **Aufgabe 1 gebaut 18.11.2026, Handytest Y am Handy bestätigt 19.11.2026:** Update-Knopf mit LCD fest unten im Hub, Logik gemeinsam in `lib/shared/update.js`, Dashboard nutzt sie mit. Offen: Aufgaben 2 bis 9 (Prüfen mit Haken, Version und Änderungsdatum je Tool, Service Worker, Erklärung bei auseinandergelaufenem Verlauf). **Entscheidung 18.11.:** Dashboard-Knopf bleibt, im Hub unten ein Update-Knopf mit LCD wie im Dashboard, später zentrales Menü Info · Sicherung · Update; Startsatz im Auftrag |
 | AIUIheinz-docHeinz | eBook-Reader als Werkzeug (id `docheinz`, `tools/docheinz/`); `AUFTRAG_docHeinz.md`, Regeln in `NEUES_WERKZEUG.md` | **Phase 1 bis 2e am Handy abgenommen 19.11.2026, Strang abgeschlossen.** Offen nur später: Design-Pflege, bei Bedarf Phase 3 (Markierungen, Notizen, Export) und Phase 4 (PDF mit pdf.js) |
 | AIUIheinz-Huelle | Android-Hülle um die HTML-Seiten (eigene WebView statt Chrome); `AUFTRAG_Huelle.md` | **nur Konzept, nicht begonnen** (19.11.2026); Anlass: Chrome-Eigenheiten bei Markierung in docHeinz. Start nach Freigabe des Entwicklers |
@@ -62,7 +61,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | AIUIheinz-Tertius | Unbeteiligter Dritter, nur lesen; `AUFTRAG_Tertius.md`, Ergebnis `docs/TERTIUS.md` | Durchgang 1 und 2 gepusht (11.11.); ab Durchgang 3 privat in `TERTIUS_privat/` am PC |
 | AIUIheinz-Assistent | Einrichtungsassistent vom frischen Handy (Konzept 18.3) | noch kein Strang; erste Aufgabe Dimensionierung, nach Modellmanager Phase 1 |
 | AIUIheinz-Fix-Threads | Korrektur: Heinz Chat sendet `num_thread`; `AUFTRAG_Fix_Threads.md` | fertig (11.11., Commit 20e9333); Handymessung offen |
-| Filter (ex Lab), Sheet | Prüfen mit Edge-Modellen | nach dem Fundament |
+| Sheet | Prüfen mit Edge-Modellen | nach dem Fundament |
 
 ## Module
 | Modul | Datei | Stand | Nächster Schritt |
@@ -74,7 +73,8 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 | Convert2 | `tools/convert2/` (`mod/`, `ui/`, `index.html`) | seit 17.11.2026 Status beta, **am Handy abgenommen 17.11.2026** (alle Punkte Handytest U): Markdown ↔ 16 Zielformate, Lesen von CSV/TSV/JSON/HTML/EPUB, Blatt und Code, EPUB-Leser, PDF über Druckdialog; alles offline; Vorlage `_original/` entfernt (in der Git-Historie) | Formatbausteine für docHeinz übernehmen (siehe Auftrag docHeinz) |
 | docHeinz | `tools/docheinz/` (`mod/`, `ui/`, `index.html`) | seit 17.11.2026 Status beta, am Handy abgenommen 19.11.2026 (Phase 1 bis 2e: eigene Auswahl, Vorab-Frage, Einstellungsmenü in Untermenüs, Satzspiegel): Bibliothek (Hinzufügen, Suche, Sortierung, Löschen, Speicherzeile), Titelseite/Titelbild, Markierungsleiste (Suche, KI), Leseansicht im Seitenmodus ohne Kopfzeile für TXT, Markdown, HTML, EPUB (Tippzonen, Steuerung bei Tipp oben, Inhaltsverzeichnis, Schriftgröße, 7 Schriften, 5 Themen, Fortschritt), eigene IndexedDB `docheinz`; im Hub (Bereich Werkzeuge) seit 18.11.2026 | Design-Pflege, Phase 3 (Markierungen, Export), Phase 4 (PDF) |
 | Setup | `tools/setup/index.html` | Einrichtungsassistent, läuft | – |
-| Data Lab (Filter) | `lab.html` | fertig, bewusst unverändert, ruft Ollama noch direkt auf | nur auf Wunsch des Entwicklers ändern |
+| Filter | `tools/filter/` (`mod/`, `ui/`, `index.html`) | seit 20.11.2026 Status beta, nur simuliert getestet: Einlesen CSV/TSV/JSON/RSS/Klartext, Bewerten (ein Eintrag je Anfrage, Antwort gegen Etiketten geprüft), Kontrollspalte, Verwechslungstabelle, Zufallswahl mit Startwert, Export CSV/TSV/JSON/Markdown, Fortsetzen nach Neuladen (IndexedDB `heinz_filter`) | Handytest Z; Messwerte in `OLLAMA_UND_MODELLE.md`; danach Lab entfernen (auf Wunsch) |
+| Data Lab | `lab.html` | alt, bewusst unverändert, ruft Ollama noch direkt auf | entfernen erst nach Abnahme von Filter |
 | Sheet | `sheet.html` | Logik fertig, mit simuliertem Modell getestet, ruft Ollama noch direkt auf | echtes 3B-Modell auf Rohstoffliste erproben |
 | Vitals | `vitals.html` | läuft; Akku und Temperatur nur mit Termux:API | auf Gerät prüfen, welche Kacheln erscheinen |
 | Server | `server.py` | läuft auf dem Handy; `POST /api/update` (nur simuliert) | Messdienst schonender (siehe Offen) |
@@ -102,6 +102,7 @@ Regel für alle: Neue Seiten und Tools müssen im Hub erreichbar sein (`TECHNIK.
 - 10.11.2026, AIUIheinz-Chat und -Design: Anbieterschicht `lib/providers.js`, Design-Fundament `lib/core.css`, `lib/core.js`, `lib/icons.svg`.
 - 11.11.2026, AIUIheinz-Chat: gemeinsame Laufzeit und Modellwahl in `lib/providers.js`, Personas in `lib/personas.js`, `lib/testreihe.js`.
 - 12.11.2026, AIUIheinz-Aufraeumen: nur Dokumente und Pfad in `tests/test_rules.py`.
+- 20.11.2026, AIUIheinz-Filter (Freigabe des Entwicklers): `lib/providers.js` `chatOllama` reicht `req.format` (JSON-Schema) durch; Test in `tests/test_filter.py`.
 - 12.11.2026, AIUIheinz-Menu (Freigabe des Entwicklers): `lib/core.css` (Bausteine aus `dashboard.html` und `tools/setup` hierher gezogen, `.chk` → `.chkrow`), `lib/core.js` (`Heinz.setting/setSetting/bindSwitch/bindSlider`), `tools/design/index.html`; `dashboard.html` und `chat.html` nur Regeln entfernt bzw. Klasse umbenannt, Verhalten gleich (Heinz Chat: Felder jetzt wie im Dashboard, 46 statt 44 px).
 - 12.11.2026, AIUIheinz-Dashboard (Freigabe des Entwicklers): neue Dateien `lib/markdown.js`, `lib/dashboarddata.js`, `lib/store.js`, `lib/data/*.json`, `lib/dashboard/*.js`; `lib/core.*` und `lib/providers.js` unberührt.
 - 12.11.2026, AIUIheinz-Speicher (Freigabe des Entwicklers): `lib/store.js` (IndexedDB-Backend, Migration, Rückfall, `info/status/onProblem`); `chat.html` (Heinz Chat startet nach `HeinzStore.open()`, Unterhaltungen über `HeinzStore`); `dashboard.html`, `lib/dashboard/state.js`, `menu.js`, `i18n.js` und `lib/data/dashboard.i18n.json` nur Hinweisband, Info-Zeile, Fehlerfang; `lib/core.js` und `lib/providers.js` unberührt; neu `tests/test_store.py`.
