@@ -285,3 +285,12 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 5. „Als Markdown exportieren“ (Datei `…-notes.md`) und „Als Markdown kopieren“; in einen Editor einfügen.
 6. Erklären oder Zusammenfassen: „Als Notiz speichern“ im Blatt und im Fenster „Analyse“; Notiz erscheint mit „KI:“ in der Liste und im Export.
 7. (Nachtrag Y6) Inhaltsfeld → „Markierungen & Notizen“ → „+ Notiz zu dieser Seite“: Notiz schreiben, speichern; in der Liste Tipp springt zur Seite zurück. „Nur mit Notiz“ filtert; Export enthält die Seitennotiz.
+
+## Y7 docHeinz: Export je Buch (nur simuliert getestet, 20.11.2026)
+1. Bibliothek: Symbol „Exportieren“ rechts neben dem Papierkorb, Formular in der Zeile (Format, ggf. Schalter für Notizen).
+2. EPUB exportieren, in Google Play Books, Kobo-App oder einem anderen Reader öffnen: Titel, Kapitel, Bilder, Inhaltsverzeichnis.
+3. Word (.docx): in Google Drive hochladen, mit Google Docs öffnen (Überschriften, Listen, Tabellen, Bilder).
+4. Markdown und Text in einem Editor; HTML im Browser.
+5. PDF: Druckdialog erscheint, „Als PDF speichern“ wählen; prüfen, ob große Bücher durchlaufen.
+6. Mit angehängten Markierungen und Notizen: letzter Abschnitt vorhanden, Kapitelbezug richtig.
+7. Ein großes Buch (50 MB und mehr) exportieren: Wartezeit, Speicher, kein Abbruch.

@@ -55,12 +55,16 @@ export function relocate(chapterText, mark) {
 export const sortMarks = (list) => list.slice().sort((a, b) => a.ch - b.ch || a.start - b.start || a.t - b.t);
 
 // Markdown für Notiz-Programme: Titel, Autor, je Kapitel Zitate (Blockzitat) mit Notiz; L = { color: [4 Namen], note, ai, by, count }
-export function toMarkdown(rec, list, chTitle, L) {
+export function toMarkdown(rec, list, chTitle, L, { bare = false } = {}) {
+    // bare: nur der Abschnitt „Markierungen und Notizen“ zum Anhängen an ein Buch (L.section als Überschrift 1, Kapitel als Überschrift 2)
     const out = [];
-    out.push('# ' + squash(rec && rec.title || ''));
-    if (rec && rec.author) out.push('', '*' + squash(rec.author) + '*');
     const ms = sortMarks(list);
-    if (L && L.count) out.push('', L.count.replace('{n}', ms.length));
+    if (bare) out.push('# ' + squash((L && L.section) || 'Marks and notes'));
+    else {
+        out.push('# ' + squash(rec && rec.title || ''));
+        if (rec && rec.author) out.push('', '*' + squash(rec.author) + '*');
+        if (L && L.count) out.push('', L.count.replace('{n}', ms.length));
+    }
     let cur = -1;
     for (const m of ms) {
         if (m.ch !== cur) { cur = m.ch; const t = squash(chTitle ? chTitle(m.ch) : ''); out.push('', '## ' + (t || (L && L.part ? L.part.replace('{n}', m.ch + 1) : String(m.ch + 1)))); }

@@ -54,7 +54,7 @@ class DocHeinzModuleTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_copied_modules_match_convert2_apart_from_the_header_line(self):
-        for f in ("zip", "text", "markdown", "html", "epub-lesen"):
+        for f in ("zip", "text", "markdown", "html", "epub-lesen", "epub-schreiben"):
             with open(os.path.join(ROOT, "tools", "convert2", "mod", f + ".js"), encoding="utf-8") as fa:
                 a = fa.read()
             with open(os.path.join(ROOT, "tools", "docheinz", "mod", f + ".js"), encoding="utf-8") as fb:
@@ -106,6 +106,38 @@ class DocHeinzDomTests(DocHeinzBase):
         self.assertIn('data-go="OEBPS/text/k1.xhtml#hier"', out)
         self.assertIn('data-etype="noteref"', out)
         self.assertNotIn("href=", out)
+
+    def test_docx_writer_makes_a_valid_file_that_libreoffice_reads(self):
+        import base64, tempfile
+        from xml.dom import minidom
+        md = ("# Kapitel Eins\n\nEin Absatz mit **fett**, *kursiv*, `Code` und [Link](https://example.org/x).\n\n"
+              "- Punkt A\n- Punkt B\n  - Unterpunkt\n\n1. Erstens\n2. Zweitens\n\n> Ein Zitat\n\n```\nzeile1\n  zeile2\n```\n\n"
+              "| Name | Wert |\n|---|---|\n| Alpha | 1 |\n| Beta | 2 |\n\n![Bild](data:image/png;base64," + PNG + ")\n\n---\n\n## Kapitel Zwei\n\nSchlusssatz.")
+        b64 = self.page.evaluate("""async (md) => { const D = await import('/tools/docheinz/mod/docx-schreiben.js');
+            const u = await D.markdownToDocx(md, { title: 'Testbuch', author: 'Frau Test', language: 'de', date: new Date('2026-01-02T03:04:05Z') });
+            let s = ''; u.forEach(b => { s += String.fromCharCode(b); }); return btoa(s); }""", md)
+        data = base64.b64decode(b64)
+        z = zipfile.ZipFile(io.BytesIO(data))
+        names = z.namelist()
+        for need in ("[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml", "word/numbering.xml", "word/_rels/document.xml.rels", "word/media/image1.png"):
+            self.assertIn(need, names)
+        for n in names:
+            if n.endswith(".xml") or n.endswith(".rels"):
+                minidom.parseString(z.read(n))                    # wohlgeformt
+        doc = z.read("word/document.xml").decode("utf-8")
+        for frag in ("Heading1", "Heading2", "<w:tbl>", "<w:drawing>", "w:numId", "CodeBlock", "Quote", "Hyperlink"):
+            self.assertIn(frag, doc)
+        self.assertIn('Target="https://example.org/x"', z.read("word/_rels/document.xml.rels").decode())
+        soffice = shutil.which("soffice")
+        if soffice:
+            with tempfile.TemporaryDirectory() as d:
+                src = os.path.join(d, "t.docx")
+                open(src, "wb").write(data)
+                subprocess.run([soffice, "--headless", "--convert-to", "txt:Text", "--outdir", d, src], check=True, capture_output=True, timeout=120, env=dict(os.environ, HOME=d))
+                txt = open(os.path.join(d, "t.txt"), encoding="utf-8").read()
+            self.assertEqual(doc.count("<w:gridCol"), 2)
+            for w in ("Testbuch", "Kapitel Eins", "fett", "Unterpunkt", "Zweitens", "Alpha", "Wert", "Schlusssatz", "zeile1"):
+                self.assertIn(w, txt, w)
 
     def test_plain_text(self):
         self.assertEqual(self.ev("return S.plain('<style>x{}</style><p>Ein  <b>Satz</b></p><script>1</script>');"), "Ein Satz")
@@ -661,6 +693,81 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#r-toc", state="hidden")
         self.assertEqual(self.pg(p)[0], 1)
         self.assertGreater(before, 1)
+        self.assertEqual(p.errors, [])
+
+    def export_book(self, p, fmt, notes=False):
+        p.click("#list .dh-exp")
+        p.wait_for_selector("#x-fmt")
+        self.choose(p, "#x-fmt", fmt)
+        if p.locator("#x-notes").count():
+            self.switch(p, "#x-notes", notes)
+        with p.expect_download() as d:
+            p.click("#x-go")
+        return d.value
+
+    def lib_book(self, p, chapters=2):
+        self.add(p, ("b.epub", "application/epub+zip", make_epub(title="Ein Buch", author="Frau Test", chapters=chapters)))
+        p.wait_for_selector("#list .dh-open")
+
+    def test_export_epub_markdown_text_html_keep_title_author_and_chapters(self):
+        p = self.open(lang="de")
+        self.lib_book(p)
+        e = self.export_book(p, "epub")
+        self.assertTrue(e.suggested_filename.endswith(".epub"))
+        z = zipfile.ZipFile(e.path())
+        self.assertEqual(z.read("mimetype"), b"application/epub+zip")
+        opf = z.read("OEBPS/content.opf").decode("utf-8")
+        self.assertIn("Ein Buch", opf); self.assertIn("Frau Test", opf)
+        allx = " ".join(z.read(n).decode("utf-8", "ignore") for n in z.namelist() if n.endswith(".xhtml"))
+        for fmt, ext in (("md", ".md"), ("txt", ".txt"), ("html", ".html")):
+            e = self.export_book(p, fmt)
+            self.assertTrue(e.suggested_filename.endswith(ext), e.suggested_filename)
+            txt = open(e.path(), encoding="utf-8").read()
+            self.assertIn("Ein Buch", txt); self.assertIn("Frau Test", txt)
+        md = open(self.export_book(p, "md").path(), encoding="utf-8").read()
+        self.assertTrue(md.startswith("# Ein Buch\n\n*Frau Test*"), md[:60])
+        self.assertEqual([u for u in p.external], [])
+        self.assertEqual(p.errors, [])
+
+    def test_export_docx_and_pdf_print_frame(self):
+        p = self.open(lang="en")
+        self.lib_book(p)
+        e = self.export_book(p, "docx")
+        z = zipfile.ZipFile(e.path())
+        self.assertIn("word/document.xml", z.namelist())
+        self.assertIn("Ein Buch", z.read("word/document.xml").decode("utf-8"))
+        p.click("#list .dh-exp"); p.wait_for_selector("#x-fmt")
+        self.choose(p, "#x-fmt", "pdf")
+        p.click("#x-go")
+        p.wait_for_selector("iframe.dh-printframe", state="attached")
+        self.assertIn("Ein Buch", p.evaluate("() => document.querySelector('iframe.dh-printframe').srcdoc"))
+        self.assertIn("Save as PDF", p.locator("#msg").inner_text())
+        self.assertEqual(p.errors, [])
+
+    def test_export_can_append_marks_and_notes_and_cancel_leaves_the_list(self):
+        p = self.open(lang="de")
+        self.add(p, ("a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde. Weiter geht es mit Text.".encode()))
+        p.wait_for_selector("#list .dh-open")
+        p.click("#list .dh-exp")
+        self.assertEqual(p.locator("#x-notes").count(), 0)          # ohne Markierungen kein Schalter
+        p.click("#list [data-act=xno]")
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.tap(p, "next")
+        p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
+        self.mark(p, "Übermensch")
+        p.click("#r-mk [data-mk=note]"); p.fill("#rs-note-t", "Merken"); p.click("#rs-note-go")
+        p.wait_for_timeout(300)
+        self.tap(p, "top"); p.click("#r-close")                      # Reader schließen
+        p.wait_for_selector("#reader", state="hidden")
+        p.wait_for_selector("#list .dh-exp")
+        e = self.export_book(p, "md", notes=True)
+        md = open(e.path(), encoding="utf-8").read()
+        self.assertIn("# Markierungen und Notizen", md)
+        self.assertIn("> Übermensch", md); self.assertIn("**Notiz:** Merken", md)
+        e = self.export_book(p, "md", notes=False)
+        self.assertNotIn("Markierungen und Notizen", open(e.path(), encoding="utf-8").read())
         self.assertEqual(p.errors, [])
 
     def test_ai_answer_can_be_saved_as_note(self):

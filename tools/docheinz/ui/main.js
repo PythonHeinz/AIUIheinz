@@ -7,12 +7,14 @@ import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibl
 import { findCover } from '../mod/cover.js';
 import { scaleCover } from './bild.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
+import { exportBook, FORMATS } from '../mod/exportieren.js';
+import { COLORS } from '../mod/markierung.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [] };
+const state = { db: null, books: [], q: '', sort: 'recent', size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -56,6 +58,7 @@ function bookRow(b) {
         row.append(q, no, yes);
         return row;
     }
+    if (state.exp === b.id) return exportRow(b, row);
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'dh-open'; open.dataset.act = 'open';
     const cover = document.createElement('span');
@@ -83,8 +86,64 @@ function bookRow(b) {
     const del = document.createElement('button');
     del.type = 'button'; del.className = 'ibtn dh-del'; del.dataset.act = 'del'; del.setAttribute('aria-label', t('del') + ': ' + b.title); del.title = t('del');
     del.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg>';
-    row.append(open, del);
+    const ex = document.createElement('button');
+    ex.type = 'button'; ex.className = 'ibtn dh-exp'; ex.dataset.act = 'exp'; ex.setAttribute('aria-label', t('x_export') + ': ' + b.title); ex.title = t('x_export');
+    ex.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-download"/></svg>';
+    row.append(open, ex, del);
     return row;
+}
+
+// ---------- Export ----------
+function exportRow(b, row) {
+    row.classList.add('exp');
+    const h = document.createElement('b'); h.className = 'dh-xh'; h.textContent = t('x_export') + ': ' + b.title;
+    const sel = document.createElement('select'); sel.className = 'sel'; sel.id = 'x-fmt'; sel.setAttribute('aria-label', t('x_fmt'));
+    FORMATS.forEach(f => sel.appendChild(Object.assign(document.createElement('option'), { value: f.id, textContent: t('x_f_' + f.id) })));
+    sel.value = state.expFmt;
+    row.append(h, sel);
+    const n = (b.marks || []).length;
+    if (n) {
+        const lab = document.createElement('label'); lab.className = 'row dh-xs';
+        lab.innerHTML = '<span class="tx"><b></b><small></small></span><span class="sw"><input type="checkbox" id="x-notes"><i></i></span>';
+        lab.querySelector('b').textContent = t('x_notes'); lab.querySelector('small').textContent = t('x_notesS', { n });
+        lab.querySelector('input').checked = state.expNotes;
+        row.appendChild(lab);
+    }
+    const bt = document.createElement('div'); bt.className = 'dh-xb';
+    const no = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('delNo') }); no.dataset.act = 'xno';
+    const go = Object.assign(document.createElement('button'), { type: 'button', className: 'pill acc', id: 'x-go', textContent: t('x_go') }); go.dataset.act = 'xgo';
+    bt.append(no, go); row.appendChild(bt);
+    return row;
+}
+function saveFile(blob, name) {
+    const a = document.createElement('a'), u = URL.createObjectURL(blob);
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 8000);
+}
+function printHtml(html) {
+    const f = document.createElement('iframe');
+    f.className = 'dh-printframe'; f.setAttribute('aria-hidden', 'true'); f.srcdoc = html;
+    f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { /* ohne Druckdialog */ } setTimeout(() => f.remove(), 120000); };
+    document.body.appendChild(f);
+}
+async function runExport(id) {
+    const rec = state.books.find(x => x.id === id);
+    if (!rec) return;
+    const fmt = state.expFmt, notes = state.expNotes && (rec.marks || []).length ? rec.marks : null;
+    state.exp = ''; render();
+    msg(t('x_working'), 'ok');
+    try {
+        const blob = await state.db.file(id);
+        if (!blob) throw new Error('file');
+        const src = await openSource(new Uint8Array(await blob.arrayBuffer()), rec.format, rec.name);
+        const labels = { color: COLORS.map(c => t('mk_' + c)), note: t('m_noteL'), ai: t('mk_ai'), count: t('m_count'), part: t('r_part', { n: '{n}' }), pageNote: t('mk_pn'), section: t('x_notesH') };
+        const out = await exportBook(src, rec, fmt, { notes, labels, language: Heinz.lang });
+        if (out.kind === 'print') { printHtml(out.html); msg(t('x_pdf'), 'ok'); return; }
+        saveFile(new Blob([out.bytes || out.text], { type: out.mime }), out.name);
+        msg(t('x_done', { f: out.name }), 'ok');
+    } catch (e) {
+        msg(t('x_err'), 'err');
+    }
 }
 
 function render() {
@@ -235,6 +294,13 @@ async function start() {
         else if (btn.dataset.act === 'del') { state.confirm = id; render(); }
         else if (btn.dataset.act === 'no') { state.confirm = ''; render(); }
         else if (btn.dataset.act === 'yes') remove(id);
+        else if (btn.dataset.act === 'exp') { state.exp = id; state.confirm = ''; render(); }
+        else if (btn.dataset.act === 'xno') { state.exp = ''; render(); }
+        else if (btn.dataset.act === 'xgo') runExport(id);
+    });
+    $('list').addEventListener('change', (e) => {
+        if (e.target.id === 'x-fmt') state.expFmt = e.target.value;
+        else if (e.target.id === 'x-notes') state.expNotes = e.target.checked;
     });
     document.addEventListener('dragover', (e) => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) { e.preventDefault(); document.body.classList.add('dh-drop'); } });
     document.addEventListener('dragleave', (e) => { if (!e.relatedTarget) document.body.classList.remove('dh-drop'); });

@@ -258,3 +258,11 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-toc .dh-mhead button { display: inline-flex; align-items: center; width: auto; padding: 0 14px; min-height: 38px; border: 1px solid var(--rline); border-radius: 19px; font: 600 .88rem var(--sans, inherit); }
 .dh-mq.cp .q::before { background: var(--rsub); border-radius: 2px; }
 .dh-toc .dh-mhead button.on { background: var(--rt); color: var(--rb); border-color: var(--rt); }
+/* Export je Buch */
+.dh-book.exp { flex-direction: column; align-items: stretch; gap: 10px; padding-top: 12px; padding-bottom: 12px; }
+.dh-book.exp .dh-xh { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-book.exp select.sel { width: 100%; }
+.dh-xs { padding: 0; }
+.dh-xb { display: flex; justify-content: flex-end; gap: 8px; }
+.dh-printframe { position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0; }
+.dh-exp { flex: none; color: var(--muted); }

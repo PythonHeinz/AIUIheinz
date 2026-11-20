@@ -834,3 +834,9 @@ Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarb
 
 ### docHeinz Phase 3, Nachtrag: Notiz zur Seite, Filter (20.11.2026)
 Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt eine Notiz ohne markierten Text an (Eintrag mit `pn: true`, `frac` = Lesestand, Auszug des Seitenanfangs); Tipp in der Liste springt dorthin. Filter „Nur mit Notiz“; Export enthält Seitennotizen als „Notiz zur Seite“. Weiter nur simuliert getestet.
+
+### docHeinz: Export je Buch (20.11.2026)
+- Bibliothek: Download-Symbol je Buch öffnet in der Zeile ein Formular (Format, Schalter „Markierungen und Notizen anhängen“, nur wenn es welche gibt). Formate: EPUB, Word (.docx), Markdown, Text, HTML, PDF (Druckdialog über einen unsichtbaren Rahmen, „Als PDF speichern“).
+- Neu: `mod/exportieren.js` (Buch → Markdown → Zielformat), `mod/docx-schreiben.js` (eigener Word-Schreiber, mit LibreOffice gegengeprüft); `mod/epub-schreiben.js` ist Kopie aus Convert2 (Kopientest erweitert). Notizen kommen als letzter Abschnitt „Markierungen und Notizen“ (EPUB: eigenes Kapitel).
+- Ein Google Doc kann die App offline nicht direkt anlegen: die .docx wird in Google Drive mit „Google Docs“ geöffnet. MOBI/AZW3 und FB2 sind nicht dabei (Kindle nimmt EPUB).
+- Grenzen: Titelbild wird nicht in die Ausgabe übernommen; sehr große Bücher brauchen Zeit und Speicher (Bilder als Text im Zwischenschritt). Nur simuliert getestet.

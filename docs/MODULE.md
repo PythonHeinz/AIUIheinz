@@ -191,7 +191,7 @@ Importgraph (nur abwärts, keine Kreise): `text`, `zip` → `markdown` → `tabe
 
 ## Werkzeug docHeinz (`tools/docheinz/`, seit 17.11.2026)
 
-Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.js`, `markdown.js`, `html.js`, `epub-lesen.js` sind **Kopien** aus `tools/convert2/mod/` (erste Zeile nennt das; ein Test prüft, dass sie bis auf diese Zeile gleich sind, Änderungen also an beiden Stellen). Die Module kennen die Oberfläche nicht und importieren nur Module ihres Ordners. Neu und nur hier:
+Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.js`, `markdown.js`, `html.js`, `epub-lesen.js`, `epub-schreiben.js` sind **Kopien** aus `tools/convert2/mod/` (erste Zeile nennt das; ein Test prüft, dass sie bis auf diese Zeile gleich sind, Änderungen also an beiden Stellen). Die Module kennen die Oberfläche nicht und importieren nur Module ihres Ordners. Neu und nur hier:
 
 | Modul | Schnittstelle | Braucht | Tests |
 |---|---|---|---|
@@ -202,6 +202,8 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `wahl.js` | `wordBounds(text, offset)` (Wort um eine Stelle), `isWordChar`; Grundlage der eigenen Auswahl (native Auswahl im Lesetext aus) | – | Node (`tests/docheinz/wahl.test.mjs`) |
 | `satz.js` | `DEFAULTS`, `LIMITS`, `clean(obj, ctx)`, `full(global, book)`, `sameAsDefaults`: Satzspiegel und Aussehen als Daten (Zeilen-/Absatzabstand, Einzug, Ränder, Textbreite, Blocksatz, Silbentrennung, Wort-/Buchstabenabstand, Schriftstärke, Hurenkinder, Spalten 1/2, eigene Farben, Helligkeit) | – | Node (`tests/docheinz/satz.test.mjs`) |
 | `markierung.js` | `makeMark`, `cleanMarks`, `addMark/updateMark/removeMark`, `markAt`, `relocate` (Zitat im Kapitel wiederfinden), `sortMarks`, `toMarkdown(rec, list, chTitle, L)`: Markierungen (4 Farben), Notizen und Notizen zur Seite (`pn`) eines Buchs als Daten, Export als Markdown | – | Node (`tests/docheinz/markierung.test.mjs`) |
+| `docx-schreiben.js` | `markdownToDocx(md, opts)` → Word-Datei (.docx) aus Markdown: Überschriften, Listen, Zitate, Code, Tabellen, Bilder (PNG/JPEG/GIF als `data:`), Links; `imageSize` | `zip.js`, `markdown.js`, `text.js`, `DOMParser` | Browser (`tests/test_docheinz.py`, Gegenprüfung mit LibreOffice) |
+| `exportieren.js` | `FORMATS` (epub, docx, md, txt, html, pdf), `bookToMarkdown(source, rec, opts)`, `htmlDocument`, `exportBook(source, rec, id, opts)`: Buch in andere Formate, optional mit angehängten Markierungen und Notizen; PDF nur als Druckdokument (`html`) | `html.js`, `markdown.js`, `epub-schreiben.js`, `docx-schreiben.js`, `markierung.js`, `text.js` | Browser (Oberfläche) |
 | `ki.js` | `buildRequest(kind, passage, {lang, title, author, page})` (Systemprompt EN/DE, Auftrag `explain`/`summary`, optional Seitentext bis 3000 Zeichen), `trimHistory` (Verlauf für Nachfragen, 8000 Zeichen), `clip` (6000 Zeichen), `KINDS` | – | Node (`auswahl.test.mjs`) |
 | `cover.js` | `findCover(bytes)` (EPUB: `cover-image`, Meta „cover“, Guide „cover“, Dateiname, sonst erstes Bild ab 5 KB auf der Titelseite (erstes Kapitel mit „Titel/Cover/Umschlag“); nur png/jpeg/gif/webp; Fehler → null), `COVER_TYPES` | `DOMParser`, `zip` | Browser (`tests/test_docheinz.py`) |
 | `seiten.js` | `pageCount`, `clampPage`, `fracOfPage`, `fracEnd`, `pageOfFrac`, `pageOfOffset`, `zoneOf` (Tippzonen `ZONE`), `turn` (Seite/Kapitel vor und zurück) | – | Node (`tests/docheinz/seiten.test.mjs`) |
