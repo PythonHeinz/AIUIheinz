@@ -11,7 +11,7 @@ import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/hub.html", "/dashboard.html", "/lab.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html", "/tools/convert2/index.html", "/tools/docheinz/index.html"]
+PAGES = ["/", "/hub.html", "/dashboard.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html", "/tools/convert2/index.html", "/tools/docheinz/index.html"]
 
 
 def missing_classes(css, classes):
@@ -2731,7 +2731,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.locator("#ring svg").count(), 1)
         self.assertIn("AIUI", page.inner_text(".top .ttl b"))
         ids = page.eval_on_selector_all("#main a[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(ids, ["chat", "dashboard", "lab", "vitals"])
+        self.assertEqual(ids, ["chat", "dashboard", "vitals"])
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(set(ids), {"convert2", "docheinz", "sheet", "filter", "scan", "studio"})

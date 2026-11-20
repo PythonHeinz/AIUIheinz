@@ -44,7 +44,6 @@ Format: `[ ] Prüfpunkt – Datum, Commit`
 ## Tool-Seiten
 
 - [ ] Tabelle (sheet.html): Einfügen aus Zwischenablage, Export
-- [ ] Lab (lab.html): Seite lädt, Eingabe, Ausgabe
 - [ ] Vitals (vitals.html): Werte erscheinen
 - [ ] Bild/Text auslesen und Zwischenablage (scan), Filter, Studio, Models, Setup: jeweils öffnen und eine Grundaktion ausführen
 

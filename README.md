@@ -10,7 +10,7 @@ Arbeitsweise, Stand und Regeln für Entwicklung mit Claude-Strängen: `docs/agen
 | `index.html` | Hub (Startseite der App: Chat, Werkzeuge, Einrichten, Ollama-Status, Version); `hub.html` leitet nur dorthin weiter |
 | `chat.html` | Heinz Chat: ruhige Seite für Gespräche mit dem gewählten Modell |
 | `dashboard.html` | Heinz Dashboard: Modi, alle Parameter manuell, Tempo-Test, Testreihen |
-| `lab.html` | Data Lab: Einträge einzeln vom Modell nach Regel bewerten lassen |
+| `tools/filter/` | Filter: Einträge einzeln vom Modell nach Regel bewerten lassen (Nachfolger des Data Lab) |
 | `sheet.html` | Tabelle per Befehl: Modell übersetzt nur in JSON, Code zählt und ändert |
 | `vitals.html` | Akku, Temperatur, RAM, Verlauf, Ollama-Tempotest |
 | `server.py` | Statische Seiten, Dateien in `data/`, Vitals-Logger, Update-Endpunkt |

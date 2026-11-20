@@ -822,3 +822,5 @@ Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarb
 - `tool.json` auf `beta`; der Hub-Test `test_language_toggle_switches_hub_and_persists` prüft nicht mehr den Platzhaltertext.
 - Tests: 25 Node-Tests (`tests/filter/`), 8 in `tests/test_filter.py` (davon 6 Seitentests: Lauf und Anfrageform, Kontrolle, Filter und Exporte, Fehler und unklar, Abbrechen und Fortsetzen, Neuladen, Online-Sperre); voller Lauf grün. **Nur simuliert**, nichts am Gerät: Handytest Z (`docs/HANDYTEST.md`). Offen: Messwerte (Tempo, Trefferquote), Lab entfernen nach Abnahme.
 
+### 2026-11-20 AIUIheinz-Filter: Data Lab entfernt
+- Entscheidung des Entwicklers: Er nutzt Filter, es funktioniert (Feinschliff bei Design und Funktion folgt); das Lab ist Geschichte. Entfernt: `lab.html`, `tools/lab/tool.json`, Eintrag `lab` in `AREAS` (`index.html`, Gruppe „Alte Versionen“), Ausnahmen in `tests/test_rules.py`, Listen in `tests/test_server.py` und `tests/test_pages.py`, Zeile in `docs/HANDYTEST.md`, `README.md`. Die Dokumente beschreiben es weiter als Vorgeschichte; der Code steht in der Git-Historie (vor Commit dieser Entfernung).

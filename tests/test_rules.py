@@ -9,7 +9,7 @@ import re
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LEGACY = {"lib/dashboard/speedtest.js", "lib/dashboard/series.js", "sheet.html", "lab.html", "vitals.html"}   # speed test and series of the dashboard measure directly on purpose
+LEGACY = {"lib/dashboard/speedtest.js", "lib/dashboard/series.js", "sheet.html", "vitals.html"}   # speed test and series of the dashboard measure directly on purpose
 DIRECT = re.compile(r"/api/(chat|generate|embed|embeddings)\b|num_thread\s*:|keep_alive\s*:")   # reading rt.options.num_thread for display is fine; setting values is not
 
 
@@ -141,7 +141,7 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(problems, [])
 
     # old pages that keep their classic inline script until they are converted after consultation (docs/agent/AUFTRAG_Fundament.md)
-    LEGACY_PAGES = {"lab.html", "sheet.html", "vitals.html"}
+    LEGACY_PAGES = {"sheet.html", "vitals.html"}
 
     def test_no_page_has_a_classic_script_except_the_head_block_and_the_legacy_pages(self):
         problems = []
