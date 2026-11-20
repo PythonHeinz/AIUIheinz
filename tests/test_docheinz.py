@@ -179,7 +179,7 @@ class DocHeinzDomTests(DocHeinzBase):
                 try { await B.openSource(bytes, fmt, name); out[k] = 'no error'; } catch (e) { out[k] = [e instanceof B.BuchFehler, e.code, e.detail]; }
             }
             return out;""")
-        self.assertEqual(r["pdf"], [True, "pdf", ""])
+        self.assertEqual(r["pdf"][:2], [True, "unreadable"])
         self.assertEqual(r["mobi"], [True, "unsupported", "mobi"])
         self.assertEqual(r["empty"][1], "empty")
         self.assertEqual(r["bad"][1], "unreadable")
@@ -308,7 +308,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.add(p, ("a.txt", "text/plain", b"Hallo Welt."), ("x.pdf", "application/pdf", b"%PDF-1.4"), ("y.mobi", "application/x-mobipocket-ebook", b"BOOKMOBI"), ("e.epub", "application/epub+zip", self.epub(drm=True)), ("leer.txt", "text/plain", b"   "), ("kaputt.epub", "application/epub+zip", b"kein zip"))
         p.wait_for_function("() => document.getElementById('msg').textContent.includes('kaputt.epub')")
         m = p.locator("#msg").inner_text()
-        for part in ("“a.txt” is already in the library", "PDF is not supported yet", "format .mobi is not supported", "copy-protected", "no readable text", "could not be read"):
+        for part in ("“a.txt” is already in the library", "format .mobi is not supported", "copy-protected", "no readable text", "could not be read"):
             self.assertIn(part, m)
         self.assertEqual(self.rows(p), 1)
         self.assertEqual(p.locator("#msg.err").count(), 1)
@@ -316,8 +316,21 @@ class DocHeinzUiTests(DocHeinzBase):
     def test_german_messages(self):
         p = self.open(lang="de")
         self.add(p, ("x.pdf", "application/pdf", b"%PDF-1.4"))
-        p.wait_for_function("() => document.getElementById('msg').textContent.includes('PDF')")
-        self.assertIn("PDF wird noch nicht unterstützt", p.locator("#msg").inner_text())
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('x.pdf')")
+        self.assertIn("ließ sich nicht lesen", p.locator("#msg").inner_text())
+
+    def test_pdf_reflow_and_scan_notice(self):
+        import pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        p = self.open()
+        self.start_book(p, "text.pdf", "application/pdf", (fx / "text.pdf").read_bytes(), cover=True)
+        txt = p.evaluate("() => document.getElementById('r-page').textContent")
+        self.assertIn("Kapitel 1", txt)
+        self.assertEqual(p.evaluate("() => document.querySelectorAll('#r-page h2, #r-page h3, #r-page h1').length > 0"), True)
+        p2 = self.open()
+        self.add(p2, ("scan.pdf", "application/pdf", (fx / "scan.pdf").read_bytes()))
+        p2.wait_for_function("() => document.getElementById('msg').textContent.includes('text layer')")
+        self.assertEqual(self.rows(p2), 0)
 
     def test_delete_asks_first_and_removes_the_book(self):
         p = self.open()

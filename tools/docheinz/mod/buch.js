@@ -1,6 +1,6 @@
 /* tools/docheinz/mod/buch.js – Bücher lesen: TXT, Markdown, HTML, EPUB hinter einer Schnittstelle (Insel-Modul, keine Oberfläche).
  *   formatOf(name, type) -> 'epub' | 'md' | 'txt' | 'html' | 'pdf' | 'other'
- *   openSource(bytes, format, name) -> Promise<Source>   wirft BuchFehler (code: 'drm' | 'unreadable' | 'empty' | 'pdf' | 'unsupported')
+ *   openSource(bytes, format, name) -> Promise<Source>   wirft BuchFehler (code: 'drm' | 'unreadable' | 'empty' | 'scanned' | 'unsupported')
  *     Source = { format, metadata: { title, creator, language }, toc: [{ title, href, level }],
  *                chapters: [{ href, title }], html(i) -> Promise<string> (bereinigt), resolve(go) -> { index, anchor } | null }
  *   describe(source) -> Promise<{ lens: number[] }>      Textlänge je Kapitel (Fortschritt in Prozent)
@@ -45,7 +45,7 @@ function simple(format, meta, parts) {
 }
 
 export async function openSource(bytes, format, name = '') {
-    if (format === 'pdf') throw new BuchFehler('pdf');
+    if (format === 'pdf') { const { openPdf } = await import('./pdf-lesen.js'); return openPdf(bytes, name, BuchFehler); }
     if (format !== 'epub' && format !== 'md' && format !== 'txt' && format !== 'html') throw new BuchFehler('unsupported', (name.split('.').pop() || '').toLowerCase());
     if (format === 'epub') {
         let book;

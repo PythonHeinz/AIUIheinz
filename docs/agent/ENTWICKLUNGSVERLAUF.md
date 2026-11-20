@@ -840,3 +840,9 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - Neu: `mod/exportieren.js` (Buch → Markdown → Zielformat), `mod/docx-schreiben.js` (eigener Word-Schreiber, mit LibreOffice gegengeprüft); `mod/epub-schreiben.js` ist Kopie aus Convert2 (Kopientest erweitert). Notizen kommen als letzter Abschnitt „Markierungen und Notizen“ (EPUB: eigenes Kapitel).
 - Ein Google Doc kann die App offline nicht direkt anlegen: die .docx wird in Google Drive mit „Google Docs“ geöffnet. MOBI/AZW3 und FB2 sind nicht dabei (Kindle nimmt EPUB).
 - Grenzen: Titelbild wird nicht in die Ausgabe übernommen; sehr große Bücher brauchen Zeit und Speicher (Bilder als Text im Zwischenschritt). Nur simuliert getestet.
+
+### docHeinz Phase 4a: PDF im Umfluss-Modus (20.11.2026)
+- pdf.js 6.5.438 liegt lokal in `tools/docheinz/vendor/` (Apache-2.0, Dateien von `.mjs` nach `.js` umbenannt, weil `server.py` `.mjs` nicht sicher ausliefert); wird erst beim Öffnen eines PDFs geladen, keine Anfrage nach außen.
+- `mod/pdf-text.js` (reine Funktionen, Node-Tests): Zeilen, zwei Spalten, Absätze, Überschriften nach Schriftgröße, Aufzählungen, Silbentrennung, Kopf-/Fußzeilen und Seitenzahlen entfernt (Zeilen mit großer Schrift bleiben, sonst verschwänden Überschriften wie „Kapitel 1“). `mod/pdf-lesen.js`: Kapitel nach PDF-Gliederung, sonst je 10 Seiten, Seiten werden erst beim Öffnen eines Kapitels gelesen.
+- PDF ohne Textebene (Scan): klarer Hinweis (`scanned`), OCR folgt als 4c (Wunsch des Entwicklers). Originalansicht mit Zoom folgt als 4b.
+- Fallstrick: Test-PDFs in `tests/docheinz/fixtures/` (mit LibreOffice erzeugt). Nur simuliert getestet; Handytest Y8.
