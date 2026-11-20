@@ -39,3 +39,25 @@ test('Absatz über Seitenumbruch wird verbunden, HTML maskiert', () => {
     assert.equal(j.length, 2); assert.equal(j[0].text, 'Ende ohne Punkt und weiter <b>');
     assert.equal(blocksToHtml(j), '<p>Ende ohne Punkt und weiter &lt;b&gt;</p>\n<h3>X</h3>\n');
 });
+
+test('Tabelle: Zellen nach großen Lücken, mehrzeilige Zelle mit Wert dazwischen', () => {
+    const L = (s, x0, x1, y, cells) => ({ s, x0, x1, y, fs: 10, cells });
+    const c = (s, x0, x1) => ({ s, x0, x1 });
+    const lines = [
+        L('Typ Faktor', 50, 300, 100, [c('Typ', 50, 80), c('Faktor', 260, 300)]),
+        L('Licht an die Netz-', 50, 150, 118, [c('Licht an die Netz-', 50, 150)]),
+        L('1,000', 260, 290, 122, [c('1,000', 260, 290)]),
+        L('spannung', 50, 100, 126, [c('spannung', 50, 100)]),
+        L('Anderes 0,9', 50, 290, 144, [c('Anderes', 50, 100), c('0,9', 260, 290)]),
+    ];
+    const b = toBlocks(lines, 10);
+    assert.equal(b.length, 1); assert.equal(b[0].t, 'table');
+    assert.deepEqual(b[0].rows, [['Typ', 'Faktor'], ['Licht an die Netzspannung', '1,000'], ['Anderes', '0,9']]);
+    assert.match(blocksToHtml(b), /<th>Typ<\/th><th>Faktor<\/th>[\s\S]*<td>1,000<\/td>/);
+});
+test('versteckter Trennstrich: Blocksatzzeile knapp vor dem Rand wird ohne Leerzeichen angefügt', () => {
+    const mk = (s, x1, y) => ({ s, x0: 50, x1, y, fs: 10, cells: [] });
+    const lines = [mk('Dies ist ein langer Blocksatzabsatz mit genug Text für die Kennung der Zeile Di', 396, 100), mk('vision geht hier weiter und der Text ist ebenfalls lang genug für den Rand und mehr', 400, 112), mk('dritte Zeile ebenfalls lang genug für die Erkennung des Blocksatzes bis ganz nach hinten', 400, 124), mk('vierte Zeile ebenfalls lang genug für die Erkennung des Blocksatzes bis ganz nach hinten', 400, 136), mk('Ende.', 80, 148)];
+    const b = toBlocks(lines, 10);
+    assert.match(b[0].text, /Zeile Division geht/);
+});

@@ -28,11 +28,15 @@ function groupLines(items) {
     const out = [];
     for (const ln of lines) {
         ln.its.sort((a, b) => a.x - b.x);
-        let s = '', prev = null, x1 = 0;
-        const w = {};
+        let s = '', prev = null, x1 = 0, last = null;
+        const w = {}, cells = [];
         for (const it of ln.its) {
             const txt = it.s, fs = it.fs || 10;
             if (!txt.trim()) { if (prev && !/\s$/.test(s)) s += ' '; prev = it; x1 = Math.max(x1, it.x + (it.w || 0)); continue; }
+            if (!last || it.x - last > 2.2 * fs) cells.push({ s: '', x0: it.x, x1: it.x });          // große Lücke = neue Zelle (Tabelle)
+            const cell = cells[cells.length - 1];
+            cell.s += (cell.s && !/\s$/.test(cell.s) && !/^\s/.test(txt) && prev && it.x - (prev.x + (prev.w || 0)) > 0.18 * fs ? ' ' : '') + txt; cell.x1 = it.x + (it.w || 0);
+            last = it.x + (it.w || 0);
             if (prev) {
                 const gap = it.x - (prev.x + (prev.w || 0));
                 if (!/\s$/.test(s) && !/^\s/.test(txt) && gap > 0.18 * fs) s += ' ';
@@ -44,7 +48,8 @@ function groupLines(items) {
         const text = s.replace(/\s+/g, ' ').trim();
         if (!text) continue;
         const fs = +Object.entries(w).sort((a, b) => b[1] - a[1])[0][0];
-        out.push({ s: text, x0: ln.its[0].x, x1, y: ln.y, fs });
+        cells.forEach(c => { c.s = c.s.replace(/\s+/g, ' ').trim(); });
+        out.push({ s: text, x0: ln.its[0].x, x1, y: ln.y, fs, cells: cells.filter(c => c.s) });
     }
     return out;
 }
@@ -60,7 +65,13 @@ export function orderPage(items) {
         if (i.x < mid - 0.5 * fs && i.x + w > mid + 0.5 * fs) cross += n;
         else if (i.x + w / 2 < mid) left += n; else right += n;
     }
-    const two = r - l > 200 && total > 120 && cross / total < 0.2 && left / total > 0.25 && right / total > 0.25;
+    let two = r - l > 200 && total > 120 && cross / total < 0.2 && left / total > 0.25 && right / total > 0.25;
+    if (two) {                                   // echte Spalten haben auf beiden Seiten viele lange Zeilen; Tabellen nicht
+        const rows = { l: new Map(), r: new Map() };
+        for (const i of its) { const k = Math.round(i.y / ((i.fs || 10) * 0.5)); const m = (i.x + (i.w || 0) / 2 < mid) ? rows.l : rows.r; m.set(k, (m.get(k) || 0) + i.s.trim().length); }
+        const ok = m => m.size >= 5 && [...m.values()].reduce((a, b) => a + b, 0) / m.size >= 30;
+        two = ok(rows.l) && ok(rows.r);
+    }
     if (!two) return groupLines(its);
     const full = [], lft = [], rgt = [];
     for (const i of its) {
@@ -101,13 +112,68 @@ export function baseSize(lines) {
     return e.length ? +e[0][0] : 10;
 }
 
+// Tabellen: Zeilen mit mehreren Zellen (große Lücken) bilden zusammen mit den Zeilen dazwischen eine Tabelle
+const CAPTION = /^(Tabelle|Table|Tab\.|Abbildung|Abb\.|Figure|Fig\.)\s*\d/i;
+function findTables(lines, base) {
+    const gaps = [];
+    for (let i = 1; i < lines.length; i++) { const g = lines[i].y - lines[i - 1].y; if (g > 0 && g < 3 * base) gaps.push(g); }
+    const med = median(gaps) || base * 1.3;
+    const multi = lines.map(l => l.cells && l.cells.length >= 2);
+    const tables = [];
+    let i = 0;
+    while (i < lines.length) {
+        if (!multi[i]) { i++; continue; }
+        let a = i, b = i, nm = 1;
+        for (let j = i + 1; j < lines.length && lines[j].y - lines[j - 1].y <= 2.3 * med && !CAPTION.test(lines[j].s); j++) if (multi[j]) { b = j; nm++; }
+        if (nm < 2) { i = b + 1; continue; }
+        // direkt anschließende Folgezeilen einer Zelle mit einbeziehen
+        while (b + 1 < lines.length && lines[b + 1].y - lines[b].y <= 1.2 * med && lines[b + 1].fs <= base * 1.1 && !multi[b + 1] && lines[b + 1].x0 <= lines[a].x0 + 0.3 * (Math.max(...lines.slice(a, b + 1).map(l => l.x1)) - lines[a].x0) && lines[b + 1].s.length < 60) b++;
+        tables.push([a, b]); i = b + 1;
+    }
+    return { tables, med };
+}
+function buildTable(lines, med) {
+    const full = lines.filter(l => l.cells && l.cells.length >= 2), ncols = Math.max(...full.map(l => l.cells.length));
+    const ref = full.filter(l => l.cells.length === ncols), bound = [];
+    for (let c = 0; c < ncols - 1; c++) bound.push((Math.max(...ref.map(l => l.cells[c].x1)) + Math.min(...ref.map(l => l.cells[c + 1].x0))) / 2);
+    const colOf = (cx) => { let c = 0; while (c < bound.length && cx > bound[c]) c++; return c; };
+    const rows = []; let lastC0 = null, row = null;
+    for (const ln of lines) {
+        const cs = (ln.cells || []).map(c => ({ c: colOf((c.x0 + c.x1) / 2), s: c.s }));
+        const hasC0 = cs.some(c => c.c === 0);
+        if (!row || (hasC0 && (cs.length >= 2 || !lastC0 || ln.y - lastC0 > 1.2 * med))) { row = Array.from({ length: ncols }, () => ''); rows.push(row); }
+        if (hasC0) lastC0 = ln.y;
+        for (const c of cs) row[c.c] = joinText(row[c.c], c.s);
+    }
+    return rows;
+}
+const joinText = (a, b) => { if (!a) return b; const d = a.match(/(\p{L})[-\u00AD]$/u); return d && /^\p{Ll}/u.test(b) ? a.slice(0, -1) + b : a + ' ' + b; };
+
 export function toBlocks(lines, base) {
+    if (!lines.length) return [];
+    const { tables, med } = findTables(lines, base);
+    if (!tables.length) return paragraphs(lines, base);
+    const out = []; let from = 0;
+    for (const [a, b] of tables) {
+        out.push(...paragraphs(lines.slice(from, a), base));
+        out.push({ t: 'table', rows: buildTable(lines.slice(a, b + 1), med), fs: base });
+        from = b + 1;
+    }
+    out.push(...paragraphs(lines.slice(from), base));
+    return out;
+}
+
+function paragraphs(lines, base) {
     const blocks = [];
     if (!lines.length) return blocks;
     const gaps = [];
     for (let i = 1; i < lines.length; i++) { const g = lines[i].y - lines[i - 1].y; if (g > 0 && g < 3 * base) gaps.push(g); }
     const med = median(gaps) || base * 1.3;
-    const left = median(lines.map(l => l.x0)), rightEdge = (() => { const xs = lines.map(l => l.x1).sort((a, b) => a - b); return xs[Math.floor(xs.length * 0.9)] || xs[xs.length - 1]; })();
+    const left = median(lines.map(l => l.x0)), rightEdge = (() => { const pl = lines.filter(l => l.s.length > 50), xs = (pl.length >= 3 ? pl : lines).map(l => l.x1).sort((a, b) => a - b); return xs[Math.floor(xs.length * 0.9)] || xs[xs.length - 1]; })();
+    const longL = lines.filter(l => l.s.length > 50);
+    const justified = longL.length >= 4 && longL.filter(l => l.x1 >= rightEdge - 0.15 * l.fs || (rightEdge - l.x1 > 0.2 * l.fs && rightEdge - l.x1 < 0.65 * l.fs)).length > 0.7 * longL.length && longL.some(l => l.x1 >= rightEdge - 0.15 * l.fs);
+    // pdf.js liefert den weichen Trennstrich nicht mit: eine Blocksatzzeile, die knapp (ca. Strichbreite) vor dem Rand endet, ist ein Worttrenner
+    const hidden = (prev, ln) => justified && /\p{L}$/u.test(prev.s) && /^\p{Ll}/u.test(ln.s) && rightEdge - prev.x1 > 0.2 * prev.fs && rightEdge - prev.x1 < 0.65 * prev.fs;
     const heading = (ln) => ln.fs >= base * 1.18 && ln.s.length <= 160 && !/[,;]$/.test(ln.s);
     let cur = null;
     const flush = () => { if (cur) { blocks.push(cur); cur = null; } };
@@ -132,6 +198,7 @@ export function toBlocks(lines, base) {
         if (start) { flush(); cur = b ? { t: 'li', text: ln.s.replace(BULLET, ''), fs: ln.fs } : { t: 'p', text: ln.s, fs: ln.fs }; continue; }
         const dash = cur.text.match(/(\p{L})[-­]$/u);
         if (dash && /^\p{Ll}/u.test(ln.s)) cur.text = cur.text.slice(0, -1) + ln.s;               // Silbentrennung am Zeilenende
+        else if (hidden(prev, ln)) cur.text += ln.s;
         else cur.text += ' ' + ln.s;
     }
     flush();
@@ -156,7 +223,8 @@ export function blocksToHtml(blocks) {
     let out = '', inList = false;
     for (const b of blocks) {
         if (b.t !== 'li' && inList) { out += '</ul>\n'; inList = false; }
-        if (b.t === 'li') { if (!inList) { out += '<ul>\n'; inList = true; } out += '<li>' + esc(b.text) + '</li>\n'; }
+        if (b.t === 'table') out += '<table>\n' + b.rows.map((r, i) => '<tr>' + r.map(c => '<' + (i === 0 ? 'th' : 'td') + '>' + esc(c) + '</' + (i === 0 ? 'th' : 'td') + '>').join('') + '</tr>').join('\n') + '\n</table>\n';
+        else if (b.t === 'li') { if (!inList) { out += '<ul>\n'; inList = true; } out += '<li>' + esc(b.text) + '</li>\n'; }
         else if (b.t === 'h') out += '<h' + b.l + '>' + esc(b.text) + '</h' + b.l + '>\n';
         else out += '<p>' + esc(b.text) + '</p>\n';
     }

@@ -7,6 +7,7 @@ import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zo
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
 import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
+import { openOriginal, closeOriginal, isOriginalOpen } from './pdfansicht.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black', 'custom'];
@@ -294,6 +295,11 @@ function wire() {
     $('r-close').addEventListener('click', () => { if (!$('r-set').hidden && ($('r-set').dataset.pg || 'main') !== 'main') { setPage(null); return; } if (!$('r-set').hidden || !$('r-toc').hidden) { $('r-set').hidden = true; $('r-toc').hidden = true; $('reader').dataset.set = '0'; return; } if (S.pushed) { S.leaving = true; history.back(); } else close(); });
     $('r-toc-b').addEventListener('click', () => { if (panel('toc')) tocTab('toc'); });
     $('r-tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) tocTab(b.dataset.tab); });
+    $('r-orig-b').addEventListener('click', () => {
+        const r = S.src.pdf.range(S.ch), f = fracOfPage(S.page, S.pages);
+        history.pushState({ dh: 1 }, '');
+        openOriginal(S.src, r.from + Math.round(f * (r.to - r.from)), { onClose: (pg) => { const ch = S.src.pdf.chapterOf(pg), q = S.src.pdf.range(ch); show(ch, '', q.to > q.from ? (pg - q.from) / (q.to - q.from + 1) : 0); showUi(false); } });
+    });
     $('r-set-b').addEventListener('click', () => { if (panel('set')) { setPage('main'); buildAiChips(); } });
     $('sw-gap').addEventListener('change', (e) => { applyGap(e.target.checked); S.cb.onSettings({ gap: S.gap }); });
     $('r-prev').addEventListener('click', () => go(-1));
@@ -322,6 +328,7 @@ function wire() {
     window.addEventListener('popstate', () => {
         if (consumePop()) return;
         if (!S.open) return;
+        if (isOriginalOpen()) { history.pushState({ dh: 1 }, ''); closeOriginal(); return; }
         // Zurück-Geste: erst Einstellungen/Inhalt/Leiste schließen, im Buch bleiben; erst danach den Reader verlassen
         const leaving = S.leaving; S.leaving = false;
         if (!leaving && (S.ui || !$('r-set').hidden || !$('r-toc').hidden)) { history.pushState({ dh: 1 }, ''); closeUi(); return; }
@@ -343,6 +350,7 @@ export async function openReader(rec, src, ctx) {
     await applyFont(eff().font);
     syncLook();
     buildToc();
+    $('r-orig-b').hidden = !src.pdf;
     S.open = true;
     showUi(false);
     $('reader').hidden = false;
@@ -358,7 +366,7 @@ export async function openReader(rec, src, ctx) {
 export function close() {
     if (!S.open) return;
     save(true);
-    resetSelection(); clearHit();
+    closeOriginal(true); resetSelection(); clearHit();
     S.open = false; S.seq++;
     cancelAnimationFrame(S.raf);
     $('reader').hidden = true;

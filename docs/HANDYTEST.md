@@ -301,3 +301,5 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. Kapitel: bei PDFs mit Gliederung nach Gliederung, sonst je 10 Seiten. Wie lange dauert das Öffnen eines dicken PDFs (Seitenzahl notieren)?
 4. Zweispaltiges PDF: Reihenfolge links vor rechts? Tabellen und Formeln sind nur Text, das ist bekannt.
 5. Eingescanntes PDF: Hinweis „keine Textebene“, kein Absturz. (OCR folgt.)
+6. Originalansicht (Knopf oben in der Leiste, nur bei PDF): Seiten wie gedruckt, mit zwei Fingern zoomen, Doppeltipp zoomt, Plus/Minus, ruckelt es? Zurück führt an dieselbe Stelle im Text.
+7. Norm mit Tabellen (EU 2019/2015, Anhang II): Tabellen als Tabelle, Wörter ohne Lücken mitten im Wort?

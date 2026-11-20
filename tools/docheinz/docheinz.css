@@ -266,3 +266,13 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-xb { display: flex; justify-content: flex-end; gap: 8px; }
 .dh-printframe { position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0; }
 .dh-exp { flex: none; color: var(--muted); }
+
+/* PDF-Originalansicht */
+.dh-orig { position: absolute; inset: 0; z-index: 12; background: #3a3a3a; display: flex; flex-direction: column; }
+.dh-orig .dh-origbar { position: relative; flex: 0 0 auto; z-index: 2; }
+.dh-pm { font-size: 24px; line-height: 1; font-weight: 400; }
+.dh-oscroll { flex: 1 1 auto; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; }
+.dh-opages { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0 0 calc(12px + env(safe-area-inset-bottom)); width: max-content; min-width: 100%; }
+.dh-opg { position: relative; background: #fff; flex: 0 0 auto; }
+.dh-opg canvas { display: block; width: 100%; height: 100%; }
+.dh-orig[hidden] { display: none; }

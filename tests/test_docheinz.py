@@ -332,6 +332,34 @@ class DocHeinzUiTests(DocHeinzBase):
         p2.wait_for_function("() => document.getElementById('msg').textContent.includes('text layer')")
         self.assertEqual(self.rows(p2), 0)
 
+    def test_pdf_original_view_zoom_and_back(self):
+        import pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        p = self.open()
+        self.start_book(p, "text.pdf", "application/pdf", (fx / "text.pdf").read_bytes(), cover=True)
+        p.click("#r-page", position={"x": 213, "y": 20}); p.wait_for_selector("#r-ov:not([hidden])")
+        self.assertEqual(p.locator("#r-orig-b").is_hidden(), False)
+        p.click("#r-orig-b")
+        p.wait_for_selector("#r-orig:not([hidden])")
+        p.wait_for_function("() => document.querySelectorAll('#o-pages .dh-opg.ok').length >= 1")
+        self.assertIn("/ 3", p.locator("#o-pos").inner_text())
+        w1 = p.evaluate("() => document.querySelector('#o-pages .dh-opg').getBoundingClientRect().width")
+        p.click("#o-in")
+        w2 = p.evaluate("() => document.querySelector('#o-pages .dh-opg').getBoundingClientRect().width")
+        self.assertGreater(w2, w1 * 1.3)
+        p.wait_for_function("() => document.querySelector('#o-pages .dh-opg.ok canvas').width > 500")
+        self.assertIn("%", p.locator("#o-pos").inner_text())
+        p.click("#o-out"); p.click("#o-out")
+        w3 = p.evaluate("() => document.querySelector('#o-pages .dh-opg').getBoundingClientRect().width")
+        self.assertAlmostEqual(w3, w1, delta=2)
+        p.evaluate("() => { const s = document.getElementById('o-scroll'); s.scrollTop = document.querySelectorAll('#o-pages .dh-opg')[2].offsetTop; }")
+        p.wait_for_function("() => document.getElementById('o-pos').textContent.startsWith('3 /')")
+        p.click("#o-close")
+        p.wait_for_selector("#r-orig", state="hidden")
+        txt = p.evaluate("() => document.getElementById('r-page').textContent")
+        self.assertIn("Dies ist der erste Absatz", txt)
+        self.assertEqual(p.errors, [])
+
     def test_delete_asks_first_and_removes_the_book(self):
         p = self.open()
         self.add(p, ("a.txt", "text/plain", b"Hallo."), ("b.txt", "text/plain", b"Welt."))

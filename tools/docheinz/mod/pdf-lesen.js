@@ -115,5 +115,28 @@ export async function openPdf(bytes, name, BuchFehler) {
         resolve: go => { const [p] = String(go).split('#'); const index = chapters.findIndex(c => c.href === p); return index < 0 ? null : { index, anchor: '' }; },
         textLength: async i => plain(await html(i)).length,
         pages: n,
+        pdf: {
+            pages: n,
+            size: async (p) => { const v = (await doc.getPage(p)).getViewport({ scale: 1 }); return { w: v.width, h: v.height }; },
+            // zeichnet Seite p auf das Canvas, cssW = Breite in CSS-Pixeln; liefert { cancel }
+            render: (p, canvas, cssW, dpr) => {
+                let task = null, dead = false;
+                const done = (async () => {
+                    const page = await doc.getPage(p), v1 = page.getViewport({ scale: 1 });
+                    let scale = (cssW / v1.width) * dpr;
+                    const maxPx = 12e6; if (v1.width * v1.height * scale * scale > maxPx) scale = Math.sqrt(maxPx / (v1.width * v1.height));
+                    const v = page.getViewport({ scale });
+                    if (dead) return;
+                    const c = document.createElement('canvas'); c.width = Math.floor(v.width); c.height = Math.floor(v.height);
+                    task = page.render({ canvasContext: c.getContext('2d'), canvas: c, viewport: v });
+                    await task.promise;
+                    if (dead) return;
+                    canvas.width = c.width; canvas.height = c.height; canvas.getContext('2d').drawImage(c, 0, 0);
+                })().catch(() => {});
+                return { done, cancel: () => { dead = true; try { task && task.cancel(); } catch (e) { /* schon fertig */ } } };
+            },
+            chapterOf: (p) => Math.max(0, chapters.findIndex(c => p >= c.from && p <= c.to)),
+            range: (i) => (chapters[i] ? { from: chapters[i].from, to: chapters[i].to } : { from: 1, to: n }),
+        },
     };
 }
