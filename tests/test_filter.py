@@ -10,6 +10,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NODE = shutil.which("node")
 
 
+@unittest.skipUnless(NODE, "node fehlt")
+class FilterModuleTests(unittest.TestCase):
+    def test_node_tests_of_all_modules_pass(self):
+        d = os.path.join(ROOT, "tests", "filter")
+        files = sorted(os.path.join("tests", "filter", f) for f in os.listdir(d) if f.endswith(".test.mjs"))
+        r = subprocess.run([NODE, "--test", *files], cwd=ROOT, capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+
 class FilterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
