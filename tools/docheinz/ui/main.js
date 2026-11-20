@@ -7,6 +7,7 @@ import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibl
 import { findCover } from '../mod/cover.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
 import { imagesToPdf, readPhotoPages } from '../mod/bilder-pdf.js';
+import { openCamera, cameraSupported } from './kamera.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { exportBook, FORMATS } from '../mod/exportieren.js';
 import { LANGS, makeRecognizer } from '../mod/ocr.js';
@@ -127,14 +128,20 @@ function photoRow(b, row) {
     return row;
 }
 async function appendPhotos(id, files) {
-    files = Array.from(files || []).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+    files = byTime(files || []);
+    if (!files.length) return;
+    try {
+        const add = [];
+        for (let i = 0; i < files.length; i++) { msg(t('p_reading', { i: i + 1, n: files.length }), 'ok'); add.push(await photoToPage(files[i])); }
+        await appendPages(id, add);
+    } catch { msg(t('p_err'), 'err'); }
+}
+async function appendPages(id, add) {
     const rec = state.books.find(b => b.id === id);
-    if (!rec || !files.length) return;
+    if (!rec || !add.length) return;
     try {
         const blob = await state.db.file(id);
         const old = readPhotoPages(new Uint8Array(await blob.arrayBuffer()));
-        const add = [];
-        for (let i = 0; i < files.length; i++) { msg(t('p_reading', { i: i + 1, n: files.length }), 'ok'); add.push(await photoToPage(files[i])); }
         const pdf = imagesToPdf([...old, ...add]);
         const src = await openSource(pdf, 'pdf', rec.name, { ocr: rec.ocr || [] });
         const { lens } = await describe(src);
@@ -297,22 +304,31 @@ async function backfillCovers() {
 }
 
 // ---------- Hinzufügen ----------
-async function addFiles(files) {
+// Reihenfolge von Fotos: nach Aufnahmezeit (Dateinamen der Galerie sind nicht chronologisch); ohne Zeitangaben bleibt die Auswahlreihenfolge
+function byTime(list) {
+    const l = Array.from(list);
+    return l.every(f => f.lastModified > 0) ? l.map((f, i) => [f, i]).sort((a, b) => a[0].lastModified - b[0].lastModified || a[1] - b[1]).map(x => x[0]) : l;
+}
+function makePhotoFile(pages) {
+    const d = new Date(), z = n => String(n).padStart(2, '0');
+    const name = t('p_name') + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + z(d.getMinutes()) + '.pdf';
+    return new File([imagesToPdf(pages)], name, { type: 'application/pdf' });
+}
+async function addFiles(files, pre) {
     files = Array.from(files || []);
+    let photoName = '';
+    if (pre && pre.length) { const pf = makePhotoFile(pre); photoName = pf.name; files = [pf]; }
     if (!files.length) return;
     const lines = [];
     // Fotos von Buchseiten: alle Bilder dieser Auswahl werden ein Buch (Bilder -> PDF -> Texterkennung)
-    let photoName = '';
     const isImg = f => /^image\//.test(f.type || '') || /\.(jpe?g|png|webp|bmp|gif|heic|heif)$/i.test(f.name || '');
-    const imgs = files.filter(isImg).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+    const imgs = byTime(files.filter(isImg));
     if (imgs.length) {
         files = files.filter(f => !isImg(f));
         try {
             const pages = [];
             for (let i = 0; i < imgs.length; i++) { msg(t('p_reading', { i: i + 1, n: imgs.length }), 'ok'); pages.push(await photoToPage(imgs[i])); }
-            const d = new Date(), z = n => String(n).padStart(2, '0');
-            photoName = t('p_name') + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + z(d.getMinutes()) + '.pdf';
-            files.unshift(new File([imagesToPdf(pages)], photoName, { type: 'application/pdf' }));
+            const pf = makePhotoFile(pages); photoName = pf.name; files.unshift(pf);
         } catch { lines.push(t('p_err')); }
     }
     let added = 0;
@@ -410,6 +426,7 @@ async function start() {
     $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
     $('file-cam').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
     $('file-pg').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
+    if (cameraSupported()) { $('b-cam').hidden = false; $('b-cam').addEventListener('click', () => openCamera({ t, onDone: (pg) => addFiles([], pg), onCancel: () => {}, onError: () => msg(t('k_denied'), 'warn') })); }
     $('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
     $('sort').addEventListener('change', (e) => { state.sort = e.target.value; HeinzStore.set(K('sort'), state.sort); render(); });
     $('list').addEventListener('click', (e) => {
@@ -426,7 +443,7 @@ async function start() {
         else if (btn.dataset.act === 'xgo') runExport(id);
         else if (btn.dataset.act === 'padd') { state.photoAsk = id; state.confirm = ''; state.exp = ''; state.ocrAsk = ''; render(); }
         else if (btn.dataset.act === 'pno') { state.photoAsk = ''; render(); }
-        else if (btn.dataset.act === 'pcam') { state.addTo = id; $('file-cam').click(); }
+        else if (btn.dataset.act === 'pcam') { state.addTo = id; if (cameraSupported()) openCamera({ t, onDone: (pg) => appendPages(id, pg), onCancel: () => {}, onError: () => $('file-cam').click() }); else $('file-cam').click(); }
         else if (btn.dataset.act === 'pgal') { state.addTo = id; $('file-pg').click(); }
         else if (btn.dataset.act === 'ocr') { state.ocrAsk = id; state.confirm = ''; state.exp = ''; render(); }
         else if (btn.dataset.act === 'ocrno') { state.ocrAsk = ''; render(); }

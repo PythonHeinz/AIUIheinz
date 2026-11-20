@@ -385,7 +385,7 @@ class DocHeinzUiTests(DocHeinzBase):
         import pathlib
         fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
         p = self.open(lang="de")
-        self.add(p, ("foto2.jpg", "image/jpeg", (fx / "foto2.jpg").read_bytes()), ("foto1.jpg", "image/jpeg", (fx / "foto1.jpg").read_bytes()))
+        self.add(p, ("foto1.jpg", "image/jpeg", (fx / "foto1.jpg").read_bytes()), ("foto2.jpg", "image/jpeg", (fx / "foto2.jpg").read_bytes()))
         p.wait_for_selector("#o-go")                           # Formular der Texterkennung öffnet sich von selbst
         self.assertEqual(self.rows(p), 1)
         self.assertIn("Fotos", p.locator("#list .dh-xh").inner_text())
@@ -397,7 +397,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.tap(p, "next")
         p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
         txt = p.evaluate("() => document.getElementById('r-body').textContent")
-        self.assertIn("Heißluftfritteuse", txt)                # Seite 1 zuerst (nach Dateiname sortiert)
+        self.assertIn("Heißluftfritteuse", txt)                # Auswahlreihenfolge bleibt erhalten
         self.assertLess(txt.index("Heißluftfritteuse"), txt.index("Sicherheitshinweisen"))
         self.assertEqual(p.external, [])
         self.assertEqual(p.errors, [])
@@ -427,6 +427,33 @@ class DocHeinzUiTests(DocHeinzBase):
         txt = p.evaluate("() => document.getElementById('r-body').textContent")
         self.assertIn("Heißluftfritteuse", txt)
         self.assertIn("Sicherheitshinweisen", txt)
+        self.assertEqual(p.errors, [])
+
+    def test_camera_takes_several_pages_in_one_go(self):
+        b = self.pw.chromium.launch(args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
+        self.addCleanup(b.close)
+        ctx = b.new_context(viewport={"width": 426, "height": 803}, permissions=["camera"])
+        p = ctx.new_page()
+        p.errors = []
+        p.on("pageerror", lambda e: p.errors.append(str(e)))
+        p.add_init_script("if(!localStorage.getItem('heinz_settings'))localStorage.setItem('heinz_settings', JSON.stringify({lang:'de', theme:'dk'}));")
+        p.goto(self.srv.base + URL)
+        p.wait_for_selector("html[data-dh=ready]")
+        p.wait_for_selector("#b-cam:not([hidden])")
+        p.click("#b-cam")
+        p.wait_for_selector("#cam:not([hidden])")
+        p.wait_for_function("() => document.getElementById('cam-v').videoWidth > 0")
+        for _ in range(3):
+            p.click("#cam-s")
+            p.wait_for_timeout(250)
+        self.assertIn("3 Seite", p.locator("#cam-n").inner_text())
+        p.click("#cam-u")
+        self.assertIn("2 Seite", p.locator("#cam-n").inner_text())
+        p.click("#cam-d")
+        p.wait_for_selector("#o-go")
+        self.assertEqual(self.rows(p), 1)
+        self.assertIn("0 von 2", p.locator("#list .help").inner_text())
+        self.assertEqual(p.locator("#cam").is_hidden(), True)
         self.assertEqual(p.errors, [])
 
     def test_delete_asks_first_and_removes_the_book(self):

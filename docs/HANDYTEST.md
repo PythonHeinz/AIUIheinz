@@ -315,3 +315,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Sprache wählen, Start. Zeit je Seite notieren. Danach lesen: Umlaute, Zahlen, Zeilenumbrüche, Silbentrennung?
 3. Gutes Foto: Seite gerade, gleichmäßig hell, Schrift füllt das Bild. Wie schlecht wird es bei schiefem Foto oder Schatten? (Perspektivkorrektur gibt es noch nicht.)
 4. Am Foto-Buch „+ Seite“: „Foto aufnehmen“ (Kamera, eine Seite je Aufnahme) und „Aus der Galerie“. Neue Seiten erscheinen hinten, danach OCR (nur die neuen Seiten).
+
+### Y10 Nachtrag: mehrere Seiten nacheinander fotografieren (nur simuliert getestet)
+1. Bibliothek, „Kamera“ antippen, Kamerazugriff erlauben.
+2. Mehrere Seiten nacheinander mit dem Auslöser aufnehmen; Zähler und Miniaturen prüfen, „Letztes löschen“ testen.
+3. „Fertig“: ein Buch „Fotos …“ mit allen Seiten in Aufnahmereihenfolge, OCR-Formular öffnet sich.
+4. Mehrere Fotos aus der Galerie wählen: Reihenfolge = Aufnahmezeit.

@@ -18,6 +18,7 @@
         <label class="pill acc dh-addbtn" id="b-add"><svg class="i sm"><use href="../../lib/icons.svg#i-plus"/></svg><span data-i="add"></span><input type="file" id="file" class="sr-only" multiple accept=".epub,.md,.markdown,.txt,.html,.htm,.xhtml,.pdf,application/pdf,image/*,.jpg,.jpeg,.png,.webp,application/epub+zip,text/plain,text/markdown,text/html"></label>
         <input type="file" id="file-cam" class="sr-only" accept="image/*" capture="environment">
         <input type="file" id="file-pg" class="sr-only" multiple accept="image/*">
+        <button type="button" class="pill dh-camopen" id="b-cam" hidden><span data-i="k_open"></span></button>
         <div class="help" data-i="add_help"></div>
     <div class="notice" id="msg" role="status" hidden></div>
     </section>
@@ -33,6 +34,18 @@
     <div class="help dh-store" id="store"></div>
 </main>
 
+<div class="dh-cam" id="cam" hidden>
+    <video id="cam-v" playsinline muted autoplay></video>
+    <div class="dh-camflash" id="cam-f"></div>
+    <div class="dh-camtop"><span id="cam-n"></span></div>
+    <div class="dh-camthumbs" id="cam-t"></div>
+    <div class="dh-cambar">
+        <button type="button" class="pill" id="cam-x" data-i="k_cancel"></button>
+        <button type="button" class="pill" id="cam-u" data-i="k_undo"></button>
+        <button type="button" class="dh-shutter" id="cam-s" data-i-label="k_shoot"></button>
+        <button type="button" class="pill acc" id="cam-d" data-i="k_done"></button>
+    </div>
+</div>
 <div class="dh-reader" id="reader" data-rt="auto" data-font="serif" hidden>
     <div class="dh-cpage" id="r-cover" hidden><img id="r-cimg" alt="" hidden><div class="dh-ctitle" id="r-ctitle" hidden><b id="r-ct"></b><span id="r-ca"></span></div></div>
     <div class="dh-page" id="r-page"><div class="dh-clip" id="r-clip"><article class="dh-text" id="r-body" tabindex="-1"></article></div></div>
