@@ -24,17 +24,26 @@ export function ocrTextToHtml(text) {
 }
 
 // Wörter mit niedriger Sicherheit (Grafiken, Bildrauschen) verwerfen; Zeilen, die danach fast leer sind, ebenfalls.
-// blocks = data.blocks von tesseract.js: Blöcke > Absätze > Zeilen > Wörter { text, confidence }
-export function filterBlocks(blocks, minWord = 60, minKeep = 0.6) {
+// Große Schrift (Titel auf farbigem Grund) erkennt Tesseract oft unsicher: Zeilen deutlich höher als der Durchschnitt bekommen eine niedrigere Schwelle.
+// blocks = data.blocks von tesseract.js: Blöcke > Absätze > Zeilen > Wörter { text, confidence, bbox }
+export function filterBlocks(blocks, { minWord = 45, minBig = 30, minKeep = 0.6, bigFactor = 1.3 } = {}) {
+    const hs = [];
+    for (const b of blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) { const h = l.bbox ? l.bbox.y1 - l.bbox.y0 : 0; if (h > 0) hs.push(h); }
+    hs.sort((x, y) => x - y);
+    const med = hs.length ? hs[hs.length >> 1] : 0;
     const paras = [];
     for (const b of blocks || []) for (const p of b.paragraphs || []) {
         const lines = [];
         for (const l of p.lines || []) {
             const ws = (l.words || []).filter(w => w.text && w.text.trim());
             if (!ws.length) continue;
-            const keep = ws.filter(w => w.confidence >= minWord);
+            const big = med > 0 && l.bbox && (l.bbox.y1 - l.bbox.y0) >= bigFactor * med;
+            const min = big ? minBig : minWord;
+            const keep = ws.filter(w => w.confidence >= min);
             if (keep.length < Math.max(1, Math.ceil(ws.length * minKeep))) continue;
-            lines.push(keep.map(w => w.text.trim()).join(' '));
+            const txt = keep.map(w => w.text.trim()).join(' ');
+            if ((txt.match(/\p{L}/gu) || []).length < 3 && (txt.match(/\d/g) || []).length < 2) continue;      // Symbolreste wie „® ®“ oder „A x I= ©“
+            lines.push(txt);
         }
         if (lines.length) paras.push(lines.join('\n'));
     }
