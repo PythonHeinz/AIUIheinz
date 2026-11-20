@@ -2781,7 +2781,8 @@ class PageTest(unittest.TestCase):
         self.assertIn("Einrichten", page.inner_text("#areas"))
         self.assertEqual(json.loads(page.evaluate("localStorage.getItem('heinz_settings')"))["lang"], "de")
         page.goto(self.srv.base + "/tools/filter/index.html")
-        self.assertIn("Platzhalter", page.inner_text(".panel"))
+        self.assertIn("EINGABE", page.inner_text("#sec-in").upper(), "the language set in the hub carries over to Filter")
+        self.assertIn("Einfügen", page.inner_text("#sec-in"))
 
     def test_models_placeholder_lists_ollama_models(self):
         page = self.new_page()

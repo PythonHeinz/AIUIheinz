@@ -1,0 +1,36 @@
+/* tools/filter/filter.css – nur was nur dieses Werkzeug braucht (Chips, Kacheln, Tabelle). Alles Übrige kommt aus lib/core.css. Klassen mit Präfix fl-. */
+.fl { padding-bottom: 40px; }
+.fl .panel { background: var(--surf); border-color: var(--line); }
+.fl .pill { border-color: var(--edge); }
+.fl .pill.acc { border-color: var(--acc); }
+.fl-ta { display: block; width: 100%; min-height: 120px; height: 140px; resize: vertical; padding: 10px 12px; border-radius: 14px; background: var(--bg); color: var(--txt); border: 1px solid var(--edge); font: .84rem/1.5 var(--mono); outline: none; box-sizing: border-box; }
+.fl-ta:focus { border-color: var(--acc); }
+.fl-rule { min-height: 64px; height: 72px; font-family: inherit; font-size: .88rem; margin-top: 4px; }
+.fl-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.fl-row .pill { flex: 1 1 auto; padding: 0 12px; }
+.fl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.fl-chip { min-height: 34px; padding: 0 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--edge); color: var(--txt); font-size: .8rem; cursor: pointer; }
+.fl-chip[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--onacc); font-weight: 600; }
+.fl .panel .inp, .fl .panel .sel { margin-top: 4px; }
+.fl-take { margin-top: 8px; }
+.fl-det { margin-top: 12px; }
+.fl-det summary { cursor: pointer; font-size: .86rem; color: var(--txt); min-height: 32px; display: flex; align-items: center; }
+.fl .notice { margin-top: 10px; }
+.fl-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; margin: 10px 0 6px; }
+.fl-tile { text-align: left; padding: 8px 10px; border-radius: 12px; background: var(--card); border: 1px solid var(--edge); color: var(--txt); cursor: pointer; min-height: 56px; }
+.fl-tile b { display: block; font-size: 1.15rem; line-height: 1.2; }
+.fl-tile span { display: block; font-size: .74rem; color: var(--sub); overflow-wrap: anywhere; }
+.fl-tile[aria-pressed="true"] { border-color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); }
+.fl-tile.static { cursor: default; }
+.fl-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+.fl-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.fl-bar .seg2 { margin: 0; flex: 1; min-width: 220px; }
+.fl-wrap { max-height: 52vh; overflow: auto; overscroll-behavior: contain; margin-top: 8px; border: 1px solid var(--edge); border-radius: 12px; }
+.fl-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.fl-table th, .fl-table td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.fl-table th { position: sticky; top: 0; background: var(--card); color: var(--sub); font-weight: 600; }
+.fl-table td.ok { color: var(--green); } .fl-table td.bad { color: var(--red); }
+.fl-table td.num { text-align: right; }
+.fl-exp { margin-top: 14px; }
+@media (max-height: 500px) { .fl-wrap { max-height: 70vh; } }
+.fl [hidden] { display: none !important; }   /* .pill, .chkrow … set display and would override the hidden attribute */

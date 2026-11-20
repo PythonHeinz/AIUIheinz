@@ -6,25 +6,87 @@
 <meta name="theme-color" content="#121212">
 <link rel="manifest" href="/manifest.webmanifest">
 <title>AIUIheinz · Filter</title>
-<link rel="stylesheet" href="/lib/core.css">
+<link rel="stylesheet" href="../../lib/core.css">
+<link rel="stylesheet" href="filter.css">
+<script src="../../lib/core.js"></script>
 </head>
 <body>
 <div id="app-header"></div>
-<main class="page">
-    <div class="panel"><h3 id="h"></h3><div id="p"></div></div>
-    <a class="card c-gray" href="/lab.html"><span class="ico">🧪</span><h2 id="old"></h2></a>
+<main class="page fl">
+    <section class="panel" id="sec-in">
+        <div class="caps grp"><span data-i="s1"></span></div>
+        <textarea id="in" class="fl-ta" spellcheck="false" autocomplete="off" autocapitalize="off" data-ph="ph"></textarea>
+        <div class="fl-row">
+            <button type="button" class="pill" id="b-paste"><svg class="i sm"><use href="../../lib/icons.svg#i-copy"/></svg><span data-i="paste"></span></button>
+            <label class="pill" id="b-file"><svg class="i sm"><use href="../../lib/icons.svg#i-doc"/></svg><span data-i="file"></span><input type="file" id="file" class="sr-only" accept=".csv,.tsv,.txt,.json,.xml,.rss,.atom,text/*,application/json"></label>
+            <button type="button" class="pill" id="b-sample"><svg class="i sm"><use href="../../lib/icons.svg#i-sparkle"/></svg><span data-i="sample"></span></button>
+            <button type="button" class="pill" id="b-clear"><svg class="i sm"><use href="../../lib/icons.svg#i-trash"/></svg><span data-i="clear"></span></button>
+        </div>
+        <div class="help" id="info"></div>
+        <label class="chkrow" id="row-absatz" hidden><input type="checkbox" id="absatz"><span data-i="absatz"></span></label>
+        <div id="colbox" hidden>
+            <div class="help" data-i="cols"></div>
+            <div class="fl-chips" id="cols"></div>
+            <label class="fld"><span data-i="cmp"></span><select id="cmp" class="sel"></select></label>
+            <button type="button" class="pill fl-take" id="b-take" hidden><span data-i="takeLabels"></span></button>
+        </div>
+    </section>
+
+    <section class="panel" id="sec-rule">
+        <div class="caps grp"><span data-i="s2"></span></div>
+        <div class="fl-chips" id="presets"></div>
+        <div class="help" id="presetdesc"></div>
+        <label class="fld"><span data-i="rule"></span><textarea id="rule" class="fl-ta fl-rule" spellcheck="false" autocomplete="off"></textarea></label>
+        <label class="fld"><span data-i="labels"></span><input id="labels" class="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <details class="fl-det" id="params">
+            <summary><span data-i="params"></span></summary>
+            <label class="fld"><span data-i="engine"></span><select id="provider" class="sel"></select></label>
+            <label class="fld"><span data-i="model"></span><select id="model" class="sel"></select></label>
+            <div class="help" id="modelhelp"></div>
+            <label class="fld"><span data-i="temp"></span><input id="temp" class="inp" type="number" step="0.1" min="0" max="2" inputmode="decimal"></label>
+            <label class="fld"><span data-i="maxTok"></span><input id="maxtok" class="inp" type="number" step="10" min="20" max="2000" inputmode="numeric"></label>
+            <label class="fld"><span data-i="limit"></span><input id="limit" class="inp" type="number" step="1" min="1" inputmode="numeric"></label>
+            <label class="chkrow"><input type="checkbox" id="why"><span data-i="why"></span></label>
+            <label class="chkrow"><input type="checkbox" id="zufall"><span data-i="zufall"></span></label>
+            <label class="fld" id="row-seed"><span data-i="seed"></span><input id="seed" class="inp" type="number" step="1" inputmode="numeric"></label>
+            <div class="help" id="rtinfo"></div>
+        </details>
+        <div class="notice warn" id="onl" hidden></div>
+    </section>
+
+    <section class="panel" id="sec-res">
+        <div class="caps grp"><span data-i="s3"></span></div>
+        <div class="fl-row">
+            <button type="button" class="pill acc" id="b-run"><svg class="i sm"><use href="../../lib/icons.svg#i-send"/></svg><span data-i="run"></span></button>
+            <button type="button" class="pill" id="b-resume" hidden><svg class="i sm"><use href="../../lib/icons.svg#i-refresh"/></svg><span id="t-resume"></span></button>
+            <button type="button" class="pill" id="b-cancel" hidden><svg class="i sm"><use href="../../lib/icons.svg#i-stop"/></svg><span data-i="cancel"></span></button>
+        </div>
+        <div class="prog" id="prog" hidden><i id="progbar"></i></div>
+        <div class="help" id="status"></div>
+        <div id="resbox" hidden>
+            <div class="help" id="fact"></div>
+            <div class="fl-tiles" id="tiles"></div>
+            <div class="help" data-i="tiles"></div>
+            <label class="chkrow"><input type="checkbox" id="only"><span data-i="only"></span></label>
+            <div class="fl-bar"><span class="help" data-i="sort"></span>
+                <div class="seg2" id="seg-sort"><button type="button" data-sort="index" class="on" data-i="s_index"></button><button type="button" data-sort="label" data-i="s_label"></button><button type="button" data-sort="text" data-i="s_text"></button></div>
+            </div>
+            <div class="fl-wrap"><table class="fl-table" id="tbl"></table></div>
+            <div class="help" id="more"></div>
+            <details class="fl-det" id="cfbox" hidden><summary><span data-i="confusion"></span></summary><div class="fl-wrap"><table class="fl-table" id="cf"></table></div></details>
+            <div class="caps grp fl-exp"><span data-i="export"></span></div>
+            <div class="fl-row">
+                <button type="button" class="pill acc" id="b-copy"><svg class="i sm"><use href="../../lib/icons.svg#i-copy"/></svg><span data-i="copyTsv"></span></button>
+                <button type="button" class="pill" data-exp="csv"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="csv"></span></button>
+                <button type="button" class="pill" data-exp="tsv"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="tsv"></span></button>
+                <button type="button" class="pill" data-exp="json"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="json"></span></button>
+                <button type="button" class="pill" data-exp="md"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="md"></span></button>
+            </div>
+            <div class="help" data-i="suggestion"></div>
+        </div>
+    </section>
+    <div class="notice" id="msg" role="status" hidden></div>
 </main>
-<script src="/lib/core.js"></script>
-<script type="module">
-(function () {
-    var D = {
-        en: { sub: 'filter', h: 'Filter (placeholder)', p: 'Small models classify and convert text under strict rules; code does the counting. Built in its own strand.', old: 'Open the old Data Lab' },
-        de: { sub: 'filter', h: 'Filter (Platzhalter)', p: 'Kleine Modelle klassifizieren und wandeln Text nach strengen Regeln um; Zählen macht der Code. Wird in einem eigenen Strang gebaut.', old: 'Altes Data Lab öffnen' }
-    };
-    function render() { ['h', 'p', 'old'].forEach(function (k) { document.getElementById(k).textContent = Heinz.t(D, k); }); }
-    Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
-    Heinz.onLang(render); render();
-})();
-</script>
+<script type="module" src="ui/main.js"></script>
 </body>
 </html>
