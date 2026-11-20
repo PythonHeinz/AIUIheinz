@@ -226,3 +226,33 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-rset select.sel { background: var(--rline); color: var(--rt); border-color: var(--rline); height: 42px; }
 .dh-rset .fld { margin-top: 10px; }
 .dh-swc[hidden] { display: none; }
+
+/* Markierungen (Phase 3) */
+::highlight(dh-m0) { background-color: rgba(234, 179, 8, .42); color: inherit; }
+::highlight(dh-m1) { background-color: rgba(74, 170, 110, .38); color: inherit; }
+::highlight(dh-m2) { background-color: rgba(90, 150, 230, .38); color: inherit; }
+::highlight(dh-m3) { background-color: rgba(220, 110, 160, .38); color: inherit; }
+.dh-mk { flex-wrap: nowrap; align-items: center; gap: 2px; }
+.dh-mk .dh-cdot { min-height: 0; width: 30px; height: 30px; padding: 0; margin: 4px 4px; border-radius: 50%; border: 2px solid transparent; box-sizing: border-box; }
+.dh-mk .dh-cdot.on { border-color: var(--rb); box-shadow: 0 0 0 2px var(--rt); }
+.dh-mk .dh-cdot.on { outline: 2px solid var(--rb); outline-offset: 1px; }
+.dh-mk button svg { width: 20px; height: 20px; display: block; margin: auto; }
+.dh-mk [data-mk] { min-width: 40px; padding: 0 8px; }
+.dh-mk button.dh-cdot.c0 { background: #e0b01c; } .dh-mk button.dh-cdot.c1 { background: #4aaa6e; } .dh-mk button.dh-cdot.c2 { background: #5a96e6; } .dh-mk button.dh-cdot.c3 { background: #dc6ea0; }
+.dh-sel button.ic { min-width: 40px; padding: 0 8px; } .dh-sel button.ic svg { width: 20px; height: 20px; display: block; margin: auto; }
+.dh-tabs { display: flex; gap: 8px; margin: 4px 0 8px; }
+.dh-toc .dh-tabs button { width: auto; flex: 1; text-align: center; border: 1px solid var(--rline); border-radius: 18px; padding: 9px 4px; font: 600 .9rem var(--sans, inherit); }
+.dh-toc .dh-tabs button.on { background: var(--rt); color: var(--rb); border-color: var(--rt); }
+.dh-mhead { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.dh-mhead .pill[disabled] { opacity: .45; }
+.dh-mi { display: flex; align-items: stretch; border-bottom: 1px solid var(--rline); }
+.dh-toc .dh-mi button.dh-mq { flex: 1; min-width: 0; border: 0; padding: 12px 4px; display: block; width: auto; font: .95rem var(--serif); }
+.dh-toc .dh-mi button.dh-mx { width: 44px; flex: none; text-align: center; border: 0; padding: 0; color: var(--rsub); }
+.dh-mq .q { display: block; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.dh-mq .q::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.dh-mq.c0 .q::before { background: #e0b01c; } .dh-mq.c1 .q::before { background: #4aaa6e; } .dh-mq.c2 .q::before { background: #5a96e6; } .dh-mq.c3 .q::before { background: #dc6ea0; }
+.dh-mq small { display: block; margin-top: 4px; color: var(--rsub); font: .8rem var(--sans, inherit); }
+.dh-mq .n { display: block; margin-top: 6px; color: var(--rt); font: .88rem var(--sans, inherit); white-space: pre-wrap; opacity: .85; }
+.dh-nq { margin: 0 0 10px; padding: 0 0 0 10px; border-left: 3px solid var(--rline); color: var(--rsub); font-size: .9rem; }
+.dh-nt { width: 100%; box-sizing: border-box; min-height: 110px; padding: 10px; border-radius: 12px; border: 1px solid var(--rline); background: transparent; color: inherit; font: inherit; resize: vertical; margin-bottom: 10px; }
+.dh-toc .dh-mhead button { display: inline-flex; align-items: center; width: auto; padding: 0 14px; min-height: 38px; border: 1px solid var(--rline); border-radius: 19px; font: 600 .88rem var(--sans, inherit); }

@@ -6,7 +6,7 @@ import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
-import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl } from './auswahl.js';
+import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black', 'custom'];
@@ -81,6 +81,7 @@ async function show(i, anchor, frac, at) {
     await Promise.race([Promise.all(imgs.map(m => (m.decode ? m.decode().catch(() => {}) : Promise.resolve()))), new Promise(r => setTimeout(r, 600))]);
     if (seq !== S.seq || !S.open) return;
     layout(frac || 0);
+    drawMarks();
     if (anchor) {
         const el = b.querySelector('[id="' + anchor.replace(/["\\]/g, '') + '"]');
         if (el) goPage(pageOfOffset(el.getBoundingClientRect().left - b.getBoundingClientRect().left, S.step, S.pages));
@@ -176,9 +177,15 @@ function setPage(name) {                // Untermenüs im selben Blatt; name nul
 }
 function closeUi() { if (S.ui || !$('r-set').hidden || !$('r-toc').hidden) showUi(false); }
 
+function tocTab(name) {
+    $('r-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+    $('r-tocl').hidden = name !== 'toc'; $('r-markl').hidden = name !== 'marks';
+    if (name === 'marks') renderMarkList($('r-markl'), (m) => { closeUi(); jump(m.ch, m.start, m.len); });
+}
 function buildToc() {
-    const box = $('r-toc');
+    const box = $('r-tocl');
     box.textContent = '';
+    tocTab('toc');
     const src = S.src;
     const items = src.toc.length ? src.toc : [];
     if (!items.length) { const p = document.createElement('p'); p.className = 'dh-notoc'; p.textContent = S.t('r_noToc'); box.appendChild(p); return; }
@@ -256,6 +263,7 @@ export async function applyFont(id) {
 
 function onTap(e) {
     const hadSel = S.hadSel; S.hadSel = false;
+    if (mkOpen()) { if (!markTap(e.clientX, e.clientY)) hideMk(); return; }          // Leiste einer Markierung offen: Tippen schließt sie (oder öffnet die nächste)
     if (hadSel || hasWahl()) { clearWahl(); return; }                                 // Markierung aktiv: Tippen hebt sie nur auf, kein Blättern
     const a = e.target.closest && e.target.closest('a[data-go]');
     if (a) {
@@ -273,6 +281,7 @@ function onTap(e) {
     if (S.ui) { closeUi(); return; }
     const r = $('r-page').getBoundingClientRect();
     const z = zoneOf(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
+    if (z !== 'top' && markTap(e.clientX, e.clientY)) return;                       // Tippen auf markierten Text öffnet die Leiste der Markierung
     if (z === 'top') showUi(true);
     else if (z === 'next') go(1);
     else if (z === 'prev') go(-1);
@@ -283,7 +292,8 @@ function wire() {
     S.wired = true;
     // Pfeil: bei offenem Einstellungs- oder Inhaltsfeld nur dieses schließen (zurück ins Buch), sonst den Reader verlassen
     $('r-close').addEventListener('click', () => { if (!$('r-set').hidden && ($('r-set').dataset.pg || 'main') !== 'main') { setPage(null); return; } if (!$('r-set').hidden || !$('r-toc').hidden) { $('r-set').hidden = true; $('r-toc').hidden = true; $('reader').dataset.set = '0'; return; } if (S.pushed) { S.leaving = true; history.back(); } else close(); });
-    $('r-toc-b').addEventListener('click', () => { panel('toc'); });
+    $('r-toc-b').addEventListener('click', () => { if (panel('toc')) tocTab('toc'); });
+    $('r-tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) tocTab(b.dataset.tab); });
     $('r-set-b').addEventListener('click', () => { if (panel('set')) { setPage('main'); buildAiChips(); } });
     $('sw-gap').addEventListener('change', (e) => { applyGap(e.target.checked); S.cb.onSettings({ gap: S.gap }); });
     $('r-prev').addEventListener('click', () => go(-1));
@@ -338,7 +348,7 @@ export async function openReader(rec, src, ctx) {
     $('reader').hidden = false;
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
-    initSelection({ isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
+    initSelection({ marks: ctx.marks, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
     setCover(ctx.cover || null);
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);

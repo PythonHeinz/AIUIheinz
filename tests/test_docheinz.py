@@ -334,8 +334,8 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#r-next").is_disabled())
         self.tap(p, "top")
         p.click("#r-toc-b")
-        self.assertEqual(p.locator("#r-toc button").count(), 3)
-        p.click("#r-toc button >> nth=0")
+        self.assertEqual(p.locator("#r-tocl button").count(), 3)
+        p.click("#r-tocl button >> nth=0")
         p.wait_for_function("() => document.getElementById('r-body').textContent.includes('Text von Kapitel 1')")
         self.assertTrue(p.locator("#r-ov").is_hidden())
         self.assertEqual(p.errors, [])
@@ -455,7 +455,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#r-sel").is_hidden())
         self.select_text(p, "Text von Kapitel 1")
         p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertEqual(p.locator("#r-sel button:visible").count(), 4)
+        self.assertEqual(p.locator("#r-sel button:visible").count(), 5)
         p.click("#r-sel [data-sel=search]")
         p.wait_for_selector("#r-sheet:not([hidden]) .dh-hit")
         self.assertTrue(p.locator("#r-sel").is_hidden())
@@ -550,6 +550,100 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("test:1b", p.locator("#rs-sub").inner_text())
         self.assertTrue(p.locator("#rs-copy").is_visible())
         self.assertEqual([u for u in p.external if "localhost:11434" not in u], [])
+
+    def word_pt(self, p, needle):
+        return p.evaluate("""(needle) => {
+            const b = document.getElementById('r-body'), w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+            let n; while ((n = w.nextNode())) { const i = n.nodeValue.indexOf(needle); if (i >= 0) {
+                const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + needle.length);
+                const q = r.getClientRects()[0]; return [q.left + q.width / 2, q.top + q.height / 2]; } }
+            throw new Error('not found');
+        }""", needle)
+
+    def hl(self, p, i):
+        return p.evaluate("(i) => { const h = CSS.highlights.get('dh-m' + i); return h ? h.size : 0; }", i)
+
+    def mark(self, p, needle):
+        self.select_text(p, needle)
+        p.click("#r-sel [data-sel=mark]")
+        p.wait_for_selector("#r-mk:not([hidden])")
+
+    def open_marks(self, p):
+        self.tap(p, "top"); p.click("#r-toc-b"); p.click("#r-tabs [data-tab=marks]")
+
+    def test_mark_color_note_and_persistence_after_reload(self):
+        p = self.open(lang="de")
+        self.start_book(p, "a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde. Weiter geht es mit Text.".encode())
+        self.mark(p, "Übermensch")
+        self.assertEqual(self.hl(p, 0), 1)
+        self.assertEqual(p.locator("#r-sel").is_hidden(), True)
+        p.click("#r-mk [data-c='2']")
+        self.assertEqual([self.hl(p, 0), self.hl(p, 2)], [0, 1])
+        p.click("#r-mk [data-mk=note]")
+        p.fill("#rs-note-t", "Meine Notiz")
+        p.click("#rs-note-go")
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+        p.wait_for_timeout(400)
+        p.reload()
+        p.wait_for_selector("#list .dh-open")
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        p.wait_for_function("() => { const h = CSS.highlights.get('dh-m2'); return h && h.size === 1; }")
+        self.open_marks(p)
+        self.assertEqual(p.locator("#r-markl .dh-mi").count(), 1)
+        txt = p.locator("#r-markl .dh-mi").inner_text()
+        self.assertIn("Übermensch", txt); self.assertIn("Meine Notiz", txt)
+        self.assertEqual(p.errors, [])
+
+    def test_tap_on_mark_opens_bar_and_delete_removes_it(self):
+        p = self.open()
+        self.start_book(p, "a.md", "text/markdown", ("# Titel\n\n" + "\n\n".join("Absatz %d" % i for i in range(8)) + "\n\nDer Übermensch ist der Sinn der Erde. Weiter geht es mit mehr Text für die Seite.").encode())
+        self.mark(p, "Übermensch")
+        self.tap(p, "mid")                                    # Tippen anderswo schließt nur die Leiste
+        p.wait_for_selector("#r-mk", state="hidden")
+        x, y = self.word_pt(p, "Übermensch")
+        p.mouse.click(x, y)                                   # Tippen auf die Markierung öffnet die Leiste wieder
+        p.wait_for_selector("#r-mk:not([hidden])")
+        self.assertEqual(self.pg(p)[0], 1)                    # nicht geblättert
+        p.click("#r-mk [data-mk=del]")
+        self.assertEqual(self.hl(p, 0), 0)
+        self.open_marks(p)
+        self.assertEqual(p.locator("#r-markl .dh-mi").count(), 0)
+        self.assertEqual(p.locator("#mk-export").is_disabled(), True)
+
+    def test_marks_register_jumps_and_exports_markdown(self):
+        p = self.open(lang="de")
+        self.start_book(p, "a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde und das Ende aller Dinge.".encode())
+        self.mark(p, "Übermensch")
+        p.click("#r-mk [data-mk=note]"); p.fill("#rs-note-t", "Wichtig"); p.click("#rs-note-go")
+        self.open_marks(p)
+        with p.expect_download() as d:
+            p.click("#mk-export")
+        md = open(d.value.path(), encoding="utf-8").read()
+        self.assertIn("> Übermensch", md); self.assertIn("**Notiz:** Wichtig", md); self.assertIn("1 Markierungen", md)
+        self.assertTrue(d.value.suggested_filename.endswith("-notes.md"))
+        p.click("#r-markl .dh-mq")
+        p.wait_for_selector("#r-toc", state="hidden")
+        self.assertGreaterEqual(p.evaluate("() => CSS.highlights.get('dh-hit') ? CSS.highlights.get('dh-hit').size : 0"), 1)
+
+    def test_ai_answer_can_be_saved_as_note(self):
+        p = self.open(lang="de")
+        self.fake_ollama(p)
+        self.start_book(p, "a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde.".encode())
+        self.set_active(p, "ollama", "test:1b")
+        self.select_text(p, "Übermensch")
+        p.click("#r-sel [data-sel=explain]")
+        p.click("#rs-go")
+        p.wait_for_function("() => document.querySelector('#rs-body .dh-sout') && document.querySelector('#rs-body .dh-sout').textContent.includes('Erklärung')")
+        p.click("#rs-note")
+        self.assertIn("gespeichert", p.locator("#rs-note").inner_text())
+        self.assertEqual(self.hl(p, 0), 1)
+        p.click("#r-sheet #rs-close")
+        self.open_marks(p)
+        txt = p.locator("#r-markl .dh-mi").inner_text()
+        self.assertIn("KI: Das ist die Erklärung.", txt)
+        self.assertEqual(p.errors, [])
 
     def test_ask_more_opens_the_analysis_window_with_history_and_page_context(self):
         p = self.open(lang="de")

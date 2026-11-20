@@ -824,3 +824,10 @@ Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarb
 
 ### 2026-11-20 AIUIheinz-Filter: Data Lab entfernt
 - Entscheidung des Entwicklers: Er nutzt Filter, es funktioniert (Feinschliff bei Design und Funktion folgt); das Lab ist Geschichte. Entfernt: `lab.html`, `tools/lab/tool.json`, Eintrag `lab` in `AREAS` (`index.html`, Gruppe „Alte Versionen“), Ausnahmen in `tests/test_rules.py`, Listen in `tests/test_server.py` und `tests/test_pages.py`, Zeile in `docs/HANDYTEST.md`, `README.md`. Die Dokumente beschreiben es weiter als Vorgeschichte; der Code steht in der Git-Historie (vor Commit dieser Entfernung).
+
+### docHeinz Phase 3: Markierungen, Notizen, Markdown-Export (20.11.2026)
+- Neues Modul `mod/markierung.js` (Daten, Wiederfinden über Zitat, `toMarkdown`) mit Node-Tests; Oberfläche in `ui/auswahl.js` (Knopf „Markieren“, Farbleiste `#r-mk`, Notizblatt, `drawMarks()` mit CSS-Highlight `dh-m0..3`), Register „Markierungen“ im Inhaltsfeld (`ui/leser.js`, `#r-tabs`, `#r-tocl`, `#r-markl`).
+- Speicherung am Buchdatensatz (`marks` in IndexedDB `docheinz`, Callback `onMarks`); Position = Kapitel plus Zeichenposition im Kapiteltext (wie Suche), bei Abweichung wird das Zitat neu gesucht.
+- Auswahlleiste: Suchen und Kopieren als Symbole, damit fünf Einträge auch auf Deutsch in eine Zeile passen. Tippen auf markierten Text (außer in der oberen Steuerzone) öffnet die Leiste der Markierung, Tippen anderswo schließt sie.
+- Entscheidungen des Entwicklers: 4 Farben plus Notiz; Register im Inhaltsverzeichnis; Export als Markdown je Buch (Datei und Zwischenablage); KI-Antwort per „Als Notiz speichern“ übernehmbar (als „KI“ gekennzeichnet).
+- Nur simuliert getestet (Playwright, Node); Handytest Y6.

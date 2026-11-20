@@ -187,6 +187,8 @@ async function openBook(id) {
                 HeinzStore.set(K('booklook'), state.bookLook);
             },
             onProfiles: (list) => { state.profiles = list; HeinzStore.set(K('profiles'), list); },
+            marks: rec.marks || [],
+            onMarks: async (list) => { rec.marks = list; try { await state.db.update(id, { marks: list }); } catch { /* Markierungen bleiben im Speicher, bis der Reader schließt */ } },
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
             onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },

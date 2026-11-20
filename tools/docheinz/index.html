@@ -84,18 +84,28 @@
             <p class="help"><a href="../../dashboard.html" data-i="r_aiDash"></a></p>
         </section>
     </div>
-    <nav class="dh-toc" id="r-toc" hidden></nav>
+    <nav class="dh-toc" id="r-toc" hidden>
+        <div class="dh-tabs" id="r-tabs"><button type="button" data-tab="toc" class="on" data-i="r_tabToc"></button><button type="button" data-tab="marks" data-i="r_tabMarks"></button></div>
+        <div id="r-tocl"></div>
+        <div id="r-markl" hidden></div>
+    </nav>
     <button type="button" class="dh-turn dh-turn-l" id="r-prev" data-i-label="r_prev" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-l"/></svg></button>
     <button type="button" class="dh-turn dh-turn-r" id="r-next" data-i-label="r_next" hidden><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></button>
     <div class="dh-sel" id="r-sel" hidden>
-        <button type="button" data-sel="search" data-i="s_search"></button>
+        <button type="button" data-sel="search" class="ic" data-i-label="s_search"><svg class="i"><use href="../../lib/icons.svg#i-search"/></svg></button>
         <button type="button" data-sel="explain" data-i="s_explain"></button>
         <button type="button" data-sel="summary" data-i="s_summary"></button>
-        <button type="button" data-sel="copy" data-i="s_copy"></button>
+        <button type="button" data-sel="mark" data-i="s_mark"></button>
+        <button type="button" data-sel="copy" class="ic" data-i-label="s_copy"><svg class="i"><use href="../../lib/icons.svg#i-copy"/></svg></button>
+    </div>
+    <div class="dh-sel dh-mk" id="r-mk" hidden>
+        <button type="button" class="dh-cdot c0" data-c="0"></button><button type="button" class="dh-cdot c1" data-c="1"></button><button type="button" class="dh-cdot c2" data-c="2"></button><button type="button" class="dh-cdot c3" data-c="3"></button>
+        <button type="button" data-mk="note" data-i-label="mk_note"><svg class="i"><use href="../../lib/icons.svg#i-pencil"/></svg></button>
+        <button type="button" data-mk="del" data-i-label="mk_del"><svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg></button>
     </div>
     <i class="dh-h" id="r-h1" hidden></i><i class="dh-h" id="r-h2" hidden></i>
     <section class="dh-sheet" id="r-sheet" hidden>
-        <header><b id="rs-title"></b><button type="button" class="pill" id="rs-copy" data-i="s_copy" hidden></button><button type="button" class="pill" id="rs-more" data-i="s_more" hidden></button><button type="button" class="pill" id="rs-stop" data-i="s_stop" hidden></button><button type="button" class="pill" id="rs-close" data-i="s_close"></button></header>
+        <header><b id="rs-title"></b><button type="button" class="pill" id="rs-copy" data-i="s_copy" hidden></button><button type="button" class="pill" id="rs-note" data-i="s_toNote" hidden></button><button type="button" class="pill" id="rs-more" data-i="s_more" hidden></button><button type="button" class="pill" id="rs-stop" data-i="s_stop" hidden></button><button type="button" class="pill" id="rs-close" data-i="s_close"></button></header>
         <p class="help" id="rs-sub" hidden></p>
         <div class="dh-sbody" id="rs-body"></div>
     </section>

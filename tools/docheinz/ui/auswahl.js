@@ -8,10 +8,11 @@ import { buildRequest, trimHistory } from '../mod/ki.js';
 import { wordBounds } from '../mod/wahl.js';
 import { mdToHtml } from '../mod/markdown.js';
 import { sauber } from '../mod/sauber.js';
+import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS } from '../mod/markierung.js';
 
 const MAX_QUERY = 80;
 const AI_KEY = 'heinz_docheinz_ai';
-const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', range: null, drag: null, lp: 0, sup: false, pressing: false, anchor: null, px: 0, py: 0, pid: 0, timer: 0, ac: null, cache: new Map(), run: 0, wired: false };
+const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', range: null, drag: null, lp: 0, sup: false, pressing: false, anchor: null, px: 0, py: 0, pid: 0, timer: 0, ac: null, cache: new Map(), run: 0, wired: false, marks: [], mk: null, off: null };
 
 // ---------- Eigene Auswahl ----------
 // Die native Auswahl ist im Lesetext abgeschaltet (Chrome blendet dort Menü und Suchfeld ein). Langer Druck markiert ein Wort, zwei Griffe ziehen die Markierung auf;
@@ -44,6 +45,7 @@ function rects() { return Array.from(A.range.getClientRects()).filter(r => r.wid
 function selectedText() { return A.range ? A.range.toString().replace(/\s+/g, ' ').trim() : ''; }
 export const hasWahl = () => !!A.range;
 export function clearWahl() {
+    hideMk();
     A.range = null; A.text = ''; A.drag = null; clearTimeout(A.lp);
     hl(false);
     ['r-sel', 'r-h1', 'r-h2'].forEach(id => { const e = $(id); if (e) e.hidden = true; });
@@ -59,7 +61,7 @@ function placeUi(showBar) {
     const bar = $('r-sel');
     bar.hidden = !showBar;
     if (!showBar) return;
-    A.text = selectedText();
+    A.text = selectedText(); A.off = selOffsets();
     bar.querySelector('[data-sel=search]').hidden = A.text.length > MAX_QUERY;
     const bw = bar.offsetWidth || 260, bh = bar.offsetHeight || 48, top0 = 64 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0);
     let y = first.top - bh - 12;
@@ -117,13 +119,150 @@ function moveHandle(ev) {
 }
 function dropHandle() { if (A.drag) { A.drag = null; if (A.range) placeUi(true); } }
 
+// ---------- Markierungen und Notizen (Phase 3) ----------
+// Eine Markierung sitzt an Kapitel und Zeichenposition im Kapiteltext (gleiche Zählung wie bei der Suche), gezeichnet mit der CSS-Highlight-API (4 Farben).
+const MKCOL = 'heinz_docheinz_markcolor';
+const textNodes = () => { const w = document.createTreeWalker(body(), NodeFilter.SHOW_TEXT), out = []; let n; while ((n = w.nextNode())) out.push(n); return out; };
+const bodyText = () => textNodes().map(n => n.nodeValue).join('');
+function offsetOf(node, off) { let pos = 0; for (const n of textNodes()) { if (n === node) return pos + off; pos += n.nodeValue.length; } return -1; }
+function rangeAt(start, len) {
+    const end = start + len; let pos = 0, started = false; const r = document.createRange();
+    for (const n of textNodes()) {
+        const l = n.nodeValue.length;
+        if (!started && start < pos + l) { r.setStart(n, start - pos); started = true; }
+        if (started && end <= pos + l) { r.setEnd(n, end - pos); return r; }
+        pos += l;
+    }
+    return null;
+}
+function selOffsets() {
+    if (!A.range || !A.env || !A.env.ch) return null;
+    const s = offsetOf(A.range.startContainer, A.range.startOffset), e = offsetOf(A.range.endContainer, A.range.endOffset);
+    if (s < 0 || e <= s) return null;
+    const text = bodyText().slice(s, e);
+    return text.trim() ? { ch: A.env.ch(), start: s, len: e - s, text } : null;
+}
+const persist = () => { try { A.env && A.env.onMarks && A.env.onMarks(A.marks); } catch { /* Speichern ist nicht kritisch */ } };
+export const marksList = () => A.marks;
+export function drawMarks() {
+    try {
+        if (!(window.CSS && CSS.highlights && window.Highlight) || !A.env) return;
+        const ch = A.env.ch(), txt = bodyText(), hs = COLORS.map(() => new Highlight());
+        let moved = false;
+        A.marks.forEach((m, i) => {
+            if (m.ch !== ch) return;
+            const st = relocate(txt, m);
+            if (st < 0) return;
+            if (st !== m.start) { A.marks[i] = { ...m, start: st }; moved = true; }
+            const r = rangeAt(st, m.len);
+            if (r) hs[m.color].add(r);
+        });
+        hs.forEach((h, i) => CSS.highlights.set('dh-m' + i, h));
+        if (moved) persist();
+    } catch { /* ohne Hervorhebung */ }
+}
+function dropMarks() { try { if (window.CSS && CSS.highlights) COLORS.forEach((c, i) => CSS.highlights.delete('dh-m' + i)); } catch { /* ohne Hervorhebung */ } }
+const slop = (r, x, y) => x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4;
+function markHit(x, y) {
+    const c = caretAt(x, y);
+    if (!c || !A.env.ch) return null;
+    const m = markAt(A.marks, A.env.ch(), offsetOf(c.node, c.off));
+    if (!m) return null;
+    const r = rangeAt(m.start, m.len);
+    return r && Array.from(r.getClientRects()).some(q => slop(q, x, y)) ? m : null;
+}
+export const mkOpen = () => !!A.mk;
+export function hideMk() { A.mk = null; const b = $('r-mk'); if (b) b.hidden = true; }
+function showMk(id) {
+    const m = A.marks.find(x => x.id === id), r = m && rangeAt(m.start, m.len);
+    const rs = r ? Array.from(r.getClientRects()).filter(q => q.width > 0 && q.height > 0) : [];
+    if (!rs.length) { hideMk(); return; }
+    A.mk = id;
+    const bar = $('r-mk');
+    bar.hidden = false;
+    bar.querySelectorAll('[data-c]').forEach(b => { b.classList.toggle('on', +b.dataset.c === m.color); b.setAttribute('aria-label', t('mk_' + COLORS[+b.dataset.c])); b.title = t('mk_' + COLORS[+b.dataset.c]); });
+    const first = rs[0], last = rs[rs.length - 1], bw = bar.offsetWidth || 260, bh = bar.offsetHeight || 48, top0 = 64 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0);
+    let y = first.top - bh - 12;
+    if (y < top0) y = last.bottom + 12;
+    y = Math.min(y, innerHeight - bh - 8);
+    bar.style.left = Math.max(8, Math.min(innerWidth - bw - 8, (first.left + last.right) / 2 - bw / 2)) + 'px';
+    bar.style.top = Math.max(8, y) + 'px';
+}
+// Tippen auf Text: liegt eine Markierung darunter, öffnet sich ihre Leiste (true = Tippen verbraucht)
+export function markTap(x, y) { const m = markHit(x, y); if (!m) return false; showMk(m.id); return true; }
+function doMark() {
+    const o = A.off || selOffsets();
+    if (!o || A.marks.length >= MAX_MARKS) return;
+    const m = makeMark({ ...o, color: +HeinzStore.get(MKCOL, 0) || 0 });
+    A.marks = addMark(A.marks, m); persist();
+    clearWahl(); drawMarks(); showMk(m.id);
+}
+function openNote(id) {
+    const m = A.marks.find(x => x.id === id);
+    if (!m) return;
+    openSheet(t('n_title'), '');
+    const box = $('rs-body');
+    const q = document.createElement('blockquote'); q.className = 'dh-nq'; q.textContent = m.text.length > 300 ? m.text.slice(0, 300) + ' …' : m.text;
+    const ta = document.createElement('textarea'); ta.id = 'rs-note-t'; ta.className = 'dh-nt'; ta.maxLength = 4000; ta.value = m.note; ta.placeholder = t('n_ph');
+    const go = document.createElement('button'); go.type = 'button'; go.className = 'pill acc'; go.id = 'rs-note-go'; go.textContent = t('n_save');
+    go.addEventListener('click', () => {
+        const v = ta.value.trim();
+        A.marks = updateMark(A.marks, id, { note: v, ai: v === m.note ? m.ai : false }); persist(); closeSheet();
+    });
+    box.append(q, ta, go);
+}
+// KI-Antwort als Notiz an der markierten Stelle (legt die Markierung an, falls es sie noch nicht gibt)
+function aiToNote(c, text) {
+    const o = c && c.off;
+    if (!o || !text) return false;
+    let m = A.marks.find(x => x.ch === o.ch && x.start === o.start && x.len === o.len);
+    if (!m) { m = makeMark({ ...o, color: +HeinzStore.get(MKCOL, 0) || 0 }); A.marks = addMark(A.marks, m); }
+    if (!m.note) A.marks = updateMark(A.marks, m.id, { note: text, ai: true, model: c.model });
+    else A.marks = updateMark(A.marks, m.id, { note: m.note + '\n\n[' + t('mk_ai') + '] ' + text });
+    persist(); drawMarks();
+    return true;
+}
+const L = () => ({ color: COLORS.map(c => t('mk_' + c)), note: t('m_noteL'), ai: t('mk_ai'), count: t('m_count'), part: t('r_part', { n: '{n}' }) });
+const chTitle = (ch) => { const c = A.env.src().chapters[ch]; return c && c.title || ''; };
+const mdText = () => toMarkdown(A.env.rec(), A.marks, chTitle, L());
+function exportMd() {
+    const name = (A.env.rec().title || 'book').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'book';
+    const a = document.createElement('a'), u = URL.createObjectURL(new Blob([mdText()], { type: 'text/markdown' }));
+    a.href = u; a.download = name + '-notes.md'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 4000);
+}
+// Liste für das Register „Markierungen“ im Inhaltsfeld; onGo(m) springt zur Stelle
+export function renderMarkList(box, onGo) {
+    box.textContent = '';
+    const head = document.createElement('div'); head.className = 'dh-mhead';
+    const ex = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'mk-export', textContent: t('m_export'), disabled: !A.marks.length });
+    const cp = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'mk-copy', textContent: t('m_copyMd'), disabled: !A.marks.length });
+    ex.addEventListener('click', exportMd);
+    cp.addEventListener('click', async () => { try { await navigator.clipboard.writeText(mdText()); } catch { /* keine Berechtigung */ } });
+    head.append(ex, cp); box.appendChild(head);
+    if (!A.marks.length) { box.appendChild(Object.assign(document.createElement('p'), { className: 'dh-notoc', textContent: t('m_none') })); return; }
+    sortMarks(A.marks).forEach(m => {
+        const row = document.createElement('div'); row.className = 'dh-mi'; row.dataset.id = m.id;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-mq c' + m.color;
+        const q = document.createElement('span'); q.className = 'q'; q.textContent = m.text;
+        const sm = document.createElement('small'); sm.textContent = chTitle(m.ch) || t('r_part', { n: m.ch + 1 });
+        b.append(q, sm);
+        if (m.note) { const n = document.createElement('span'); n.className = 'n'; n.textContent = (m.ai ? t('mk_ai') + ': ' : '') + m.note; b.appendChild(n); }
+        b.addEventListener('click', () => onGo(m));
+        const x = document.createElement('button'); x.type = 'button'; x.className = 'dh-mx'; x.setAttribute('aria-label', t('mk_del'));
+        x.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg>';
+        x.addEventListener('click', () => { A.marks = removeMark(A.marks, m.id); persist(); drawMarks(); renderMarkList(box, onGo); });
+        row.append(b, x); box.appendChild(row);
+    });
+}
+
 function openSheet(title, sub) {
     const sh = $('r-sheet');
     $('rs-title').textContent = title;
     $('rs-sub').textContent = sub || '';
     $('rs-sub').hidden = !sub;
     $('rs-body').textContent = '';
-    $('rs-stop').hidden = true; $('rs-copy').hidden = true; $('rs-more').hidden = true;
+    $('rs-stop').hidden = true; $('rs-copy').hidden = true; $('rs-more').hidden = true; $('rs-note').hidden = true;
     sh.hidden = false;
     clearWahl();
 }
@@ -232,17 +371,17 @@ async function search(query) {
 const ASKFIRST = 'heinz_docheinz_askfirst';
 export const askFirstOn = () => +HeinzStore.get(ASKFIRST, 1) !== 0;
 // Erst ein Feld für eine eigene Frage (leer = Standardauftrag, wie bisher), dann die Antwort.
-function askFirst(kind, passage) {
+function askFirst(kind, passage, off) {
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
     const f = document.createElement('form'); f.className = 'dh-qform';
     const q = document.createElement('input'); q.type = 'text'; q.id = 'rs-q'; q.placeholder = t('s_askPh'); q.autocomplete = 'off'; q.maxLength = 500;
     const go = document.createElement('button'); go.type = 'submit'; go.className = 'pill acc'; go.id = 'rs-go'; go.textContent = t('s_go');
     f.append(q, go);
-    f.addEventListener('submit', (e) => { e.preventDefault(); ask(kind, passage, q.value.trim()); });
+    f.addEventListener('submit', (e) => { e.preventDefault(); ask(kind, passage, q.value.trim(), off); });
     box.appendChild(f);
 }
-async function ask(kind, passage, question = '') {
+async function ask(kind, passage, question = '', off = null) {
     const my = ++A.run;
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
@@ -270,9 +409,9 @@ async function ask(kind, passage, question = '') {
             onDelta: (d) => { if (my !== A.run) return; text += d; renderMd(out, text); if (wait.parentNode) wait.remove(); } });
         if (my !== A.run) return;
         if (!text.trim()) out.textContent = t('s_empty');
-        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
+        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
     } catch (e) {
-        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; A.conv = { kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
+        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
         else {
             const code = e && e.code;
             box.appendChild(line('dh-sline err', code === 'ONLINE_BLOCKED' ? t('s_blocked') : code === 'NO_KEY' ? t('s_nokey') : t('s_err')));
@@ -280,6 +419,12 @@ async function ask(kind, passage, question = '') {
     } finally {
         if (my === A.run) { if (wait.parentNode) wait.remove(); $('rs-stop').hidden = true; A.ac = null; }
     }
+}
+
+function noteBtn(text, off, model) {
+    const b = $('rs-note');
+    b.hidden = !off; b.disabled = false; b.textContent = t('s_toNote');
+    b.onclick = () => { if (aiToNote({ off, model }, text)) { b.textContent = t('s_noted'); b.disabled = true; } };
 }
 
 // ---------- Fenster „Analyse“ (Nachfragen; der Verlauf lebt nur, solange es offen ist) ----------
@@ -296,6 +441,13 @@ function addCopy(d) {
     b.type = 'button'; b.className = 'pill'; b.textContent = t('s_copy');
     b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(rawOf(d.querySelector('.dh-mc'))); } catch { /* keine Berechtigung */ } });
     d.appendChild(b);
+    const c = A.conv;
+    if (c && c.off) {
+        const n = document.createElement('button');
+        n.type = 'button'; n.className = 'pill'; n.textContent = t('s_toNote');
+        n.addEventListener('click', () => { if (aiToNote(c, rawOf(d.querySelector('.dh-mc')))) { n.textContent = t('s_noted'); n.disabled = true; } });
+        d.appendChild(n);
+    }
 }
 function ctxOn() { return $('ra-seg').querySelector('button.on').dataset.ctx === '1'; }
 function anaSub() {
@@ -365,7 +517,7 @@ async function followUp(q) {
 // ---------- Anschluss an die Leseansicht ----------
 // env = { isOpen(), rec(), src(), t, lang(), jump(ch, start, len) }
 export function initSelection(env) {
-    A.env = env;
+    A.env = env; A.marks = cleanMarks(env.marks); A.mk = null; A.off = null;
     A.cache.clear();
     if (A.wired) return;
     A.wired = true;
@@ -380,9 +532,18 @@ export function initSelection(env) {
     $('r-sel').addEventListener('click', (e) => {
         const b = e.target.closest('button[data-sel]');
         if (!b || !A.text) return;
-        const text = A.text;
+        const text = A.text, off = A.off;
+        if (b.dataset.sel === 'mark') { doMark(); return; }
         if (b.dataset.sel === 'copy') { try { navigator.clipboard.writeText(text); } catch { /* keine Berechtigung */ } clearWahl(); }
-        else if (b.dataset.sel === 'search') search(text); else if (askFirstOn()) askFirst(b.dataset.sel, text); else ask(b.dataset.sel, text);
+        else if (b.dataset.sel === 'search') search(text); else if (askFirstOn()) askFirst(b.dataset.sel, text, off); else ask(b.dataset.sel, text, '', off);
+    });
+    $('r-mk').addEventListener('pointerdown', (e) => e.preventDefault());
+    $('r-mk').addEventListener('click', (e) => {
+        const b = e.target.closest('button'), id = A.mk;
+        if (!b || !id) return;
+        if (b.dataset.c != null) { const c = +b.dataset.c; HeinzStore.set(MKCOL, c); A.marks = updateMark(A.marks, id, { color: c }); persist(); drawMarks(); showMk(id); }
+        else if (b.dataset.mk === 'note') { hideMk(); openNote(id); }
+        else if (b.dataset.mk === 'del') { A.marks = removeMark(A.marks, id); persist(); drawMarks(); hideMk(); }
     });
     $('rs-close').addEventListener('click', closeSheet);
     $('rs-more').addEventListener('click', openAna);
@@ -395,4 +556,4 @@ export function initSelection(env) {
     $('rs-stop').addEventListener('click', () => { if (A.ac) A.ac.abort(); });
     $('rs-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(rawOf($('rs-body').querySelector('.dh-sout'))); } catch { /* keine Berechtigung */ } });
 }
-export function resetSelection() { closeAna(true); A.conv = null; closeSheet(); clearWahl(); A.cache.clear(); }
+export function resetSelection() { closeAna(true); A.conv = null; closeSheet(); clearWahl(); dropMarks(); A.marks = []; A.cache.clear(); }

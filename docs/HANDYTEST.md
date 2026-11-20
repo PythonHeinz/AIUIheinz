@@ -276,3 +276,11 @@ Vorbereitung: `git pull`, `bash start.sh`, Ollama mit `qwen2.5:3b` und `gemma2:2
 8. Hell/Dunkel, EN/DE, quer gehaltenes Handy.
 Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang melden; sie kommen in `docs/OLLAMA_UND_MODELLE.md`.
 
+
+## Y6 docHeinz Phase 3: Markierungen, Notizen, Export (nur simuliert getestet, 20.11.2026)
+1. Text lang drücken, ziehen: Leiste mit Lupe, Erklären, Zusammenfassen, Markieren, Kopieren in einer Zeile.
+2. „Markieren“: Stelle bekommt die zuletzt benutzte Farbe, darüber erscheint die Leiste (4 Farben, Stift, Mülleimer). Farbe wechseln, Notiz schreiben und speichern.
+3. Auf markierten Text tippen: Leiste öffnet sich wieder; anderswo tippen schließt sie. Markierung bleibt nach Schriftgröße ändern, Kapitelwechsel, App neu laden.
+4. Inhaltsfeld (Menü oben links): Register „Markierungen“, Tipp springt zur Stelle, Mülleimer löscht.
+5. „Als Markdown exportieren“ (Datei `…-notes.md`) und „Als Markdown kopieren“; in einen Editor einfügen.
+6. Erklären oder Zusammenfassen: „Als Notiz speichern“ im Blatt und im Fenster „Analyse“; Notiz erscheint mit „KI:“ in der Liste und im Export.
