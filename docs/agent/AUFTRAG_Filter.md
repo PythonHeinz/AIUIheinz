@@ -24,11 +24,17 @@ Eingabe per Datei (CSV, TSV, TXT, JSON, XML, RSS/Atom) oder Einfügen; Spaltenwa
 ## Schritt 2: Oberfläche (`tools/filter/index.html`)
 Ablauf in drei klaren Schritten wie im Lab, aber im neuen Design: **1 Eingabe** (Datei, Einfügen, Spalte), **2 Regel** (ein Satz, Etiketten, Presets, Parameter ausklappbar), **3 Ergebnis** (Kacheln, Tabelle, Kontrolle, Export). Nur Treffer anzeigen als Schalter; Begründung und Zufallswahl wie im Lab. Gestaltung nach `DESIGN.md` (Bausteine `lib/core.css`, Symbole aus dem Sprite, EN und DE, 426 × 803 und 426 × 400, Hell und Dunkel). Lange Läufe: Fortschritt, Abbruch, Fortsetzen nach Neuladen, kein Verlust bei App im Hintergrund.
 
-## Offene Entscheidungen (dem Entwickler zur Wahl vorlegen, nicht raten)
-1. **Welches Modell?** Vorschlag: die Standardkonfiguration des Heinz Chat (Qwen 2.5 3B) als Vorgabe, im Werkzeug **änderbar** (Modellwahl nur hier, keine Abhängigkeit vom Dashboard); Engine und Modell als Fakt in der Kopfzeile des Ergebnisses. Laufzeit (Threads, Kontext) wird wie beim Heinz Chat geteilt gelesen, nicht geschrieben.
+## Entscheidungen des Entwicklers (20.11.2026)
+1. **Modell:** Vorgabe Qwen 2.5 3B (Standardkonfiguration des Heinz Chat), im Werkzeug frei wählbar aus der Liste der Engine, **auch LiteRT-LM**.
+2. **`lib/providers.js` darf `format` (JSON-Schema mit `enum`) an Ollama durchreichen:** freigegeben als **Mini-Commit mit Test**, nur dieser Eingriff am Fundament (vorher „Aktive Arbeit“ lesen, kein anderer Strang an `lib/providers.js`). Für LiteRT-LM prüfen, ob `response_format` greift; wenn nicht gesichert, Rückfall auf Prompt + Prüfung der Antwort gegen die erlaubten Etiketten, im Ergebnis kenntlich („unklar“ zählen).
+3. **Preset „Rohstoffe“ (`material`) entfällt** (gehört zu INCIheinz). Übernommen werden Stimmung, Dringlichkeit, Nachrichtenart, Thema.
+Inventur und Zuschnittsvorschlag: `docs/agent/FILTER_INVENTUR.md`. Der Strang legt den Zuschnitt **kurz zur Bestätigung vor** (Module wie dort vorgeschlagen), bevor er baut.
+
+## Weitere offene Entscheidungen (dem Entwickler zur Wahl vorlegen, nicht raten)
+1. ~~Welches Modell?~~ entschieden (siehe oben). Engine und Modell als Fakt in der Kopfzeile des Ergebnisses; Laufzeit (Threads, Kontext) wird wie beim Heinz Chat geteilt gelesen, nicht geschrieben.
 2. **Ein Eintrag je Anfrage oder Stapel?** Vorschlag: einer (zuverlässiger bei kleinen Modellen), Stapel nur als Option mit Warnhinweis.
 3. **Online-Modelle erlaubt?** Vorschlag: nein in dieser Fassung; Mauer Offline/Online wie im Heinz Chat erst, wenn ein Anbieter eingebunden wird.
-4. **Presets mitnehmen?** Vorschlag: die bewährten aus dem Lab, gekürzt, mit Beschreibung in EN und DE.
+4. ~~Presets~~ entschieden: vier aus dem Lab, mit Beschreibung in EN und DE.
 5. **Eigene Daten:** Ergebnisse und letzte Eingaben nur lokal in eigener IndexedDB `heinz_filter`; Einstellungen klein über `HeinzStore` mit Präfix `heinz_filter_…`.
 
 ## Schritt 3: Aufnahme und Abschluss

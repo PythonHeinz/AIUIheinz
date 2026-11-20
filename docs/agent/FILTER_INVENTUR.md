@@ -25,7 +25,7 @@ Quelle: `lab.html` (659 Zeilen, ein Inline-Skript, ca. 35 Funktionen). `lab.html
 ## Vorschlag Zuschnitt (zur Entscheidung des Entwicklers)
 `tools/filter/mod/`: `einlesen.js`, `bewerten.js`, `auswerten.js`, `ausgabe.js`, `presets.js`, `db.js` (eigene IndexedDB `heinz_filter`: letzte Eingabe, Ergebnisse, Fortsetzen); `tools/filter/ui/`: `main.js` und je Schritt eine Datei (`eingabe.js`, `regel.js`, `ergebnis.js`); Tests `tests/filter/*.test.mjs` (Node) plus Seitentest mit simuliertem Ollama. Neu gegenüber dem Lab: Modellzugriff über `HeinzProviders`, Ergebnisse speichern und nach Neuladen fortsetzen, fester Startwert für die Zufallswahl, Hinweis bei gekürzten Einträgen.
 
-## Fragen an den Entwickler (vor dem Bau)
+## Fragen an den Entwickler (beantwortet 20.11.2026: 1 ja, 2 nein, 3 ja; siehe `AUFTRAG_Filter.md`)
 1. `lib/providers.js` darf **`format` (Schema) an Ollama durchreichen** (kleine Änderung, Fundament, Mini-Commit mit Test)? Sonst nur Prompt + Prüfung.
 2. Preset `material` ins Filter übernehmen oder weglassen (gehört zu INCIheinz)?
 3. Modelle: Vorgabe Qwen 2.5 3B aus der Standardkonfiguration, Wahl im Werkzeug frei aus der Liste der Engine (auch LiteRT-LM)?
