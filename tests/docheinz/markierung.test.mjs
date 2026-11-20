@@ -46,3 +46,15 @@ test('toMarkdown: Kapitel, Zitate, Notizen, KI-Antworten', () => {
     assert.ok(md.includes('## Teil 2\n\n> Eis *(grün)*\n\n**Notiz:** Merken'));
     assert.deepEqual(sortMarks(l).map(m => m.id), ['a', 'b']);
 });
+
+test('Notiz zur Seite: ohne Text erlaubt, nur mit Notiz, sortiert nach Lesestand, Export', () => {
+    const a = makeMark({ ch: 0, pn: true, frac: 0.5, text: 'Anfang der Seite', note: 'Später prüfen', id: 'a' });
+    assert.equal(a.pn, true); assert.equal(a.len, 0); assert.equal(a.frac, 0.5);
+    const b = makeMark({ ch: 0, start: 3, len: 4, text: 'Welt', id: 'b' });
+    const out = cleanMarks([a, b, makeMark({ ch: 0, pn: true, frac: 0.1, text: 'x', note: '', id: 'leer' })]);
+    assert.deepEqual(out.map(m => m.id), ['a', 'b']);
+    assert.equal(markAt(out, 0, 3).id, 'b');
+    assert.deepEqual(sortMarks(out).map(m => m.id), ['b', 'a']);
+    const md = toMarkdown({ title: 'T' }, out, () => 'K', { color: ['g', 'g', 'g', 'g'], pageNote: 'Seitennotiz' });
+    assert.ok(md.includes('> Anfang der Seite …\n\n**Seitennotiz:** Später prüfen'));
+});

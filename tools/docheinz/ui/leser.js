@@ -6,7 +6,7 @@ import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
-import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList } from './auswahl.js';
+import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black', 'custom'];
@@ -180,7 +180,7 @@ function closeUi() { if (S.ui || !$('r-set').hidden || !$('r-toc').hidden) showU
 function tocTab(name) {
     $('r-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
     $('r-tocl').hidden = name !== 'toc'; $('r-markl').hidden = name !== 'marks';
-    if (name === 'marks') renderMarkList($('r-markl'), (m) => { closeUi(); jump(m.ch, m.start, m.len); });
+    if (name === 'marks') renderMarkList($('r-markl'), (m) => { closeUi(); if (m.pn) { showCover(false); show(m.ch, '', m.frac || 0); } else jump(m.ch, m.start, m.len); }, () => { closeUi(); pageNote(); });
 }
 function buildToc() {
     const box = $('r-tocl');
@@ -348,7 +348,7 @@ export async function openReader(rec, src, ctx) {
     $('reader').hidden = false;
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
-    initSelection({ marks: ctx.marks, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
+    initSelection({ marks: ctx.marks, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, frac: () => fracOfPage(S.page, S.pages), isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
     setCover(ctx.cover || null);
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);

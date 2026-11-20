@@ -256,3 +256,5 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-nq { margin: 0 0 10px; padding: 0 0 0 10px; border-left: 3px solid var(--rline); color: var(--rsub); font-size: .9rem; }
 .dh-nt { width: 100%; box-sizing: border-box; min-height: 110px; padding: 10px; border-radius: 12px; border: 1px solid var(--rline); background: transparent; color: inherit; font: inherit; resize: vertical; margin-bottom: 10px; }
 .dh-toc .dh-mhead button { display: inline-flex; align-items: center; width: auto; padding: 0 14px; min-height: 38px; border: 1px solid var(--rline); border-radius: 19px; font: 600 .88rem var(--sans, inherit); }
+.dh-mq.cp .q::before { background: var(--rsub); border-radius: 2px; }
+.dh-toc .dh-mhead button.on { background: var(--rt); color: var(--rb); border-color: var(--rt); }

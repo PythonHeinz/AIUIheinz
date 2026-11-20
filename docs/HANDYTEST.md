@@ -284,3 +284,4 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 4. Inhaltsfeld (Menü oben links): Register „Markierungen“, Tipp springt zur Stelle, Mülleimer löscht.
 5. „Als Markdown exportieren“ (Datei `…-notes.md`) und „Als Markdown kopieren“; in einen Editor einfügen.
 6. Erklären oder Zusammenfassen: „Als Notiz speichern“ im Blatt und im Fenster „Analyse“; Notiz erscheint mit „KI:“ in der Liste und im Export.
+7. (Nachtrag Y6) Inhaltsfeld → „Markierungen & Notizen“ → „+ Notiz zu dieser Seite“: Notiz schreiben, speichern; in der Liste Tipp springt zur Seite zurück. „Nur mit Notiz“ filtert; Export enthält die Seitennotiz.

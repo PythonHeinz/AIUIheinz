@@ -831,3 +831,6 @@ Statt der System-Farbwahl (Chrome-Dialog) gibt es für Text- und Hintergrundfarb
 - Auswahlleiste: Suchen und Kopieren als Symbole, damit fünf Einträge auch auf Deutsch in eine Zeile passen. Tippen auf markierten Text (außer in der oberen Steuerzone) öffnet die Leiste der Markierung, Tippen anderswo schließt sie.
 - Entscheidungen des Entwicklers: 4 Farben plus Notiz; Register im Inhaltsverzeichnis; Export als Markdown je Buch (Datei und Zwischenablage); KI-Antwort per „Als Notiz speichern“ übernehmbar (als „KI“ gekennzeichnet).
 - Nur simuliert getestet (Playwright, Node); Handytest Y6.
+
+### docHeinz Phase 3, Nachtrag: Notiz zur Seite, Filter (20.11.2026)
+Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt eine Notiz ohne markierten Text an (Eintrag mit `pn: true`, `frac` = Lesestand, Auszug des Seitenanfangs); Tipp in der Liste springt dorthin. Filter „Nur mit Notiz“; Export enthält Seitennotizen als „Notiz zur Seite“. Weiter nur simuliert getestet.

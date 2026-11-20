@@ -627,6 +627,42 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#r-toc", state="hidden")
         self.assertGreaterEqual(p.evaluate("() => CSS.highlights.get('dh-hit') ? CSS.highlights.get('dh-hit').size : 0"), 1)
 
+    def test_page_note_without_selection_filter_and_export(self):
+        p = self.open(lang="de")
+        paras = "\n\n".join(("Absatz %d mit etwas Text zum Lesen auf dieser Seite des Buchs und noch etwas mehr Text. " % i) * 3 for i in range(30))
+        self.start_book(p, "a.md", "text/markdown", ("# Ein Titel\n\n" + paras).encode())
+        self.open_marks(p)
+        p.click("#mk-new")
+        p.wait_for_selector("#rs-note-t")
+        self.assertIn("Absatz 0", p.locator("#rs-body .dh-nq").inner_text())
+        p.fill("#rs-note-t", "Das merke ich mir")
+        p.click("#rs-note-go")
+        self.assertTrue(p.locator("#r-sheet").is_hidden())
+        self.mark(p, "Absatz 1")                              # eine zweite Markierung ohne Notiz
+        self.tap(p, "mid")
+        self.open_marks(p)
+        self.assertEqual(p.locator("#r-markl .dh-mi").count(), 2)
+        p.click("#mk-filter")
+        self.assertEqual(p.locator("#r-markl .dh-mi").count(), 1)
+        self.assertIn("Notiz zur Seite", p.locator("#r-markl .dh-mi").inner_text())
+        self.assertIn("Das merke ich mir", p.locator("#r-markl .dh-mi").inner_text())
+        with p.expect_download() as d:
+            p.click("#mk-export")
+        md = open(d.value.path(), encoding="utf-8").read()
+        self.assertIn("**Notiz zur Seite:** Das merke ich mir", md)
+        p.click("#r-close")                                   # Inhaltsfeld schließen (Pfeil), Steuerung zu, weiterblättern, dann über den Eintrag zurückspringen
+        self.tap(p, "mid")
+        self.tap(p, "next"); self.tap(p, "next")
+        p.wait_for_timeout(200)
+        before = self.pg(p)[0]
+        self.open_marks(p)
+        p.click("#mk-filter") if p.locator("#mk-filter.on").count() == 0 else None
+        p.click("#r-markl .dh-mq >> nth=0")
+        p.wait_for_selector("#r-toc", state="hidden")
+        self.assertEqual(self.pg(p)[0], 1)
+        self.assertGreater(before, 1)
+        self.assertEqual(p.errors, [])
+
     def test_ai_answer_can_be_saved_as_note(self):
         p = self.open(lang="de")
         self.fake_ollama(p)

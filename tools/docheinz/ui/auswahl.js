@@ -12,7 +12,7 @@ import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate
 
 const MAX_QUERY = 80;
 const AI_KEY = 'heinz_docheinz_ai';
-const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', range: null, drag: null, lp: 0, sup: false, pressing: false, anchor: null, px: 0, py: 0, pid: 0, timer: 0, ac: null, cache: new Map(), run: 0, wired: false, marks: [], mk: null, off: null };
+const A = { conv: null, anaOpen: false, anaPushed: false, skipPop: false, anaAc: null, anaRun: 0, env: null, text: '', range: null, drag: null, lp: 0, sup: false, pressing: false, anchor: null, px: 0, py: 0, pid: 0, timer: 0, ac: null, cache: new Map(), run: 0, wired: false, marks: [], mk: null, off: null, onlyNotes: false };
 
 // ---------- Eigene Auswahl ----------
 // Die native Auswahl ist im Lesetext abgeschaltet (Chrome blendet dort Menü und Suchfeld ein). Langer Druck markiert ein Wort, zwei Griffe ziehen die Markierung auf;
@@ -197,6 +197,23 @@ function doMark() {
     A.marks = addMark(A.marks, m); persist();
     clearWahl(); drawMarks(); showMk(m.id);
 }
+// Notiz zur Seite (ohne markierten Text): hängt am Lesestand, der Auszug zeigt den Seitenanfang
+export function pageNote() {
+    if (!A.env || !A.env.frac || A.marks.length >= MAX_MARKS) return;
+    const ex = squashTxt(A.env.pageText ? A.env.pageText() : '').slice(0, 90), at = { ch: A.env.ch(), frac: A.env.frac() };
+    openSheet(t('mk_pn'), '');
+    const box = $('rs-body');
+    if (ex) { const q = document.createElement('blockquote'); q.className = 'dh-nq'; q.textContent = ex + ' …'; box.appendChild(q); }
+    const ta = document.createElement('textarea'); ta.id = 'rs-note-t'; ta.className = 'dh-nt'; ta.maxLength = 4000; ta.placeholder = t('n_ph');
+    const go = document.createElement('button'); go.type = 'button'; go.className = 'pill acc'; go.id = 'rs-note-go'; go.textContent = t('n_save');
+    go.addEventListener('click', () => {
+        const v = ta.value.trim();
+        if (v) { A.marks = addMark(A.marks, makeMark({ ...at, pn: true, text: ex, note: v })); persist(); }
+        closeSheet();
+    });
+    box.append(ta, go);
+}
+const squashTxt = (x) => String(x || '').replace(/\s+/g, ' ').trim();
 function openNote(id) {
     const m = A.marks.find(x => x.id === id);
     if (!m) return;
@@ -222,7 +239,7 @@ function aiToNote(c, text) {
     persist(); drawMarks();
     return true;
 }
-const L = () => ({ color: COLORS.map(c => t('mk_' + c)), note: t('m_noteL'), ai: t('mk_ai'), count: t('m_count'), part: t('r_part', { n: '{n}' }) });
+const L = () => ({ pageNote: t('mk_pn'), color: COLORS.map(c => t('mk_' + c)), note: t('m_noteL'), ai: t('mk_ai'), count: t('m_count'), part: t('r_part', { n: '{n}' }) });
 const chTitle = (ch) => { const c = A.env.src().chapters[ch]; return c && c.title || ''; };
 const mdText = () => toMarkdown(A.env.rec(), A.marks, chTitle, L());
 function exportMd() {
@@ -232,20 +249,24 @@ function exportMd() {
     setTimeout(() => URL.revokeObjectURL(u), 4000);
 }
 // Liste für das Register „Markierungen“ im Inhaltsfeld; onGo(m) springt zur Stelle
-export function renderMarkList(box, onGo) {
+export function renderMarkList(box, onGo, onNew) {
     box.textContent = '';
     const head = document.createElement('div'); head.className = 'dh-mhead';
     const ex = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'mk-export', textContent: t('m_export'), disabled: !A.marks.length });
     const cp = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'mk-copy', textContent: t('m_copyMd'), disabled: !A.marks.length });
     ex.addEventListener('click', exportMd);
     cp.addEventListener('click', async () => { try { await navigator.clipboard.writeText(mdText()); } catch { /* keine Berechtigung */ } });
-    head.append(ex, cp); box.appendChild(head);
+    const nw = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'mk-new', textContent: t('mk_pnNew') });
+    nw.addEventListener('click', () => onNew && onNew());
+    const fl = Object.assign(document.createElement('button'), { type: 'button', className: 'pill' + (A.onlyNotes ? ' on' : ''), id: 'mk-filter', textContent: t('mk_onlyN') });
+    fl.addEventListener('click', () => { A.onlyNotes = !A.onlyNotes; renderMarkList(box, onGo, onNew); });
+    head.append(nw, fl, ex, cp); box.appendChild(head);
     if (!A.marks.length) { box.appendChild(Object.assign(document.createElement('p'), { className: 'dh-notoc', textContent: t('m_none') })); return; }
-    sortMarks(A.marks).forEach(m => {
+    sortMarks(A.marks).filter(m => !A.onlyNotes || m.note).forEach(m => {
         const row = document.createElement('div'); row.className = 'dh-mi'; row.dataset.id = m.id;
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-mq c' + m.color;
-        const q = document.createElement('span'); q.className = 'q'; q.textContent = m.text;
-        const sm = document.createElement('small'); sm.textContent = chTitle(m.ch) || t('r_part', { n: m.ch + 1 });
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-mq ' + (m.pn ? 'cp' : 'c' + m.color);
+        const q = document.createElement('span'); q.className = 'q'; q.textContent = m.pn ? (m.text ? m.text + ' …' : '') : m.text;
+        const sm = document.createElement('small'); sm.textContent = (m.pn ? t('mk_pn') + ' · ' : '') + (chTitle(m.ch) || t('r_part', { n: m.ch + 1 }));
         b.append(q, sm);
         if (m.note) { const n = document.createElement('span'); n.className = 'n'; n.textContent = (m.ai ? t('mk_ai') + ': ' : '') + m.note; b.appendChild(n); }
         b.addEventListener('click', () => onGo(m));
