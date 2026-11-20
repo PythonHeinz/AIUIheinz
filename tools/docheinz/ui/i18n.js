@@ -2,7 +2,7 @@
 export const D = {
     en: {
         sub: 'docHeinz', title: 'docHeinz',
-        s_add: 'Library', add: 'Add books', add_help: 'EPUB, Markdown, HTML or text. Everything stays on this device. On a PC you can also drop files here.',
+        s_add: 'Library', add: 'Add books', add_help: 'EPUB, PDF (with text), Markdown, HTML or text. Everything stays on this device. On a PC you can also drop files here.',
         count_one: '1 book', count_n: '{n} books',
         search: 'Search title or author …', so_recent: 'Last read', so_title: 'Title', so_author: 'Author', so_added: 'Added', so_progress: 'Progress',
         empty0: 'Your library is empty. Tap “Add books” to start.', emptyQ: 'No book matches this search.',
@@ -31,7 +31,7 @@ export const D = {
     },
     de: {
         sub: 'docHeinz', title: 'docHeinz',
-        s_add: 'Bibliothek', add: 'Bücher hinzufügen', add_help: 'EPUB, Markdown, HTML oder Text. Alles bleibt auf diesem Gerät. Am PC kannst du Dateien auch hierher ziehen.',
+        s_add: 'Bibliothek', add: 'Bücher hinzufügen', add_help: 'EPUB, PDF (mit Text), Markdown, HTML oder Text. Alles bleibt auf diesem Gerät. Am PC kannst du Dateien auch hierher ziehen.',
         count_one: '1 Buch', count_n: '{n} Bücher',
         search: 'Titel oder Autor suchen …', so_recent: 'Zuletzt gelesen', so_title: 'Titel', so_author: 'Autor', so_added: 'Hinzugefügt', so_progress: 'Fortschritt',
         empty0: 'Deine Bibliothek ist leer. Tippe auf „Bücher hinzufügen“.', emptyQ: 'Kein Buch passt zu dieser Suche.',

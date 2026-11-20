@@ -25,7 +25,9 @@ function msg(lines, kind) {
     el.className = 'notice dh-msg' + (kind ? ' ' + kind : '');
     el.hidden = false;
     clearTimeout(msg.t);
-    msg.t = setTimeout(() => { el.hidden = true; }, 9000);
+    msg.t = setTimeout(() => { el.hidden = true; }, kind === 'ok' ? 9000 : 60000);
+    el.onclick = () => { el.hidden = true; };
+    el.scrollIntoView({ block: 'nearest' });
 }
 
 function applyI18n() {

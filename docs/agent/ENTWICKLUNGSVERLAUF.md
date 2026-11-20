@@ -847,3 +847,4 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - PDF ohne Textebene (Scan): klarer Hinweis (`scanned`), OCR folgt als 4c (Wunsch des Entwicklers). Originalansicht mit Zoom folgt als 4b.
 - Fallstrick: Test-PDFs in `tests/docheinz/fixtures/` (mit LibreOffice erzeugt). Nur simuliert getestet; Handytest Y8.
 - Nachtrag 4a: Beim Hinzufügen wird jetzt „Name wird gelesen … x %“ angezeigt (Handy-Hinweis: PDFs werden beim Hinzufügen komplett gelesen, um die Textlänge für den Fortschritt zu bestimmen; vorher blieb die Anzeige stumm). Offen: Beschleunigung für dicke PDFs (Messwert vom Handy abwarten).
+- Fix 4a (Handy-Befund): Dateiauswahl (`accept` in `index.html`) enthielt kein PDF, Android blendete PDFs aus. Meldungsfeld jetzt direkt unter dem Hinzufügen-Knopf (vorher unter der Liste, außer Sicht), Fehler bleiben 60 s, Tippen schließt, `scrollIntoView`.
