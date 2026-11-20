@@ -15,7 +15,7 @@ test('Wörter und Zeilen mit niedriger Sicherheit fallen weg', () => {
         { words: [w('Guter', 93), w('Text', 90), w('hier', 88)] },
         { words: [w('xX', 20), w('#', 15), w('Z', 30)] },
         { words: [w('®', 70), w('A', 80), w('x', 75)] },
-        { words: [w('Titel', 95), w('r=', 10)] },
+        { words: [w('Titel', 95), w('Text', 90), w('r=', 10)] },
     ] }, { lines: [{ words: [w('~', 5)] }] }] }];
-    assert.equal(filterBlocks(blocks), 'Guter Text hier\nTitel');
+    assert.equal(filterBlocks(blocks), 'Guter Text hier\nTitel Text');
 });
