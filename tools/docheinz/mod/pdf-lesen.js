@@ -4,6 +4,7 @@
  * Nur PDFs mit Textebene; ohne Text (Scan) wirft BuchFehler('scanned'). Verschlüsselte PDFs: BuchFehler('drm'). */
 import { orderPage, furnitureKeys, dropFurniture, baseSize, toBlocks, joinPages, blocksToHtml } from './pdf-text.js';
 import { sauber, plain } from './sauber.js';
+import { ocrTextToHtml } from './ocr.js';
 
 const PAGES_PER_CH = 10;
 const stem = n => String(n || '').replace(/\.[^.]+$/, '');
@@ -29,7 +30,7 @@ async function pageLines(page) {
     return { lines: orderPage(items), h: vp.height };
 }
 
-export async function openPdf(bytes, name, BuchFehler) {
+export async function openPdf(bytes, name, BuchFehler, opts = {}) {
     const lib = await loadLib();
     let doc;
     try { doc = await lib.getDocument({ data: bytes.slice(0), isEvalSupported: false, useSystemFonts: false }).promise; }
@@ -48,7 +49,8 @@ export async function openPdf(bytes, name, BuchFehler) {
         const { lines } = await getPage(p);
         chars += lines.reduce((a, l) => a + l.s.length, 0); probe++;
     }
-    if (chars < 20 * probe * 0.5 && chars < 100) throw new BuchFehler('scanned');
+    const OCR = Array.isArray(opts.ocr) ? opts.ocr : null;          // Scan: Text kommt aus der Texterkennung (rec.ocr, eine Zeichenkette je Seite)
+    if (!OCR && chars < 20 * probe * 0.5 && chars < 100) throw new BuchFehler('scanned');
 
     // Kopf-/Fußzeilen aus einer Stichprobe bestimmen
     const sample = [];
@@ -96,6 +98,7 @@ export async function openPdf(bytes, name, BuchFehler) {
     const htmlCache = new Map();
     const build = async (i) => {
         const c = chapters[i], pages = [];
+        if (OCR) { let h = ''; for (let p = c.from; p <= c.to; p++) h += OCR[p - 1] ? ocrTextToHtml(OCR[p - 1]) + '\n' : ''; return sauber(h.trim() ? h : '<p></p>'); }
         for (let p = c.from; p <= c.to; p++) {
             const { lines, h } = await getPage(p);
             pages.push(toBlocks(dropFurniture(lines, h, keys, base), base));
@@ -105,7 +108,7 @@ export async function openPdf(bytes, name, BuchFehler) {
         if (!html.trim()) html = '<p></p>';
         return sauber(html);
     };
-    const html = (i) => { if (!htmlCache.has(i)) htmlCache.set(i, build(i)); return htmlCache.get(i); };
+    const html = (i) => { if (OCR) return build(i); if (!htmlCache.has(i)) htmlCache.set(i, build(i)); return htmlCache.get(i); };
 
     return {
         format: 'pdf',

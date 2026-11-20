@@ -330,7 +330,28 @@ class DocHeinzUiTests(DocHeinzBase):
         p2 = self.open()
         self.add(p2, ("scan.pdf", "application/pdf", (fx / "scan.pdf").read_bytes()))
         p2.wait_for_function("() => document.getElementById('msg').textContent.includes('text layer')")
-        self.assertEqual(self.rows(p2), 0)
+        self.assertEqual(self.rows(p2), 1)
+        self.assertIn("0 / 1", p2.locator("#list .dh-pct").inner_text())
+
+    def test_pdf_scan_ocr_runs_locally_and_reads(self):
+        import pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        p = self.open(lang="de")
+        self.add(p, ("scan_text.pdf", "application/pdf", (fx / "scan_text.pdf").read_bytes()))
+        p.wait_for_selector("#list .dh-ocr")
+        p.click("#list .dh-ocr")
+        self.assertEqual(p.locator("#o-lang").input_value(), "deu")
+        p.click("#o-go")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=90000)
+        self.assertEqual(p.locator("#list .dh-ocr").count(), 0)
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.tap(p, "next")
+        p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
+        p.wait_for_function("() => document.getElementById('r-page').textContent.includes('Energieeffizienzklasse')", timeout=20000)
+        self.assertEqual(p.external, [])
+        self.assertEqual(p.errors, [])
 
     def test_pdf_original_view_zoom_and_back(self):
         import pathlib

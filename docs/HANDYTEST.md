@@ -303,3 +303,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 5. Eingescanntes PDF: Hinweis „keine Textebene“, kein Absturz. (OCR folgt.)
 6. Originalansicht (Knopf oben in der Leiste, nur bei PDF): Seiten wie gedruckt, mit zwei Fingern zoomen, Doppeltipp zoomt, Plus/Minus, ruckelt es? Zurück führt an dieselbe Stelle im Text.
 7. Norm mit Tabellen (EU 2019/2015, Anhang II): Tabellen als Tabelle, Wörter ohne Lücken mitten im Wort?
+
+## Y9 docHeinz: OCR für gescannte PDFs (nur simuliert getestet, 20.11.2026)
+1. `git pull`, `bash start.sh`; ein eingescanntes PDF (Folien-PDF ohne Text) hinzufügen: es erscheint als Buch mit „Scan · Text erkannt 0 / N Seiten“ und Knopf OCR.
+2. OCR antippen, Sprache wählen, Start. Bildschirm anlassen. Zeit je Seite notieren (Pixel 9 Pro) und ob der Akku/Wärme auffällt. Beim ersten Mal lädt der Kern und die Sprachdaten (wenige Sekunden).
+3. Zwischendurch ■ drücken: es hält nach der Seite an, später mit OCR weitermachen. Seite neu laden und weitermachen geht ebenfalls.
+4. Fertig: Buch öffnen, Text prüfen (Umlaute, Zahlen, Spalten). Originalansicht zeigt das Bild der Seite.
