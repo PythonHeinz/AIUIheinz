@@ -32,3 +32,17 @@ export function imagesToPdf(pages, dpi = 150) {
     let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; }
     return out;
 }
+
+/* readPhotoPages(pdfBytes) -> [{ jpeg, w, h }]   liest die Seiten eines von imagesToPdf erzeugten PDFs zurück (zum Anhängen weiterer Fotos).
+ * Funktioniert nur für diese Dateien (Bild-Objekte mit /DCTDecode und /Length vor dem Datenstrom). */
+export function readPhotoPages(bytes) {
+    const s = new TextDecoder('latin1').decode(bytes), pages = [];
+    const re = /\/Type \/XObject \/Subtype \/Image \/Width (\d+) \/Height (\d+)[^>]*?\/Length (\d+) >>\nstream\n/g;
+    let m;
+    while ((m = re.exec(s))) {
+        const start = m.index + m[0].length, len = +m[3];
+        pages.push({ jpeg: bytes.slice(start, start + len), w: +m[1], h: +m[2] });
+        re.lastIndex = start + len;
+    }
+    return pages;
+}

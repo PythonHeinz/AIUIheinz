@@ -402,6 +402,33 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(p.external, [])
         self.assertEqual(p.errors, [])
 
+    def test_photo_book_gets_more_pages_one_by_one(self):
+        import pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        p = self.open(lang="de")
+        self.add(p, ("foto1.jpg", "image/jpeg", (fx / "foto1.jpg").read_bytes()))
+        p.wait_for_selector("#o-go"); p.click("#o-go")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=90000)
+        self.assertIn("1", p.locator("#list").inner_text())
+        p.click("#list [data-act=padd]")
+        p.wait_for_selector("#p-cam")
+        with p.expect_file_chooser() as fc:
+            p.click("#p-cam")
+        fc.value.set_files([{"name": "foto2.jpg", "mimeType": "image/jpeg", "buffer": (fx / "foto2.jpg").read_bytes()}])
+        p.wait_for_selector("#o-go")                           # Formular der Texterkennung für die neue Seite
+        self.assertIn("1 von 2", p.locator("#list .help").inner_text())
+        p.click("#o-go")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=90000)
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.tap(p, "next")
+        p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
+        txt = p.evaluate("() => document.getElementById('r-body').textContent")
+        self.assertIn("Heißluftfritteuse", txt)
+        self.assertIn("Sicherheitshinweisen", txt)
+        self.assertEqual(p.errors, [])
+
     def test_delete_asks_first_and_removes_the_book(self):
         p = self.open()
         self.add(p, ("a.txt", "text/plain", b"Hallo."), ("b.txt", "text/plain", b"Welt."))

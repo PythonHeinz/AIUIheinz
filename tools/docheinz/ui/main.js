@@ -6,7 +6,7 @@ import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
-import { imagesToPdf } from '../mod/bilder-pdf.js';
+import { imagesToPdf, readPhotoPages } from '../mod/bilder-pdf.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { exportBook, FORMATS } from '../mod/exportieren.js';
 import { LANGS, makeRecognizer } from '../mod/ocr.js';
@@ -16,7 +16,7 @@ import { openReader, close as closeReader, applyTheme, applySize, applyBtns, rel
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
+const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -64,6 +64,7 @@ function bookRow(b) {
     }
     if (state.exp === b.id) return exportRow(b, row);
     if (state.ocrAsk === b.id) return ocrRow(b, row);
+    if (state.photoAsk === b.id) return photoRow(b, row);
     const open = document.createElement('button');
     open.type = 'button'; open.className = 'dh-open'; open.dataset.act = 'open';
     const cover = document.createElement('span');
@@ -96,13 +97,53 @@ function bookRow(b) {
     const ex = document.createElement('button');
     ex.type = 'button'; ex.className = 'ibtn dh-exp'; ex.dataset.act = 'exp'; ex.setAttribute('aria-label', t('x_export') + ': ' + b.title); ex.title = t('x_export');
     ex.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-download"/></svg>';
+    const extra = [];
     if (need || job) {
         const oc = document.createElement('button');
         oc.type = 'button'; oc.className = 'pill acc dh-ocr'; oc.dataset.act = job ? 'ocrstop' : 'ocr'; oc.textContent = job ? '■' : 'OCR';
         oc.setAttribute('aria-label', (job ? t('o_stop') : t('o_start')) + ': ' + b.title); oc.title = job ? t('o_stop') : t('o_start');
-        row.append(open, oc, ex, del);
-    } else row.append(open, ex, del);
+        extra.push(oc);
+    }
+    if (b.photo && !job) {
+        const pa = document.createElement('button');
+        pa.type = 'button'; pa.className = 'pill dh-ocr'; pa.dataset.act = 'padd'; pa.textContent = '+ ' + t('p_page');
+        pa.setAttribute('aria-label', t('p_addTitle', { t: b.title })); pa.title = t('p_addTitle', { t: b.title });
+        extra.push(pa);
+    }
+    row.append(open, ...extra, ex, del);
     return row;
+}
+
+// ---------- Seiten zu einem Foto-Buch hinzufügen ----------
+function photoRow(b, row) {
+    row.classList.add('exp');
+    const h = document.createElement('b'); h.className = 'dh-xh'; h.textContent = t('p_addTitle', { t: b.title });
+    const hp = document.createElement('p'); hp.className = 'help'; hp.textContent = t('p_addHelp', { n: b.ocrTotal });
+    const bt = document.createElement('div'); bt.className = 'dh-xb';
+    const no = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('delNo') }); no.dataset.act = 'pno';
+    const gal = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('p_gallery') }); gal.dataset.act = 'pgal';
+    const cam = Object.assign(document.createElement('button'), { type: 'button', className: 'pill acc', id: 'p-cam', textContent: t('p_camera') }); cam.dataset.act = 'pcam';
+    bt.append(no, gal, cam); row.append(h, hp, bt);
+    return row;
+}
+async function appendPhotos(id, files) {
+    files = Array.from(files || []).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+    const rec = state.books.find(b => b.id === id);
+    if (!rec || !files.length) return;
+    try {
+        const blob = await state.db.file(id);
+        const old = readPhotoPages(new Uint8Array(await blob.arrayBuffer()));
+        const add = [];
+        for (let i = 0; i < files.length; i++) { msg(t('p_reading', { i: i + 1, n: files.length }), 'ok'); add.push(await photoToPage(files[i])); }
+        const pdf = imagesToPdf([...old, ...add]);
+        const src = await openSource(pdf, 'pdf', rec.name, { ocr: rec.ocr || [] });
+        const { lens } = await describe(src);
+        Object.assign(rec, { size: pdf.length, sig: signature(rec.name, pdf.length), ocrTotal: old.length + add.length, chapters: src.chapters.length, toc: src.toc.map(x => ({ title: x.title, href: x.href, level: x.level })), lens });
+        await state.db.put(rec, new Blob([pdf], { type: 'application/pdf' }));
+        state.photoAsk = ''; state.ocrAsk = id;
+        await reload();
+        msg(t('p_added', { n: add.length }), 'ok');
+    } catch { msg(t('p_err'), 'err'); }
 }
 
 // ---------- Texterkennung (OCR) ----------
@@ -367,6 +408,8 @@ async function start() {
     Heinz.enhanceSelects('select.sel');
 
     $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+    $('file-cam').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
+    $('file-pg').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
     $('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
     $('sort').addEventListener('change', (e) => { state.sort = e.target.value; HeinzStore.set(K('sort'), state.sort); render(); });
     $('list').addEventListener('click', (e) => {
@@ -381,6 +424,10 @@ async function start() {
         else if (btn.dataset.act === 'exp') { state.exp = id; state.confirm = ''; render(); }
         else if (btn.dataset.act === 'xno') { state.exp = ''; render(); }
         else if (btn.dataset.act === 'xgo') runExport(id);
+        else if (btn.dataset.act === 'padd') { state.photoAsk = id; state.confirm = ''; state.exp = ''; state.ocrAsk = ''; render(); }
+        else if (btn.dataset.act === 'pno') { state.photoAsk = ''; render(); }
+        else if (btn.dataset.act === 'pcam') { state.addTo = id; $('file-cam').click(); }
+        else if (btn.dataset.act === 'pgal') { state.addTo = id; $('file-pg').click(); }
         else if (btn.dataset.act === 'ocr') { state.ocrAsk = id; state.confirm = ''; state.exp = ''; render(); }
         else if (btn.dataset.act === 'ocrno') { state.ocrAsk = ''; render(); }
         else if (btn.dataset.act === 'ocrgo') runOcr(id, document.getElementById('o-lang').value);

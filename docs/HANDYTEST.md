@@ -314,3 +314,4 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 1. „Bücher hinzufügen“, im Dateiwähler Bilder (oder „Kamera“) wählen, mehrere Seiten auf einmal; Reihenfolge = Dateiname. Es entsteht ein Buch „Fotos …“, das Formular der Texterkennung öffnet sich.
 2. Sprache wählen, Start. Zeit je Seite notieren. Danach lesen: Umlaute, Zahlen, Zeilenumbrüche, Silbentrennung?
 3. Gutes Foto: Seite gerade, gleichmäßig hell, Schrift füllt das Bild. Wie schlecht wird es bei schiefem Foto oder Schatten? (Perspektivkorrektur gibt es noch nicht.)
+4. Am Foto-Buch „+ Seite“: „Foto aufnehmen“ (Kamera, eine Seite je Aufnahme) und „Aus der Galerie“. Neue Seiten erscheinen hinten, danach OCR (nur die neuen Seiten).
