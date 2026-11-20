@@ -83,8 +83,8 @@ export async function openSource(bytes, format, name = '') {
     return simple('html', { title, creator: '', language: lang }, [{ title: '', html }]);
 }
 
-export async function describe(source) {
+export async function describe(source, onProgress) {
     const lens = [];
-    for (let i = 0; i < source.chapters.length; i++) lens.push(source.textLength ? await source.textLength(i) : plain(await source.html(i)).length);
+    for (let i = 0; i < source.chapters.length; i++) { if (onProgress) onProgress(i, source.chapters.length); lens.push(source.textLength ? await source.textLength(i) : plain(await source.html(i)).length); }
     return { lens };
 }

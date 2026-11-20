@@ -206,8 +206,9 @@ async function addFiles(files) {
             if (known.has(signature(name, f.size))) { lines.push(t('m_dup', { name })); continue; }
             const format = formatOf(name, f.type);
             const bytes = new Uint8Array(await f.arrayBuffer());
+            msg(t('m_reading', { name }), 'ok');
             const src = await openSource(bytes, format, name);
-            const { lens } = await describe(src);
+            const { lens } = await describe(src, (i, n) => { if (n > 1) msg(t('m_reading', { name }) + ' ' + Math.round(100 * i / n) + ' %', 'ok'); });
             const rec = makeRecord(src, { name, size: f.size, lens });
             if (format === 'epub') await withCover(rec, bytes);
             await state.db.put(rec, new Blob([bytes], { type: f.type || 'application/octet-stream' }));

@@ -316,7 +316,7 @@ class DocHeinzUiTests(DocHeinzBase):
     def test_german_messages(self):
         p = self.open(lang="de")
         self.add(p, ("x.pdf", "application/pdf", b"%PDF-1.4"))
-        p.wait_for_function("() => document.getElementById('msg').textContent.includes('x.pdf')")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('ließ sich nicht lesen')")
         self.assertIn("ließ sich nicht lesen", p.locator("#msg").inner_text())
 
     def test_pdf_reflow_and_scan_notice(self):
