@@ -295,7 +295,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 6. Mit angehängten Markierungen und Notizen: letzter Abschnitt vorhanden, Kapitelbezug richtig.
 7. Ein großes Buch (50 MB und mehr) exportieren: Wartezeit, Speicher, kein Abbruch.
 
-## Y8 docHeinz: PDF lesen im Umfluss-Modus (nur simuliert getestet, 20.11.2026)
+## Y8 docHeinz: PDF lesen und Originalansicht – am Handy bestätigt 20.11.2026 (Entwickler)
 1. `git pull`, `bash start.sh`, docHeinz öffnen, ein PDF mit Text (Roman, Anleitung) in die Bibliothek legen.
 2. Es öffnet sich im Leser: Absätze, Überschriften, Silbentrennung am Zeilenende aufgelöst, keine Seitenzahlen und Kopfzeilen im Text. Schrift, Farben, Markierungen, Notizen, Export wie bei EPUB.
 3. Kapitel: bei PDFs mit Gliederung nach Gliederung, sonst je 10 Seiten. Wie lange dauert das Öffnen eines dicken PDFs (Seitenzahl notieren)?
