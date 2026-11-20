@@ -97,7 +97,7 @@ function bookRow(b) {
     ex.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-download"/></svg>';
     if (need || job) {
         const oc = document.createElement('button');
-        oc.type = 'button'; oc.className = 'ibtn dh-ocr'; oc.dataset.act = job ? 'ocrstop' : 'ocr'; oc.textContent = job ? '■' : 'OCR';
+        oc.type = 'button'; oc.className = 'pill acc dh-ocr'; oc.dataset.act = job ? 'ocrstop' : 'ocr'; oc.textContent = job ? '■' : 'OCR';
         oc.setAttribute('aria-label', (job ? t('o_stop') : t('o_start')) + ': ' + b.title); oc.title = job ? t('o_stop') : t('o_start');
         row.append(open, oc, ex, del);
     } else row.append(open, ex, del);
