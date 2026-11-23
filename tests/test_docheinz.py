@@ -445,17 +445,19 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.getElementById('cam-v').videoWidth > 0")
         for _ in range(3):
             p.click("#cam-s")
-            p.wait_for_timeout(250)
+            p.wait_for_timeout(900)
         self.assertIn("3 Seite", p.locator("#cam-n").inner_text())
         p.click("#cam-u")
         self.assertIn("2 Seite", p.locator("#cam-n").inner_text())
-        p.click("#cam-r")                                      # Ansicht drehen: Aufnahme wird mitgedreht (Hochformat <-> Querformat)
-        w0 = p.evaluate("() => document.getElementById('cam-v').videoWidth")
-        p.click("#cam-s"); p.wait_for_timeout(300)
-        dims = p.evaluate("() => { const i = [...document.querySelectorAll('#cam-t img')].pop(); return [i.naturalWidth, i.naturalHeight]; }")
-        vh = p.evaluate("() => document.getElementById('cam-v').videoHeight")
-        if w0 != vh:                                           # nur aussagekräftig, wenn das Testbild nicht quadratisch ist
-            (self.assertLess if w0 > vh else self.assertGreater)(dims[0], dims[1])
+        dims = lambda: p.evaluate("() => { const i = [...document.querySelectorAll('#cam-t img')].pop(); return [i.naturalWidth, i.naturalHeight]; }")
+        vw, vh = p.evaluate("() => [document.getElementById('cam-v').videoWidth, document.getElementById('cam-v').videoHeight]")
+        d = dims()
+        if vw != vh:                                           # Handy hochkant: Rohbild quer wird zu Hochformat gedreht (wie die Kamera-App)
+            self.assertEqual(d[0] < d[1], vw > vh)
+        p.click("#cam-r"); p.click("#cam-s"); p.wait_for_timeout(300)     # ↻ dreht zusätzlich
+        d2 = dims()
+        if vw != vh:
+            self.assertEqual(d2[0] > d2[1], vw > vh)
         p.click("#cam-u")
         p.click("#cam-d")
         p.wait_for_selector("#o-go")
