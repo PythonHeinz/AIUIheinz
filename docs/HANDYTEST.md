@@ -321,3 +321,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Mehrere Seiten nacheinander mit dem Auslöser aufnehmen; Zähler und Miniaturen prüfen, „Letztes löschen“ testen.
 3. „Fertig“: ein Buch „Fotos …“ mit allen Seiten in Aufnahmereihenfolge, OCR-Formular öffnet sich.
 4. Mehrere Fotos aus der Galerie wählen: Reihenfolge = Aufnahmezeit.
+
+### Y10 Nachtrag 2: gedrehte Fotos und Doppelseiten (nur simuliert getestet)
+1. Eine Doppelseite quer und eine Einzelseite fotografieren (Telefon beliebig gehalten), OCR starten.
+2. Erwartung: Text aufrecht erkannt, linke Seite vor rechter, kein Zeilenmix. Dauer je Seite notieren.

@@ -3,7 +3,7 @@
  *   openCamera({ t, onDone(pages), onCancel(), onError() })   pages = [{ jpeg: Uint8Array, w, h }] in Aufnahmereihenfolge
  * Jede Aufnahme bleibt im Speicher, bis „Fertig“; „Zurücknehmen“ verwirft die letzte. Der Strom wird beim Schließen immer beendet. */
 const $ = id => document.getElementById(id);
-const C = { stream: null, pages: [], urls: [], cb: null, busy: false, wired: false, max: 2200 };
+const C = { stream: null, pages: [], urls: [], cb: null, busy: false, wired: false, max: 3200 };
 export const cameraSupported = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
 function stop() {

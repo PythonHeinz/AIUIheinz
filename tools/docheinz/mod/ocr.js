@@ -1,6 +1,6 @@
 /* tools/docheinz/mod/ocr.js – Texterkennung (OCR) für gescannte PDF-Seiten, lokal mit tesseract.js (vendor/ocr/, keine Anfrage nach außen).
  *   LANGS = ['deu', 'eng', 'deu+eng']
- *   makeRecognizer(lang) -> Promise<{ recognize(canvas) -> Promise<string>, end() }>   lädt Bibliothek, Kern (WASM) und Sprachdaten erst jetzt
+ *   makeRecognizer(lang) -> Promise<{ recognize(canvas) -> Promise<string>, score(canvas) -> Promise<number>, end() }>   lädt Bibliothek, Kern (WASM) und Sprachdaten erst jetzt
  *   ocrTextToHtml(text) -> HTML    reine Funktion: Zeilen zu Absätzen, Silbentrennung am Zeilenende, Maskierung
  * Grenzen: Qualität hängt von der Vorlage ab; Tabellen und Spalten werden nicht als Struktur erkannt, nur als Text. */
 export const LANGS = ['deu', 'eng', 'deu+eng'];
@@ -57,9 +57,18 @@ export async function makeRecognizer(lang) {
     const worker = await createWorker(lang, 1, { workerPath: base + 'worker.min.js', corePath: base + 'tesseract-core-simd-lstm.wasm.js', langPath: base, gzip: true, cacheMethod: 'none' });
     return {
         recognize: async (canvas) => {
+            if (canvas.width < 40 || canvas.height < 40) return '';
             const r = await worker.recognize(canvas, {}, { text: true, blocks: true });
             const d = r && r.data; if (!d) return '';
             return d.blocks ? filterBlocks(d.blocks) : (d.text || '');
+        },
+        // mittlere Wortsicherheit (0..100) für die Ausrichtungsprobe; Text auf dem Kopf oder gedreht ergibt niedrige Werte
+        score: async (canvas) => {
+            const r = await worker.recognize(canvas, {}, { text: true, blocks: true });
+            const words = []; const walk = n => { if (!n) return; if (Array.isArray(n)) return n.forEach(walk); if (typeof n.confidence === 'number' && n.text && !n.words && !n.lines && !n.paragraphs) words.push(n); ['paragraphs', 'lines', 'words'].forEach(k => walk(n[k])); };
+            walk(r && r.data && r.data.blocks);
+            const good = words.filter(w => /[A-Za-zÄÖÜäöüß]{2,}/.test(w.text));
+            return good.length ? good.reduce((a, w) => a + w.confidence, 0) / good.length * Math.min(1, good.length / 15) : 0;
         },
         end: () => worker.terminate(),
     };

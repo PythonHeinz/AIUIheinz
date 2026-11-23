@@ -15,7 +15,7 @@ export async function scaleCover(bytes, type, max = 720) {
 }
 
 // Seitenfoto -> JPEG für das Foto-PDF: EXIF-Drehung wird übernommen, lange Seite höchstens max Pixel, Transparenz auf Weiß.
-export async function photoToPage(file, max = 2200) {
+export async function photoToPage(file, max = 3200) {
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
     const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
     const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));

@@ -5,6 +5,7 @@ import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
+import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized } from './seite.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
 import { imagesToPdf, readPhotoPages } from '../mod/bilder-pdf.js';
 import { openCamera, cameraSupported } from './kamera.js';
@@ -167,6 +168,23 @@ function ocrRow(b, row) {
     bt.append(no, go); row.append(h, sel, hp, bt);
     return row;
 }
+// Foto-Seite lesen: Drehung erkennen (Zeilenrichtung, dann Probe der Richtung), Doppelseite am Falz teilen, linke Seite zuerst.
+async function readPhotoPage(canvas, rz) {
+    const small = c => { const k = Math.min(1, 1000 / Math.max(c.width, c.height)); const o = document.createElement('canvas'); o.width = Math.round(c.width * k); o.height = Math.round(c.height * k); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); return o; };
+    let up = canvas;
+    if (textAxis(inkMap(canvas)) === 90) {
+        const a = rotated(canvas, 90), b = rotated(canvas, 270);
+        up = (await rz.score(small(a))) >= (await rz.score(small(b))) ? a : b;
+    } else if ((await rz.score(small(canvas))) < 60) {
+        const r = rotated(canvas, 180);
+        if ((await rz.score(small(r))) > (await rz.score(small(canvas)))) up = r;
+    }
+    const g = gutterAt(inkMap(up));
+    const lv = c => binarized(leveled(c, skewAngle(inkMap(c))));
+    if (g === null) return rz.recognize(lv(up));
+    const left = await rz.recognize(lv(cropped(up, 0, Math.min(1, g + 0.01)))), right = await rz.recognize(lv(cropped(up, Math.max(0, g - 0.01), 1)));
+    return [left, right].filter(x => x.trim()).join('\n\n');
+}
 async function runOcr(id, lang) {
     const rec = state.books.find(b => b.id === id);
     if (!rec || state.ocrJob) return;
@@ -182,9 +200,10 @@ async function runOcr(id, lang) {
         const canvas = document.createElement('canvas');
         for (let p = (rec.ocr || []).length + 1; p <= rec.ocrTotal && !job.stop; p++) {
             job.i = p; msg(t('o_page', { i: p, n: rec.ocrTotal }), 'ok'); render();
-            await src.pdf.render(p, canvas, 1800, 1).done;
-            if (rec.photo) enhanceForOcr(canvas);
-            const text = await rz.recognize(canvas);
+            let wpx = 1800;
+            if (rec.photo) { const sz = await src.pdf.size(p); wpx = Math.min(3200, Math.round(sz.w * 150 / 72)); }   // Foto-Seiten in Originalauflösung
+            await src.pdf.render(p, canvas, wpx, 1).done;
+            const text = rec.photo ? await readPhotoPage(canvas, rz) : await rz.recognize(canvas);
             rec.ocr = (rec.ocr || []).concat([text.trim() ? text : ' ']);
             await state.db.update(id, { ocr: rec.ocr });
         }
