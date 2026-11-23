@@ -416,7 +416,7 @@ class DocHeinzUiTests(DocHeinzBase):
             p.click("#p-cam")
         fc.value.set_files([{"name": "foto2.jpg", "mimeType": "image/jpeg", "buffer": (fx / "foto2.jpg").read_bytes()}])
         p.wait_for_selector("#o-go")                           # Formular der Texterkennung für die neue Seite
-        self.assertIn("1 von 2", p.locator("#list .help").inner_text())
+        self.assertIn("1 von 2", p.locator("#list .help").first.inner_text())
         p.click("#o-go")
         p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=90000)
         p.click("#list .dh-open")
@@ -427,6 +427,52 @@ class DocHeinzUiTests(DocHeinzBase):
         txt = p.evaluate("() => document.getElementById('r-body').textContent")
         self.assertIn("Heißluftfritteuse", txt)
         self.assertIn("Sicherheitshinweisen", txt)
+        self.assertEqual(p.errors, [])
+
+    def test_cloud_recognition_only_with_online_and_key_and_sends_page_photos(self):
+        import base64, pathlib
+        fx = pathlib.Path(__file__).parent / "docheinz" / "fixtures"
+        # 1) ohne „Online erlauben“: Hinweis statt Knopf, nichts verlässt das Gerät
+        p = self.open(lang="de")
+        self.add(p, ("foto1.jpg", "image/jpeg", (fx / "foto1.jpg").read_bytes()))
+        p.wait_for_selector("#o-go")
+        self.assertEqual(p.locator("#c-ask").count(), 0)
+        self.assertIn("Online erlauben", p.locator(".dh-cloud").inner_text())
+        self.assertEqual(p.external, [])
+        # 2) mit Online + Schlüssel: Bestätigung, dann geht nur das Seitenfoto an Gemini
+        p.evaluate("() => { localStorage.setItem('heinz_online', 'true'); localStorage.setItem('heinz_keys', JSON.stringify({ google: 'KEY' })); }")
+        p.reload(); p.wait_for_selector("html[data-dh=ready]")
+        calls = []
+        def gem(route):
+            url = route.request.url; cors = {"access-control-allow-origin": "*"}
+            if route.request.method == "OPTIONS":
+                return route.fulfill(status=204, headers={**cors, "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
+            if ":streamGenerateContent" in url:
+                calls.append(json.loads(route.request.post_data))
+                ev = "data: " + json.dumps({"candidates": [{"content": {"role": "model", "parts": [{"text": "Erste Zeile des Buchs.\n\nZweiter Absatz."}]}, "finishReason": "STOP"}]}) + "\r\n\r\n"
+                return route.fulfill(status=200, content_type="text/event-stream", headers=cors, body=ev)
+            return route.fulfill(status=200, content_type="application/json", headers=cors, body=json.dumps({"models": [{"name": "models/gemini-3.8-flash", "supportedGenerationMethods": ["generateContent"]}]}))
+        p.route("https://generativelanguage.googleapis.com/v1beta/**", gem)
+        p.click("#list [data-act=ocr]") if p.locator("#o-go").count() == 0 else None
+        p.wait_for_selector("#c-ask")
+        p.click("#c-ask")
+        p.wait_for_selector("#c-go")
+        self.assertIn("verlassen dieses Gerät", p.locator(".dh-cloud").inner_text())
+        p.wait_for_function("() => document.getElementById('c-model').value === 'models/gemini-3.8-flash'")
+        p.click("#c-go")
+        p.wait_for_function("() => document.getElementById('msg').textContent.includes('lesbar')", timeout=60000)
+        self.assertEqual(len(calls), 1)
+        parts = calls[0]["contents"][-1]["parts"]
+        img = [x for x in parts if "inlineData" in x][0]["inlineData"]
+        self.assertEqual(img["mimeType"], "image/jpeg")
+        self.assertEqual(base64.b64decode(img["data"])[:2], b"\xff\xd8")
+        self.assertEqual(self.rows(p), 1)
+        p.click("#list .dh-open")
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.tap(p, "next")
+        p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
+        self.assertIn("Zweiter Absatz", p.evaluate("() => document.getElementById('r-body').textContent"))
         self.assertEqual(p.errors, [])
 
     def test_camera_takes_several_pages_in_one_go(self):
@@ -469,7 +515,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.click("#cam-d")
         p.wait_for_selector("#o-go")
         self.assertEqual(self.rows(p), 1)
-        self.assertIn("0 von 2", p.locator("#list .help").inner_text())
+        self.assertIn("0 von 2", p.locator("#list .help").first.inner_text())
         self.assertEqual(p.locator("#cam").is_hidden(), True)
         self.assertEqual(p.errors, [])
 

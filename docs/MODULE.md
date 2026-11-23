@@ -208,6 +208,8 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `ocr.js` | `makeRecognizer(lang)` (tesseract.js aus `vendor/ocr/`, lazy, lokal), `ocrTextToHtml(text)` (rein), `LANGS`. Scan-PDFs: Datensatz hat `ocr` (Text je Seite) und `ocrTotal`; `openSource(..., { ocr })` baut daraus die Kapitel. |
 | `bilder-pdf.js` | `imagesToPdf(pages, dpi)`: JPEG-Seitenbilder zu einem PDF (DCTDecode, ohne Textebene); Grundlage für Fotos von Buchseiten. Oberfläche: `ui/bild.js` (`photoToPage` mit EXIF-Drehung, `enhanceForOcr` Graustufen und Kontrast). |
 | `ui/kamera.js` | Eigene Kamera-Ansicht: mehrere Fotos nacheinander (getUserMedia, Auslöser, Miniaturen, Rückgängig), liefert JPEG-Seiten an `main.js`. |
+| `mod/cloud-ocr.js` | Cloud-Erkennung: Anweisung an das Modell, Nachrichten mit Seitenbild, Antwort säubern, Modell vorwählen (rein). |
+| `ui/cloud.js` | Cloud-Erkennung über `lib/providers.js` (Anbieter google), nur mit „Online erlauben“ und Schlüssel. |
 | `ui/seite.js` | Foto-Seite für OCR: Drehung, Falz bei Doppelseiten, Schräglage, Säuberung (Hintergrund/Schatten). |
 | `ui/pdfansicht.js` | PDF-Originalansicht (Oberfläche): Seiten als Canvas aus `src.pdf.render`, Zoom per Pinch, Doppeltipp, Knöpfe, Strg+Mausrad; Seiten nur in Sicht gezeichnet (IntersectionObserver), Rückkehr in den Text an die Seite. |
 | `exportieren.js` | `FORMATS` (epub, docx, md, txt, html, pdf), `bookToMarkdown(source, rec, opts)`, `htmlDocument`, `exportBook(source, rec, id, opts)`: Buch in andere Formate, optional mit angehängten Markierungen und Notizen; PDF nur als Druckdokument (`html`) | `html.js`, `markdown.js`, `epub-schreiben.js`, `docx-schreiben.js`, `markierung.js`, `text.js` | Browser (Oberfläche) |

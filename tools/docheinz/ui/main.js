@@ -12,13 +12,14 @@ import { openCamera, cameraSupported } from './kamera.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { exportBook, FORMATS } from '../mod/exportieren.js';
 import { LANGS, makeRecognizer } from '../mod/ocr.js';
+import { cloudState, cloudModels, transcribe } from './cloud.js';
 import { COLORS } from '../mod/markierung.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
+const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', cloudAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -166,7 +167,60 @@ function ocrRow(b, row) {
     const no = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('delNo') }); no.dataset.act = 'ocrno';
     const go = Object.assign(document.createElement('button'), { type: 'button', className: 'pill acc', id: 'o-go', textContent: t('o_go') }); go.dataset.act = 'ocrgo';
     bt.append(no, go); row.append(h, sel, hp, bt);
+    if (b.photo) cloudBlock(b, row);
     return row;
+}
+// Cloud-Erkennung (nur Foto-Bücher): Knopf nur mit „Online erlauben“ und Google-Schlüssel; vor dem Senden Bestätigung je Buch.
+function cloudBlock(b, row) {
+    const c = cloudState(), box = document.createElement('div'); box.className = 'dh-cloud';
+    const hp = document.createElement('p'); hp.className = 'help';
+    if (!c.online || !c.key) { hp.textContent = t('c_need'); box.append(hp); row.append(box); return; }
+    if (state.cloudAsk !== b.id) {
+        const bt = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', id: 'c-ask', textContent: t('c_btn') }); bt.dataset.act = 'cloudask';
+        hp.textContent = t('c_help'); box.append(hp, bt); row.append(box); return;
+    }
+    const warn = document.createElement('p'); warn.className = 'help'; warn.textContent = t('c_warn', { n: b.ocrTotal });
+    const sel = document.createElement('select'); sel.className = 'sel'; sel.id = 'c-model'; sel.setAttribute('aria-label', t('c_model'));
+    const fill = (names, pick) => { sel.textContent = ''; names.forEach(n => sel.appendChild(Object.assign(document.createElement('option'), { value: n, textContent: n }))); sel.value = pick; };
+    fill(['gemini-flash-latest'], 'gemini-flash-latest');
+    cloudModels().then(m => { if (m.names.length) fill(m.names, m.pick); }).catch(() => { /* Vorgabe bleibt */ });
+    const bt = document.createElement('div'); bt.className = 'dh-xb';
+    const no = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('delNo') }); no.dataset.act = 'cloudno';
+    const go = Object.assign(document.createElement('button'), { type: 'button', className: 'pill acc', id: 'c-go', textContent: t('c_go') }); go.dataset.act = 'cloudgo';
+    bt.append(no, go); box.append(warn, sel, bt); row.append(box);
+}
+async function runOcrCloud(id, model) {
+    const rec = state.books.find(b => b.id === id);
+    if (!rec || state.ocrJob || !model) return;
+    const job = { id, i: (rec.ocr || []).length, stop: false };
+    state.ocrJob = job; state.ocrAsk = ''; state.cloudAsk = ''; render();
+    let lock = null;
+    try {
+        try { lock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch { /* ohne Bildschirmsperre */ }
+        const blob = await state.db.file(id);
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const pages = readPhotoPages(bytes);
+        for (let p = (rec.ocr || []).length + 1; p <= rec.ocrTotal && !job.stop; p++) {
+            job.i = p; msg(t('c_page', { i: p, n: rec.ocrTotal }), 'ok'); render();
+            const jpg = new Blob([pages[p - 1].jpeg], { type: 'image/jpeg' });
+            let text;
+            try { text = await transcribe(model, jpg); } catch (e) { if (e && e.code === 'ONLINE_BLOCKED') throw e; text = await transcribe(model, jpg); }   // eine Wiederholung je Seite
+            rec.ocr = (rec.ocr || []).concat([text.trim() ? text : ' ']);
+            await state.db.update(id, { ocr: rec.ocr });
+        }
+        const done = rec.ocr.length >= rec.ocrTotal;
+        if (done || job.stop) {
+            const s2 = await openSource(bytes, 'pdf', rec.name, { ocr: rec.ocr });
+            const { lens } = await describe(s2);
+            rec.lens = lens; await state.db.update(id, { lens });
+        }
+        msg(done ? t('o_done', { name: rec.title }) : t('o_paused', { i: rec.ocr.length, n: rec.ocrTotal }), done ? 'ok' : 'warn');
+    } catch (e) {
+        msg(e && e.code === 'ONLINE_BLOCKED' ? t('c_blocked') : t('c_err'), 'err');
+    } finally {
+        if (lock) { try { lock.release(); } catch { /* freigegeben */ } }
+        state.ocrJob = null; render();
+    }
 }
 // Foto-Seite lesen: Drehung erkennen (Zeilenrichtung, dann Probe der Richtung), Doppelseite am Falz teilen, linke Seite zuerst.
 async function readPhotoPage(canvas, rz) {
@@ -466,8 +520,11 @@ async function start() {
         else if (btn.dataset.act === 'pcam') { state.addTo = id; if (cameraSupported()) openCamera({ t, onDone: (pg) => appendPages(id, pg), onCancel: () => {}, onError: () => $('file-cam').click() }); else $('file-cam').click(); }
         else if (btn.dataset.act === 'pgal') { state.addTo = id; $('file-pg').click(); }
         else if (btn.dataset.act === 'ocr') { state.ocrAsk = id; state.confirm = ''; state.exp = ''; render(); }
-        else if (btn.dataset.act === 'ocrno') { state.ocrAsk = ''; render(); }
+        else if (btn.dataset.act === 'ocrno') { state.ocrAsk = ''; state.cloudAsk = ''; render(); }
         else if (btn.dataset.act === 'ocrgo') runOcr(id, document.getElementById('o-lang').value);
+        else if (btn.dataset.act === 'cloudask') { state.cloudAsk = id; render(); }
+        else if (btn.dataset.act === 'cloudno') { state.cloudAsk = ''; render(); }
+        else if (btn.dataset.act === 'cloudgo') runOcrCloud(id, document.getElementById('c-model').value);
         else if (btn.dataset.act === 'ocrstop' && state.ocrJob) { state.ocrJob.stop = true; msg(t('o_stopping'), 'ok'); }
     });
     $('list').addEventListener('change', (e) => {

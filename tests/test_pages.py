@@ -1866,6 +1866,20 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzDashboard.renderCaps(); HeinzDashboard.renderThink()")
         return page, g
 
+    def test_images_in_messages_go_only_to_the_native_google_route(self):
+        page, g = self.gemini_page()
+        out = page.evaluate("""async () => (await HeinzProviders.chat('google', { model: 'models/gemini-3.8-flash', stream: true,
+            messages: [{ role: 'user', content: 'read', images: [{ mime: 'image/jpeg', data: 'QUJD' }] }] })).text""")
+        self.assertEqual(out, "Hi there")
+        parts = g.requests[-1][2]["contents"][0]["parts"]
+        self.assertEqual(parts[0], {"text": "read"})
+        self.assertEqual(parts[1], {"inlineData": {"mimeType": "image/jpeg", "data": "QUJD"}})
+        # other engines never receive images
+        sent = []
+        page.route("http://localhost:11434/api/chat", lambda r: (sent.append(r.request.post_data), r.fulfill(status=200, content_type="application/x-ndjson", headers={"access-control-allow-origin": "*"}, body='{"message":{"content":"ok"},"done":true}\n')))
+        page.evaluate("""async () => { await HeinzProviders.chat('ollama', { model: 'm', messages: [{ role: 'user', content: 'x', images: [{ mime: 'image/jpeg', data: 'QUJD' }] }] }); }""")
+        self.assertTrue(sent and "images" not in sent[-1] and "QUJD" not in sent[-1])
+
     def test_native_google_sends_generation_config_with_top_k_and_key_only_in_header(self):
         page, g = self.gemini_page()
         self.assertEqual(page.evaluate("HeinzDashboard.MODELS"), ["models/gemini-3.8-flash", "models/gemini-2.5-flash"], "embedding model filtered")

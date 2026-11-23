@@ -325,3 +325,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 ### Y10 Nachtrag 2: gedrehte Fotos und Doppelseiten (nur simuliert getestet)
 1. Eine Doppelseite quer und eine Einzelseite fotografieren (Telefon beliebig gehalten), OCR starten.
 2. Erwartung: Text aufrecht erkannt, linke Seite vor rechter, kein Zeilenmix. Dauer je Seite notieren.
+
+### Y10 Nachtrag 3: Cloud-Erkennung mit Gemini (nur simuliert getestet)
+1. Im Dashboard „Online erlauben“ einschalten und den Google-Schlüssel eintragen.
+2. Foto-Buch öffnen, OCR-Formular: Knopf „Mit Cloud-Modell erkennen (Google Gemini)“ muss da sein; ohne Haken/Schlüssel nur Hinweis.
+3. Antippen: Bestätigung mit Seitenzahl und Modellauswahl, dann „Senden und lesen“. Text, Reihenfolge (links vor rechts) und Dauer je Seite mit der lokalen OCR vergleichen.
+4. Haken wieder aus: kein Cloud-Knopf, keine Anfrage nach außen.
