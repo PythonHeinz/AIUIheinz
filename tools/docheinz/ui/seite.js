@@ -122,3 +122,67 @@ export function mainColumns(map) {
     const b = runs.reduce((a, r) => (r[2] > a[2] ? r : a));
     return [Math.max(0, b[0] / w - 0.02), Math.min(1, (b[1] + 1) / w + 0.02)];
 }
+
+// Gewölbte oder schräge Seite begradigen: Schräglage der Zeilen je Zelle eines Gitters (nx Streifen mal ny Bänder) schätzen
+// (gleiche Projektionsmethode wie skewAngle), glätten und die Seite in schmalen Blöcken senkrecht verschieben, bis die Zeilen gerade laufen.
+// Die Neigung darf also von links nach rechts (Wölbung am Falz) und von oben nach unten (Perspektive) wechseln.
+// Gibt dasselbe Canvas zurück, wenn zu wenig Text für eine Schätzung da ist. Zeilen müssen nach der Drehung waagerecht liegen.
+export function dewarped(canvas, nx = 8, ny = 6) {
+    const map = inkMap(canvas), { w, h, ink } = map, bw = w / nx, bh = h / ny;
+    const bins = new Float32Array(Math.ceil(Math.hypot(w, h)) + 80), grid = [];
+    for (let j = 0; j < ny; j++) {
+        grid.push([]);
+        for (let b = 0; b < nx; b++) {
+            const x0 = Math.floor(b * bw), x1 = Math.floor((b + 1) * bw), y0 = Math.floor(j * bh), y1 = Math.floor((j + 1) * bh), cx = (x0 + x1) / 2, pts = [];
+            for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (ink[y * w + x] && ((x * 7 + y * 13) & 1) === 0) pts.push(x - cx, y - y0);
+            if (pts.length < 250) { grid[j].push(null); continue; }
+            let best = 0, bs = -1;
+            for (let a = -14; a <= 14.001; a += 1) {
+                const sn = Math.sin(a * Math.PI / 180), cs = Math.cos(a * Math.PI / 180); bins.fill(0);
+                for (let i = 0; i < pts.length; i += 2) bins[Math.round(pts[i + 1] * cs - pts[i] * sn + bw * 0.5 + 40)]++;
+                let q = 0; for (let i = 0; i < bins.length; i++) q += bins[i] * bins[i];
+                if (q > bs) { bs = q; best = a; }
+            }
+            grid[j].push(best);
+        }
+    }
+    const known = grid.flat().filter(a => a !== null); if (known.length < 4) return canvas;
+    const mean = known.reduce((s, v) => s + v, 0) / known.length;
+    for (let j = 0; j < ny; j++) for (let b = 0; b < nx; b++) if (grid[j][b] !== null && Math.abs(grid[j][b] - mean) > 7) grid[j][b] = null;   // Ausreißer (Bilder, Überschriften)
+    for (let pass = 0; pass < 4; pass++) {                       // Lücken aus bekannten Nachbarn füllen
+        const next = grid.map(r => r.slice());
+        for (let j = 0; j < ny; j++) for (let b = 0; b < nx; b++) if (grid[j][b] === null) {
+            const nb = []; for (let dj = -1; dj <= 1; dj++) for (let db = -1; db <= 1; db++) { const v = grid[j + dj] && grid[j + dj][b + db]; if (v !== undefined && v !== null) nb.push(v); }
+            if (nb.length) next[j][b] = nb.reduce((s, v) => s + v, 0) / nb.length;
+        }
+        for (let j = 0; j < ny; j++) grid[j] = next[j];
+    }
+    const g0 = grid.map(r => r.map(v => (v === null ? mean : v)));
+    const sm = g0.map((r, j) => r.map((v, b) => { let s = 0, n = 0; for (let dj = -1; dj <= 1; dj++) for (let db = -1; db <= 1; db++) { const q = g0[j + dj] && g0[j + dj][b + db]; if (q !== undefined) { s += q; n++; } } return s / n; }));
+    const k = canvas.width / w, W = canvas.width, H = canvas.height, nxs = 24, nys = 40, cxi = nxs / 2;
+    // Verschiebungsfeld an Knoten (nxs+1 mal nys+1): Mitte der Seite bleibt stehen, nach außen wächst die Verschiebung mit der Neigung
+    const D = [];
+    for (let jn = 0; jn <= nys; jn++) {
+        const ym = (jn / nys) * H / k, jf = Math.max(0, Math.min(ny - 1, ym / bh - 0.5)), j0 = Math.floor(jf), j1 = Math.min(ny - 1, j0 + 1), t = jf - j0, dx = W / nxs / k;
+        const slope = i => { const xm = (i + 0.5) / nxs * W / k, bf = Math.max(0, Math.min(nx - 1, xm / bw - 0.5)), b0 = Math.floor(bf), b1 = Math.min(nx - 1, b0 + 1), u = bf - b0;
+            return Math.tan(((sm[j0][b0] * (1 - u) + sm[j0][b1] * u) * (1 - t) + (sm[j1][b0] * (1 - u) + sm[j1][b1] * u) * t) * Math.PI / 180); };
+        const row = new Float32Array(nxs + 1);
+        for (let i = cxi; i < nxs; i++) row[i + 1] = row[i] - slope(i) * dx * k;      // nach rechts (Bildpixel)
+        for (let i = cxi - 1; i >= 0; i--) row[i] = row[i + 1] + slope(i) * dx * k;   // nach links
+        D.push(row);
+    }
+    const src = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H), s32 = new Uint32Array(src.data.buffer);
+    const out = document.createElement('canvas'); out.width = W; out.height = H;
+    const og = out.getContext('2d'), dst = og.createImageData(W, H), d32 = new Uint32Array(dst.data.buffer), white = 0xffffffff;
+    const colX = new Float32Array(W), colI = new Int32Array(W);
+    for (let x = 0; x < W; x++) { const f = x / W * nxs, i = Math.min(nxs - 1, Math.floor(f)); colI[x] = i; colX[x] = f - i; }
+    for (let y = 0; y < H; y++) {
+        const f = y / H * nys, j = Math.min(nys - 1, Math.floor(f)), t = f - j, r0 = D[j], r1 = D[j + 1], o = y * W;
+        for (let x = 0; x < W; x++) {
+            const i = colI[x], u = colX[x], d = (r0[i] * (1 - u) + r0[i + 1] * u) * (1 - t) + (r1[i] * (1 - u) + r1[i + 1] * u) * t, ys = Math.round(y - d);
+            d32[o + x] = ys >= 0 && ys < H ? s32[ys * W + x] : white;
+        }
+    }
+    og.putImageData(dst, 0, 0);
+    return out;
+}

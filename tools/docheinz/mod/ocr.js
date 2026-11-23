@@ -56,11 +56,11 @@ export async function makeRecognizer(lang) {
     const createWorker = T.createWorker || (T.default && T.default.createWorker);
     const worker = await createWorker(lang, 1, { workerPath: base + 'worker.min.js', corePath: base + 'tesseract-core-simd-lstm.wasm.js', langPath: base, gzip: true, cacheMethod: 'none' });
     return {
-        recognize: async (canvas) => {
+        recognize: async (canvas, opts) => {
             if (canvas.width < 40 || canvas.height < 40) return '';
             const r = await worker.recognize(canvas, {}, { text: true, blocks: true });
             const d = r && r.data; if (!d) return '';
-            return d.blocks ? filterBlocks(d.blocks) : (d.text || '');
+            return d.blocks ? filterBlocks(d.blocks, opts) : (d.text || '');
         },
         // mittlere Wortsicherheit (0..100) für die Ausrichtungsprobe; Text auf dem Kopf oder gedreht ergibt niedrige Werte
         score: async (canvas) => {

@@ -5,7 +5,7 @@ import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
-import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized, mainColumns } from './seite.js';
+import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized, mainColumns, dewarped } from './seite.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
 import { imagesToPdf, readPhotoPages } from '../mod/bilder-pdf.js';
 import { openCamera, cameraSupported } from './kamera.js';
@@ -177,8 +177,9 @@ async function readPhotoPage(canvas, rz) {
     let up = turn(order[0]), bs = await rz.score(small(up));
     for (let i = 1; i < order.length && bs < 60; i++) { const c = turn(order[i]), s = await rz.score(small(c)); if (s > bs) { bs = s; up = c; } }
     const piece = async c => {
-        const lv = leveled(c, skewAngle(inkMap(c))), [x0, x1] = mainColumns(inkMap(lv));
-        return rz.recognize(binarized(cropped(lv, x0, x1)));
+        let lv = dewarped(c); if (lv === c) lv = leveled(c, skewAngle(inkMap(c)));
+        const [x0, x1] = mainColumns(inkMap(lv));
+        return rz.recognize(binarized(cropped(lv, x0, x1)), { minWord: 30, minBig: 20, minKeep: 0.5 });   // Fotos: großzügiger, die Säuberung hat Hintergrund schon entfernt
     };
     const g = gutterAt(inkMap(up));
     if (g === null) return piece(up);

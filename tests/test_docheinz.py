@@ -443,9 +443,16 @@ class DocHeinzUiTests(DocHeinzBase):
         p.click("#b-cam")
         p.wait_for_selector("#cam:not([hidden])")
         p.wait_for_function("() => document.getElementById('cam-v').videoWidth > 0")
-        for _ in range(3):
-            p.click("#cam-s")
-            p.wait_for_timeout(900)
+        def shoot(n):                                           # Auslöser und warten, bis die Zahl der Aufnahmen stimmt
+            for _ in range(5):                                  # ein Druck während der laufenden Aufnahme zählt nicht: erneut drücken
+                p.click("#cam-s")
+                try:
+                    p.wait_for_function("(n) => document.getElementById('cam-n').textContent.startsWith(n + ' ')", arg=n, timeout=4000); return
+                except Exception:
+                    pass
+            self.fail("Aufnahme %d kam nicht an" % n)
+        for n in (1, 2, 3):
+            shoot(n)
         self.assertIn("3 Seite", p.locator("#cam-n").inner_text())
         p.click("#cam-u")
         self.assertIn("2 Seite", p.locator("#cam-n").inner_text())
@@ -454,7 +461,7 @@ class DocHeinzUiTests(DocHeinzBase):
         d = dims()
         if vw != vh:                                           # Handy hochkant: Rohbild quer wird zu Hochformat gedreht (wie die Kamera-App)
             self.assertEqual(d[0] < d[1], vw > vh)
-        p.wait_for_timeout(900); p.click("#cam-r"); p.click("#cam-s"); p.wait_for_timeout(1200)     # ↻ dreht zusätzlich
+        p.click("#cam-r"); shoot(3)     # ↻ dreht zusätzlich
         d2 = dims()
         if vw != vh:
             self.assertEqual(d2[0] > d2[1], vw > vh)
