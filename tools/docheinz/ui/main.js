@@ -5,7 +5,7 @@ import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
 import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
 import { findCover } from '../mod/cover.js';
-import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized } from './seite.js';
+import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized, mainColumns } from './seite.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
 import { imagesToPdf, readPhotoPages } from '../mod/bilder-pdf.js';
 import { openCamera, cameraSupported } from './kamera.js';
@@ -170,19 +170,19 @@ function ocrRow(b, row) {
 }
 // Foto-Seite lesen: Drehung erkennen (Zeilenrichtung, dann Probe der Richtung), Doppelseite am Falz teilen, linke Seite zuerst.
 async function readPhotoPage(canvas, rz) {
-    const small = c => { const k = Math.min(1, 1000 / Math.max(c.width, c.height)); const o = document.createElement('canvas'); o.width = Math.round(c.width * k); o.height = Math.round(c.height * k); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); return o; };
-    let up = canvas;
-    if (textAxis(inkMap(canvas)) === 90) {
-        const a = rotated(canvas, 90), b = rotated(canvas, 270);
-        up = (await rz.score(small(a))) >= (await rz.score(small(b))) ? a : b;
-    } else if ((await rz.score(small(canvas))) < 60) {
-        const r = rotated(canvas, 180);
-        if ((await rz.score(small(r))) > (await rz.score(small(canvas)))) up = r;
-    }
+    const small = c => { const k = Math.min(1, 1600 / Math.max(c.width, c.height)); const o = document.createElement('canvas'); o.width = Math.round(c.width * k); o.height = Math.round(c.height * k); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); return o; };
+    const turn = d => (d ? rotated(canvas, d) : canvas);
+    // Ausrichtung: Probe-OCR (Wortsicherheit); Reihenfolge nach Zeilenrichtung, Abbruch bei sicherem Treffer
+    const order = textAxis(inkMap(canvas)) === 90 ? [90, 270, 0, 180] : [0, 180, 90, 270];
+    let up = turn(order[0]), bs = await rz.score(small(up));
+    for (let i = 1; i < order.length && bs < 60; i++) { const c = turn(order[i]), s = await rz.score(small(c)); if (s > bs) { bs = s; up = c; } }
+    const piece = async c => {
+        const lv = leveled(c, skewAngle(inkMap(c))), [x0, x1] = mainColumns(inkMap(lv));
+        return rz.recognize(binarized(cropped(lv, x0, x1)));
+    };
     const g = gutterAt(inkMap(up));
-    const lv = c => binarized(leveled(c, skewAngle(inkMap(c))));
-    if (g === null) return rz.recognize(lv(up));
-    const left = await rz.recognize(lv(cropped(up, 0, Math.min(1, g + 0.01)))), right = await rz.recognize(lv(cropped(up, Math.max(0, g - 0.01), 1)));
+    if (g === null) return piece(up);
+    const left = await piece(cropped(up, 0, Math.min(1, g + 0.01))), right = await piece(cropped(up, Math.max(0, g - 0.01), 1));
     return [left, right].filter(x => x.trim()).join('\n\n');
 }
 async function runOcr(id, lang) {

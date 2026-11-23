@@ -104,3 +104,21 @@ export function binarized(canvas) {
     for (let i = 0; i < w * h; i++) { const v = mean[i] - y[i] > 24 ? 0 : 255; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; }
     g.putImageData(img, 0, 0); return canvas;
 }
+
+// Hauptspalte des Textes (Anteile der Breite): größter zusammenhängender Strichbereich, kleine Lücken überbrückt. Schneidet Randreste
+// anderer Seiten (Blattkanten, durchscheinende Nachbarseite) ab. Gibt [0, 1] zurück, wenn nichts Sinnvolles gefunden wird.
+export function mainColumns(map) {
+    const { w, h, ink } = map, cols = new Float32Array(w);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (ink[y * w + x]) cols[x]++;
+    const mx = Math.max(...cols); if (mx < 5) return [0, 1];
+    const thr = mx * 0.12, gap = Math.round(w * 0.04), runs = []; let s = -1, last = -1, sum = 0;
+    for (let x = 0; x < w; x++) {
+        if (cols[x] >= thr) { if (s < 0) { s = x; sum = 0; } last = x; sum += cols[x]; }
+        else if (s >= 0 && x - last > gap) { runs.push([s, last, sum]); s = -1; }
+    }
+    if (s >= 0) runs.push([s, last, sum]);
+    if (!runs.length) return [0, 1];
+    // aufeinanderfolgende Läufe mit kleinem Abstand zusammenführen ist oben schon geschehen; größten wählen
+    const b = runs.reduce((a, r) => (r[2] > a[2] ? r : a));
+    return [Math.max(0, b[0] / w - 0.02), Math.min(1, (b[1] + 1) / w + 0.02)];
+}
