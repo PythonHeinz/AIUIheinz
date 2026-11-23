@@ -101,7 +101,7 @@ export function binarized(canvas) {
         for (let x = 0; x < w; x++) { if (x + r < w) { s += y[o + x + r]; n++; } if (x - r - 1 >= 0) { s -= y[o + x - r - 1]; n--; } tmp[o + x] = s / n; } }
     for (let x = 0; x < w; x++) { let s = 0, n = 0; for (let yy = 0; yy < Math.min(h, r); yy++) { s += tmp[yy * w + x]; n++; }
         for (let yy = 0; yy < h; yy++) { if (yy + r < h) { s += tmp[(yy + r) * w + x]; n++; } if (yy - r - 1 >= 0) { s -= tmp[(yy - r - 1) * w + x]; n--; } mean[yy * w + x] = s / n; } }
-    for (let i = 0; i < w * h; i++) { const v = mean[i] - y[i] > 24 ? 0 : 255; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; }
+    for (let i = 0; i < w * h; i++) { const v = (mean[i] - y[i] > 24 && y[i] < mean[i] * 0.86) || mean[i] - y[i] > 60 ? 0 : 255; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; }
     g.putImageData(img, 0, 0); return canvas;
 }
 

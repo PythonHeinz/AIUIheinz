@@ -454,7 +454,7 @@ class DocHeinzUiTests(DocHeinzBase):
         d = dims()
         if vw != vh:                                           # Handy hochkant: Rohbild quer wird zu Hochformat gedreht (wie die Kamera-App)
             self.assertEqual(d[0] < d[1], vw > vh)
-        p.click("#cam-r"); p.click("#cam-s"); p.wait_for_timeout(300)     # ↻ dreht zusätzlich
+        p.wait_for_timeout(900); p.click("#cam-r"); p.click("#cam-s"); p.wait_for_timeout(1200)     # ↻ dreht zusätzlich
         d2 = dims()
         if vw != vh:
             self.assertEqual(d2[0] > d2[1], vw > vh)
