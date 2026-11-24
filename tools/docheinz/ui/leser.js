@@ -263,6 +263,7 @@ export async function applyFont(id) {
 }
 
 function onTap(e) {
+    fullscreen(true);
     const hadSel = S.hadSel; S.hadSel = false;
     if (mkOpen()) { if (!markTap(e.clientX, e.clientY)) hideMk(); return; }          // Leiste einer Markierung offen: Tippen schließt sie (oder öffnet die nächste)
     if (hadSel || hasWahl()) { clearWahl(); return; }                                 // Markierung aktiv: Tippen hebt sie nur auf, kein Blättern
@@ -336,7 +337,17 @@ function wire() {
     });
 }
 
+// Vollbild beim Lesen: nur der Text, keine Statusleiste und keine Navigationsleiste. Der Browser erlaubt es nur nach einer Berührung; geht es verloren
+// (App-Wechsel, Wischen vom Rand), holt das nächste Tippen im Leser es zurück. Ohne Unterstützung passiert nichts.
+function fullscreen(on) {
+    try {
+        const d = document, el = d.documentElement;
+        if (on && !d.fullscreenElement && el.requestFullscreen) { const r = el.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); }
+        else if (!on && d.fullscreenElement && d.exitFullscreen) { const r = d.exitFullscreen(); if (r && r.catch) r.catch(() => {}); }
+    } catch { /* ohne Vollbild weiterlesen */ }
+}
 export async function openReader(rec, src, ctx) {
+    fullscreen(true);
     wire();
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
     S.g = { ...DEFAULTS, ...clean({ size: ctx.size, theme: ctx.theme, font: ctx.font, ...(ctx.look || {}) }, CTX) };
@@ -374,6 +385,7 @@ export function close() {
     body().textContent = '';
     $('r-cover').hidden = true; S.onCover = false;
     if (S.coverUrl) { URL.revokeObjectURL(S.coverUrl); S.coverUrl = ''; }
+    fullscreen(false);
     S.cb.onClose();
     S.rec = null; S.src = null;
 }

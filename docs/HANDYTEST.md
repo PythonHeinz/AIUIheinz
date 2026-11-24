@@ -339,3 +339,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 - [ ] Hell: Modell-Anzeige und Gleichzeitig-Pille hellgrau mit dunkler Schrift, gut lesbar; Wechsel auf dunkel und zurück zeichnet beide neu.
 - [ ] Dunkel: alles unverändert.
 - [ ] Hell: Personen-LED, Änderung (weiß mit Bernsteinhof) und behalten (ruhiges Bernstein) sind direkt zu unterscheiden, wie im dunklen Modus.
+### Y11: Vollbild im Leser (nur simuliert getestet)
+1. Ein Buch öffnen: Statusleiste und Navigationsleiste sollen verschwinden, nur der Text bleibt.
+2. Vom Rand wischen oder die App wechseln, zurückkehren, einmal tippen: Vollbild kommt zurück.
+3. Buch schließen: Leisten sind wieder da. Notieren, ob die Gestenleiste unten ganz weg ist.
