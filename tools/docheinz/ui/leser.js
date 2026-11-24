@@ -6,7 +6,7 @@ import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
-import { initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
+import { askChapter, initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
 import { openOriginal, closeOriginal, isOriginalOpen } from './pdfansicht.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
@@ -311,7 +311,11 @@ function wire() {
     $('look-reset').addEventListener('click', () => lookApi().reset());
     $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });
     $('sel-font').addEventListener('change', (e) => setLook('font', e.target.value));
-    $('r-set').addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) setPage(g.dataset.go); });
+    $('r-set').addEventListener('click', (e) => {
+        const c = e.target.closest('[data-chap]');
+        if (c) { $('r-set').hidden = true; $('reader').dataset.set = '0'; askChapter(c.dataset.chap === 'sum' ? 'summary' : 'explain', c.dataset.chap === 'ask'); return; }
+        const g = e.target.closest('[data-go]'); if (g) setPage(g.dataset.go);
+    });
     $('rs-back').addEventListener('click', () => setPage(null));
     const pg = $('r-page');
     pg.addEventListener('pointerdown', () => { S.hadSel = hasWahl(); }, true);

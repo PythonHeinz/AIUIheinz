@@ -4,7 +4,7 @@
 import { $, HeinzStore } from './base.js';
 import { HeinzProviders as PV } from '../../../lib/providers.js';
 import { findAll, normalizeQuery } from '../mod/suche.js';
-import { buildRequest, trimHistory } from '../mod/ki.js';
+import { buildRequest, trimHistory, MAX_CHARS, CHAPTER_MAX_ONLINE } from '../mod/ki.js';
 import { wordBounds } from '../mod/wahl.js';
 import { mdToHtml } from '../mod/markdown.js';
 import { sauber } from '../mod/sauber.js';
@@ -392,17 +392,17 @@ async function search(query) {
 const ASKFIRST = 'heinz_docheinz_askfirst';
 export const askFirstOn = () => +HeinzStore.get(ASKFIRST, 1) !== 0;
 // Erst ein Feld für eine eigene Frage (leer = Standardauftrag, wie bisher), dann die Antwort.
-function askFirst(kind, passage, off) {
+function askFirst(kind, passage, off, chapter = false) {
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
     const f = document.createElement('form'); f.className = 'dh-qform';
     const q = document.createElement('input'); q.type = 'text'; q.id = 'rs-q'; q.placeholder = t('s_askPh'); q.autocomplete = 'off'; q.maxLength = 500;
     const go = document.createElement('button'); go.type = 'submit'; go.className = 'pill acc'; go.id = 'rs-go'; go.textContent = t('s_go');
     f.append(q, go);
-    f.addEventListener('submit', (e) => { e.preventDefault(); ask(kind, passage, q.value.trim(), off); });
+    f.addEventListener('submit', (e) => { e.preventDefault(); ask(kind, passage, q.value.trim(), off, chapter); });
     box.appendChild(f);
 }
-async function ask(kind, passage, question = '', off = null) {
+async function ask(kind, passage, question = '', off = null, chapter = false) {
     const my = ++A.run;
     openSheet(t(kind === 'explain' ? 's_explainT' : 's_sumT'), '');
     const box = $('rs-body');
@@ -410,7 +410,8 @@ async function ask(kind, passage, question = '', off = null) {
     const p = act && PV.get(act.provider);
     if (!p) { box.appendChild(line('dh-sline', t('s_noModel'))); return; }
     const as = aiSettings(act);
-    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, system: as.system, question });
+    const max = chapter && !p.local ? CHAPTER_MAX_ONLINE : MAX_CHARS;
+    const req = buildRequest(kind, passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, system: as.system, question, max });
     $('rs-sub').textContent = aiLabel(act);
     $('rs-sub').hidden = false;
     if (!p.local) {
@@ -430,9 +431,9 @@ async function ask(kind, passage, question = '', off = null) {
             onDelta: (d) => { if (my !== A.run) return; text += d; renderMd(out, text); if (wait.parentNode) wait.remove(); } });
         if (my !== A.run) return;
         if (!text.trim()) out.textContent = t('s_empty');
-        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
+        else { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { max, off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; }
     } catch (e) {
-        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
+        if (my !== A.run || (e && e.name === 'AbortError')) { if (text) { $('rs-copy').hidden = false; $('rs-more').hidden = false; noteBtn(text, off, act.model); A.conv = { max, off, kind, passage, question, config: act.config || '', local: p.local, provider: act.provider, model: act.model, name: p.name, msgs: [req.messages[0], { role: 'assistant', content: text }], page: A.env.pageText ? A.env.pageText() : '' }; } }
         else {
             const code = e && e.code;
             box.appendChild(line('dh-sline err', code === 'ONLINE_BLOCKED' ? t('s_blocked') : code === 'NO_KEY' ? t('s_nokey') : t('s_err')));
@@ -442,6 +443,13 @@ async function ask(kind, passage, question = '', off = null) {
     }
 }
 
+// Kapitel-KI: das aktuelle Kapitel (ohne Markierung) zusammenfassen, erklären oder dazu fragen. Lokal gehen die ersten MAX_CHARS Zeichen, an Cloud-Modelle bis CHAPTER_MAX_ONLINE.
+export async function askChapter(kind, withQuestion = false) {
+    if (!A.env || !A.env.ch) return;
+    const text = (await chapterText(A.env.ch())).replace(/\s+/g, ' ').trim();
+    if (!text) return;
+    if (withQuestion) askFirst(kind, text, null, true); else ask(kind, text, '', null, true);
+}
 function noteBtn(text, off, model) {
     const b = $('rs-note');
     b.hidden = !off; b.disabled = false; b.textContent = t('s_toNote');
@@ -512,7 +520,7 @@ async function followUp(q) {
     if (!q || !c || A.anaAc) return;
     addMsg('user', q);
     const as = aiSettings({ provider: c.provider, model: c.model, config: c.config });
-    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system, question: c.question || '' });
+    const first = buildRequest(c.kind, c.passage, { lang: A.env.lang(), title: A.env.rec().title, author: A.env.rec().author, page: ctxOn() ? c.page : '', system: as.system, question: c.question || '', max: c.max || MAX_CHARS });
     const hist = trimHistory([first.messages[0]].concat(c.msgs.slice(1)).concat([{ role: 'user', content: q }]));
     const out = addMsg('assistant', t('s_working'));
     const span = out.querySelector('.dh-mc');

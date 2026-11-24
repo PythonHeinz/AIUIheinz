@@ -348,3 +348,8 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 1. Kamera öffnen: gestrichelter Rahmen und ein Ring in der Bildmitte sind zu sehen.
 2. Handy parallel über die Seite halten: der Punkt im Ring wird grün (unter etwa 4° Neigung). Schräg halten: Punkt wandert, Ring bleibt weiß.
 3. Rückmeldung: Stört der Rahmen, ist die Neigungsrichtung richtig herum, erscheint der Ring überhaupt (Sensor)?
+
+### Y13: Kapitel-KI (nur simuliert getestet)
+1. Buch öffnen, oben tippen, Einstellungen: die Zeilen „Kapitel zusammenfassen“, „Kapitel erklären“, „Frage zum Kapitel“ sind da.
+2. „Kapitel zusammenfassen“ mit lokalem Modell: Antwort kommt, Hinweis „gekürzt“ bei langen Kapiteln. Danach mit Gemini (Online erlauben): längerer Auszug, Antwort zum ganzen Kapitel.
+3. „Frage zum Kapitel“: eigene Frage eintippen, Antwort, im Fenster Analyse nachfragen.

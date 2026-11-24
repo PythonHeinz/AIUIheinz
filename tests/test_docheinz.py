@@ -792,6 +792,33 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#rs-copy").is_visible())
         self.assertEqual([u for u in p.external if "localhost:11434" not in u], [])
 
+    def test_chapter_summary_and_question_send_the_whole_chapter_text_only(self):
+        p = self.open(lang="de")
+        calls = self.fake_ollama(p)
+        self.start_book(p, "a.md", "text/markdown", "# Ein Titel\n\nDer Übermensch ist der Sinn der Erde. Zweiter Satz des Kapitels.\n\nDritter Absatz mit Zarathustra.".encode())
+        self.set_active(p, "ollama", "test:1b")
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.click("#r-set [data-chap=sum]")
+        p.wait_for_function("() => document.querySelector('#rs-body .dh-sout') && document.querySelector('#rs-body .dh-sout').textContent.length > 3")
+        self.assertEqual(len(calls), 1)
+        u = calls[0]["messages"][1]["content"]
+        for part in ("Übermensch", "Zweiter Satz", "Zarathustra"):
+            self.assertIn(part, u)
+        self.assertTrue(p.locator("#r-set").is_hidden())
+        self.assertEqual(p.locator("#rs-note").is_hidden(), True)                 # ohne Markierung keine Notiz
+        p.click("#rs-close") if p.locator("#rs-close").count() else p.keyboard.press("Escape")
+        p.wait_for_selector("#r-sheet", state="hidden")
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.click("#r-set [data-chap=ask]")
+        p.fill("#rs-q", "Wer ist gemeint?")
+        p.click("#rs-go")
+        p.wait_for_function("() => document.querySelector('#rs-body .dh-sout') && document.querySelector('#rs-body .dh-sout').textContent.length > 3")
+        self.assertEqual(len(calls), 2)
+        self.assertIn("Wer ist gemeint?", calls[1]["messages"][1]["content"])
+        self.assertIn("Zarathustra", calls[1]["messages"][1]["content"])
+        self.assertEqual([u for u in p.external if "localhost:11434" not in u], [])
+        self.assertEqual(p.errors, [])
+
     def word_pt(self, p, needle):
         return p.evaluate("""(needle) => {
             const b = document.getElementById('r-body'), w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);

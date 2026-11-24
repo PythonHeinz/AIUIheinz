@@ -61,3 +61,13 @@ test('custom system prompt replaces the built-in one and fills {title}/{author}'
     assert.equal(r.system, 'Buch T von A. Sei knapp.');
     assert.match(buildRequest('explain', 'x', { lang: 'en', system: '   ' }).system, /Never say which book/);
 });
+
+import { CHAPTER_MAX_ONLINE } from '../../tools/docheinz/mod/ki.js';
+test('Kapitel: max erlaubt längeren Text, Standard bleibt bei MAX_CHARS', () => {
+    const long = 'a'.repeat(MAX_CHARS * 3);
+    assert.equal(buildRequest('summary', long, { lang: 'de' }).clipped, true);
+    const r = buildRequest('summary', long, { lang: 'de', max: CHAPTER_MAX_ONLINE });
+    assert.equal(r.clipped, false);
+    assert.ok(r.messages[0].content.length > MAX_CHARS * 3);
+    assert.ok(buildRequest('summary', 'a'.repeat(CHAPTER_MAX_ONLINE + 5), { lang: 'en', max: CHAPTER_MAX_ONLINE }).clipped);
+});

@@ -6,6 +6,7 @@
 export const KINDS = ['explain', 'summary'];
 export const MAX_CHARS = 6000;
 export const MAX_PAGE = 3000;
+export const CHAPTER_MAX_ONLINE = 60000;      // ganzes Kapitel nur an Cloud-Modelle (großes Kontextfenster); lokale Modelle behalten MAX_CHARS
 export const MAX_HISTORY = 8000;
 
 export function clip(text, max = MAX_CHARS) {
@@ -25,10 +26,10 @@ const TASK = {
 // question: freie Frage des Lesers zur Textstelle (ersetzt den Standardauftrag, leer = Standardauftrag)
 // system: eigener Systemprompt (z. B. aus einer Dashboard-Konfiguration); leer = eingebauter. {title} und {author} werden darin ersetzt.
 // Titel und Autor gehen sonst nicht mit: kleine Modelle reden dann nur über „das Buch von …“.
-export function buildRequest(kind, passage, { lang = 'en', title = '', author = '', page = '', system = '', question = '' } = {}) {
+export function buildRequest(kind, passage, { lang = 'en', title = '', author = '', page = '', system = '', question = '', max = MAX_CHARS } = {}) {
     if (!KINDS.includes(kind)) throw new Error('ki: unbekannte Art ' + kind);
     const l = lang === 'de' ? 'de' : 'en';
-    const c = clip(passage);
+    const c = clip(passage, max);
     const pg = clip(page, MAX_PAGE).text;
     const ctx = pg ? (l === 'de' ? 'Seitentext zum Zusammenhang:\n' : 'Page text for context:\n') + pg + '\n\n' : '';
     const sys = String(system || '').trim() ? String(system).replace(/\{title\}/g, title).replace(/\{author\}/g, author) : SYSTEM[l];
