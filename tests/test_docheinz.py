@@ -488,6 +488,15 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#b-cam:not([hidden])")
         p.click("#b-cam")
         p.wait_for_selector("#cam:not([hidden])")
+        self.assertTrue(p.locator("#cam-g").is_visible())                       # Rahmen als Hilfe
+        self.assertTrue(p.locator("#cam-l").is_hidden())                        # ohne Sensorwert kein Ring
+        tilt = lambda be, ga: p.evaluate("([b, g]) => window.dispatchEvent(Object.assign(new Event('deviceorientation'), { beta: b, gamma: g }))", [be, ga])
+        tilt(1.5, -2)
+        p.wait_for_selector("#cam-l.ok")                                        # parallel: grün
+        tilt(20, 0)
+        p.wait_for_selector("#cam-l:not(.ok)")                                  # schräg: nicht grün
+        self.assertIn("translate(0px, 18px)", p.evaluate("() => document.getElementById('cam-ld').style.transform"))
+        p.wait_for_selector("#cam:not([hidden])")
         p.wait_for_function("() => document.getElementById('cam-v').videoWidth > 0")
         def shoot(n):                                           # Auslöser und warten, bis die Zahl der Aufnahmen stimmt
             for _ in range(5):                                  # ein Druck während der laufenden Aufnahme zählt nicht: erneut drücken

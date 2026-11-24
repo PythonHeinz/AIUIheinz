@@ -9,6 +9,7 @@ export const cameraSupported = () => !!(navigator.mediaDevices && navigator.medi
 function stop() {
     if (C.stream) { C.stream.getTracks().forEach(t => t.stop()); C.stream = null; }
     $('cam-v').srcObject = null;
+    window.removeEventListener('deviceorientation', onTilt);
     C.urls.forEach(u => URL.revokeObjectURL(u)); C.urls = [];
     $('cam-t').textContent = '';
     $('cam').hidden = true;
@@ -57,6 +58,13 @@ async function shoot() {
     } catch { /* diese Aufnahme fehlt, die nächste geht */ }
     C.busy = false;
 }
+// Wasserwaage: Punkt wandert aus der Mitte, wenn das Handy nicht parallel zur Seite liegt; grün ab etwa 4° Abweichung. Ohne Sensor bleibt der Ring unsichtbar.
+function onTilt(e) {
+    if (e.beta == null || e.gamma == null) return;
+    const l = $('cam-l'), d = $('cam-ld'), cl = v => Math.max(-30, Math.min(30, v)) * 0.9;
+    l.hidden = false; d.style.transform = 'translate(' + cl(e.gamma) + 'px,' + cl(e.beta) + 'px)';
+    l.classList.toggle('ok', Math.abs(e.beta) < 4 && Math.abs(e.gamma) < 4);
+}
 function wire() {
     if (C.wired) return; C.wired = true;
     $('cam-s').addEventListener('click', shoot);
@@ -78,6 +86,7 @@ export async function openCamera(cb) {
     } catch { if (cb.onError) cb.onError(); return; }
     const v = $('cam-v'); v.srcObject = C.stream;
     $('cam').hidden = false; layout();
+    $('cam-l').hidden = true; window.addEventListener('deviceorientation', onTilt);
     try { await v.play(); } catch { /* autoplay */ }
     refresh();
 }
