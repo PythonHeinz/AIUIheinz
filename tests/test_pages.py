@@ -646,6 +646,16 @@ class PageTest(unittest.TestCase):
         px = page.evaluate("(()=>{var c=document.getElementById('chip-led'),d=c.getContext('2d').getImageData(1,1,1,1).data;return [d[0],d[1],d[2]]})()")
         self.assertGreater(px[0], 180)   # canvas panel itself is pale, not #0a0b0d
 
+    def test_saved_threads_above_four_are_reset_once(self):
+        page = self.new_page()
+        page.add_init_script("if(!localStorage.getItem('heinz_settings'))localStorage.setItem('heinz_settings',JSON.stringify({threads:{'gemma2:2b':8,'qwen2.5:3b':3}}))")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_timeout(600)
+        st = page.evaluate("JSON.parse(localStorage.getItem('heinz_settings'))")
+        self.assertNotIn('gemma2:2b', st['threads'])
+        self.assertEqual(st['threads']['qwen2.5:3b'], 3)
+        self.assertEqual(st.get('threadsFixed'), 1)   # flag: a later deliberate choice is not touched again
+
     def test_preload_follows_mode_threads_and_can_be_switched_off(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
@@ -3065,14 +3075,14 @@ class PageTest(unittest.TestCase):
         return fake.requests[-1], page
 
     def test_heinz_chat_sends_context_and_threads_of_its_configuration_not_the_dashboard_values(self):
-        # the dashboard has 5 threads and 9999 tokens of context saved; the built-in default configuration of the chat says 2 and 4096
-        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 5}, params: {ctx: 9999}}))")
+        # the dashboard has 3 threads and 9999 tokens of context saved; the built-in default configuration of the chat says 2 and 4096
+        req, _ = self._slim_send_options("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 3}, params: {ctx: 9999}}))")
         self.assertEqual((req["options"].get("num_thread"), req["options"].get("num_ctx")), (2, 4096))
 
     def _chat_with_runtime(self, runtime_js):
         page = self.new_page(chat_model=None)
         fake = FakeOllama(page)
-        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 5}, params: {ctx: 9999}})); localStorage.setItem('heinz_configs', JSON.stringify([{id: 'k1', name: 'K', provider: 'ollama', model: 'qwen2.5:3b', person: 'native', prompt: '', tone: null, stop: [], runtime: %s}])); localStorage.setItem('heinz_chat_config', JSON.stringify('k1'));" % runtime_js)
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({threads: {'qwen2.5:3b': 3}, params: {ctx: 9999}})); localStorage.setItem('heinz_configs', JSON.stringify([{id: 'k1', name: 'K', provider: 'ollama', model: 'qwen2.5:3b', person: 'native', prompt: '', tone: null, stop: [], runtime: %s}])); localStorage.setItem('heinz_chat_config', JSON.stringify('k1'));" % runtime_js)
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('qwen2.5:3b') >= 0")
@@ -3088,7 +3098,7 @@ class PageTest(unittest.TestCase):
 
     def test_heinz_chat_falls_back_to_the_saved_working_values_for_a_configuration_without_runtime(self):
         req = self._chat_with_runtime("null")
-        self.assertEqual((req["options"].get("num_thread"), req["options"].get("num_ctx")), (5, 9999))
+        self.assertEqual((req["options"].get("num_thread"), req["options"].get("num_ctx")), (3, 9999))
 
     def test_slim_chat_sends_no_threads_for_other_engines(self):
         page = self.new_page()
