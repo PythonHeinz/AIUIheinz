@@ -164,6 +164,7 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-ttsrow { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .dh-ttsrow .ibtn { min-width: 44px; font-size: 1.1rem; }
 .dh-ttsrow .sel { flex: 0 1 38%; min-width: 0; }
+.dh-reader[data-tts="2"] .dh-page { padding-bottom: calc(116px + env(safe-area-inset-bottom)); }
 .dh-reader[data-tts="1"] .dh-page { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 ::highlight(dh-hit) { background-color: rgba(250, 204, 21, .45); color: inherit; }
 

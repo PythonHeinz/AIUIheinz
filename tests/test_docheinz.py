@@ -544,7 +544,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertEqual(p.errors, [])
         self.assertEqual(p.external, [])
 
-    def test_read_aloud_turns_the_pages_along_and_manual_turn_stops_it(self):
+    def test_read_aloud_turns_the_pages_along_and_manual_turn_continues_there(self):
         p = self.open(lang="en")
         p.add_init_script(self.FAKE_TTS)
         p.reload(); p.wait_for_selector("html[data-dh=ready]")
@@ -553,9 +553,24 @@ class DocHeinzUiTests(DocHeinzBase):
         self.tap(p, "top"); p.click("#r-set-b"); p.click("#r-set [data-tts]")
         p.wait_for_function("() => +document.getElementById('reader').dataset.page >= 3", timeout=20000)   # Seite blättert mit
         self.assertTrue(p.locator("#r-tts").is_visible())
+        n = p.evaluate("() => +document.getElementById('reader').dataset.page")
         self.tap(p, "next")
-        p.wait_for_selector("#r-tts", state="hidden")                                               # von Hand blättern beendet das Vorlesen
+        self.assertTrue(p.locator("#r-tts").is_visible())                                           # von Hand blättern: Vorlesen läuft weiter
+        p.wait_for_function("n => +document.getElementById('reader').dataset.page > n", arg=n)
+        p.click("#tts-play")                                                                        # Pause: Stimmenwahl erscheint
+        self.assertTrue(p.locator("#tts-voice").is_visible())
         self.assertEqual(p.errors, [])
+
+    def test_always_fullscreen_is_a_setting_default_off(self):
+        p = self.open(lang="en")
+        p.evaluate("() => { window.__fs = 0; Element.prototype.requestFullscreen = function () { window.__fs++; return Promise.resolve(); }; }")
+        self.start_book(p, "a.md", "text/markdown", b"# T\n\nText.")
+        self.tap(p, "top")
+        self.assertEqual(p.evaluate("() => window.__fs"), 0)                                        # Standard: kein Vollbild
+        p.click("#r-set-b"); self.go(p, "fmt", "ctl")
+        p.check("#sw-full")
+        self.assertEqual(p.evaluate("() => localStorage.getItem('heinz_docheinz_full')"), "1")
+        self.assertGreaterEqual(p.evaluate("() => window.__fs"), 1)
 
     def test_camera_takes_several_pages_in_one_go(self):
         b = self.pw.chromium.launch(args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])

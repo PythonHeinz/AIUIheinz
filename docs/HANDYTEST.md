@@ -362,5 +362,6 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 ### Y15: Vorlesen (nur simuliert getestet)
 1. Buch öffnen, Tipp oben, Einstellungen, „Vorlesen“ (fehlt die Zeile, bietet der Browser keine Sprachausgabe). Es liest ab der Seite; der gelesene Satz ist markiert, die Seite blättert mit.
 2. Steuerleiste unten: Satz zurück/vor, Pause/Weiter, Stopp, Tempo. Bei Pause erscheint die Stimmenwahl (Offline-Stimmen sind gekennzeichnet; Offline wird bevorzugt).
-3. Kapitelende: Es geht im nächsten Kapitel weiter. Von Hand blättern oder Buch schließen beendet das Vorlesen.
+3. Kapitelende: Es geht im nächsten Kapitel weiter. Von Hand blättern liest auf der neuen Seite weiter; Stopp oder Buch schließen beendet es. Bei Pause Stimme wählen, dann Weiter.
+3a. Steuerung, „Immer Vollbild“: aus (Standard) = Statusleiste sichtbar; an = Vollbild.
 4. Zu beobachten: Bei gesperrtem Bildschirm oder Wechsel in eine andere App stoppt Chrome die Sprachausgabe. Qualität und Offline-Stimmen hängen vom Gerät ab (Android: Spracheinstellungen, Stimmen herunterladen). Pause startet den Satz neu.

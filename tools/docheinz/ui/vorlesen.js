@@ -86,9 +86,9 @@ async function loop(from) {
 // ---------- Steuerung ----------
 function bar() {
     const b = $('r-tts'); if (!b) return;
-    const changed = b.hidden === R.on;
+    const lvl = R.on ? (R.paused ? '2' : '1') : '0', changed = $('reader').dataset.tts !== lvl;
     b.hidden = !R.on;
-    $('reader').dataset.tts = R.on ? '1' : '0';
+    $('reader').dataset.tts = lvl;
     $('tts-play').textContent = R.paused ? '▶' : '❚❚';
     $('tts-play').setAttribute('aria-label', t(R.paused ? 'tts_play' : 'tts_pause'));
     $('tts-voice-row').hidden = !R.paused;
@@ -99,10 +99,11 @@ function fillBar() {
     RATES.forEach(r => rs.appendChild(Object.assign(document.createElement('option'), { value: r, textContent: r + '×' })));
     rs.value = +pref().rate || 1;
     const vs = $('tts-voice'); vs.textContent = '';
-    const l = lang(), fit = R.voices.filter(v => String(v.lang).slice(0, 2).toLowerCase() === l), list = fit.length ? fit : [];
+    loadVoices();
+    const l = lang(), fit = R.voices.filter(v => String(v.lang).slice(0, 2).toLowerCase() === l), list = fit.length ? fit : R.voices;
     list.forEach(v => vs.appendChild(Object.assign(document.createElement('option'), { value: v.voiceURI, textContent: v.name + (v.localService ? ' · ' + t('tts_offline') : '') })));
     const cur = voiceFor(); if (cur) vs.value = cur.voiceURI;
-    vs.hidden = list.length < 2;
+    vs.hidden = list.length < 1;
 }
 function loadVoices() { try { R.voices = speechSynthesis.getVoices() || []; } catch { R.voices = []; } }
 function wire() {
@@ -128,6 +129,13 @@ export function startReading() {
     build();
     if (!R.sents.length) return;
     loop(firstOnPage());
+}
+export function afterTurn(newText) {              // von Hand geblättert: ab der ersten Zeile der neuen Seite weiterlesen (bei Pause nur den Platz merken)
+    if (!R.on || !R.env.isOpen()) return;
+    if (newText || !R.sents.length) build();
+    const i = firstOnPage();
+    if (R.paused) { R.idx = i; return; }
+    loop(i);
 }
 export function stopReading() {
     R.run++;

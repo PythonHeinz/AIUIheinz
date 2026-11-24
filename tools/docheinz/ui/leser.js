@@ -6,13 +6,13 @@ import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
-import { initVorlesen, startReading, stopReading, supported as ttsOk } from './vorlesen.js';
+import { initVorlesen, startReading, stopReading, afterTurn, isReading, supported as ttsOk } from './vorlesen.js';
 import { askChapter, initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
 import { openOriginal, closeOriginal, isOriginalOpen } from './pdfansicht.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
 export const THEMES = ['auto', 'lt', 'sepia', 'dk', 'black', 'custom'];
-const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: false, g: { ...DEFAULTS }, b: null, bookOn: false, prof: [], maxw: 640, cols: 1, ui: false, onCover: false, coverUrl: '' };
+const S = { rec: null, src: null, ch: 0, page: 0, pages: 1, step: 0, size: 19, theme: 'auto', font: DEFAULT_FONT, btns: false, full: false, t: (k) => k, lang: () => 'en', cb: {}, open: false, timer: 0, raf: 0, seq: 0, pushed: false, wired: false, hadSel: false, gap: false, g: { ...DEFAULTS }, b: null, bookOn: false, prof: [], maxw: 640, cols: 1, ui: false, onCover: false, coverUrl: '' };
 
 const body = () => $('r-body');
 const lastCh = () => S.src.chapters.length - 1;
@@ -95,13 +95,13 @@ async function show(i, anchor, frac, at) {
 }
 
 function go(dir) {
-    stopReading();                                  // von Hand blättern beendet das Vorlesen
+    const rd = isReading();                         // beim Vorlesen: von Hand blättern setzt das Vorlesen auf der neuen Seite fort
     clearHit(); clearWahl();
     if (S.onCover) { if (dir > 0) { showCover(false); save(true); } return; }
     const r = turn({ ch: S.ch, page: S.page }, dir, S.pages, S.src.chapters.length);
     if (!r) { if (dir < 0) showCover(true); return; }
-    if (r.ch === S.ch) goPage(r.page);
-    else show(r.ch, '', 0, r.page);          // 'first' oder 'last'
+    if (r.ch === S.ch) { goPage(r.page); if (rd) afterTurn(false); }
+    else { const p = show(r.ch, '', 0, r.page); if (rd) Promise.resolve(p).then(() => afterTurn(true)); }          // 'first' oder 'last'
 }
 
 // ---------- Fundstelle anspringen (Suche) ----------
@@ -265,7 +265,7 @@ export async function applyFont(id) {
 }
 
 function onTap(e) {
-    fullscreen(true);
+    if (S.full) fullscreen(true);
     const hadSel = S.hadSel; S.hadSel = false;
     if (mkOpen()) { if (!markTap(e.clientX, e.clientY)) hideMk(); return; }          // Leiste einer Markierung offen: Tippen schließt sie (oder öffnet die nächste)
     if (hadSel || hasWahl()) { clearWahl(); return; }                                 // Markierung aktiv: Tippen hebt sie nur auf, kein Blättern
@@ -311,6 +311,7 @@ function wire() {
     $('sel-theme').addEventListener('change', (e) => setLook('theme', e.target.value));
     $('sel-scope').addEventListener('change', (e) => lookApi().setScope(e.target.value === '1'));
     $('look-reset').addEventListener('click', () => lookApi().reset());
+    $('sw-full').addEventListener('change', (e) => { S.full = e.target.checked; S.cb.onSettings({ full: S.full }); fullscreen(S.full); });
     $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });
     $('sel-font').addEventListener('change', (e) => setLook('font', e.target.value));
     $('r-set').addEventListener('click', (e) => {
@@ -350,12 +351,13 @@ function wire() {
 function fullscreen(on) {
     try {
         const d = document, el = d.documentElement;
-        if (on && !d.fullscreenElement && el.requestFullscreen) { const r = el.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); }
+        if (!on) { if (d.fullscreenElement && d.exitFullscreen) { const r = d.exitFullscreen(); if (r && r.catch) r.catch(() => {}); } return; }
+        if ( !d.fullscreenElement && el.requestFullscreen) { const r = el.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); }
     } catch { /* ohne Vollbild weiterlesen */ }
 }
 export async function openReader(rec, src, ctx) {
-    fullscreen(true);
     wire();
+    S.full = ctx.full === true; $('sw-full').checked = S.full; fullscreen(S.full);
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
     S.g = { ...DEFAULTS, ...clean({ size: ctx.size, theme: ctx.theme, font: ctx.font, ...(ctx.look || {}) }, CTX) };
     S.b = ctx.bookLook && Object.keys(clean(ctx.bookLook, CTX)).length ? clean(ctx.bookLook, CTX) : null;
@@ -383,6 +385,9 @@ export async function openReader(rec, src, ctx) {
         follow: (r) => {                                                      // gelesenen Satz markieren, Seite nachführen
             const b = body(), q = r.getClientRects()[0] || r.getBoundingClientRect();
             goPage(pageOfOffset(q.left - b.getBoundingClientRect().left, S.step, S.pages));
+            const cl = $('r-clip').getBoundingClientRect(), q2 = r.getClientRects()[0] || r.getBoundingClientRect();          // Gegenprobe: liegt der Satz sichtbar im Blatt?
+            if (q2.left >= cl.right - 2) goPage(S.page + Math.max(1, Math.floor((q2.left - cl.left) / S.step)));
+            else if (q2.left < cl.left - 2) goPage(S.page - Math.max(1, Math.ceil((cl.left - q2.left) / S.step)));
             try { if (window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('dh-read', new Highlight(r)); } catch { /* ohne Hervorhebung */ }
         },
         nextChapter: async () => { if (S.ch + 1 >= S.src.chapters.length) return false; await show(S.ch + 1, '', 0); return true; },

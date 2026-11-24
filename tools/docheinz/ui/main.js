@@ -21,7 +21,7 @@ import { openReader, close as closeReader, applyTheme, applySize, applyBtns, rel
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', cloudAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
+const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', cloudAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, full: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -496,7 +496,7 @@ async function openBook(id, jumpTo = null) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            jumpTo, t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, gap: state.gap,
+            jumpTo, t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, full: state.full, gap: state.gap,
             onLook: ({ global, book }) => {
                 state.size = global.size; state.theme = global.theme; state.font = global.font;
                 HeinzStore.set(K('size'), global.size); HeinzStore.set(K('theme'), global.theme); HeinzStore.set(K('font'), global.font);
@@ -508,7 +508,7 @@ async function openBook(id, jumpTo = null) {
             marks: rec.marks || [],
             onMarks: async (list) => { rec.marks = list; try { await state.db.update(id, { marks: list }); } catch { /* Markierungen bleiben im Speicher, bis der Reader schließt */ } },
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
-            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
+            onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('full' in p) { state.full = p.full; HeinzStore.set(K('full'), p.full ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
             onClose: () => { render(); },
         });
     } catch (e) {
@@ -535,6 +535,7 @@ async function start() {
     state.theme = THEMES.includes(HeinzStore.get(K('theme'))) ? HeinzStore.get(K('theme')) : 'auto';
     state.font = isFont(HeinzStore.get(K('font'))) ? HeinzStore.get(K('font')) : DEFAULT_FONT;
     state.btns = +HeinzStore.get(K('btns'), 0) === 1;
+    state.full = +HeinzStore.get(K('full'), 0) === 1;
     state.gap = +HeinzStore.get(K('gap'), 0) === 1;
     Heinz.header({ sub: { en: D.en.sub, de: D.de.sub }, back: '/' });
     Heinz.onLang(applyI18n);
