@@ -503,6 +503,60 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("einziger", p.evaluate("() => document.getElementById('r-body').textContent"))
         self.assertEqual(p.errors, [])
 
+    FAKE_TTS = """
+        window.__said = []; window.__rate = [];
+        const voices = [{ name: 'Online-Stimme', lang: 'de-DE', voiceURI: 'on', localService: false, default: false }, { name: 'Offline-Stimme', lang: 'de-DE', voiceURI: 'off', localService: true, default: false }];
+        window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+        const fake = { speaking: false, cur: null, getVoices: () => voices, addEventListener() {}, cancel() { const c = this.cur; this.cur = null; if (c && c.onerror) setTimeout(() => c.onerror({ error: 'interrupted' }), 0); },
+            speak(u) { window.__said.push(u.text); window.__rate.push([u.rate, u.voice && u.voice.voiceURI]); this.cur = u; setTimeout(() => { if (this.cur === u) { this.cur = null; u.onend && u.onend(); } }, 30); } };
+        Object.defineProperty(window, 'speechSynthesis', { value: fake, configurable: true });
+    """
+
+    def test_read_aloud_goes_sentence_by_sentence_with_marking_pause_and_offline_voice(self):
+        p = self.open(lang="de")
+        p.add_init_script(self.FAKE_TTS)
+        p.reload(); p.wait_for_selector("html[data-dh=ready]")
+        self.start_book(p, "a.md", "text/markdown", "# Kapitel A\n\nDr. Müller kam an. Er ging nach Hause!\n\nZweiter Absatz ohne Punkt\n\n# Kapitel B\n\nNoch ein Satz im zweiten Kapitel.".encode())
+        self.tap(p, "top"); p.click("#r-set-b")
+        p.click("#r-set [data-tts]")
+        p.wait_for_selector("#r-tts:not([hidden])")
+        p.wait_for_function("() => window.__said.length >= 4", timeout=8000)
+        said = p.evaluate("() => window.__said")
+        self.assertEqual(said[:3], ["Kapitel A", "Dr. Müller kam an.", "Er ging nach Hause!"])      # Abkürzung trennt nicht, Überschrift eigener Satz
+        self.assertEqual(p.evaluate("() => window.__rate[0]"), [1, "off"])                          # lokale (Offline-)Stimme bevorzugt
+        self.assertTrue(p.evaluate("() => CSS.highlights.has('dh-read')"))                          # gelesener Satz ist markiert
+        p.wait_for_function("() => window.__said.includes('Noch ein Satz im zweiten Kapitel.')", timeout=8000)   # Kapitelwechsel
+        p.wait_for_selector("#r-tts", state="hidden", timeout=8000)                                 # am Ende der Lektüre stoppt es von selbst
+        self.assertEqual(p.evaluate("() => CSS.highlights.has('dh-read')"), False)
+        # Pause und Fortsetzen, Geschwindigkeit
+        self.tap(p, "top"); p.click("#r-set-b"); p.click("#r-set [data-tts]")
+        p.wait_for_selector("#r-tts:not([hidden])")
+        p.select_option("#tts-rate", "1.4")
+        p.click("#tts-play")
+        p.wait_for_selector("#tts-voice-row:not([hidden])")
+        n = p.evaluate("() => window.__said.length"); p.wait_for_timeout(300)
+        self.assertEqual(p.evaluate("() => window.__said.length"), n)                               # pausiert: nichts wird mehr gesprochen
+        p.click("#tts-play")
+        p.wait_for_function("(n) => window.__said.length > n", arg=n)
+        self.assertEqual(p.evaluate("() => window.__rate[window.__rate.length - 1][0]"), 1.4)
+        p.click("#tts-stop")
+        p.wait_for_selector("#r-tts", state="hidden")
+        self.assertEqual(p.errors, [])
+        self.assertEqual(p.external, [])
+
+    def test_read_aloud_turns_the_pages_along_and_manual_turn_stops_it(self):
+        p = self.open(lang="en")
+        p.add_init_script(self.FAKE_TTS)
+        p.reload(); p.wait_for_selector("html[data-dh=ready]")
+        self.start_book(p, "l.md", "text/markdown", LONG_MD.encode())
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 3")
+        self.tap(p, "top"); p.click("#r-set-b"); p.click("#r-set [data-tts]")
+        p.wait_for_function("() => +document.getElementById('reader').dataset.page >= 3", timeout=20000)   # Seite blättert mit
+        self.assertTrue(p.locator("#r-tts").is_visible())
+        self.tap(p, "next")
+        p.wait_for_selector("#r-tts", state="hidden")                                               # von Hand blättern beendet das Vorlesen
+        self.assertEqual(p.errors, [])
+
     def test_camera_takes_several_pages_in_one_go(self):
         b = self.pw.chromium.launch(args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
         self.addCleanup(b.close)

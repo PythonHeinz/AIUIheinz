@@ -210,6 +210,8 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `ui/kamera.js` | Eigene Kamera-Ansicht: mehrere Fotos nacheinander (getUserMedia, Auslöser, Miniaturen, Rückgängig), liefert JPEG-Seiten an `main.js`. |
 | `mod/volltext.js` | Volltextsuche über mehrere Bücher: Treffer, Rangfolge, Cache-Schlüssel (rein). |
 | `ui/volltext.js` | Kapiteltexte aller Bücher für die Volltextsuche aus dem Store `texts` oder frisch gelesen. |
+| `mod/vorlesen.js` | Vorlesen: Text in Sätze teilen (Kürzel, Zahlen, Länge), Stimmenwahl (rein). |
+| `ui/vorlesen.js` | Vorlesen mit der Sprachausgabe des Browsers: Mitlauf-Markierung, Steuerleiste, Kapitelwechsel. |
 | `mod/cloud-ocr.js` | Cloud-Erkennung: Anweisung an das Modell, Nachrichten mit Seitenbild, Antwort säubern, Modell vorwählen (rein). |
 | `ui/cloud.js` | Cloud-Erkennung über `lib/providers.js` (Anbieter google), nur mit „Online erlauben“ und Schlüssel. |
 | `ui/seite.js` | Foto-Seite für OCR: Drehung, Falz bei Doppelseiten, Schräglage, Säuberung (Hintergrund/Schatten). |

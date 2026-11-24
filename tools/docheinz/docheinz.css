@@ -158,6 +158,13 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-hit { display: block; width: 100%; text-align: left; padding: 8px 4px; border: 0; border-bottom: 1px solid var(--rline); background: transparent; color: var(--rt); font: inherit; font-size: .92rem; cursor: pointer; }
 .dh-hit small { display: block; color: var(--rsub); margin-bottom: 2px; }
 .dh-hit mark { background: transparent; color: var(--rlink); font-weight: 700; }
+::highlight(dh-read) { background-color: rgba(90, 150, 230, .38); color: inherit; }
+.dh-tts { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); background: var(--rb); color: var(--rt); border-top: 1px solid var(--rline); }
+.dh-tts[hidden] { display: none; }
+.dh-ttsrow { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.dh-ttsrow .ibtn { min-width: 44px; font-size: 1.1rem; }
+.dh-ttsrow .sel { flex: 0 1 38%; min-width: 0; }
+.dh-reader[data-tts="1"] .dh-page { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 ::highlight(dh-hit) { background-color: rgba(250, 204, 21, .45); color: inherit; }
 
 /* Fenster „Analyse“ (Nachfragen) */

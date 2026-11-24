@@ -6,6 +6,7 @@ import { percent } from '../mod/bibliothek.js';
 import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zoneOf, turn } from '../mod/seiten.js';
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
+import { initVorlesen, startReading, stopReading, supported as ttsOk } from './vorlesen.js';
 import { askChapter, initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
 import { openOriginal, closeOriginal, isOriginalOpen } from './pdfansicht.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
@@ -94,6 +95,7 @@ async function show(i, anchor, frac, at) {
 }
 
 function go(dir) {
+    stopReading();                                  // von Hand blättern beendet das Vorlesen
     clearHit(); clearWahl();
     if (S.onCover) { if (dir > 0) { showCover(false); save(true); } return; }
     const r = turn({ ch: S.ch, page: S.page }, dir, S.pages, S.src.chapters.length);
@@ -312,6 +314,8 @@ function wire() {
     $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });
     $('sel-font').addEventListener('change', (e) => setLook('font', e.target.value));
     $('r-set').addEventListener('click', (e) => {
+        const tt = e.target.closest('#tts-row');
+        if (tt) { $('r-set').hidden = true; $('reader').dataset.set = '0'; startReading(); return; }
         const c = e.target.closest('[data-chap]');
         if (c) { $('r-set').hidden = true; $('reader').dataset.set = '0'; askChapter(c.dataset.chap === 'sum' ? 'summary' : 'explain', c.dataset.chap === 'ask'); return; }
         const g = e.target.closest('[data-go]'); if (g) setPage(g.dataset.go);
@@ -371,6 +375,19 @@ export async function openReader(rec, src, ctx) {
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
     initSelection({ marks: ctx.marks, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, frac: () => fracOfPage(S.page, S.pages), isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
+    initVorlesen({
+        body, rec: () => S.rec, lang: () => S.lang(), t: (k, v) => S.t(k, v), isOpen: () => S.open,
+        pageInfo: () => ({ page: S.page, step: S.step }),
+        ready: () => { if (S.onCover) showCover(false); closeUi(); clearHit(); clearWahl(); },
+        relayout: () => scheduleLayout(),
+        follow: (r) => {                                                      // gelesenen Satz markieren, Seite nachführen
+            const b = body(), q = r.getClientRects()[0] || r.getBoundingClientRect();
+            goPage(pageOfOffset(q.left - b.getBoundingClientRect().left, S.step, S.pages));
+            try { if (window.CSS && CSS.highlights && window.Highlight) CSS.highlights.set('dh-read', new Highlight(r)); } catch { /* ohne Hervorhebung */ }
+        },
+        nextChapter: async () => { if (S.ch + 1 >= S.src.chapters.length) return false; await show(S.ch + 1, '', 0); return true; },
+    });
+    $('tts-row').hidden = !ttsOk();
     setCover(ctx.cover || null);
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);
@@ -380,6 +397,7 @@ export async function openReader(rec, src, ctx) {
 
 export function close() {
     if (!S.open) return;
+    stopReading();
     save(true);
     closeOriginal(true); resetSelection(); clearHit();
     S.open = false; S.seq++;

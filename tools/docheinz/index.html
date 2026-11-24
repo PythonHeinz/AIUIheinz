@@ -60,6 +60,16 @@
         <button type="button" class="ibtn" id="r-orig-b" data-i-label="o_open" hidden><svg class="i"><use href="../../lib/icons.svg#i-expand"/></svg></button>
         <button type="button" class="ibtn" id="r-set-b" data-i-label="r_set"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></button>
     </div>
+    <div class="dh-tts" id="r-tts" hidden>
+        <div class="dh-ttsrow">
+            <button type="button" class="ibtn" id="tts-prev" data-i-label="tts_prev">‹</button>
+            <button type="button" class="ibtn" id="tts-play" data-i-label="tts_pause">❚❚</button>
+            <button type="button" class="ibtn" id="tts-next" data-i-label="tts_next">›</button>
+            <button type="button" class="ibtn" id="tts-stop" data-i-label="tts_stop">■</button>
+            <select class="sel" id="tts-rate" data-i-label="tts_rate"></select>
+        </div>
+        <div class="dh-ttsrow" id="tts-voice-row" hidden><select class="sel" id="tts-voice" data-i-label="tts_voice" hidden></select></div>
+    </div>
     <div class="dh-ov dh-ovfoot" id="r-ovfoot" hidden>
         <span class="dh-rpos" id="r-pos"></span>
         <span class="dh-bar"><i id="r-prog"></i></span>
@@ -81,6 +91,7 @@
             <button type="button" class="row" data-chap="sum"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_sum"></b><small data-i="c_sumS"></small></span></button>
             <button type="button" class="row" data-chap="exp"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_exp"></b><small data-i="c_expS"></small></span></button>
             <button type="button" class="row" data-chap="ask"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_ask"></b><small data-i="c_askS"></small></span></button>
+            <button type="button" class="row" id="tts-row" data-tts="1" hidden><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="tts_row"></b><small data-i="tts_rowS"></small></span></button>
             <p class="help" data-i="r_tips"></p>
         </section>
         <section class="dh-sp" data-p="fmt" hidden>

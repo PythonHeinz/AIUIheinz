@@ -354,7 +354,13 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. „Kapitel zusammenfassen“ mit lokalem Modell: Antwort kommt, Hinweis „gekürzt“ bei langen Kapiteln. Danach mit Gemini (Online erlauben): längerer Auszug, Antwort zum ganzen Kapitel.
 3. „Frage zum Kapitel“: eigene Frage eintippen, Antwort, im Fenster Analyse nachfragen.
 
-### Y14: Volltextsuche über alle Bücher (nur simuliert getestet)
+### Y14: Volltextsuche über alle Bücher (am Handy bestätigt 24.11.2026)
 1. Bibliothek: einen Begriff ins Suchfeld tippen: Knopf „In allen Büchern suchen“ erscheint. Antippen: Fortschritt „Bereite Buch i von n vor …“, dann Treffer je Buch.
 2. Zeit der ersten Suche bei deiner Bibliothek notieren (alle Bücher werden einmal gelesen), danach dieselbe Suche noch einmal: muss deutlich schneller sein.
 3. Treffer antippen: Buch öffnet an der Stelle, Fundstelle hervorgehoben. Im Speicherhinweis unten prüfen, wie viel Platz dazukommt.
+
+### Y15: Vorlesen (nur simuliert getestet)
+1. Buch öffnen, Tipp oben, Einstellungen, „Vorlesen“ (fehlt die Zeile, bietet der Browser keine Sprachausgabe). Es liest ab der Seite; der gelesene Satz ist markiert, die Seite blättert mit.
+2. Steuerleiste unten: Satz zurück/vor, Pause/Weiter, Stopp, Tempo. Bei Pause erscheint die Stimmenwahl (Offline-Stimmen sind gekennzeichnet; Offline wird bevorzugt).
+3. Kapitelende: Es geht im nächsten Kapitel weiter. Von Hand blättern oder Buch schließen beendet das Vorlesen.
+4. Zu beobachten: Bei gesperrtem Bildschirm oder Wechsel in eine andere App stoppt Chrome die Sprachausgabe. Qualität und Offline-Stimmen hängen vom Gerät ab (Android: Spracheinstellungen, Stimmen herunterladen). Pause startet den Satz neu.
