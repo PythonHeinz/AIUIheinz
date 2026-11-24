@@ -630,6 +630,22 @@ class PageTest(unittest.TestCase):
         page.evaluate("() => { const t = document.getElementById('param-threads'); t.value = 3; HeinzDashboard.onThreads(); }")
         self.wait_preloads(page, 1)
 
+    def test_light_mode_slider_logo_and_lcd(self):
+        """24.11.: slider track light in every person colour, logo without black plate in light, LCD panel pale grey in light."""
+        page = self.new_page()
+        page.add_init_script("try{localStorage.setItem('heinz_settings',JSON.stringify({theme:'lt'}))}catch(e){}")
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_timeout(600)
+        page.evaluate("document.documentElement.style.setProperty('--acc','#00acc1')")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('input[type=range]')).appearance"), 'none')   # own track, not Chrome's accent-dependent dark one
+        page.evaluate("var r=document.getElementById('param-temp'); r.value=1.0")
+        self.assertEqual(page.evaluate("document.getElementById('param-temp').style.getPropertyValue('--fill')"), "100%")
+        self.assertEqual(page.evaluate("getComputedStyle(document.getElementById('status-dot')).backgroundColor"), "rgba(0, 0, 0, 0)")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('#ring-logo text')).fill"), "rgb(32, 33, 36)")
+        self.assertEqual(page.evaluate("getComputedStyle(document.querySelector('.chip')).backgroundColor"), "rgb(223, 227, 232)")
+        px = page.evaluate("(()=>{var c=document.getElementById('chip-led'),d=c.getContext('2d').getImageData(1,1,1,1).data;return [d[0],d[1],d[2]]})()")
+        self.assertGreater(px[0], 180)   # canvas panel itself is pale, not #0a0b0d
+
     def test_preload_follows_mode_threads_and_can_be_switched_off(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")

@@ -331,3 +331,11 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Foto-Buch öffnen, OCR-Formular: Knopf „Mit Cloud-Modell erkennen (Google Gemini)“ muss da sein; ohne Haken/Schlüssel nur Hinweis.
 3. Antippen: Bestätigung mit Seitenzahl und Modellauswahl, dann „Senden und lesen“. Text, Reihenfolge (links vor rechts) und Dauer je Seite mit der lokalen OCR vergleichen.
 4. Haken wieder aus: kein Cloud-Knopf, keine Anfrage nach außen.
+
+## U Heller Modus: Slider, Logo, LCD (24.11.2026; nur simuliert getestet)
+- [ ] Hell: Heinz Chat, Logo mittig im Ring (vorher zu hoch), ebenso dunkel.
+- [ ] Hell: Logo ohne schwarze Platte, dunkle Schrift „HEINZ UI“, Ring bleibt in Statusfarbe.
+- [ ] Hell, Wilson: Einstellungen, Slider-Track hell wie bei Heinz, gefüllter Teil in Akzentfarbe, Daumen greifbar; Wert ändern und Person wechseln, Füllung folgt.
+- [ ] Hell: Modell-Anzeige und Gleichzeitig-Pille hellgrau mit dunkler Schrift, gut lesbar; Wechsel auf dunkel und zurück zeichnet beide neu.
+- [ ] Dunkel: alles unverändert.
+

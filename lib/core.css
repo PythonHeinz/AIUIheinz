@@ -9,6 +9,8 @@
   --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
   --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --lcd-bg:#0a0b0d; --lcd-inset:none;   /* LCD panels (Pixel canvases, .led, .chip): dark; light = pale grey reflective LCD */
+  --logo-bg:#0a0b0d; --logo-fill:#0a0b0d; --logo-txt:#e8eaed; --logo-edge:#26292e; --logo-rim:#4b5058;   /* Heinz UI logo plate (dark) */
   --code:#121212; --code-t:#d4d4d4; --tk-c:#7f8c8d; --tk-s:#98c379; --tk-d:#e5c07b; --tk-n:#d19a66; --tk-k:#c678dd; --tk-b:#61afef; --tk-f:#56b6c2;   /* code blocks and syntax colours (Markdown output) */
 }
 :root[data-theme="lt"] {
@@ -16,6 +18,8 @@
   --bg:#f4f6f8; --surf:#fff; --card:#eceff3; --line:#e1e4e8; --edge:#dadce0; --ol:transparent;
   --txt:#202124; --sub:#5f6368; --muted:#80868b; --pri:#1a73e8; --onacc:#fff; --scrim:rgba(32,33,36,.42);
   --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285;
+  --lcd-bg:#dfe3e8; --lcd-inset:inset 0 1px 3px rgba(0,0,0,.18);
+  --logo-bg:transparent; --logo-fill:transparent; --logo-txt:#202124; --logo-edge:transparent; --logo-rim:transparent;   /* Heinz UI logo: no black plate in light */
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme="auto"] {
@@ -23,6 +27,8 @@
     --bg:#f4f6f8; --surf:#fff; --card:#eceff3; --line:#e1e4e8; --edge:#dadce0; --ol:transparent;
     --txt:#202124; --sub:#5f6368; --muted:#80868b; --pri:#1a73e8; --onacc:#fff; --scrim:rgba(32,33,36,.42);
     --code:#eef0f3; --code-t:#202124; --tk-c:#80868b; --tk-s:#188038; --tk-d:#b06000; --tk-n:#c5221f; --tk-k:#8430ce; --tk-b:#1967d2; --tk-f:#0b7285;
+    --lcd-bg:#dfe3e8; --lcd-inset:inset 0 1px 3px rgba(0,0,0,.18);
+    --logo-bg:transparent; --logo-fill:transparent; --logo-txt:#202124; --logo-edge:transparent; --logo-rim:transparent;
   }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -116,13 +122,16 @@ table.list { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.list td, table.list th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
 .foot { margin-top: 22px; font-size: 12px; color: var(--muted); text-align: center; }
 
-/* LED display panel (lib/pixel.js): dark in every theme */
-.led { border-radius: 12px; overflow: hidden; background: #0a0b0d; border: 1px solid var(--line); line-height: 0; margin: 8px 0; }
+/* LED/LCD display panel (lib/pixel.js): dark panel in dark theme, pale grey reflective LCD in light */
+.led { position: relative; border-radius: 12px; overflow: hidden; background: var(--lcd-bg); border: 1px solid var(--line); line-height: 0; margin: 8px 0; }
 .led canvas { display: block; width: 100%; }
+.led::after, .chip::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--lcd-inset); pointer-events: none; }
 
 /* Metal ring (Heinz UI logo frame): opt-in via class "metal" on .ring-btn. Values documented in docs/DESIGN.md. */
-.ring-btn.metal { width: 52px; height: 52px; position: relative; border: 1px solid #26292e; background: #0a0b0d; box-shadow: inset 0 0 0 1px #4b5058; color: #e8eaed; }
-.ring-btn.metal::before { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 2px solid var(--s); background: color-mix(in srgb, var(--s) 16%, #0a0b0d); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
+.ring-btn.metal { width: 52px; height: 52px; position: relative; border: 1px solid var(--logo-edge); background: var(--logo-bg); box-shadow: inset 0 0 0 1px var(--logo-rim); color: var(--logo-txt); }
+.ring-btn.metal svg { display: block; }
+.ring-btn.metal text { fill: var(--logo-txt); }
+.ring-btn.metal::before { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 2px solid var(--s); background: color-mix(in srgb, var(--s) 16%, var(--logo-fill)); box-shadow: 0 0 9px color-mix(in srgb, var(--s) 45%, transparent); }
 .ring-btn.metal .rt { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; }
 
 /* Themed popup list for <select> (lib/core.js) */
@@ -273,3 +282,12 @@ select.sel, .inp { width: 100%; height: 46px; border-radius: 14px; background: v
 .kept > .led-trough .led-slit { background: color-mix(in srgb, var(--led-halo) 55%, var(--led-off)); box-shadow: 0 0 4px color-mix(in srgb, var(--led-halo) 45%, transparent); } /* kept own state of a person that is not selected: dim amber */
 /* Text cursor in the accent colour of the page (the person's colour in the Dashboard), readable in both themes */
 input, textarea, [contenteditable] { caret-color: var(--acc); }
+
+/* Range slider drawn by the page, not by the browser: Chrome picks a dark track for some accent colours (cyan of Wilson) and that is too harsh on a light page.
+   Track = light neutral, fill = accent up to --fill (percent, kept by lib/core.js on input and on every value change). */
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; accent-color: var(--acc); --fill: 50%; --rtrack: color-mix(in srgb, var(--txt) 16%, var(--card)); }
+input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 99px; background: linear-gradient(to right, var(--acc) var(--fill), var(--rtrack) var(--fill)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -7px; border-radius: 50%; background: var(--acc); border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+input[type=range]::-moz-range-track { height: 6px; border-radius: 99px; background: var(--rtrack); }
+input[type=range]::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--acc); }
+input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: var(--acc); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
