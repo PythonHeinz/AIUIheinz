@@ -317,3 +317,9 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-camopen { margin-top: 8px; width: 100%; }
 
 .dh-camrot { position: absolute; right: 12px; top: calc(8px + env(safe-area-inset-top)); min-width: 44px; }
+
+/* Wörterbuch */
+.dh-dictrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.dh-dictrow span { min-width: 0; overflow-wrap: anywhere; }
+.dh-dw { margin: 10px 0 2px; font-weight: 700; color: var(--rlink); }
+.dh-dd { white-space: pre-wrap; line-height: 1.45; }

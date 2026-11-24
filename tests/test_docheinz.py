@@ -480,6 +480,32 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("Zweiter Absatz", p.evaluate("() => document.getElementById('r-body').textContent"))
         self.assertEqual(p.errors, [])
 
+    def test_dictionary_import_and_lookup_with_base_form(self):
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# Wort\n\nDie Häuser standen am Fluss.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        p.click("#b-dict")
+        p.wait_for_selector("#dict:not([hidden])")
+        self.assertIn("Noch kein Wörterbuch", p.inner_text("#dict"))
+        tsv = "# Beispiel\nHaus\tGebäude zum Wohnen\nFluss\tgroßes fließendes Gewässer\nHaus\tauch: Familie\n".encode()
+        p.set_input_files("#file-dict", {"name": "klein.tsv", "mimeType": "text/tab-separated-values", "buffer": tsv})
+        p.wait_for_function("() => /3 Einträge/.test(document.getElementById('dict').innerText)")
+        self.assertIn("klein", p.inner_text("#dict"))
+        p.click("#dict [data-dc=close]")
+        p.locator("#list .dh-book").first.click()
+        p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Häuser")                                           # Beugung: findet „Haus“ über die Grundform
+        p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => document.querySelectorAll('#rs-body .dh-dd').length === 2")
+        txt = p.inner_text("#rs-body")
+        self.assertIn("Gebäude zum Wohnen", txt); self.assertIn("auch: Familie", txt)
+        self.assertEqual(p.external, [])
+        p.click("#rs-close") if p.locator("#rs-close").count() else None
+        self.select_text(p, "Fluss")
+        p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Gewässer/.test(document.getElementById('rs-body').innerText)")
+        self.assertEqual(p.errors, [])
+
     def test_full_text_search_over_all_books_jumps_to_the_hit(self):
         p = self.open(lang="de")
         self.add(p, ("eins.md", "text/markdown", "# Buch Eins\n\nDer Übermensch kommt zuerst. Später wieder der Übermensch.".encode()),
@@ -508,7 +534,7 @@ class DocHeinzUiTests(DocHeinzBase):
         const voices = [{ name: 'Online-Stimme', lang: 'de-DE', voiceURI: 'on', localService: false, default: false }, { name: 'Offline-Stimme', lang: 'de-DE', voiceURI: 'off', localService: true, default: false }];
         window.SpeechSynthesisUtterance = function (t) { this.text = t; };
         const fake = { speaking: false, cur: null, getVoices: () => voices, addEventListener() {}, cancel() { const c = this.cur; this.cur = null; if (c && c.onerror) setTimeout(() => c.onerror({ error: 'interrupted' }), 0); },
-            speak(u) { window.__said.push(u.text); window.__rate.push([u.rate, u.voice && u.voice.voiceURI]); this.cur = u; setTimeout(() => { if (this.cur === u) { this.cur = null; u.onend && u.onend(); } }, 30); } };
+            speak(u) { window.__said.push(u.text); window.__rate.push([u.rate, u.voice && u.voice.voiceURI]); this.cur = u; setTimeout(() => { if (this.cur === u) { this.cur = null; u.onend && u.onend(); } }, window.__speed || 30); } };
         Object.defineProperty(window, 'speechSynthesis', { value: fake, configurable: true });
     """
 
@@ -529,6 +555,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#r-tts", state="hidden", timeout=8000)                                 # am Ende der Lektüre stoppt es von selbst
         self.assertEqual(p.evaluate("() => CSS.highlights.has('dh-read')"), False)
         # Pause und Fortsetzen, Geschwindigkeit
+        p.evaluate("() => { window.__speed = 3000; }")                                             # langsam: Zeit für Pause und Tempo
         self.tap(p, "top"); p.click("#r-set-b"); p.click("#r-set [data-tts]")
         p.wait_for_selector("#r-tts:not([hidden])")
         p.select_option("#tts-rate", "1.4")
@@ -793,7 +820,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertTrue(p.locator("#r-sel").is_hidden())
         self.select_text(p, "Text von Kapitel 1")
         p.wait_for_selector("#r-sel:not([hidden])")
-        self.assertEqual(p.locator("#r-sel button:visible").count(), 5)
+        self.assertEqual(p.locator("#r-sel button:visible").count(), 6)
         p.click("#r-sel [data-sel=search]")
         p.wait_for_selector("#r-sheet:not([hidden]) .dh-hit")
         self.assertTrue(p.locator("#r-sel").is_hidden())

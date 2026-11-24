@@ -16,6 +16,7 @@ import { searchBook, rankBooks, MIN_QUERY } from '../mod/volltext.js';
 import { bookChapters } from './volltext.js';
 import { cloudState, cloudModels, transcribe } from './cloud.js';
 import { COLORS } from '../mod/markierung.js';
+import { initDict } from './woerterbuch.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
 const K = (n) => 'heinz_docheinz_' + n;
@@ -549,6 +550,7 @@ async function start() {
     if (cameraSupported()) { $('b-cam').hidden = false; $('b-cam').addEventListener('click', () => openCamera({ t, onDone: (pg) => addFiles([], pg), onCancel: () => {}, onError: () => msg(t('k_denied'), 'warn') })); }
     $('q').addEventListener('input', (e) => { state.q = e.target.value; if (state.ft) closeFt(); render(); });
     $('ft-go').addEventListener('click', fullSearch);
+    initDict({ db: () => state.db, t, say: msg });
     $('ft').addEventListener('click', (e) => {
         const b = e.target.closest('[data-ft]');
         if (!b) return;

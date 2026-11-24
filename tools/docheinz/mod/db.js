@@ -2,12 +2,13 @@
  * Stores: books (keyPath id: Metadaten, Lesestand), files (keyPath id: { id, blob } die Buchdatei) und texts (keyPath id: { id, key, chapters } Kapiteltexte für die Volltextsuche, ab Version 2). lib/store.js bleibt unberührt.
  *   openDb(name?) -> Promise<Db>; wirft Error('idb'), wenn IndexedDB fehlt oder gesperrt ist
  *   Db: put(record, blob), list(), get(id), file(id) -> Blob|null, update(id, patch) -> record|null, remove(id), clear(), close()
+ *       dictList() -> [{ id, name, count }], dictCreate(meta), dictAdd(id, [[schlüssel, text, original], …]), dictFind([schlüssel]) -> [{ dict, w, d, o }], dictRemove(id) (Wörterbücher, ab Version 3)
  *       getText(id) -> { id, key, chapters } | null, putText(id, key, chapters)
  *   storage() -> Promise<{ usage, quota, persisted }>   (Werte null, wo der Browser sie nicht nennt)
  *   persist() -> Promise<boolean>
  * Ein volles Gerät meldet put() als Error mit code 'full'. */
 export const DB_NAME = 'docheinz';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 const wrap = req => new Promise((ok, no) => { req.onsuccess = () => ok(req.result); req.onerror = () => no(req.error); });
 const done = tx => new Promise((ok, no) => { tx.oncomplete = () => ok(); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error || new Error('abort')); });
@@ -23,6 +24,8 @@ export function openDb(name = DB_NAME) {
             if (!db.objectStoreNames.contains('books')) db.createObjectStore('books', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('files')) db.createObjectStore('files', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('texts')) db.createObjectStore('texts', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('dictmeta')) db.createObjectStore('dictmeta', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('dict')) { const d = db.createObjectStore('dict', { autoIncrement: true }); d.createIndex('w', 'w'); d.createIndex('dict', 'dict'); }
         };
         req.onerror = () => no(new Error('idb'));
         req.onblocked = () => no(new Error('idb'));
@@ -63,6 +66,30 @@ function make(db) {
             const tx = db.transaction('texts', 'readwrite'); const fin = done(tx);
             tx.objectStore('texts').put({ id, key, chapters });
             try { await fin; } catch (e) { if (full(e)) { const err = new Error('full'); err.code = 'full'; throw err; } throw e; }
+        },
+        async dictList() { return wrap(db.transaction('dictmeta').objectStore('dictmeta').getAll()); },
+        async dictCreate(meta) {
+            const tx = db.transaction('dictmeta', 'readwrite'); const fin = done(tx);
+            tx.objectStore('dictmeta').put(meta); await fin; return meta;
+        },
+        async dictAdd(id, entries) {                                                   // ein Stapel Einträge; zählt in den Metadaten mit
+            const tx = db.transaction(['dict', 'dictmeta'], 'readwrite'); const fin = done(tx);
+            const st = tx.objectStore('dict'), mt = tx.objectStore('dictmeta');
+            entries.forEach(e => st.add({ dict: id, w: e[0], d: e[1], o: e[2] || e[0] }));
+            const m = await wrap(mt.get(id)); if (m) { m.count = (m.count || 0) + entries.length; mt.put(m); }
+            try { await fin; } catch (e) { if (full(e)) { const err = new Error('full'); err.code = 'full'; throw err; } throw e; }
+        },
+        async dictFind(keys) {
+            const ix = db.transaction('dict').objectStore('dict').index('w'), out = [];
+            for (const k of keys) { const r = await wrap(ix.getAll(k, 20)); r.forEach(x => out.push(x)); }
+            return out;
+        },
+        async dictRemove(id) {
+            const tx = db.transaction(['dict', 'dictmeta'], 'readwrite'); const fin = done(tx);
+            tx.objectStore('dictmeta').delete(id);
+            const cur = tx.objectStore('dict').index('dict').openKeyCursor(IDBKeyRange.only(id)), st = tx.objectStore('dict');
+            cur.onsuccess = () => { const c = cur.result; if (c) { st.delete(c.primaryKey); c.continue(); } };
+            await fin;
         },
         async remove(id) {
             const tx = db.transaction(['books', 'files', 'texts'], 'readwrite');

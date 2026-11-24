@@ -7,6 +7,7 @@ import { findAll, normalizeQuery } from '../mod/suche.js';
 import { buildRequest, trimHistory, MAX_CHARS, CHAPTER_MAX_ONLINE } from '../mod/ki.js';
 import { wordBounds } from '../mod/wahl.js';
 import { mdToHtml } from '../mod/markdown.js';
+import { lookup } from './woerterbuch.js';
 import { sauber } from '../mod/sauber.js';
 import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS } from '../mod/markierung.js';
 
@@ -356,6 +357,24 @@ async function chapterText(i) {
     A.cache.set(i, txt);
     return txt;
 }
+async function dictSearch(text) {
+    const q = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (!q) return;
+    const my = ++A.run;
+    openSheet(t('d_sheetT', { q }), '');
+    const box = $('rs-body');
+    box.appendChild(line('dh-sline', t('s_working')));
+    let r; try { r = await lookup(text, A.env.lang()); } catch { r = { none: false, groups: [], tried: [] }; }
+    if (my !== A.run) return;
+    box.textContent = '';
+    if (r.none) { box.appendChild(line('dh-sline', t('d_none'))); return; }
+    if (!r.groups.length) { box.appendChild(line('dh-sline', t('d_nohit'))); return; }
+    r.groups.forEach(g => g.items.forEach(it => {
+        const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = it.o + (it.name ? ' · ' + it.name : '');
+        const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = it.d;
+        box.append(h, d);
+    }));
+}
 async function search(query) {
     query = normalizeQuery(query);
     if (!query) return;
@@ -564,7 +583,7 @@ export function initSelection(env) {
         const text = A.text, off = A.off;
         if (b.dataset.sel === 'mark') { doMark(); return; }
         if (b.dataset.sel === 'copy') { try { navigator.clipboard.writeText(text); } catch { /* keine Berechtigung */ } clearWahl(); }
-        else if (b.dataset.sel === 'search') search(text); else if (askFirstOn()) askFirst(b.dataset.sel, text, off); else ask(b.dataset.sel, text, '', off);
+        else if (b.dataset.sel === 'search') search(text); else if (b.dataset.sel === 'dict') dictSearch(text); else if (askFirstOn()) askFirst(b.dataset.sel, text, off); else ask(b.dataset.sel, text, '', off);
     });
     $('r-mk').addEventListener('pointerdown', (e) => e.preventDefault());
     $('r-mk').addEventListener('click', (e) => {
