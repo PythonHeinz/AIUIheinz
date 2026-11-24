@@ -342,7 +342,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 ### Y11: Vollbild im Leser (nur simuliert getestet)
 1. Ein Buch öffnen: Statusleiste und Navigationsleiste sollen verschwinden, nur der Text bleibt.
 2. Vom Rand wischen oder die App wechseln, zurückkehren, einmal tippen: Vollbild kommt zurück.
-3. Buch schließen: Leisten sind wieder da. Notieren, ob die Gestenleiste unten ganz weg ist.
+3. Buch schließen: die Bibliothek bleibt im Vollbild, der Hinweis „Zum Beenden von oben ziehen“ kommt nicht noch einmal. Hub über den Pfeil erreichen: Leisten sind wieder da. Notieren, ob die Gestenleiste unten ganz weg ist.
 
 ### Y12: Kamera-Hilfen (nur simuliert getestet)
 1. Kamera öffnen: gestrichelter Rahmen und ein Ring in der Bildmitte sind zu sehen.

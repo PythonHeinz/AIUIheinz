@@ -347,7 +347,6 @@ function fullscreen(on) {
     try {
         const d = document, el = d.documentElement;
         if (on && !d.fullscreenElement && el.requestFullscreen) { const r = el.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); }
-        else if (!on && d.fullscreenElement && d.exitFullscreen) { const r = d.exitFullscreen(); if (r && r.catch) r.catch(() => {}); }
     } catch { /* ohne Vollbild weiterlesen */ }
 }
 export async function openReader(rec, src, ctx) {
@@ -390,8 +389,7 @@ export function close() {
     body().textContent = '';
     $('r-cover').hidden = true; S.onCover = false;
     if (S.coverUrl) { URL.revokeObjectURL(S.coverUrl); S.coverUrl = ''; }
-    fullscreen(false);
-    S.cb.onClose();
+    S.cb.onClose();                                  // Vollbild bleibt an: Chrome zeigt den Hinweis zum Beenden sonst bei jedem Buch neu; endet beim Verlassen der Seite von selbst
     S.rec = null; S.src = null;
 }
 export const isOpen = () => S.open;
