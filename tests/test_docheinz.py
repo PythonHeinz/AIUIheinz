@@ -598,6 +598,11 @@ class DocHeinzUiTests(DocHeinzBase):
         p.check("#sw-full")
         self.assertEqual(p.evaluate("() => localStorage.getItem('heinz_docheinz_full')"), "1")
         self.assertGreaterEqual(p.evaluate("() => window.__fs"), 1)
+        p.click("#r-set-b"); p.click("#rs-back") if p.locator("#rs-back").is_visible() else None
+        p.evaluate("() => document.getElementById('r-fs').click()")                      # Knopf oben schaltet auch den Haken um
+        self.assertEqual(p.evaluate("() => localStorage.getItem('heinz_docheinz_full')"), "0")
+        p.evaluate("() => document.getElementById('r-fs').click()")
+        self.assertEqual(p.evaluate("() => localStorage.getItem('heinz_docheinz_full')"), "1")
 
     def test_camera_takes_several_pages_in_one_go(self):
         b = self.pw.chromium.launch(args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])

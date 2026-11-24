@@ -311,7 +311,10 @@ function wire() {
     $('sel-theme').addEventListener('change', (e) => setLook('theme', e.target.value));
     $('sel-scope').addEventListener('change', (e) => lookApi().setScope(e.target.value === '1'));
     $('look-reset').addEventListener('click', () => lookApi().reset());
-    $('sw-full').addEventListener('change', (e) => { S.full = e.target.checked; S.cb.onSettings({ full: S.full }); fullscreen(S.full); });
+    const setFull = (on) => { S.full = on; $('sw-full').checked = on; S.cb.onSettings({ full: on }); fullscreen(on); fsIcon(); };
+    $('sw-full').addEventListener('change', (e) => setFull(e.target.checked));
+    $('r-fs').addEventListener('click', () => setFull(!S.full));
+    document.addEventListener('fullscreenchange', fsIcon);
     $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });
     $('sel-font').addEventListener('change', (e) => setLook('font', e.target.value));
     $('r-set').addEventListener('click', (e) => {
@@ -348,6 +351,7 @@ function wire() {
 
 // Vollbild beim Lesen: nur der Text, keine Statusleiste und keine Navigationsleiste. Der Browser erlaubt es nur nach einer Berührung; geht es verloren
 // (App-Wechsel, Wischen vom Rand), holt das nächste Tippen im Leser es zurück. Ohne Unterstützung passiert nichts.
+function fsIcon() { const on = !!document.fullscreenElement || S.full; const u = $('r-fs-i'); if (u) u.setAttribute('href', '../../lib/icons.svg#' + (on ? 'i-shrink' : 'i-expand')); }
 function fullscreen(on) {
     try {
         const d = document, el = d.documentElement;
@@ -357,7 +361,8 @@ function fullscreen(on) {
 }
 export async function openReader(rec, src, ctx) {
     wire();
-    S.full = ctx.full === true; $('sw-full').checked = S.full; fullscreen(S.full);
+    S.full = ctx.full === true; $('sw-full').checked = S.full; fullscreen(S.full); fsIcon();
+    $('r-fs').hidden = !document.documentElement.requestFullscreen;
     S.rec = rec; S.src = src; S.t = ctx.t; S.lang = ctx.lang || S.lang; S.cb = ctx;
     S.g = { ...DEFAULTS, ...clean({ size: ctx.size, theme: ctx.theme, font: ctx.font, ...(ctx.look || {}) }, CTX) };
     S.b = ctx.bookLook && Object.keys(clean(ctx.bookLook, CTX)).length ? clean(ctx.bookLook, CTX) : null;
