@@ -338,4 +338,4 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 - [ ] Hell, Wilson: Einstellungen, Slider-Track hell wie bei Heinz, gefüllter Teil in Akzentfarbe, Daumen greifbar; Wert ändern und Person wechseln, Füllung folgt.
 - [ ] Hell: Modell-Anzeige und Gleichzeitig-Pille hellgrau mit dunkler Schrift, gut lesbar; Wechsel auf dunkel und zurück zeichnet beide neu.
 - [ ] Dunkel: alles unverändert.
-
+- [ ] Hell: Personen-LED, Änderung (weiß mit Bernsteinhof) und behalten (ruhiges Bernstein) sind direkt zu unterscheiden, wie im dunklen Modus.
