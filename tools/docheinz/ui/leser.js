@@ -7,7 +7,7 @@ import { pageCount, clampPage, fracOfPage, fracEnd, pageOfFrac, pageOfOffset, zo
 import { buildLookUi, sync as syncLook } from './satz.js';
 import { DEFAULTS, clean, full } from '../mod/satz.js';
 import { initVorlesen, startReading, stopReading, afterTurn, isReading, supported as ttsOk } from './vorlesen.js';
-import { askChapter, initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, buildAiChips, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
+import { askChapter, initSelection, resetSelection, closeSheet, closeAna, consumePop, anaIsOpen, hasWahl, clearWahl, drawMarks, markTap, mkOpen, hideMk, renderMarkList, pageNote } from './auswahl.js';
 import { openOriginal, closeOriginal, isOriginalOpen } from './pdfansicht.js';
 import { FONTS, fontOf, isFont, DEFAULT_FONT } from '../mod/schriften.js';
 
@@ -303,7 +303,7 @@ function wire() {
         history.pushState({ dh: 1 }, '');
         openOriginal(S.src, r.from + Math.round(f * (r.to - r.from)), { onClose: (pg) => { const ch = S.src.pdf.chapterOf(pg), q = S.src.pdf.range(ch); show(ch, '', q.to > q.from ? (pg - q.from) / (q.to - q.from + 1) : 0); showUi(false); } });
     });
-    $('r-set-b').addEventListener('click', () => { if (panel('set')) { setPage('main'); buildAiChips(); } });
+    $('r-set-b').addEventListener('click', () => { if (panel('set')) setPage('main'); });
     $('sw-gap').addEventListener('change', (e) => { applyGap(e.target.checked); S.cb.onSettings({ gap: S.gap }); });
     $('r-prev').addEventListener('click', () => go(-1));
     $('r-next').addEventListener('click', () => go(1));
@@ -312,7 +312,6 @@ function wire() {
     $('sel-scope').addEventListener('change', (e) => lookApi().setScope(e.target.value === '1'));
     $('look-reset').addEventListener('click', () => lookApi().reset());
     const setFull = (on) => { S.full = on; $('sw-full').checked = on; S.cb.onSettings({ full: on }); fullscreen(on); fsIcon(); };
-    $('sw-full').addEventListener('change', (e) => setFull(e.target.checked));
     $('r-fs').addEventListener('click', () => setFull(!S.full));
     document.addEventListener('fullscreenchange', fsIcon);
     $('sw-btns').addEventListener('change', (e) => { applyBtns(e.target.checked); S.cb.onSettings({ btns: S.btns }); });

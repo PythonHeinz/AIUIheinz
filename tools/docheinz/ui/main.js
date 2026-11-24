@@ -17,6 +17,7 @@ import { bookChapters } from './volltext.js';
 import { cloudState, cloudModels, transcribe } from './cloud.js';
 import { COLORS } from '../mod/markierung.js';
 import { initDict } from './woerterbuch.js';
+import { buildAiChips } from './auswahl.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
 
 const K = (n) => 'heinz_docheinz_' + n;
@@ -551,6 +552,9 @@ async function start() {
     $('q').addEventListener('input', (e) => { state.q = e.target.value; if (state.ft) closeFt(); render(); });
     $('ft-go').addEventListener('click', fullSearch);
     initDict({ db: () => state.db, t, say: msg });
+    $('b-set').addEventListener('click', () => { const b = $('setp'); b.hidden = !b.hidden; if (!b.hidden) { $('sw-full').checked = state.full; buildAiChips(t); } });
+    $('setp-close').addEventListener('click', () => { $('setp').hidden = true; });
+    $('sw-full').addEventListener('change', (e) => { state.full = e.target.checked; HeinzStore.set(K('full'), state.full ? 1 : 0); });
     $('ft').addEventListener('click', (e) => {
         const b = e.target.closest('[data-ft]');
         if (!b) return;

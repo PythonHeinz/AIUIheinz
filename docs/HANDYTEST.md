@@ -372,3 +372,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. Flugmodus: dasselbe muss gehen. In der Bibliothek ein Wörterbuch löschen: Einträge sind danach weg.
 4. Zu beobachten: Dateien über etwa 100 MB können das Einlesen verlangsamen; die Grundform-Suche ist eine einfache Regel (keine Sprachanalyse) und findet unregelmäßige Formen (ging, went) nicht.
 
+### Y17: Aufgeräumtes Menü (nur simuliert getestet)
+1. Bibliothek: Knopf „Einstellungen“. Dort KI-Modell wählen, „Vor jeder KI-Anfrage fragen“ und „Immer Vollbild“ umschalten; gilt für alle Bücher.
+2. Im Buch: Menü oben rechts zeigt nur Formatierung, Kapitel-KI und Vorlesen. Knopf mit Pfeilen oben schaltet Vollbild, Knopf mit Dokument-Symbol zeigt bei Foto- und PDF-Büchern die Originalseite.
+

@@ -19,6 +19,7 @@
         <input type="file" id="file-cam" class="sr-only" accept="image/*" capture="environment">
         <input type="file" id="file-pg" class="sr-only" multiple accept="image/*">
         <button type="button" class="pill dh-camopen" id="b-cam" hidden><span data-i="k_open"></span></button>
+        <button type="button" class="pill" id="b-set" data-i="a_btn"></button>
         <button type="button" class="pill" id="b-dict" data-i="d_btn"></button>
         <div class="help" data-i="add_help"></div>
     <div class="notice" id="msg" role="status" hidden></div>
@@ -28,6 +29,15 @@
         <div class="dh-tools" id="tools" hidden>
             <input id="q" class="inp" type="search" autocomplete="off" spellcheck="false" data-ph="search">
             <select id="sort" class="sel"></select>
+        </div>
+        <div class="panel dh-setp" id="setp" hidden>
+            <div class="dh-fth"><b data-i="a_title"></b><button type="button" class="pill" id="setp-close" data-i="ft_close"></button></div>
+            <label class="fld"><span data-i="r_aiSel"></span><select class="sel" id="sel-ai"></select></label>
+            <p class="help" id="ai-cur"></p>
+            <label class="row"><span class="tx"><b data-i="r_askFirst"></b><small data-i="r_askFirstS"></small></span><span class="sw"><input type="checkbox" id="sw-askfirst"><i></i></span></label>
+            <p class="help" data-i="r_aiHint"></p>
+            <p class="help"><a href="../../dashboard.html" data-i="r_aiDash"></a></p>
+            <label class="row"><span class="tx"><b data-i="r_full"></b><small data-i="r_fullS"></small></span><span class="sw"><input type="checkbox" id="sw-full"><i></i></span></label>
         </div>
         <div class="panel dh-dict" id="dict" hidden></div>
         <div class="dh-ftbar" id="ftbar" hidden><button type="button" class="pill" id="ft-go" data-i="ft_btn"></button></div>
@@ -90,7 +100,6 @@
         <div class="dh-rhead"><button type="button" class="ibtn" id="rs-back" data-i-label="r_back" hidden><svg class="i"><use href="../../lib/icons.svg#i-arrow-l"/></svg></button><b id="rs-ttl"></b></div>
         <section class="dh-sp" data-p="main">
             <button type="button" class="row" data-go="fmt"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i="m_fmt"></b><small data-i="m_fmtS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
-            <button type="button" class="row" data-go="ai"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="m_ai"></b><small data-i="m_aiS"></small></span><span class="go"><svg class="i"><use href="../../lib/icons.svg#i-chev-r"/></svg></span></button>
             <button type="button" class="row" data-chap="sum"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_sum"></b><small data-i="c_sumS"></small></span></button>
             <button type="button" class="row" data-chap="exp"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_exp"></b><small data-i="c_expS"></small></span></button>
             <button type="button" class="row" data-chap="ask"><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sparkle"/></svg></span><span class="tx"><b data-i="c_ask"></b><small data-i="c_askS"></small></span></button>
@@ -119,17 +128,9 @@
         <section class="dh-sp" data-p="color" hidden><div id="lk-color"></div></section>
         <section class="dh-sp" data-p="ctl" hidden>
             <label class="row"><span class="tx"><b data-i="r_btns"></b><small data-i="r_btnsS"></small></span><span class="sw"><input type="checkbox" id="sw-btns"><i></i></span></label>
-            <label class="row"><span class="tx"><b data-i="r_full"></b><small data-i="r_fullS"></small></span><span class="sw"><input type="checkbox" id="sw-full"><i></i></span></label>
             <label class="row"><span class="tx"><b data-i="r_gap"></b></span><span class="sw"><input type="checkbox" id="sw-gap"><i></i></span></label>
         </section>
         <section class="dh-sp" data-p="prof" hidden><div id="lk-prof"></div></section>
-        <section class="dh-sp" data-p="ai" hidden>
-            <label class="fld"><span data-i="r_aiSel"></span><select class="sel" id="sel-ai"></select></label>
-            <p class="help" id="ai-cur"></p>
-            <label class="row"><span class="tx"><b data-i="r_askFirst"></b><small data-i="r_askFirstS"></small></span><span class="sw"><input type="checkbox" id="sw-askfirst"><i></i></span></label>
-            <p class="help" data-i="r_aiHint"></p>
-            <p class="help"><a href="../../dashboard.html" data-i="r_aiDash"></a></p>
-        </section>
     </div>
     <nav class="dh-toc" id="r-toc" hidden>
         <div class="dh-tabs" id="r-tabs"><button type="button" data-tab="toc" class="on" data-i="r_tabToc"></button><button type="button" data-tab="marks" data-i="r_tabMarks"></button></div>

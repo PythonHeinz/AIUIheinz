@@ -324,18 +324,19 @@ function aiSettings(act) {
     return { system: cfg && cfg.prompt ? cfg.prompt : '', options, keepAlive: rt.keepAlive, cfg };
 }
 function aiLabel(c) { const p = c && PV.get(c.provider); if (!c || !p) return ''; const f = c.config ? PV.configById(c.config) : null; return (f ? f.name + ' · ' : '') + c.model + ' · ' + p.name; }
-export async function buildAiChips() {
+export async function buildAiChips(tr) {
+    const T = tr || ((k, v) => A.env.t(k, v));
     const sel = $('sel-ai'), cur = $('ai-cur'), sw = $('sw-askfirst');
     sw.checked = askFirstOn();
     sel.textContent = '';
     // Nur Konfigurationen aus dem Dashboard (Modell, Prompt, Ton, Laufzeit); die Modellflut der Anbieter erscheint hier nicht.
     const ok = (id) => { const p = PV.get(id); return !!p && !!p.baseUrl && (p.local || (PV.onlineAllowed() && (!p.needsKey || PV.getKey(id)))); };
-    sel.appendChild(Object.assign(document.createElement('option'), { value: '', textContent: A.env.t('r_aiDefault') }));
+    sel.appendChild(Object.assign(document.createElement('option'), { value: '', textContent: T('r_aiDefault') }));
     PV.configs().filter(f => ok(f.provider)).forEach(f => sel.appendChild(Object.assign(document.createElement('option'), { value: f.id, textContent: f.name + ' · ' + f.model + (PV.get(f.provider).local ? '' : ' · online') })));
     const show = () => {
         const c = HeinzStore.get(AI_KEY, null), act = aiChoice();
         sel.value = c && c.config && PV.configById(c.config) ? c.config : '';
-        cur.textContent = act ? A.env.t('r_aiCur', { m: aiLabel(act) }) : A.env.t('r_aiNone');
+        cur.textContent = act ? T('r_aiCur', { m: aiLabel(act) }) : T('r_aiNone');
     };
     if (!sel.dataset.wired) {
         sel.dataset.wired = '1';
