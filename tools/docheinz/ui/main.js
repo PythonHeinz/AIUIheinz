@@ -12,6 +12,8 @@ import { openCamera, cameraSupported } from './kamera.js';
 import { isFont, DEFAULT_FONT } from '../mod/schriften.js';
 import { exportBook, FORMATS } from '../mod/exportieren.js';
 import { LANGS, makeRecognizer } from '../mod/ocr.js';
+import { searchBook, rankBooks, MIN_QUERY } from '../mod/volltext.js';
+import { bookChapters } from './volltext.js';
 import { cloudState, cloudModels, transcribe } from './cloud.js';
 import { COLORS } from '../mod/markierung.js';
 import { openReader, close as closeReader, applyTheme, applySize, applyBtns, relabel, THEMES } from './leser.js';
@@ -339,6 +341,7 @@ function render() {
     const shown = filterSort(state.books, state.q, state.sort);
     shown.forEach(b => list.appendChild(bookRow(b)));
     $('tools').hidden = state.books.length < 2 && !state.q;
+    $('ftbar').hidden = !(state.books.length && state.q.trim().length >= MIN_QUERY);
     $('count').textContent = state.books.length ? (state.books.length === 1 ? t('count_one') : t('count_n', { n: state.books.length })) : '';
     const empty = $('empty');
     empty.hidden = shown.length > 0;
@@ -440,8 +443,50 @@ async function addFiles(files, pre) {
     msg(lines, added && lines.length === 1 ? 'ok' : (added ? 'warn' : 'err'));
 }
 
+// ---------- Volltextsuche über alle Bücher ----------
+let ftRun = 0;
+function renderFt() {
+    const box = $('ft'), f = state.ft;
+    box.hidden = !f; box.textContent = '';
+    if (!f) return;
+    const head = document.createElement('div'); head.className = 'dh-fth';
+    const h = document.createElement('b'); h.textContent = t('ft_title', { q: f.q });
+    const x = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('ft_close') }); x.dataset.ft = 'close';
+    head.append(h, x); box.appendChild(head);
+    if (f.busy) { const p = document.createElement('p'); p.className = 'help'; p.textContent = t('ft_prep', { i: f.i, n: f.n }) + ' ' + t('ft_note'); box.appendChild(p); }
+    else if (!f.items.length) { const p = document.createElement('p'); p.className = 'help'; p.textContent = t('ft_none', { n: f.n }); box.appendChild(p); }
+    f.items.forEach(it => {
+        const b = document.createElement('div'); b.className = 'dh-ftb'; b.textContent = it.title + ' · ' + t('ft_n', { n: it.count }); box.appendChild(b);
+        it.hits.forEach(hit => {
+            const s = Object.assign(document.createElement('button'), { type: 'button', className: 'dh-fts' });
+            const m = document.createElement('mark'); m.textContent = hit.hit;
+            s.append(document.createTextNode(hit.before + ' '), m, document.createTextNode(' ' + hit.after));
+            s.dataset.ft = 'hit'; s.dataset.id = it.id; s.dataset.ch = hit.ch; s.dataset.start = hit.start; s.dataset.len = hit.len;
+            box.appendChild(s);
+        });
+    });
+}
+function closeFt() { ftRun++; state.ft = null; renderFt(); }
+async function fullSearch() {
+    const q = state.q.trim();
+    if (q.length < MIN_QUERY || !state.db) return;
+    const my = ++ftRun, items = [];
+    state.ft = { q, items, i: 0, n: state.books.length, busy: true };
+    renderFt();
+    for (let k = 0; k < state.books.length; k++) {
+        if (my !== ftRun) return;
+        const rec = state.books[k];
+        state.ft.i = k + 1; renderFt();
+        try {
+            const chapters = await bookChapters(state.db, rec), r = searchBook({ chapters }, q);
+            if (r) { items.push({ id: rec.id, title: rec.title, ...r }); state.ft.items = rankBooks(items); }
+        } catch { /* dieses Buch überspringen */ }
+    }
+    if (my === ftRun) { state.ft.busy = false; renderFt(); }
+}
+
 // ---------- Öffnen ----------
-async function openBook(id) {
+async function openBook(id, jumpTo = null) {
     const rec = state.books.find(b => b.id === id);
     if (!rec) return;
     try {
@@ -451,7 +496,7 @@ async function openBook(id) {
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
         await openReader(rec, src, {
-            t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, gap: state.gap,
+            jumpTo, t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, gap: state.gap,
             onLook: ({ global, book }) => {
                 state.size = global.size; state.theme = global.theme; state.font = global.font;
                 HeinzStore.set(K('size'), global.size); HeinzStore.set(K('theme'), global.theme); HeinzStore.set(K('font'), global.font);
@@ -501,7 +546,14 @@ async function start() {
     $('file-cam').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
     $('file-pg').addEventListener('change', (e) => { appendPhotos(state.addTo, e.target.files); e.target.value = ''; });
     if (cameraSupported()) { $('b-cam').hidden = false; $('b-cam').addEventListener('click', () => openCamera({ t, onDone: (pg) => addFiles([], pg), onCancel: () => {}, onError: () => msg(t('k_denied'), 'warn') })); }
-    $('q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
+    $('q').addEventListener('input', (e) => { state.q = e.target.value; if (state.ft) closeFt(); render(); });
+    $('ft-go').addEventListener('click', fullSearch);
+    $('ft').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-ft]');
+        if (!b) return;
+        if (b.dataset.ft === 'close') closeFt();
+        else if (b.dataset.ft === 'hit') openBook(b.dataset.id, { ch: +b.dataset.ch, start: +b.dataset.start, len: +b.dataset.len });
+    });
     $('sort').addEventListener('change', (e) => { state.sort = e.target.value; HeinzStore.set(K('sort'), state.sort); render(); });
     $('list').addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-act]');

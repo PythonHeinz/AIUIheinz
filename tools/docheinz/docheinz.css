@@ -9,6 +9,14 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-tools { display: flex; gap: 8px; margin: 0 0 10px; align-items: center; }
 .dh-tools[hidden] { display: none; }
 .dh-tools .inp { flex: 1 1 auto; min-width: 0; margin: 0; }
+.dh-ftbar { margin: 0 0 10px; }
+.dh-ftbar[hidden], .dh-ft[hidden] { display: none; }
+.dh-ft { margin: 0 0 12px; padding: 10px 12px; }
+.dh-ft .dh-fth { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.dh-ft .dh-fth b { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.dh-ft .dh-ftb { margin: 10px 0 4px; font-weight: 700; }
+.dh-ft .dh-fts { display: block; width: 100%; text-align: left; margin: 2px 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line, #8884); background: transparent; color: inherit; font: inherit; font-size: .92em; line-height: 1.35; }
+.dh-ft .dh-fts mark { background: #fbbf2455; color: inherit; border-radius: 3px; padding: 0 1px; }
 .dh-tools .sel { flex: 0 0 42%; min-width: 0; }
 .dh-list { display: flex; flex-direction: column; padding: 2px 12px; background: var(--surf); border-color: var(--line); }
 .dh-list:empty { display: none; }

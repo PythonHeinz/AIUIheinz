@@ -1,12 +1,13 @@
 /* tools/docheinz/mod/db.js – eigene Datenbank des Werkzeugs: IndexedDB „docheinz“ (Insel-Modul, keine Oberfläche, kein Netz).
- * Stores: books (keyPath id: Metadaten, Lesestand) und files (keyPath id: { id, blob } die Buchdatei). lib/store.js bleibt unberührt.
+ * Stores: books (keyPath id: Metadaten, Lesestand), files (keyPath id: { id, blob } die Buchdatei) und texts (keyPath id: { id, key, chapters } Kapiteltexte für die Volltextsuche, ab Version 2). lib/store.js bleibt unberührt.
  *   openDb(name?) -> Promise<Db>; wirft Error('idb'), wenn IndexedDB fehlt oder gesperrt ist
  *   Db: put(record, blob), list(), get(id), file(id) -> Blob|null, update(id, patch) -> record|null, remove(id), clear(), close()
+ *       getText(id) -> { id, key, chapters } | null, putText(id, key, chapters)
  *   storage() -> Promise<{ usage, quota, persisted }>   (Werte null, wo der Browser sie nicht nennt)
  *   persist() -> Promise<boolean>
  * Ein volles Gerät meldet put() als Error mit code 'full'. */
 export const DB_NAME = 'docheinz';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 const wrap = req => new Promise((ok, no) => { req.onsuccess = () => ok(req.result); req.onerror = () => no(req.error); });
 const done = tx => new Promise((ok, no) => { tx.oncomplete = () => ok(); tx.onerror = () => no(tx.error); tx.onabort = () => no(tx.error || new Error('abort')); });
@@ -21,6 +22,7 @@ export function openDb(name = DB_NAME) {
             const db = req.result;
             if (!db.objectStoreNames.contains('books')) db.createObjectStore('books', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('files')) db.createObjectStore('files', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('texts')) db.createObjectStore('texts', { keyPath: 'id' });
         };
         req.onerror = () => no(new Error('idb'));
         req.onblocked = () => no(new Error('idb'));
@@ -56,14 +58,20 @@ function make(db) {
             await done(tx);
             return next;
         },
+        async getText(id) { return (await wrap(db.transaction('texts').objectStore('texts').get(id))) || null; },
+        async putText(id, key, chapters) {
+            const tx = db.transaction('texts', 'readwrite'); const fin = done(tx);
+            tx.objectStore('texts').put({ id, key, chapters });
+            try { await fin; } catch (e) { if (full(e)) { const err = new Error('full'); err.code = 'full'; throw err; } throw e; }
+        },
         async remove(id) {
-            const tx = db.transaction(['books', 'files'], 'readwrite');
-            tx.objectStore('books').delete(id); tx.objectStore('files').delete(id);
+            const tx = db.transaction(['books', 'files', 'texts'], 'readwrite');
+            tx.objectStore('books').delete(id); tx.objectStore('files').delete(id); tx.objectStore('texts').delete(id);
             await done(tx);
         },
         async clear() {
-            const tx = db.transaction(['books', 'files'], 'readwrite');
-            tx.objectStore('books').clear(); tx.objectStore('files').clear();
+            const tx = db.transaction(['books', 'files', 'texts'], 'readwrite');
+            tx.objectStore('books').clear(); tx.objectStore('files').clear(); tx.objectStore('texts').clear();
             await done(tx);
         },
         close() { db.close(); },

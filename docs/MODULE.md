@@ -208,6 +208,8 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `ocr.js` | `makeRecognizer(lang)` (tesseract.js aus `vendor/ocr/`, lazy, lokal), `ocrTextToHtml(text)` (rein), `LANGS`. Scan-PDFs: Datensatz hat `ocr` (Text je Seite) und `ocrTotal`; `openSource(..., { ocr })` baut daraus die Kapitel. |
 | `bilder-pdf.js` | `imagesToPdf(pages, dpi)`: JPEG-Seitenbilder zu einem PDF (DCTDecode, ohne Textebene); Grundlage für Fotos von Buchseiten. Oberfläche: `ui/bild.js` (`photoToPage` mit EXIF-Drehung, `enhanceForOcr` Graustufen und Kontrast). |
 | `ui/kamera.js` | Eigene Kamera-Ansicht: mehrere Fotos nacheinander (getUserMedia, Auslöser, Miniaturen, Rückgängig), liefert JPEG-Seiten an `main.js`. |
+| `mod/volltext.js` | Volltextsuche über mehrere Bücher: Treffer, Rangfolge, Cache-Schlüssel (rein). |
+| `ui/volltext.js` | Kapiteltexte aller Bücher für die Volltextsuche aus dem Store `texts` oder frisch gelesen. |
 | `mod/cloud-ocr.js` | Cloud-Erkennung: Anweisung an das Modell, Nachrichten mit Seitenbild, Antwort säubern, Modell vorwählen (rein). |
 | `ui/cloud.js` | Cloud-Erkennung über `lib/providers.js` (Anbieter google), nur mit „Online erlauben“ und Schlüssel. |
 | `ui/seite.js` | Foto-Seite für OCR: Drehung, Falz bei Doppelseiten, Schräglage, Säuberung (Hintergrund/Schatten). |

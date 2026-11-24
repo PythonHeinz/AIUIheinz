@@ -217,7 +217,10 @@ class DocHeinzDomTests(DocHeinzBase):
             out.upd = (await db.update('a', { frac: 0.5 })).frac;
             out.got = (await db.get('a')).title + (await db.get('a')).frac;
             out.none = [await db.get('zz'), await db.file('zz'), await db.update('zz', {})];
+            await db.putText('a', 'k1', ['eins', 'zwei']);
+            out.text = await db.getText('a'); out.noText = await db.getText('zz');
             await db.remove('a');
+            out.textGone = await db.getText('a');
             out.after = [(await db.list()).length, await db.file('a')];
             await db.clear();
             out.cleared = (await db.list()).length;
@@ -230,6 +233,8 @@ class DocHeinzDomTests(DocHeinzBase):
         self.assertEqual(r["upd"], 0.5)
         self.assertEqual(r["got"], "A0.5")
         self.assertEqual(r["none"], [None, None, None])
+        self.assertEqual(r["text"], {"id": "a", "key": "k1", "chapters": ["eins", "zwei"]})
+        self.assertIsNone(r["noText"]); self.assertIsNone(r["textGone"])
         self.assertEqual(r["after"], [1, None])
         self.assertEqual(r["cleared"], 0)
         self.assertEqual(r["storage"], [True, True, True])
@@ -473,6 +478,29 @@ class DocHeinzUiTests(DocHeinzBase):
         self.tap(p, "next")
         p.wait_for_function("() => document.getElementById('reader').dataset.cover === '0'")
         self.assertIn("Zweiter Absatz", p.evaluate("() => document.getElementById('r-body').textContent"))
+        self.assertEqual(p.errors, [])
+
+    def test_full_text_search_over_all_books_jumps_to_the_hit(self):
+        p = self.open(lang="de")
+        self.add(p, ("eins.md", "text/markdown", "# Buch Eins\n\nDer Übermensch kommt zuerst. Später wieder der Übermensch.".encode()),
+                 ("zwei.md", "text/markdown", "# Buch Zwei\n\nNur ein Satz ohne Treffer.".encode()),
+                 ("drei.md", "text/markdown", "# Buch Drei\n\nEin einziger Übermensch steht hier, mitten im Satz.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 3")
+        self.assertTrue(p.locator("#ftbar").is_hidden())
+        p.fill("#q", "übermensch")
+        p.wait_for_selector("#ft-go:visible")
+        p.click("#ft-go")
+        p.wait_for_function("() => document.querySelectorAll('#ft .dh-fts').length === 3")
+        heads = p.locator("#ft .dh-ftb").all_inner_texts()
+        self.assertEqual(len(heads), 2)                                        # das Buch ohne Treffer fehlt
+        self.assertIn("Buch Eins", heads[0]); self.assertIn("2 Treffer", heads[0])   # nach Trefferzahl sortiert
+        self.assertIn("Buch Drei", heads[1]); self.assertIn("1 Treffer", heads[1])
+        self.assertEqual(p.external, [])
+        p.locator("#ft .dh-fts").nth(2).click()                                # Treffer in Buch Drei
+        p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => CSS.highlights.get('dh-hit') && CSS.highlights.get('dh-hit').size === 1")
+        self.assertEqual(p.evaluate("() => String(CSS.highlights.get('dh-hit').values().next().value)"), "Übermensch")
+        self.assertIn("einziger", p.evaluate("() => document.getElementById('r-body').textContent"))
         self.assertEqual(p.errors, [])
 
     def test_camera_takes_several_pages_in_one_go(self):

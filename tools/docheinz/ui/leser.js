@@ -376,6 +376,7 @@ export async function openReader(rec, src, ctx) {
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);
     showCover(start);
+    if (ctx.jumpTo) await jump(ctx.jumpTo.ch, ctx.jumpTo.start, ctx.jumpTo.len);          // Treffer der Volltextsuche der Bibliothek
 }
 
 export function close() {
