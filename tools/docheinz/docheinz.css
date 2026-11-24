@@ -64,11 +64,11 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 /* Leseansicht: Themen über Variablen am Container. Kein Kopf, kein Fuß: der Text füllt den Schirm, die Steuerung liegt nur auf Tipp oben darüber (verschiebt nichts). */
 .dh-reader { --rb: var(--surf); --rt: var(--txt); --rbar: var(--card); --rline: var(--line); --rsub: var(--sub); --rlink: var(--pri); --bh: calc(52px + env(safe-area-inset-top)); position: fixed; inset: 0; overflow: clip; z-index: 90; background: var(--rb); color: var(--rt); overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
 .dh-reader[hidden] { display: none; }
-.dh-reader[data-rt=lt] { --rb: #fbfbf8; --rt: #1d1d1b; --rbar: #eeeeea; --rline: #d9d9d3; --rsub: #5b5b56; --rlink: #1a56b0; }
+.dh-reader[data-rt=lt] { --rb: #fbfbf8; --rt: #1d1d1b; --rbar: #eeeeea; --rline: #d9d9d3; --rsub: #5b5b56; --rlink: #2f6a5c; }
 .dh-reader[data-rt=sepia] { --rb: #f4ecd8; --rt: #433422; --rbar: #e9dfc4; --rline: #d3c7a8; --rsub: #7a6a52; --rlink: #8a4b12; }
-.dh-reader[data-rt=dk] { --rb: #1b1b1c; --rt: #d6d6d2; --rbar: #262628; --rline: #36363a; --rsub: #9a9aa0; --rlink: #8ab4f8; }
-.dh-reader[data-rt=black] { --rb: #000; --rt: #b9b9b6; --rbar: #121212; --rline: #262626; --rsub: #86868a; --rlink: #7aa7e8; }
-.dh-reader[data-rt=custom] { --rb: var(--cbg, #fbfbf8); --rt: var(--cfg, #1d1d1b); --rbar: color-mix(in srgb, var(--rb) 90%, var(--rt)); --rline: color-mix(in srgb, var(--rb) 78%, var(--rt)); --rsub: color-mix(in srgb, var(--rt) 62%, var(--rb)); --rlink: color-mix(in srgb, var(--rt) 70%, #3b82f6); }
+.dh-reader[data-rt=dk] { --rb: #1b1b1c; --rt: #d6d6d2; --rbar: #262628; --rline: #36363a; --rsub: #9a9aa0; --rlink: #d4b483; }
+.dh-reader[data-rt=black] { --rb: #000; --rt: #b9b9b6; --rbar: #121212; --rline: #262626; --rsub: #86868a; --rlink: #c8a86a; }
+.dh-reader[data-rt=custom] { --rb: var(--cbg, #fbfbf8); --rt: var(--cfg, #1d1d1b); --rbar: color-mix(in srgb, var(--rb) 90%, var(--rt)); --rline: color-mix(in srgb, var(--rb) 78%, var(--rt)); --rsub: color-mix(in srgb, var(--rt) 62%, var(--rb)); --rlink: color-mix(in srgb, hsl(from var(--rt) h calc(s * 1.6) l) 80%, #c8a050); }
 .dh-reader[data-font=serif] { --rf: var(--serif); }
 .dh-reader[data-font=literata] { --rf: 'Literata', Georgia, serif; }
 .dh-reader[data-font=lora] { --rf: 'Lora', Georgia, serif; }
@@ -163,7 +163,8 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-tts[hidden] { display: none; }
 .dh-ttsrow { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .dh-ttsrow .ibtn { min-width: 44px; font-size: 1.1rem; }
-.dh-ttsrow .sel { flex: 0 1 38%; min-width: 0; }
+.dh-ttsrow .sel { flex: 0 1 38%; min-width: 0; text-overflow: ellipsis; }
+.dh-ttsrow #tts-voice { flex: 1 1 auto; }
 .dh-reader[data-tts="2"] .dh-page { padding-bottom: calc(116px + env(safe-area-inset-bottom)); }
 .dh-reader[data-tts="1"] .dh-page { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 ::highlight(dh-hit) { background-color: rgba(250, 204, 21, .45); color: inherit; }
@@ -233,7 +234,7 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-qform { display: flex; gap: 8px; align-items: center; margin: 4px 0; } .dh-qform input { flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--rline); background: var(--rb); color: var(--rt); font: inherit; font-size: .95rem; outline: none; } .dh-qform input:focus { border-color: var(--rlink); } .dh-qform .pill { flex: none; }
 
 /* Einstellungsblatt: Hauptmenü und Untermenüs im Stil des Dashboards (.row, .tile, .sw, select.sel aus lib/core.css; Farben des Lesethemas) */
-.dh-rset { --txt: var(--rt); --sub: var(--rsub); --muted: var(--rsub); --card: var(--rline); --line: var(--rline); --ol: var(--rline); --pri: var(--rlink); --acc: var(--rlink); --onacc: var(--rb); --edge: var(--rline); }
+.dh-reader > *, .dh-rset { --txt: var(--rt); --sub: var(--rsub); --muted: var(--rsub); --card: var(--rline); --line: var(--rline); --ol: var(--rline); --pri: var(--rlink); --acc: var(--rlink); --onacc: var(--rb); --edge: var(--rline); }
 .dh-rhead { display: flex; align-items: center; gap: 4px; min-height: 36px; margin-bottom: 2px; }
 .dh-rhead b { font-size: .98rem; font-weight: 600; }
 .dh-rhead .ibtn { width: 36px; height: 36px; margin-left: -8px; color: var(--rsub); } .dh-rhead .ibtn[hidden] { display: none; }
