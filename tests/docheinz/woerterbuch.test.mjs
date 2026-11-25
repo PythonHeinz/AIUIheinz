@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { keyOf, candidates, detect, parseLine, parseJson, words } from '../../tools/docheinz/mod/woerterbuch.js';
+import { keyOf, candidates, detect, parseLine, parseJson, words, shortDef } from '../../tools/docheinz/mod/woerterbuch.js';
 
 test('Schlüssel: klein, ß = ss, Satzzeichen am Rand weg', () => {
     assert.equal(keyOf('„Straße!“'), 'strasse');
@@ -55,4 +55,12 @@ test('Beugungsformen verweisen auf die Grundform', () => {
     assert.equal(refOf({ senses: [{ glosses: ['des Adjektivs dumm'] }, { glosses: ['Tier'] }] }), '');
     const e = parseLine(JSON.stringify({ word: 'dummen', lang_code: 'de', senses: [{ glosses: ['Dativ Plural des Adjektivs dumm'] }] }), 'jsonl');
     assert.deepEqual([e[0], e[1], e[4]], ['dummen', '→ dumm', 'dumm']);
+});
+
+test('Kompaktansicht: zwei Bedeutungen plus deutsche Zeile, lange Zeilen gekürzt', () => {
+    const d = '(noun) 1. eins\n2. zwei\n3. drei\n4. vier\n5. DE: Nachtigall, Sprosser';
+    assert.equal(shortDef(d), '(noun) 1. eins\n2. zwei\n5. DE: Nachtigall, Sprosser');
+    assert.equal(shortDef('kurz'), 'kurz');
+    const lang = shortDef('x '.repeat(200));
+    assert.ok(lang.length <= 165 && lang.endsWith('…'));
 });

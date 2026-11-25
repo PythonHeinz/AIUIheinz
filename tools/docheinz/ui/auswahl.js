@@ -8,6 +8,7 @@ import { buildRequest, trimHistory, MAX_CHARS, CHAPTER_MAX_ONLINE } from '../mod
 import { wordBounds } from '../mod/wahl.js';
 import { mdToHtml } from '../mod/markdown.js';
 import { lookup } from './woerterbuch.js';
+import { shortDef } from '../mod/woerterbuch.js';
 import { wikiOn, wikiLookup } from './wikipedia.js';
 import { sauber } from '../mod/sauber.js';
 import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS } from '../mod/markierung.js';
@@ -370,11 +371,35 @@ async function dictSearch(text) {
     let r; try { r = await lookup(text, lang); } catch { r = { none: false, groups: [], tried: [] }; }
     if (my !== A.run) return;
     box.textContent = '';
-    r.groups.forEach(g => g.items.forEach(it => {
-        const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = it.o + (it.name ? ' · ' + it.name : '');
-        const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = it.d;
-        if (it.note) { const n = document.createElement('div'); n.className = 'help'; n.textContent = it.note; box.append(h, n, d); } else box.append(h, d);
-    }));
+    const rows = [];                                                         // Kompaktansicht: je Wörterbuch ein Eintrag, Bedeutungen gekürzt; „Mehr anzeigen“ blendet den Rest ein
+    r.groups.forEach(g => {
+        const per = new Map();
+        g.items.forEach(it => { const k = it.name || ''; per.set(k, (per.get(k) || 0) + 1); });
+        const seenN = new Map();
+        const sorted = g.items.slice().sort((a, b) => (+(a.o !== a.o.toLowerCase())) - (+(b.o !== b.o.toLowerCase())));   // klein geschriebene Wörter vor Namen
+        sorted.forEach(it => {
+            const idx = seenN.get(it.name || '') || 0; seenN.set(it.name || '', idx + 1);
+            const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = it.o + (it.name ? ' · ' + it.name : '');
+            const d = document.createElement('div'); d.className = 'dh-dd';
+            const short = shortDef(it.d);
+            d.textContent = short; d.dataset.full = it.d; d.dataset.short = short;
+            const els = it.note ? (() => { const n = document.createElement('div'); n.className = 'help'; n.textContent = it.note; return [h, n, d]; })() : [h, d];
+            const extra = idx >= 1;
+            els.forEach(e => { if (extra) { e.hidden = true; e.dataset.extra = '1'; } box.appendChild(e); });
+            rows.push({ extra, cut: short !== it.d });
+        });
+    });
+    if (rows.some(x => x.extra || x.cut)) {
+        const more = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('d_more') });
+        let open = false;
+        more.addEventListener('click', () => {
+            open = !open;
+            box.querySelectorAll('[data-extra]').forEach(e => { e.hidden = !open; });
+            box.querySelectorAll('.dh-dd').forEach(e => { e.textContent = open ? e.dataset.full : e.dataset.short; });
+            more.textContent = t(open ? 'd_less' : 'd_more');
+        });
+        box.appendChild(more);
+    }
     let wikiShown = false;
     if (wikiOn()) {                                                         // Wikipedia-Kurztext (nur mit Haken und „Online erlauben“; Treffer werden gemerkt)
         const hold = line('dh-sline', t('w_working')); box.appendChild(hold);

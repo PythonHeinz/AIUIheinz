@@ -496,6 +496,8 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#reader:not([hidden])")
         self.select_text(p, "Häuser")                                           # Beugung: findet „Haus“ über die Grundform
         p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Gebäude zum Wohnen/.test(document.getElementById('rs-body').innerText)")
+        p.click("#rs-body button:has-text('Mehr anzeigen')")                      # zweiter Eintrag des Wörterbuchs erst nach „Mehr anzeigen“
         p.wait_for_function("() => /auch: Familie/.test(document.getElementById('rs-body').innerText)")
         txt = p.inner_text("#rs-body")
         self.assertIn("Gebäude zum Wohnen", txt); self.assertIn("auch: Familie", txt)
@@ -517,6 +519,28 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)", timeout=60000)
         n = p.evaluate("""() => new Promise(r => { const q = indexedDB.open('docheinz'); q.onsuccess = () => { const c = q.result.transaction('dict').objectStore('dict').count(); c.onsuccess = () => r(c.result); }; })""")
         self.assertEqual(n, 0)
+        self.assertEqual(p.errors, [])
+
+    def test_dictionary_sheet_is_compact_and_expands(self):
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# Wort\n\nDie Nachtigall sang.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        p.click("#b-dict"); p.wait_for_selector("#dict:not([hidden])")
+        p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)")
+        import json
+        rows = [{"word": "Nachtigall", "lang_code": "de", "pos": "noun", "senses": [{"glosses": ["Singvogel"]}]},
+                {"word": "Nachtigall", "lang_code": "de", "pos": "name", "senses": [{"glosses": ["Familienname"]}]}]
+        buf = "\n".join(json.dumps(r) for r in rows).encode()
+        p.set_input_files("#file-dict", {"name": "n.jsonl", "mimeType": "application/json", "buffer": buf})
+        p.wait_for_function("() => /2 Einträge/.test(document.getElementById('dict').innerText)")
+        p.click("#dict [data-dc=close]")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Nachtigall")
+        p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Singvogel/.test(document.getElementById('rs-body').innerText)")
+        self.assertNotIn("Familienname", p.inner_text("#rs-body"))               # zweiter Eintrag zunächst verborgen
+        p.click("#rs-body button:has-text('Mehr anzeigen')")
+        self.assertIn("Familienname", p.inner_text("#rs-body"))
         self.assertEqual(p.errors, [])
 
     def test_dictionary_reads_gzip_jsonl_and_keeps_only_german_and_english(self):

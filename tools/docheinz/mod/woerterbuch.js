@@ -108,3 +108,10 @@ export function words(sel) {
     const parts = String(sel || '').split(/\s+/).map(w => w.replace(EDGE, '')).filter(Boolean);
     return parts.slice(0, 6);
 }
+
+// Wörterbuchtext für die Kompaktansicht: höchstens 2 Bedeutungen (plus die deutsche Übersetzungszeile „DE: …“), je höchstens 160 Zeichen
+export function shortDef(d) {
+    const lines = String(d || '').split('\n'), de = lines.filter(l => /^\d+\.\s*DE:/.test(l)), rest = lines.filter(l => !/^\d+\.\s*DE:/.test(l));
+    const cut = (l) => l.length > 160 ? l.slice(0, 157).replace(/\s+\S*$/, '') + ' …' : l;
+    return rest.slice(0, 2).concat(de.slice(0, 1)).map(cut).join('\n');
+}
