@@ -1,0 +1,47 @@
+/* tools/wikiheinz/ui/i18n.js – Texte der Oberfläche, EN und DE (Format wie Heinz.t: D[lang][key]). */
+export const D = {
+    en: {
+        sub: 'wikiheinz', title: 'WikiHeinz',
+        tabBrowse: 'Browse', tabWiki: 'My wiki', tabSources: 'Sources',
+        search: 'Search', searchPh: 'Search a title …', back: 'Back', edit: 'Edit',
+        none: 'No sources yet. Import a Wikipedia file under “Sources” or write your first page under “My wiki”.',
+        noHit: 'Nothing found for “{q}”.', hits: '{n} hits', fulltext: 'in text', redirectFrom: 'Redirect from “{v}”', mine: 'My wiki',
+        extract: 'Extract (first paragraph) from {name}, as of {stand}.', extractNoStand: 'Extract (first paragraph) from {name}.',
+        openWiki: 'Open the article on Wikipedia', source: 'Source',
+        backlinks: 'Linked from: {l}', newLink: 'No page “{t}” yet. Tap to create it.', notFound: 'No article “{t}” found.',
+        newPage: 'New page', expZip: 'Export (Markdown)', expJson: 'Export (JSON)', restore: 'Restore', filter: 'Filter', filterPh: 'Search in my pages …',
+        pages: '{n} pages', pagesNone: 'No pages yet.', title: 'Title', body: 'Text (Markdown, links as [[Title]], tags as #word)', bodyPh: 'Write here …',
+        save: 'Save', cancel: 'Cancel', del: 'Delete', needTitle: 'Enter a title.', saved: 'Saved.', deleted: 'Page deleted.',
+        origin: 'From: {o}', tagsLine: 'Tags: {t}', linksLine: 'Links: {l}',
+        warnNever: 'My wiki exists only on this device and is not part of the app backup. Export it from time to time.', warnOld: 'Changed since the last export ({d}). Export again to be safe.', lastExport: 'Last export: {d}.',
+        exported: 'File “{n}” created.', restored: '{n} pages restored.', restoreFail: 'This file could not be restored: {why}',
+        importTitle: 'Import a Wikipedia file', importHelp: 'Pick the file wikipedia-de.jsonl.gz made by the script (docs/agent/AUFTRAG_WikiHeinz.md). It is read in pieces and stays on this device. An interrupted import continues with the same file.',
+        importFile: 'Choose file', stop: 'Stop', reading: '{n} entries read …', impDone: 'Import finished: {n} entries.', impStopped: 'Stopped at {n} entries. Choose the same file to continue.', impFail: 'Import failed: {why}',
+        exists: 'This source is already imported. Delete it first to import it again.', notAFile: 'This does not look like an extract file (jsonl with “word” and “senses”).',
+        entries: '{n} entries', complete: 'complete', incomplete: 'incomplete', readOnly: 'read only', writable: 'writable', license: 'License: {l}', stand: 'as of {s}',
+        delete: 'Delete source', deleting: 'Deleting … {n} of {m}', delDone: 'Source deleted.', confirmDel: 'Delete “{n}” from this device? Tap again.',
+        storeMem: 'Storage is not available; everything stays only while this page is open.', usage: 'Storage used by this site: {u} of {q}.', persisted: 'Protected from automatic clean-up.', notPersisted: 'Not protected: the browser may clear the data when space is short.'
+    },
+    de: {
+        sub: 'wikiheinz', title: 'WikiHeinz',
+        tabBrowse: 'Stöbern', tabWiki: 'Mein Wiki', tabSources: 'Quellen',
+        search: 'Suche', searchPh: 'Titel suchen …', back: 'Zurück', edit: 'Bearbeiten',
+        none: 'Noch keine Quellen. Importiere unter „Quellen“ eine Wikipedia-Datei oder schreibe unter „Mein Wiki“ deine erste Seite.',
+        noHit: 'Nichts gefunden für „{q}“.', hits: '{n} Treffer', fulltext: 'im Text', redirectFrom: 'Weiterleitung von „{v}“', mine: 'Mein Wiki',
+        extract: 'Auszug (erster Absatz) aus {name}, Stand {stand}.', extractNoStand: 'Auszug (erster Absatz) aus {name}.',
+        openWiki: 'Artikel in der Wikipedia öffnen', source: 'Quelle',
+        backlinks: 'Verlinkt von: {l}', newLink: 'Noch keine Seite „{t}“. Tippen zum Anlegen.', notFound: 'Kein Artikel „{t}“ gefunden.',
+        newPage: 'Neue Seite', expZip: 'Export (Markdown)', expJson: 'Export (JSON)', restore: 'Wiederherstellen', filter: 'Filter', filterPh: 'In meinen Seiten suchen …',
+        pages: '{n} Seiten', pagesNone: 'Noch keine Seiten.', title: 'Titel', body: 'Text (Markdown, Verweise als [[Titel]], Schlagwörter als #wort)', bodyPh: 'Hier schreiben …',
+        save: 'Speichern', cancel: 'Abbrechen', del: 'Löschen', needTitle: 'Titel eintragen.', saved: 'Gespeichert.', deleted: 'Seite gelöscht.',
+        origin: 'Herkunft: {o}', tagsLine: 'Schlagwörter: {t}', linksLine: 'Verweise: {l}',
+        warnNever: 'Mein Wiki liegt nur auf diesem Gerät und ist nicht im App-Backup. Exportiere es ab und zu.', warnOld: 'Seit dem letzten Export geändert ({d}). Zur Sicherheit neu exportieren.', lastExport: 'Letzter Export: {d}.',
+        exported: 'Datei „{n}“ erstellt.', restored: '{n} Seiten wiederhergestellt.', restoreFail: 'Diese Datei ließ sich nicht wiederherstellen: {why}',
+        importTitle: 'Wikipedia-Datei importieren', importHelp: 'Wähle die vom Skript erzeugte Datei wikipedia-de.jsonl.gz (docs/agent/AUFTRAG_WikiHeinz.md). Sie wird stückweise gelesen und bleibt auf diesem Gerät. Ein unterbrochener Import läuft mit derselben Datei weiter.',
+        importFile: 'Datei wählen', stop: 'Anhalten', reading: '{n} Einträge gelesen …', impDone: 'Import fertig: {n} Einträge.', impStopped: 'Bei {n} Einträgen angehalten. Dieselbe Datei wählen, um fortzusetzen.', impFail: 'Import fehlgeschlagen: {why}',
+        exists: 'Diese Quelle ist schon importiert. Erst löschen, dann neu importieren.', notAFile: 'Das sieht nicht nach einer Auszugsdatei aus (jsonl mit „word“ und „senses“).',
+        entries: '{n} Einträge', complete: 'vollständig', incomplete: 'unvollständig', readOnly: 'nur lesen', writable: 'beschreibbar', license: 'Lizenz: {l}', stand: 'Stand {s}',
+        delete: 'Quelle löschen', deleting: 'Löschen … {n} von {m}', delDone: 'Quelle gelöscht.', confirmDel: '„{n}“ von diesem Gerät löschen? Nochmal tippen.',
+        storeMem: 'Speicher nicht verfügbar; alles bleibt nur, solange diese Seite offen ist.', usage: 'Speicher dieser Seite: {u} von {q}.', persisted: 'Vor automatischem Aufräumen geschützt.', notPersisted: 'Nicht geschützt: Der Browser kann die Daten bei Platzmangel löschen.'
+    }
+};

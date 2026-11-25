@@ -1,0 +1,15 @@
+{
+  "id": "wikiheinz",
+  "name": { "en": "WikiHeinz", "de": "WikiHeinz" },
+  "desc": {
+    "en": "Offline encyclopedia: browse an imported Wikipedia, keep your own wiki and look things up without sending anything out.",
+    "de": "Nachschlagewerk offline: eine importierte Wikipedia durchstöbern, ein eigenes Wiki führen und nachschlagen, ohne dass etwas nach außen geht."
+  },
+  "icon": "📖",
+  "entry": "tools/wikiheinz/index.html",
+  "color": "blue",
+  "status": "beta",
+  "order": 22,
+  "area": "tools",
+  "symbol": "i-search"
+}

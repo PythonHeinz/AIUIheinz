@@ -11,7 +11,7 @@ import re
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 426, "height": 803}  # Pixel 9 Pro
-PAGES = ["/", "/hub.html", "/dashboard.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html", "/tools/convert2/index.html", "/tools/docheinz/index.html"]
+PAGES = ["/", "/hub.html", "/dashboard.html", "/sheet.html", "/vitals.html", "/tools/models/index.html", "/tools/filter/index.html", "/tools/design/index.html", "/tools/design/modus.html", "/chat.html", "/tools/setup/index.html", "/tools/configs/index.html", "/tools/scan/index.html", "/tools/studio/index.html", "/tools/convert2/index.html", "/tools/docheinz/index.html", "/tools/wikiheinz/index.html"]
 
 
 def missing_classes(css, classes):

@@ -1,0 +1,28 @@
+/* tools/wikiheinz/wikiheinz.css – nur was nur dieses Werkzeug braucht (Trefferliste, Leseansicht, Editor). Alles Übrige kommt aus lib/core.css. Klassen mit Präfix wh-. */
+.wh { padding-bottom: 40px; }
+.wh .panel { background: var(--surf); border-color: var(--line); }
+.wh .pill { border-color: var(--edge); }
+.wh .pill.acc { border-color: var(--acc); }
+.wh .pill.danger { border-color: var(--red); }
+.wh-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.wh-row .pill { flex: 1 1 auto; padding: 0 12px; }
+.wh-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.wh-hit { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--edge); color: var(--txt); cursor: pointer; }
+.wh-hit b { display: block; font-family: var(--serif); font-weight: 600; font-size: 1.02rem; overflow-wrap: anywhere; }
+.wh-hit small { display: block; color: var(--sub); font-size: .78rem; margin-top: 2px; overflow-wrap: anywhere; }
+.wh-hit .wh-tag { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--edge); font-size: .7rem; color: var(--sub); }
+.wh-art h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 12px 0 4px; overflow-wrap: anywhere; }
+.wh-text { font-family: var(--serif); font-size: 1.06rem; line-height: 1.6; overflow-wrap: anywhere; margin: 10px 0 14px; }
+.wh-text p { margin: 0 0 .8em; }
+.wh-text blockquote { margin: .6em 0; padding: 2px 0 2px 12px; border-left: 3px solid var(--edge); color: var(--sub); }
+.wh-text a { color: var(--acc); text-decoration: underline; cursor: pointer; }
+.wh-text a.neu { color: var(--orange); }
+.wh-quelle { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-size: .78rem; color: var(--sub); overflow-wrap: anywhere; }
+.wh-quelle a { color: var(--sub); }
+.wh-ta { display: block; width: 100%; min-height: 220px; height: 40vh; resize: vertical; padding: 10px 12px; border-radius: 14px; background: var(--bg); color: var(--txt); border: 1px solid var(--edge); font-family: var(--serif); font-size: 1rem; line-height: 1.5; box-sizing: border-box; }
+.wh-ta:focus { border-color: var(--acc); }
+.wh-src { padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--edge); }
+.wh-src b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.wh-src small { display: block; color: var(--sub); font-size: .78rem; margin-top: 2px; overflow-wrap: anywhere; }
+.wh-src .wh-row { margin: 8px 0 0; }
+.wh [hidden] { display: none !important; }   /* .pill, .notice … set display and would override the hidden attribute */

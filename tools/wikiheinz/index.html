@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>AIUIheinz · WikiHeinz</title>
+<link rel="stylesheet" href="../../lib/core.css">
+<link rel="stylesheet" href="wikiheinz.css">
+<script src="../../lib/core.js"></script>
+</head>
+<body>
+<div id="app-header"></div>
+<main class="page wh">
+    <div class="seg2" id="tabs">
+        <button type="button" data-tab="stoebern" class="on" data-i="tabBrowse"></button>
+        <button type="button" data-tab="wiki" data-i="tabWiki"></button>
+        <button type="button" data-tab="quellen" data-i="tabSources"></button>
+    </div>
+
+    <section id="p-stoebern">
+        <div id="v-suche">
+            <label class="fld"><span class="sr-only" data-i="search"></span><input id="q" class="inp" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" data-ph="searchPh"></label>
+            <div class="help" id="suchinfo"></div>
+            <div id="treffer" class="wh-list"></div>
+        </div>
+        <article id="v-art" class="wh-art" hidden>
+            <button type="button" class="pill" id="b-back"><svg class="i sm"><use href="../../lib/icons.svg#i-chev-l"/></svg><span data-i="back"></span></button>
+            <h2 id="a-titel"></h2>
+            <div class="help" id="a-via"></div>
+            <div id="a-text" class="wh-text"></div>
+            <div class="wh-row" id="a-tools" hidden>
+                <button type="button" class="pill" id="b-edit"><svg class="i sm"><use href="../../lib/icons.svg#i-pencil"/></svg><span data-i="edit"></span></button>
+            </div>
+            <div id="a-rueck" class="help" hidden></div>
+            <div class="wh-quelle" id="a-quelle"></div>
+        </article>
+    </section>
+
+    <section id="p-wiki" hidden>
+        <div id="v-liste">
+            <div class="wh-row">
+                <button type="button" class="pill acc" id="b-neu"><svg class="i sm"><use href="../../lib/icons.svg#i-plus"/></svg><span data-i="newPage"></span></button>
+                <button type="button" class="pill" id="b-exp-zip"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="expZip"></span></button>
+                <button type="button" class="pill" id="b-exp-json"><svg class="i sm"><use href="../../lib/icons.svg#i-download"/></svg><span data-i="expJson"></span></button>
+                <label class="pill" id="b-rest"><svg class="i sm"><use href="../../lib/icons.svg#i-refresh"/></svg><span data-i="restore"></span><input type="file" id="f-rest" class="sr-only" accept=".json,application/json"></label>
+            </div>
+            <div class="notice warn" id="wikiwarn" hidden></div>
+            <label class="fld"><span class="sr-only" data-i="filter"></span><input id="wq" class="inp" type="search" autocomplete="off" spellcheck="false" data-ph="filterPh"></label>
+            <div class="help" id="wikiinfo"></div>
+            <div id="seiten" class="wh-list"></div>
+        </div>
+        <div id="v-edit" hidden>
+            <label class="fld"><span data-i="title"></span><input id="e-titel" class="inp" type="text" autocomplete="off" spellcheck="false"></label>
+            <label class="fld"><span data-i="body"></span><textarea id="e-text" class="wh-ta" spellcheck="false" data-ph="bodyPh"></textarea></label>
+            <div class="help" id="e-info"></div>
+            <div class="wh-row">
+                <button type="button" class="pill acc" id="b-save"><svg class="i sm"><use href="../../lib/icons.svg#i-save"/></svg><span data-i="save"></span></button>
+                <button type="button" class="pill" id="b-cancel"><span data-i="cancel"></span></button>
+                <button type="button" class="pill danger" id="b-del"><svg class="i sm"><use href="../../lib/icons.svg#i-trash"/></svg><span data-i="del"></span></button>
+            </div>
+        </div>
+    </section>
+
+    <section id="p-quellen" hidden>
+        <div id="quellen" class="wh-list"></div>
+        <div class="panel">
+            <div class="caps grp"><span data-i="importTitle"></span></div>
+            <div class="help" data-i="importHelp"></div>
+            <div class="wh-row">
+                <label class="pill acc" id="b-import"><svg class="i sm"><use href="../../lib/icons.svg#i-doc"/></svg><span data-i="importFile"></span><input type="file" id="f-import" class="sr-only" accept=".gz,.jsonl,.json,.txt"></label>
+                <button type="button" class="pill" id="b-stop" hidden><svg class="i sm"><use href="../../lib/icons.svg#i-stop"/></svg><span data-i="stop"></span></button>
+            </div>
+            <div class="prog" id="prog" hidden><i id="progbar"></i></div>
+            <div class="help" id="impinfo"></div>
+        </div>
+        <div class="help" id="speicherinfo"></div>
+    </section>
+    <div class="notice" id="msg" role="status" hidden></div>
+</main>
+<script type="module" src="ui/main.js"></script>
+</body>
+</html>
