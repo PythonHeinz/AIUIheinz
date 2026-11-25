@@ -3,6 +3,7 @@
 Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pixel 9 Pro). Maßgeblich ist dieses Repo (GitHub PythonHeinz/AIUIheinz, Branch `main`); es gibt keine zweite Ablage am PC. Begriffe: `BEGRIFFE.md`. Routine: `UEBERGABE.md`. Fallstricke und Tests: `TECHNIK.md`. Die lange Fassung dieser Datei bis 12.11.2026 steht unverändert in `../archiv/STAND_bis_2026-11-12.md`.
 
 ## Aktive Arbeit
+- 25.11.2026, AIUIheinz-docHeinz: Notizen und Markierungen mit Schlagwörtern und Gesamtauswertung über alle Bücher (Ausbauidee Nr. 5). Berührt nur `tools/docheinz/` (`mod/markierung.js`, neu `mod/sammlung.js`, `ui/auswahl.js`, neu `ui/notizen.js`, `ui/main.js`, `index.html`, `docheinz.css`, `ui/i18n.js`), dazu Tests und Doku.
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
 
