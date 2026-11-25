@@ -411,3 +411,11 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 4. Eintrag antippen springt im Buch an die Stelle; „#“ ändert die Schlagwörter, Mülleimer löscht.
 5. „Als Markdown kopieren“ / „exportieren“ gibt nur die gefilterte Auswahl aus, z. B. ein Schlagwort aus mehreren Büchern.
 
+### Y24: WikiHeinz (nur simuliert getestet)
+1. `git pull`, `bash start.sh`. WikiHeinz ist noch nicht im Hub (Eintrag folgt nach Freigabe); Adresse `http://localhost:3000/tools/wikiheinz/index.html`.
+2. Reiter „Quellen“: `wikipedia-de.jsonl.gz` (aus Y20) importieren. Bitte notieren: Dauer, Zahl der Einträge (erwartet rund 4,6 Mio.), belegter Speicher (Info-Zeile). Import mitten im Lauf abbrechen, Seite neu laden, fortsetzen: er macht dort weiter.
+3. Reiter „Stöbern“: „Sokrates“, „koln“ (findet Köln), „Äpfel“ eintippen; Weiterleitungen führen zum Haupteintrag. Bitte die Zeit bis zur Trefferliste notieren (Ziel unter 1 s).
+4. Reiter „Fragen“ (Qwen 2.5 3B): „Wer war Sokrates?“ – Antwort mit Nummern [1], [2] und aufklappbaren Auszügen. Eine Frage ohne Treffer („Wie wird das Wetter morgen?“) muss „nicht gefunden“ ergeben statt einer Erfindung. Flugmodus: alles läuft weiter, ohne „Online erlauben“ geht keine Anfrage nach außen.
+5. Reiter „Mein Wiki“: Seite mit `[[Link]]` und `#tag` anlegen, Rückverweise prüfen, Export JSON und Markdown-ZIP, danach Quelle löschen und aus der JSON-Datei wiederherstellen. Hinweisband erscheint, wenn nie exportiert oder nach dem Export geändert wurde.
+6. Infobox prüfen (Termux, `pip install zstandard`): `python tools/wikiheinz/skripte/zim_roh.py wikipedia_de_all_mini_<Datum>.zim Sokrates Köln --aus roh` – das Skript zählt je Artikel Tabellen, „infobox“-Treffer, Absätze und Zwischenüberschriften und schreibt das rohe HTML in den Ordner `roh`. Ergebnis (Länge, Tabellen, Infobox ja/nein) bitte mitteilen.
+

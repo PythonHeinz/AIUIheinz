@@ -250,3 +250,21 @@ Eigene Insel (Nachfolger des Data Lab, `docs/agent/AUFTRAG_Filter.md`). Die Modu
 
 Importgraph: Module untereinander ohne Verweise (keine Kreise). Oberfläche: `ui/main.js` (Einstieg) → `eingabe.js`, `regel.js`, `ergebnis.js` → `state.js` (Zustand, Ereignisse, Speichern), `base.js` (Brücke zu `Heinz`, `HeinzStore`, `HeinzProviders`), `i18n.js`. `regel.js` wird von `ergebnis.js` importiert (Etiketten, Online-Stand). Eigene Daten: `heinz_filter_settings` (HeinzStore) und IndexedDB `heinz_filter` (nicht im Backup). Tests: `bash tests/run_all.sh filter` (Node-Tests über `tests/test_filter.py`, Seitentests mit simuliertem Ollama, keine Anfragen nach außen).
 
+## Werkzeug WikiHeinz (`tools/wikiheinz/`, seit 25.11.2026)
+
+Eigene Insel (Auftrag `docs/agent/AUFTRAG_WikiHeinz.md`, Entwurf `docs/agent/WIKIHEINZ_ENTWURF.md`). Die Module in `mod/` kennen die Oberfläche nicht und importieren nur Module ihres Ordners; Modellzugriff geschieht ausschließlich in `ui/fragen.js` über `HeinzProviders` (`prepare`, `runtime`, `chat` mit `format`), die Logik ruft eine übergebene Funktion `senden` auf.
+
+| Modul | Schnittstelle | Braucht | Tests |
+|---|---|---|---|
+| `schluessel.js` | `keyOf` (Suchschlüssel: ohne Akzente, ß→ss, klein), `woerter` (Wörter einer Frage ohne Füllwörter) | nichts | Node |
+| `quelle.js` | `ART`, `EIGEN_ID`, `neueQuelle`, `ausDatei`, `istSchreibbar`, `angabe`, `linkZu` (Quelle: Name, Sprache, Lizenz, Stand, Art `import`/`eigen`) | nichts | Node |
+| `speicher.js` | Speicher im Arbeitsspeicher mit derselben Schnittstelle wie `db.js` | nichts | Node |
+| `db.js` | `oeffne()` (IndexedDB `heinz_wikiheinz`, Rückfall Speicher) | `indexedDB` | Browser |
+| `import.js` | `zeilenAus`, `parseZeile`, `importiere` (jsonl.gz als Strom, Pakete, Fortsetzen über `gelesen`, Abbruch) | `schluessel.js`, `quelle.js` | Node, Browser |
+| `suche.js` | `suche` (Anfang des Schlüssels, Weiterleitungen bis 3 Stufen), `volltext`, `suchbegriffe` | `schluessel.js` | Node |
+| `eigene.js` | Mein Wiki: `speichere`, `haengeAn`, `loescheSeite`, `seiten`, `verweise` (`[[Titel|Anzeige]]`), `tags`, `rueckverweise`, `zitatBlock`, `exportJSON`, `wiederherstellen`, `exportDateien` | `schluessel.js`, `quelle.js`, `zip.js` | Node |
+| `zip.js` | `crc32`, `zip` (ZIP ohne Kompression, nur für den Markdown-Export) | nichts | Node |
+| `frage.js` | `beantworte`, `baueBegriffeAnfrage`, `pruefeBegriffe`, `baueKontext`, `baueAntwortAnfrage`, `pruefeAntwort` (Modell liefert nur Suchbegriffe, Code sucht, Antwort nur aus nummerierten Auszügen, sonst `NOT_FOUND`) | `suche.js`, `schluessel.js` | Node |
+
+Importgraph: keine Kreise; Module anderer Werkzeuge werden nicht importiert (Inselregel). Oberfläche: `ui/main.js` (Einstieg, Reiter Stöbern, Fragen, Mein Wiki, Quellen) → `stoebern.js`, `fragen.js`, `wiki.js`, `quellen.js` → `state.js` (Zustand, Ereignisse), `base.js` (Brücke zu `Heinz`, `HeinzStore`, `HeinzProviders`, `HeinzMarkdown`), `i18n.js`. Eigene Daten: `heinz_wikiheinz_settings` (HeinzStore) und IndexedDB `heinz_wikiheinz` (nicht im Backup; Mein Wiki hat dafür Export JSON und Markdown-ZIP). Tests: `bash tests/run_all.sh wikiheinz` (Node-Tests über `tests/test_wikiheinz.py`, Seitentests mit simuliertem Ollama, Mini-ZIM für `skripte/zim_roh.py`, keine Anfragen nach außen).
+

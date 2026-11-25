@@ -48,6 +48,14 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - **`.gitignore` nur mit führendem Schrägstrich:** `/data/` meint den Ordner im Projektstamm; `data/` würde auch `lib/data/` ausschließen (12.11.2026: die JSON-Dateien des Dashboards fehlten deshalb nach `git pull` auf dem Handy, Tests liefen im Arbeitsordner grün). `tests/test_rules.py` prüft, dass keine Datei der App von `.gitignore` erfasst wird; Tests nach größeren Änderungen zusätzlich aus einem frischen Klon laufen lassen.
 - **Nicht ins Repo:** `data/` (Tabellen, Messwerte), Rohstofflisten, private Daten. `data/` steht in `.gitignore` und wird von `git pull` nie angefasst.
 
+### WikiHeinz (25.11.2026)
+- **Suchschlüssel faltet Akzente** (`keyOf`: NFD, Zeichen der Klasse `\p{M}` entfernt, ß→ss): sonst findet „ap“ kein „Äpfel“. Gilt für Import und Suche gleich; ändert man ihn, muss neu importiert werden.
+- **Listen mit asynchronem Aufbau** (IndexedDB): mehrere gleichzeitige Aufrufe erzeugten doppelte Zeilen. Lösung: laufende Nummer je Aufbau und `replaceChildren(fragment)` erst am Ende.
+- **`hidden` wird von `.pill`/`.notice` überschrieben** (`display`); in `wikiheinz.css` gilt `.wh [hidden]{display:none !important}`.
+- **Modellliste erst beim ersten Öffnen des Reiters „Fragen“** laden: sonst geht beim Start eine Anfrage an Ollama, auch wenn nur gestöbert wird.
+- **Zwei abwechselnde Systemprompts** (Begriffe, Antwort) in einer Frage: Ollama verwirft dabei den Prompt-Cache; kurz halten.
+- **Tests und `__pycache__`:** `test_rules` meldet erzeugte `__pycache__`-Ordner; Läufe mit `PYTHONDONTWRITEBYTECODE=1`.
+
 ### Termux, Tempo, Server
 - **Tempo:** Termux im Splitscreen sichtbar halten, solange `num_thread` nicht gesetzt ist; ohne Sicht läuft Ollama in `cpuset:/foreground` und mit 8 Threads bis zu zehnmal langsamer.
 - **Termux-Sessions** werden von Android mit Signal 9 beendet (Speicherdruck, Prozess-Limit). Nicht jede Last auf einmal starten; siehe `STAND.md` „Offen“.
