@@ -165,7 +165,8 @@ def entries(zim, lang='', max_chars=500, redirects=True, limit=0, start=0):
             continue
         try: txt = intro_text(bytes(html).decode('utf-8', 'replace'), max_chars)
         except Exception: continue
-        if txt: yield dict(word=title, senses=[{'glosses': [txt]}], **base)
+        if txt and not txt.endswith(':'):                                     # Begriffsklärung („… ist der Name folgender Personen:“) hat keinen Inhalt
+            yield dict(word=title, senses=[{'glosses': [txt]}], **base)
 
 
 def _libzim_articles(zim, limit=0, start=0):

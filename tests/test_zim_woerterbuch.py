@@ -14,6 +14,14 @@ class Intro(unittest.TestCase):
         self.assertTrue(t.startswith('Die Bezeichnung Küchenschabe'))
         self.assertNotIn('Infobox', t); self.assertNotIn('[1]', t)
 
+    def test_disambiguation_page_is_skipped(self):
+        class Fake(z.ZimLeser):
+            def __init__(self): pass
+            def articles(self, limit=0, start=0):
+                yield 'Gast', None, b'<p>Friedrich Gast ist der Name folgender Personen:</p>'
+                yield 'Haus', None, b'<p>Ein Haus ist ein Gebaeude zum Wohnen und Leben.</p>'
+        self.assertEqual([e['word'] for e in z.entries(Fake(), 'de')], ['Haus'])
+
     def test_cut_at_sentence_end(self):
         t = z.intro_text('<p>' + 'Erster Satz hier. ' * 3 + 'Zweiter ganz langer Satz ohne Ende ' * 20 + '</p>', 80)
         self.assertTrue(t.endswith('.')); self.assertLessEqual(len(t), 80)
