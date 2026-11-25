@@ -7,6 +7,16 @@ import { detect, parseLine, parseJson, wanted, candidates, keyOf, words } from '
 
 const D = { env: null, open: false, busy: '' };
 const BATCH = 4000;
+// Lesbarer Name statt Dateiname: de-extract -> „Deutsches Wörterbuch (Wiktionary)“, simple-extract -> „Englisches Wörterbuch (Simple English)“
+function niceName(file, t, ui) {
+    const base = file.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '') || file, m = /^([a-z]{2,6})-extract/i.exec(base);
+    if (!m) return base;
+    const c = m[1].toLowerCase();
+    if (c === 'de') return t('d_nameDe');
+    if (c === 'simple') return t('d_nameSimple');
+    let l = c; try { l = new Intl.DisplayNames([ui || 'en'], { type: 'language' }).of(c) || c; } catch { /* Kürzel bleibt */ }
+    return t('d_nameGen', { l });
+}
 
 export async function lookup(sel, lang) {
     const db = D.env && D.env.db();
@@ -60,7 +70,7 @@ async function importFile(file) {
     const gz = await isGz(file);
     if (gz && typeof DecompressionStream === 'undefined') throw new Error('nogz');
     const fmt = detect(await sampleOf(file, gz));
-    const meta = { id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: file.name.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '') || file.name, count: 0, size: file.size, added: Date.now() };
+    const meta = { id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: niceName(file.name, t, document.documentElement.lang), count: 0, size: file.size, added: Date.now() };
     await db.dictCreate(meta);
     let n = 0, seen = 0;
     const flush = async (batch) => { if (!batch.length) return; await db.dictAdd(meta.id, batch); n += batch.length; D.busy = t('d_busy', { n, name: meta.name }); render(); };
@@ -104,7 +114,8 @@ async function render() {
         const r = document.createElement('div'); r.className = 'dh-dictrow';
         const s = document.createElement('span'); s.textContent = m.name + ' · ' + t('d_count', { n: m.count });
         const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('d_del') }); b.dataset.dc = 'del'; b.dataset.id = m.id;
-        r.append(s, b); box.appendChild(r);
+        const rn = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('d_ren') }); rn.dataset.dc = 'ren'; rn.dataset.id = m.id; rn.dataset.name = m.name;
+        r.append(s, rn, b); box.appendChild(r);
     });
     if (D.busy) { const p = document.createElement('p'); p.className = 'help'; p.textContent = D.busy; box.appendChild(p); }
     else {
@@ -122,6 +133,12 @@ export function initDict(env) {
     $('dict').addEventListener('click', async (e) => {
         const b = e.target.closest('[data-dc]'); if (!b) return;
         if (b.dataset.dc === 'close') { D.open = false; render(); }
+        else if (b.dataset.dc === 'ren') {
+            const row = b.parentElement, inp = Object.assign(document.createElement('input'), { type: 'text', className: 'inp', value: b.dataset.name, maxLength: 60 });
+            const ok = Object.assign(document.createElement('button'), { type: 'button', className: 'pill acc', textContent: 'OK' }); ok.dataset.dc = 'rok'; ok.dataset.id = b.dataset.id;
+            row.textContent = ''; row.append(inp, ok); inp.focus(); inp.select();
+        }
+        else if (b.dataset.dc === 'rok') { const v = b.parentElement.querySelector('input').value.trim(); if (v) await D.env.db().dictRename(b.dataset.id, v); render(); }
         else if (b.dataset.dc === 'del') { await D.env.db().dictRemove(b.dataset.id); render(); }
     });
     $('dict').addEventListener('change', async (e) => {

@@ -517,7 +517,11 @@ class DocHeinzUiTests(DocHeinzBase):
         p.click("#b-dict")
         p.set_input_files("#file-dict", {"name": "de-extract.jsonl.gz", "mimeType": "application/gzip", "buffer": data})
         p.wait_for_function("() => /2 Einträge/.test(document.getElementById('dict').innerText)")
-        self.assertIn("de-extract", p.inner_text("#dict"))
+        self.assertIn("Deutsches Wörterbuch (Wiktionary)", p.inner_text("#dict"))        # lesbarer Name statt Dateiname
+        p.click("#dict [data-dc=ren]")
+        p.fill("#dict input[type=text]", "Mein Deutsch")
+        p.click("#dict [data-dc=rok]")
+        p.wait_for_function("() => /Mein Deutsch/.test(document.getElementById('dict').innerText)")
         self.assertEqual(p.errors, [])
 
     def test_dictionary_shows_base_form_entry_for_inflected_words(self):

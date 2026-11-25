@@ -2,7 +2,7 @@
  * Stores: books (keyPath id: Metadaten, Lesestand), files (keyPath id: { id, blob } die Buchdatei) und texts (keyPath id: { id, key, chapters } Kapiteltexte für die Volltextsuche, ab Version 2). lib/store.js bleibt unberührt.
  *   openDb(name?) -> Promise<Db>; wirft Error('idb'), wenn IndexedDB fehlt oder gesperrt ist
  *   Db: put(record, blob), list(), get(id), file(id) -> Blob|null, update(id, patch) -> record|null, remove(id), clear(), close()
- *       dictList() -> [{ id, name, count }], dictCreate(meta), dictAdd(id, [[schlüssel, text, original], …]), dictFind([schlüssel]) -> [{ dict, w, d, o }], dictRemove(id) (Wörterbücher, ab Version 3)
+ *       dictList() -> [{ id, name, count }], dictCreate(meta), dictRename(id, name), dictAdd(id, [[schlüssel, text, original], …]), dictFind([schlüssel]) -> [{ dict, w, d, o }], dictRemove(id) (Wörterbücher, ab Version 3)
  *       getText(id) -> { id, key, chapters } | null, putText(id, key, chapters)
  *   storage() -> Promise<{ usage, quota, persisted }>   (Werte null, wo der Browser sie nicht nennt)
  *   persist() -> Promise<boolean>
@@ -78,6 +78,12 @@ function make(db) {
             entries.forEach(e => st.add({ dict: id, w: e[0], d: e[1], o: e[2] || e[0], r: e[4] || '' }));
             const m = await wrap(mt.get(id)); if (m) { m.count = (m.count || 0) + entries.length; mt.put(m); }
             try { await fin; } catch (e) { if (full(e)) { const err = new Error('full'); err.code = 'full'; throw err; } throw e; }
+        },
+        async dictRename(id, name) {
+            const tx = db.transaction('dictmeta', 'readwrite'); const fin = done(tx);
+            const st = tx.objectStore('dictmeta'), m = await wrap(st.get(id));
+            if (m) { m.name = String(name).slice(0, 60); st.put(m); }
+            await fin;
         },
         async dictFind(keys) {
             const ix = db.transaction('dict').objectStore('dict').index('w'), out = [];
