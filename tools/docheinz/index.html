@@ -13,6 +13,7 @@
 <body>
 <div id="app-header"></div>
 <main class="page dh" id="lib">
+    <section class="panel dh-resume" id="sec-resume" hidden aria-live="polite"></section>
     <section class="panel" id="sec-add">
         <div class="caps grp"><span data-i="s_add"></span><span class="scope" id="count"></span></div>
         <label class="pill acc dh-addbtn" id="b-add"><svg class="i sm"><use href="../../lib/icons.svg#i-plus"/></svg><span data-i="add"></span><input type="file" id="file" class="sr-only" multiple accept=".epub,.md,.markdown,.txt,.html,.htm,.xhtml,.pdf,application/pdf,image/*,.jpg,.jpeg,.png,.webp,application/epub+zip,text/plain,text/markdown,text/html"></label>
@@ -21,6 +22,7 @@
         <button type="button" class="pill dh-camopen" id="b-cam" hidden><span data-i="k_open"></span></button>
         <button type="button" class="pill" id="b-set" data-i="a_btn"></button>
         <button type="button" class="pill" id="b-dict" data-i="d_btn"></button>
+        <button type="button" class="pill" id="b-stat" data-i="st_btn"></button>
         <div class="help" data-i="add_help"></div>
     <div class="notice" id="msg" role="status" hidden></div>
     </section>
@@ -30,6 +32,7 @@
             <input id="q" class="inp" type="search" autocomplete="off" spellcheck="false" data-ph="search">
             <select id="sort" class="sel"></select>
         </div>
+        <div class="dh-tagbar" id="tagbar" hidden></div>
         <div class="panel dh-setp" id="setp" hidden>
             <div class="dh-fth"><b data-i="a_title"></b><button type="button" class="pill" id="setp-close" data-i="ft_close"></button></div>
             <label class="fld"><span data-i="r_aiSel"></span><select class="sel" id="sel-ai"></select></label>
@@ -42,6 +45,7 @@
             <label class="row"><span class="tx"><b data-i="r_full"></b><small data-i="r_fullS"></small></span><span class="sw"><input type="checkbox" id="sw-full"><i></i></span></label>
         </div>
         <div class="panel dh-dict" id="dict" hidden></div>
+        <div class="panel dh-stat" id="stat" hidden></div>
         <div class="dh-ftbar" id="ftbar" hidden><button type="button" class="pill" id="ft-go" data-i="ft_btn"></button></div>
         <div class="panel dh-ft" id="ft" hidden aria-live="polite"></div>
         <div id="list" class="panel dh-list" aria-live="polite"></div>

@@ -3,7 +3,10 @@ import { Heinz, HeinzStore, $ } from './base.js';
 import { D } from './i18n.js';
 import { openDb, storage, persist } from '../mod/db.js';
 import { formatOf, openSource, describe, BuchFehler } from '../mod/buch.js';
-import { makeRecord, signature, filterSort, percent, initial } from '../mod/bibliothek.js';
+import { makeRecord, signature, filterSort, percent, initial, parseTags, allTags, hasTag } from '../mod/bibliothek.js';
+import { Clock, addSecs } from '../mod/statistik.js';
+import { initStat, resume as renderResume, renderStat } from './statistik.js';
+import { isReading } from './vorlesen.js';
 import { findCover } from '../mod/cover.js';
 import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized, mainColumns, dewarped } from './seite.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
@@ -24,7 +27,7 @@ import { openReader, close as closeReader, applyTheme, applySize, applyBtns, rel
 const K = (n) => 'heinz_docheinz_' + n;
 const MAX_MB = 150;
 const t = (k, v) => Heinz.t(D, k, v);
-const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', cloudAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, full: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false };
+const state = { db: null, books: [], q: '', sort: 'recent', ocrAsk: '', cloudAsk: '', photoAsk: '', addTo: '', ocrLang: '', ocrJob: null, size: 19, theme: 'auto', font: 'serif', btns: false, full: false, gap: false, look: {}, bookLook: {}, profiles: [], confirm: '', msgs: [], exp: '', expFmt: 'epub', expNotes: false, tag: '', tagEdit: '', log: {} };
 const coverUrls = [];
 const SORTS = ['recent', 'title', 'author', 'added', 'progress'];
 const mb = (n) => (n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB');
@@ -70,6 +73,7 @@ function bookRow(b) {
         row.append(q, no, yes);
         return row;
     }
+    if (state.tagEdit === b.id) return tagRow(b, row);
     if (state.exp === b.id) return exportRow(b, row);
     if (state.ocrAsk === b.id) return ocrRow(b, row);
     if (state.photoAsk === b.id) return photoRow(b, row);
@@ -97,6 +101,7 @@ function bookRow(b) {
     pr.textContent = job ? t('o_run', { i: job.i, n: b.ocrTotal }) : need ? t('o_part', { i: (b.ocr || []).length, n: b.ocrTotal }) : b.done || p >= 99 ? t('done') : (p > 0 || b.lastRead ? t('pct', { n: p }) : t('unread'));
     au.append(mt, pr);
     tx.append(ti, au);
+    if ((b.tags || []).length) { const tg = document.createElement('small'); tg.className = 'dh-tags'; tg.textContent = b.tags.map(x => '#' + x).join(' '); tx.appendChild(tg); }
     if (b.done || p > 0) { const bar = document.createElement('span'); bar.className = 'dh-bar'; const fill = document.createElement('i'); fill.style.width = (b.done ? 100 : p) + '%'; bar.appendChild(fill); tx.appendChild(bar); }   // kein leerer Balken bei 0 %
     open.append(cover, tx);
     const del = document.createElement('button');
@@ -118,8 +123,48 @@ function bookRow(b) {
         pa.setAttribute('aria-label', t('p_addTitle', { t: b.title })); pa.title = t('p_addTitle', { t: b.title });
         extra.push(pa);
     }
-    row.append(open, ...extra, ex, del);
+    const tb = document.createElement('button');
+    tb.type = 'button'; tb.className = 'ibtn dh-tgbtn'; tb.dataset.act = 'tg'; tb.textContent = '#'; tb.setAttribute('aria-label', t('tg_title', { t: b.title })); tb.title = t('tg_btn');
+    row.append(open, ...extra, tb, ex, del);
     return row;
+}
+
+// ---------- Schlagwörter (wirken zugleich als Sammlungen) ----------
+function tagRow(b, row) {
+    row.classList.add('exp', 'tg');
+    const h = document.createElement('div'); h.className = 'dh-xh'; h.textContent = t('tg_title', { t: b.title });
+    const inp = document.createElement('input'); inp.id = 'tg-in'; inp.className = 'inp'; inp.type = 'text'; inp.autocomplete = 'off'; inp.spellcheck = false;
+    inp.placeholder = t('tg_ph'); inp.value = (b.tags || []).join(', ');
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveTags(b.id, inp.value); });
+    row.append(h, inp);
+    const used = allTags(state.books).filter(x => !hasTag(b, x.tag)).slice(0, 12);
+    if (used.length) {
+        const lab = document.createElement('small'); lab.className = 'help'; lab.textContent = t('tg_sugg');
+        const box = document.createElement('div'); box.className = 'dh-chips';
+        used.forEach(x => { const c = document.createElement('button'); c.type = 'button'; c.className = 'pill'; c.dataset.act = 'tgadd'; c.dataset.tag = x.tag; c.textContent = '#' + x.tag; box.appendChild(c); });
+        row.append(lab, box);
+    }
+    const hp = document.createElement('small'); hp.className = 'help'; hp.textContent = t('tg_help'); row.appendChild(hp);
+    const bt = document.createElement('div'); bt.className = 'dh-xb';
+    const no = document.createElement('button'); no.type = 'button'; no.className = 'pill'; no.dataset.act = 'tgno'; no.textContent = t('delNo');
+    const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'pill acc'; ok.dataset.act = 'tgok'; ok.textContent = t('tg_ok');
+    bt.append(no, ok); row.appendChild(bt);
+    return row;
+}
+async function saveTags(id, text) {
+    const rec = state.books.find(b => b.id === id); if (!rec) return;
+    rec.tags = parseTags(text);
+    try { await state.db.update(id, { tags: rec.tags }); } catch { msg(t('e_open'), 'err'); }
+    if (state.tag && !allTags(state.books).some(x => x.tag.toLowerCase() === state.tag.toLowerCase())) state.tag = '';
+    state.tagEdit = ''; render();
+}
+function renderTagbar() {
+    const bar = $('tagbar'), tags = allTags(state.books);
+    bar.textContent = ''; bar.hidden = !tags.length;
+    if (!tags.length) return;
+    const mk = (label, tag, on) => { const c = document.createElement('button'); c.type = 'button'; c.className = 'pill' + (on ? ' acc' : ''); c.dataset.tag = tag; c.setAttribute('aria-pressed', on ? 'true' : 'false'); c.textContent = label; bar.appendChild(c); };
+    mk(t('tg_all'), '', !state.tag);
+    tags.forEach(x => mk('#' + x.tag + ' ' + x.count, x.tag, state.tag && x.tag.toLowerCase() === state.tag.toLowerCase()));
 }
 
 // ---------- Seiten zu einem Foto-Buch hinzufügen ----------
@@ -341,9 +386,17 @@ function render() {
     const list = $('list');
     list.textContent = '';
     coverUrls.splice(0).forEach(u => URL.revokeObjectURL(u));
-    const shown = filterSort(state.books, state.q, state.sort);
-    shown.forEach(b => list.appendChild(bookRow(b)));
-    $('tools').hidden = state.books.length < 2 && !state.q;
+    const shown = filterSort(state.books, state.q, state.sort, state.tag);
+    let lastAu = null;
+    shown.forEach(b => {
+        if (state.sort === 'author') {
+            const au = (b.author || '').trim() || t('au_none');
+            if (au !== lastAu) { lastAu = au; const hd = document.createElement('div'); hd.className = 'dh-group'; hd.textContent = au; list.appendChild(hd); }
+        }
+        list.appendChild(bookRow(b));
+    });
+    renderTagbar(); renderResume(); renderStat();
+    $('tools').hidden = state.books.length < 2 && !state.q && !state.tag;
     $('ftbar').hidden = !(state.books.length && state.q.trim().length >= MIN_QUERY);
     $('count').textContent = state.books.length ? (state.books.length === 1 ? t('count_one') : t('count_n', { n: state.books.length })) : '';
     const empty = $('empty');
@@ -488,6 +541,32 @@ async function fullSearch() {
     if (my === ftRun) { state.ft.busy = false; renderFt(); }
 }
 
+// ---------- Lesezeit (nur bei offenem Buch, sichtbarem Bildschirm und Bedienung) ----------
+const clock = new Clock(); let clockTimer = 0, clockRec = null, clockUnsaved = 0;
+const touch = () => clock.touch(Date.now());
+function tickClock() {
+    const add = clock.tick(Date.now(), document.visibilityState === 'visible', isReading());
+    if (add > 0 && clockRec) { clockRec.secs = Math.round(((+clockRec.secs || 0) + add) * 10) / 10; state.log = addSecs(state.log, Date.now(), add); clockUnsaved += add; if (clockUnsaved >= 30) saveClock(); }
+}
+function saveClock() {
+    if (!clockRec) return; clockUnsaved = 0;
+    HeinzStore.set(K('stats'), state.log);
+    state.db.update(clockRec.id, { secs: clockRec.secs }).catch(() => {});
+}
+function startClock(rec) {
+    stopClock(); clockRec = rec; clock.start(Date.now());
+    ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(ev => document.addEventListener(ev, touch, { capture: true, passive: true }));
+    clockTimer = setInterval(tickClock, 5000);
+    document.addEventListener('visibilitychange', onVis);
+}
+function onVis() { if (document.visibilityState === 'hidden') { tickClock(); saveClock(); } else clock.start(Date.now()); }
+function stopClock() {
+    if (!clockRec) return;
+    tickClock(); saveClock(); clearInterval(clockTimer); clockRec = null;
+    ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(ev => document.removeEventListener(ev, touch, { capture: true }));
+    document.removeEventListener('visibilitychange', onVis);
+}
+
 // ---------- Öffnen ----------
 async function openBook(id, jumpTo = null) {
     const rec = state.books.find(b => b.id === id);
@@ -498,6 +577,7 @@ async function openBook(id, jumpTo = null) {
         const src = await openSource(new Uint8Array(await blob.arrayBuffer()), rec.format, rec.name, rec.ocrTotal ? { ocr: rec.ocr || [] } : {});
         await state.db.update(id, { lastRead: Date.now() });
         rec.lastRead = Date.now();
+        startClock(rec);
         await openReader(rec, src, {
             jumpTo, t, lang: () => Heinz.lang, cover: rec.cover instanceof Blob ? rec.cover : null, size: state.size, theme: state.theme, font: state.font, look: state.look, bookLook: state.bookLook[id] || null, profiles: state.profiles, btns: state.btns, full: state.full, gap: state.gap,
             onLook: ({ global, book }) => {
@@ -512,7 +592,7 @@ async function openBook(id, jumpTo = null) {
             onMarks: async (list) => { rec.marks = list; try { await state.db.update(id, { marks: list }); } catch { /* Markierungen bleiben im Speicher, bis der Reader schließt */ } },
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
             onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('full' in p) { state.full = p.full; HeinzStore.set(K('full'), p.full ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
-            onClose: () => { render(); },
+            onClose: () => { stopClock(); render(); },
         });
     } catch (e) {
         console.error('open', e && e.message);
@@ -552,7 +632,10 @@ async function start() {
     if (cameraSupported()) { $('b-cam').hidden = false; $('b-cam').addEventListener('click', () => openCamera({ t, onDone: (pg) => addFiles([], pg), onCancel: () => {}, onError: () => msg(t('k_denied'), 'warn') })); }
     $('q').addEventListener('input', (e) => { state.q = e.target.value; if (state.ft) closeFt(); render(); });
     $('ft-go').addEventListener('click', fullSearch);
+    state.log = HeinzStore.get(K('stats'), {}) || {};
     initDict({ db: () => state.db, t, say: msg });
+    initStat({ t, lang: () => Heinz.lang, books: () => state.books, log: () => state.log, open: (id) => openBook(id), cover: (b) => { if (!(b.cover instanceof Blob)) return ''; const u = URL.createObjectURL(b.cover); coverUrls.push(u); return u; } });
+    $('tagbar').addEventListener('click', (e) => { const c = e.target.closest('button[data-tag]'); if (!c) return; state.tag = c.dataset.tag; render(); });
     $('b-set').addEventListener('click', () => { const b = $('setp'); b.hidden = !b.hidden; if (!b.hidden) { $('sw-full').checked = state.full; buildAiChips(t); syncWiki(); } });
     const syncWiki = () => { const ok = wikiAllowed(); $('sw-wiki').checked = ok && wikiOn(); $('sw-wiki').disabled = !ok; $('wiki-hint').hidden = ok; $('wiki-hint').textContent = ok ? '' : t('w_needOnline'); };
     $('sw-wiki').addEventListener('change', (e) => setWikiOn(e.target.checked));
@@ -574,6 +657,10 @@ async function start() {
         else if (btn.dataset.act === 'del') { state.confirm = id; render(); }
         else if (btn.dataset.act === 'no') { state.confirm = ''; render(); }
         else if (btn.dataset.act === 'yes') remove(id);
+        else if (btn.dataset.act === 'tg') { state.tagEdit = id; state.confirm = ''; state.exp = ''; state.ocrAsk = ''; state.photoAsk = ''; render(); const i = document.getElementById('tg-in'); if (i) i.focus(); }
+        else if (btn.dataset.act === 'tgno') { state.tagEdit = ''; render(); }
+        else if (btn.dataset.act === 'tgok') saveTags(id, document.getElementById('tg-in').value);
+        else if (btn.dataset.act === 'tgadd') { const i = document.getElementById('tg-in'); i.value = parseTags(i.value + ',' + btn.dataset.tag).join(', '); i.focus(); }
         else if (btn.dataset.act === 'exp') { state.exp = id; state.confirm = ''; render(); }
         else if (btn.dataset.act === 'xno') { state.exp = ''; render(); }
         else if (btn.dataset.act === 'xgo') runExport(id);

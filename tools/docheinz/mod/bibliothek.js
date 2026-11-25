@@ -2,7 +2,8 @@
  *   newId() -> string; signature(name, size) -> string (erkennt dieselbe Datei)
  *   makeRecord(source, { name, size, lens, now }) -> Datensatz für db.put
  *   percent(rec, ch, frac) -> 0..100 (nach Textlänge der Kapitel gewichtet); position(rec) -> { ch, frac }
- *   filterSort(list, query, sort) -> neue Liste; sort: 'recent' | 'title' | 'author' | 'added' | 'progress'
+ *   filterSort(list, query, sort, tag) -> neue Liste; sort: 'recent' | 'title' | 'author' | 'added' | 'progress'; tag: nur Bücher mit diesem Schlagwort (Sammlung)
+ *   parseTags(text) -> Schlagwörter aus Komma-/Semikolon-/Zeilentext (höchstens 8 je Buch, 24 Zeichen, ohne Doppelte)   allTags(list) -> [{ tag, count }]   hasTag(rec, tag)
  *   initial(title) -> Buchstabe fürs Platzhalter-Cover; hue(title) -> 0..359 */
 export function newId() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -34,13 +35,30 @@ export function percent(rec, ch, frac) {
 export const position = rec => ({ ch: rec.ch | 0, frac: +rec.frac || 0 });
 
 const norm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
-export function filterSort(list, query = '', sort = 'recent') {
+export const MAX_TAGS = 8, MAX_TAG_LEN = 24;
+export function parseTags(text) {
+    const out = [], seen = new Set();
+    for (const raw of String(text || '').split(/[,;\n]+/)) {
+        const t = raw.replace(/\s+/g, ' ').trim().slice(0, MAX_TAG_LEN).trim(), k = norm(t);
+        if (!t || seen.has(k)) continue;
+        seen.add(k); out.push(t);
+        if (out.length >= MAX_TAGS) break;
+    }
+    return out;
+}
+export const hasTag = (rec, tag) => !!tag && (rec.tags || []).some(t => norm(t) === norm(tag));
+export function allTags(list) {
+    const m = new Map();
+    for (const b of list || []) for (const t of b.tags || []) { const k = norm(t), e = m.get(k); if (e) e.count++; else m.set(k, { tag: t, count: 1 }); }
+    return [...m.values()].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'de'));
+}
+export function filterSort(list, query = '', sort = 'recent', tag = '') {
     const q = norm(query).trim();
-    let out = list.filter(b => !q || norm(b.title).includes(q) || norm(b.author).includes(q));
+    let out = list.filter(b => (!tag || hasTag(b, tag)) && (!q || norm(b.title).includes(q) || norm(b.author).includes(q) || (b.tags || []).some(t => norm(t).includes(q))));
     const cmpText = (a, b, k) => norm(a[k]).localeCompare(norm(b[k]), 'de') || a.added - b.added;
     out = out.slice().sort((a, b) => {
         if (sort === 'title') return cmpText(a, b, 'title');
-        if (sort === 'author') return cmpText(a, b, 'author') || cmpText(a, b, 'title');
+        if (sort === 'author') return (!norm(a.author) - !norm(b.author)) || cmpText(a, b, 'author') || cmpText(a, b, 'title');   // ohne Autor ans Ende
         if (sort === 'added') return b.added - a.added;
         if (sort === 'progress') return percent(b, b.ch, b.frac) - percent(a, a.ch, a.frac) || b.added - a.added;
         return (b.lastRead || 0) - (a.lastRead || 0) || b.added - a.added;   // recent: zuletzt gelesen, dann zuletzt hinzugefügt

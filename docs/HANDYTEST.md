@@ -392,3 +392,14 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Datei aufs Handy, in docHeinz unter Bibliothek, Wörterbuch importieren (Name: „Wikipedia (offline, CC BY-SA)“).
 3. Begriff markieren, „Wörterbuch“: Einleitung des Artikels; Synonyme (Weiterleitungen) zeigen den Artikel des Haupteintrags. Bitte Dateigröße, Zeilenzahl, Laufzeit und Importdauer notieren.
 
+### Y21: Weiterlesen und Lesestatistik (nur simuliert getestet)
+1. Ein Buch öffnen, ein paar Seiten lesen, schließen: ganz oben erscheint die Karte „Weiterlesen“ mit Titelbild und Prozent. Antippen öffnet das Buch an der letzten Stelle.
+2. Mindestens 5 Minuten lesen und dabei mehrmals blättern: auf der Karte erscheint „noch ca. … min“.
+3. „Statistik“ antippen: heute, letzte 7 Tage, gesamt, Balken je Tag, meistgelesene Bücher. Bildschirm ausschalten oder 2 Minuten nichts tun: die Zeit läuft nicht weiter. Beim Vorlesen läuft sie weiter.
+4. Das beendete Buch (100 %) taucht nicht mehr als „Weiterlesen“ auf.
+
+### Y22: Schlagwörter, Sammlungen und Autorenansicht (nur simuliert getestet)
+1. Am Buch „#“ antippen, Schlagwörter durch Komma eingeben, speichern: sie stehen unter dem Titel.
+2. Über der Liste erscheint die Leiste mit den Schlagwörtern und Anzahl; antippen zeigt nur diese Bücher, „Alle“ hebt es auf. Die Suche findet Schlagwörter ebenfalls.
+3. Sortierung „Autor“: Gruppenköpfe je Autor, Bücher ohne Autor ganz unten unter „Unbekannter Autor“.
+4. App neu laden: Schlagwörter und Lesezeit bleiben erhalten.

@@ -323,3 +323,31 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-dictrow span { min-width: 0; overflow-wrap: anywhere; }
 .dh-dw { margin: 10px 0 2px; font-weight: 700; color: var(--rlink); }
 .dh-dd { white-space: pre-wrap; line-height: 1.45; }
+
+/* ---------- Weiterlesen, Statistik, Schlagwörter ---------- */
+.dh-resume { padding: 0; overflow: hidden; }
+.dh-resumebtn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 12px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.dh-resumebtn .dh-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dh-resumebtn b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-rslab { color: var(--acc, inherit); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }
+.dh-rsgo { font-size: 26px; opacity: .6; }
+.dh-stat .dh-fth { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.dh-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.dh-kpi { display: flex; flex-direction: column; gap: 2px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.dh-kpi b { font-size: 16px; }
+.dh-bars { display: flex; gap: 6px; height: 84px; align-items: stretch; margin-bottom: 8px; }
+.dh-barcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.dh-barwrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.dh-barwrap i { display: block; width: 100%; background: var(--acc, currentColor); border-radius: 4px 4px 0 0; min-height: 0; }
+.dh-barcol small { font-size: 11px; opacity: .7; }
+.dh-strow { display: flex; flex-direction: column; gap: 1px; padding: 6px 0; border-top: 1px solid var(--line); }
+.dh-stt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.dh-tags { display: block; opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-tgbtn { font-weight: 700; }
+.dh-tagbar { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; padding: 6px 0; -webkit-overflow-scrolling: touch; }
+.dh-tagbar .pill { flex: 0 0 auto; white-space: nowrap; }
+.dh-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-group { padding: 10px 12px 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; opacity: .7; border-top: 1px solid var(--line); }
+.dh-group:first-child { border-top: 0; }
+.dh-book.exp.tg { gap: 8px; }
+.dh-tagbar[hidden], .dh-stat[hidden], .dh-resume[hidden] { display: none; }

@@ -5,7 +5,6 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 25.11.2026, AIUIheinz-docHeinz: Lesestatistik, „Weiterlesen“ auf der Startseite, Bibliothek ordnen (Sammlungen, Schlagwörter, Autorenansicht). Berührt nur `tools/docheinz/` (`mod/bibliothek.js`, `ui/main.js`, `ui/leser.js`, `index.html`, `docheinz.css`, `ui/i18n.js`), dazu Tests und Doku.
 
 Stand: 20.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 

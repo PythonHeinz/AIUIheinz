@@ -44,7 +44,7 @@ const ids = (l) => l.map(b => b.id);
 test('sort orders', () => {
     assert.deepEqual(ids(filterSort(L, '', 'recent')), [2, 3, 1]);
     assert.deepEqual(ids(filterSort(L, '', 'title')), [2, 3, 1]);
-    assert.deepEqual(ids(filterSort(L, '', 'author')), [3, 1, 2]);
+    assert.deepEqual(ids(filterSort(L, '', 'author')), [1, 2, 3]);
     assert.deepEqual(ids(filterSort(L, '', 'added')), [3, 2, 1]);
     assert.deepEqual(ids(filterSort(L, '', 'progress')), [2, 1, 3]);
 });
@@ -60,4 +60,16 @@ test('cover helpers', () => {
     assert.equal(initial('***'), '·');
     assert.equal(hue('Abc'), hue('Abc'));
     assert.ok(hue('Abc') >= 0 && hue('Abc') < 360);
+});
+
+test('Schlagwörter: lesen, zählen, filtern', async () => {
+    const { parseTags, allTags, hasTag, filterSort } = await import('../../tools/docheinz/mod/bibliothek.js');
+    assert.deepEqual(parseTags(' Krimi, krimi ;Urlaub\n  Sachbuch  , , '), ['Krimi', 'Urlaub', 'Sachbuch']);
+    assert.equal(parseTags('a,b,c,d,e,f,g,h,i,j').length, 8);
+    assert.equal(parseTags('x'.repeat(40))[0].length, 24);
+    const l = [{ id: 1, title: 'A', author: 'X', added: 1, tags: ['Krimi', 'Urlaub'] }, { id: 2, title: 'B', author: 'Y', added: 2, tags: ['krimi'] }, { id: 3, title: 'C', author: 'Z', added: 3 }];
+    assert.deepEqual(allTags(l), [{ tag: 'Krimi', count: 2 }, { tag: 'Urlaub', count: 1 }]);
+    assert.ok(hasTag(l[1], 'KRIMI')); assert.ok(!hasTag(l[2], 'Krimi')); assert.ok(!hasTag(l[0], ''));
+    assert.deepEqual(filterSort(l, '', 'title', 'krimi').map(b => b.id), [1, 2]);
+    assert.deepEqual(filterSort(l, 'urlau', 'title').map(b => b.id), [1]);        // Suche findet auch Schlagwörter
 });
