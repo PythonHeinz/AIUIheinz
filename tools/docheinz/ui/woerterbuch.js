@@ -25,8 +25,15 @@ export async function lookup(sel, lang) {
             const hits = await db.dictFind([c]);
             if (hits.length) { items = hits; break; }
         }
+        const refs = [...new Set(items.filter(x => x.r).map(x => x.r))], form = [];
+        if (refs.length) {                                                       // Beugungsform: Eintrag der Grundform zeigen
+            const real = items.filter(x => !x.r);
+            for (const lem of refs) { const h = (await db.dictFind(candidates(lem, lang).slice(0, 1))).filter(x => !x.r); h.forEach(x => form.push(Object.assign(x, { from: lem }))); }
+            items = real.concat(form);
+            if (!items.length) items = [{ dict: '', o: w, d: D.env.t('d_formOf', { a: w, b: refs[0] }), from: '' }];
+        }
         const key = items.map(x => x.dict + ':' + x.w + ':' + x.d.slice(0, 20)).join('|');
-        if (items.length && !seen.has(key)) { seen.add(key); groups.push({ word: w, items: items.map(x => ({ name: names[x.dict] || '', o: x.o, d: x.d })) }); }
+        if (items.length && !seen.has(key)) { seen.add(key); groups.push({ word: w, items: items.map(x => ({ name: names[x.dict] || '', o: x.o, d: x.d, note: x.from ? D.env.t('d_formOf', { a: w, b: x.from }) : '' })) }); }
         if (groups.length && w === ws.join(' ') && ws.length > 1) break;           // Wortgruppe gefunden: reicht
     }
     return { none: false, groups, tried };

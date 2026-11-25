@@ -45,3 +45,14 @@ test('Sprachfilter: deutsch und englisch bleiben, andere Sprachen fallen weg, oh
     assert.equal(wanted(parseLine('Haus\tGebäude', 'tsv')), true);
     assert.equal(parseLine('{"word":"x","senses":[{"glosses":["' + 'a'.repeat(3000) + '"]}]}', 'jsonl')[1].length, 1500);
 });
+import { refOf } from '../../tools/docheinz/mod/woerterbuch.js';
+test('Beugungsformen verweisen auf die Grundform', () => {
+    const f = (g) => ({ senses: [{ glosses: [g] }] });
+    assert.equal(refOf({ senses: [{ form_of: [{ word: 'dumm' }], glosses: ['x'] }] }), 'dumm');
+    assert.equal(refOf({ senses: [{ glosses: ['Genitiv Singular Maskulinum der starken Deklination des Adjektivs dumm'] }, { glosses: ['Dativ Plural des Adjektivs dumm'] }] }), 'dumm');
+    assert.equal(refOf(f('1. Person Singular Präsens Indikativ des Verbs gehen')), 'gehen');
+    assert.equal(refOf(f('Tier mit vier Beinen')), '');
+    assert.equal(refOf({ senses: [{ glosses: ['des Adjektivs dumm'] }, { glosses: ['Tier'] }] }), '');
+    const e = parseLine(JSON.stringify({ word: 'dummen', lang_code: 'de', senses: [{ glosses: ['Dativ Plural des Adjektivs dumm'] }] }), 'jsonl');
+    assert.deepEqual([e[0], e[1], e[4]], ['dummen', '→ dumm', 'dumm']);
+});

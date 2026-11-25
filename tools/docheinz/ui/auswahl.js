@@ -373,7 +373,7 @@ async function dictSearch(text) {
     r.groups.forEach(g => g.items.forEach(it => {
         const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = it.o + (it.name ? ' · ' + it.name : '');
         const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = it.d;
-        box.append(h, d);
+        if (it.note) { const n = document.createElement('div'); n.className = 'help'; n.textContent = it.note; box.append(h, n, d); } else box.append(h, d);
     }));
 }
 async function search(query) {

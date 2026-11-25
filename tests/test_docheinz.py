@@ -520,6 +520,27 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("de-extract", p.inner_text("#dict"))
         self.assertEqual(p.errors, [])
 
+    def test_dictionary_shows_base_form_entry_for_inflected_words(self):
+        import json
+        p = self.open(lang="de")
+        self.add(p, ("d.md", "text/markdown", "# D\n\nDie dummen Leute lachten.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        rows = [{"word": "dumm", "lang_code": "de", "pos": "adj", "senses": [{"glosses": ["nicht klug"]}]},
+                {"word": "dummen", "lang_code": "de", "pos": "adj", "senses": [{"glosses": ["Dativ Plural des Adjektivs dumm"]}, {"glosses": ["Akkusativ Singular Maskulinum des Adjektivs dumm"]}]}]
+        p.click("#b-dict")
+        p.set_input_files("#file-dict", {"name": "t.jsonl", "mimeType": "application/json", "buffer": "\n".join(json.dumps(r) for r in rows).encode()})
+        p.wait_for_function("() => /2 Einträge/.test(document.getElementById('dict').innerText)")
+        p.click("#dict [data-dc=close]")
+        p.locator("#list .dh-book").first.click()
+        p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "dummen")
+        p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /nicht klug/.test(document.getElementById('rs-body').innerText)")
+        txt = p.inner_text("#rs-body")
+        self.assertIn("Form von „dumm“", txt)
+        self.assertNotIn("Dativ Plural", txt)                                   # keine Formenbeschreibung statt Bedeutung
+        self.assertEqual(p.errors, [])
+
     def test_full_text_search_over_all_books_jumps_to_the_hit(self):
         p = self.open(lang="de")
         self.add(p, ("eins.md", "text/markdown", "# Buch Eins\n\nDer Übermensch kommt zuerst. Später wieder der Übermensch.".encode()),

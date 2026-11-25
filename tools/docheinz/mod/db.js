@@ -75,7 +75,7 @@ function make(db) {
         async dictAdd(id, entries) {                                                   // ein Stapel Einträge; zählt in den Metadaten mit
             const tx = db.transaction(['dict', 'dictmeta'], 'readwrite'); const fin = done(tx);
             const st = tx.objectStore('dict'), mt = tx.objectStore('dictmeta');
-            entries.forEach(e => st.add({ dict: id, w: e[0], d: e[1], o: e[2] || e[0] }));
+            entries.forEach(e => st.add({ dict: id, w: e[0], d: e[1], o: e[2] || e[0], r: e[4] || '' }));
             const m = await wrap(mt.get(id)); if (m) { m.count = (m.count || 0) + entries.length; mt.put(m); }
             try { await fin; } catch (e) { if (full(e)) { const err = new Error('full'); err.code = 'full'; throw err; } throw e; }
         },

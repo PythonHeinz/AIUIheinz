@@ -60,9 +60,29 @@ function glossOf(o) {
 }
 export const KEEP_LANGS = ['de', 'en'];                                  // Wiktionary enthält Wörter aller Sprachen; behalten werden deutsche und englische (Einträge ohne Sprachangabe immer)
 export const MAX_DEF = 1500;
+const FORM = /\b(?:des|der|das|von|vom|of)\s+(?:Adjektivs|Substantivs|Verbs|Pronomens|Artikels|Partizips|Adverbs|Nomens|adjective|noun|verb|participle)\s+(\S+?)\s*$/i;
+// Beugungsform („dummen“ = Form von „dumm“): Verweis auf die Grundform statt langer Formenbeschreibung
+export function refOf(o) {
+    const ss = o && Array.isArray(o.senses) ? o.senses : [];
+    if (!ss.length) return '';
+    let lemma = '';
+    for (const sn of ss) {
+        let l = '';
+        if (Array.isArray(sn.form_of) && sn.form_of[0] && sn.form_of[0].word) l = String(sn.form_of[0].word);
+        else { const m = FORM.exec(glossOf(sn.glosses || sn.gloss || '')); if (m) l = m[1]; }
+        l = l.replace(/[.,;:]+$/, '');
+        if (!l) return '';
+        if (!lemma) lemma = l; else if (keyOf(l) !== keyOf(lemma)) return '';
+    }
+    return lemma;
+}
 const entryOf = (o) => {
-    const w = o && (o.word || o.w || o.term || o.headword || o.key), d = glossOf(o).trim().slice(0, MAX_DEF);
-    return w && d ? [keyOf(w), d, String(w), o.lang_code ? String(o.lang_code) : ''] : null;
+    const w = o && (o.word || o.w || o.term || o.headword || o.key);
+    if (!w) return null;
+    const lang = o.lang_code ? String(o.lang_code) : '', r = refOf(o);
+    if (r && keyOf(r) !== keyOf(w)) return [keyOf(w), '→ ' + r, String(w), lang, r];
+    const d = glossOf(o).trim().slice(0, MAX_DEF);
+    return d ? [keyOf(w), d, String(w), lang, ''] : null;
 };
 export const wanted = (e) => !!e && (!e[3] || KEEP_LANGS.includes(e[3]));
 
