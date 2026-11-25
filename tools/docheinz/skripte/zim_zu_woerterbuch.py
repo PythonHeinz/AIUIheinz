@@ -126,12 +126,12 @@ class ZimLeser:
         offs = [self.st.unpack_from(fmt, data, w * k)[0] for k in range(n_off)]
         return [data[offs[k]:offs[k + 1]] for k in range(n_off - 1)]
 
-    def articles(self, limit=0):
+    def articles(self, limit=0, start=0):
         """erzeugt (titel, ziel_oder_None, html_bytes_oder_None) für Artikel und Weiterleitungen"""
         from array import array
-        n = min(self.count, limit) if limit else self.count
+        n = min(self.count, start + limit) if limit else self.count
         idx, cl, bl = array('I'), array('I'), array('I')
-        for i in range(n):
+        for i in range(start, n):
             try: d = self.dirent(i)
             except Exception: continue
             if d['ns'] not in ('C', 'A'): continue
@@ -152,10 +152,10 @@ class ZimLeser:
             if bl[k] < len(blobs): yield self.dirent(idx[k])['title'], None, blobs[bl[k]]
 
 
-def entries(zim, lang='', max_chars=500, redirects=True, limit=0):
+def entries(zim, lang='', max_chars=500, redirects=True, limit=0, start=0):
     """Erzeugt je Artikel einen Wörterbuch-Eintrag (dict). `zim` ist ein libzim.reader.Archive oder ein ZimLeser."""
     base = {'lang_code': lang} if lang in ('de', 'en') else {}                 # docHeinz behält nur de/en; sonst Sprache weglassen
-    for title, target, html in (zim.articles(limit) if isinstance(zim, ZimLeser) else _libzim_articles(zim, limit)):
+    for title, target, html in (zim.articles(limit, start) if isinstance(zim, ZimLeser) else _libzim_articles(zim, limit, start)):
         title = (title or '').strip()
         if not title or title == 'mainPage': continue
         if target is not None:
@@ -168,10 +168,10 @@ def entries(zim, lang='', max_chars=500, redirects=True, limit=0):
         if txt: yield dict(word=title, senses=[{'glosses': [txt]}], **base)
 
 
-def _libzim_articles(zim, limit=0):
+def _libzim_articles(zim, limit=0, start=0):
     new = getattr(zim, 'has_new_namespace_scheme', True)
     n = zim.all_entry_count if hasattr(zim, 'all_entry_count') else zim.entry_count
-    for i in range(n if not limit else min(n, limit)):
+    for i in range(start, n if not limit else min(n, start + limit)):
         try:
             e = zim._get_entry_by_id(i) if hasattr(zim, '_get_entry_by_id') else zim.get_entry_by_id(i)
             if not new and not e.path.startswith('A/'): continue
@@ -192,11 +192,11 @@ def open_zim(path, reader='auto'):
     return ZimLeser(path)
 
 
-def run(src, dst, lang='', max_chars=500, redirects=True, limit=0, reader='auto'):
+def run(src, dst, lang='', max_chars=500, redirects=True, limit=0, reader='auto', start=0):
     zim = open_zim(src, reader)
     n = 0
     with gzip.open(dst, 'wt', encoding='utf-8') as out:
-        for e in entries(zim, lang, max_chars, redirects, limit):
+        for e in entries(zim, lang, max_chars, redirects, limit, start):
             out.write(json.dumps(e, ensure_ascii=False, separators=(',', ':')) + '\n'); n += 1
             if n % 100000 == 0: print(f'{n} Einträge …', file=sys.stderr)
     return n
@@ -209,9 +209,10 @@ def main(argv=None):
     p.add_argument('--max-chars', type=int, default=500, help='Länge der Einleitung (Standard 500)')
     p.add_argument('--no-redirects', action='store_true', help='Weiterleitungen weglassen (kleinere Datei)')
     p.add_argument('--limit', type=int, default=0, help='nur die ersten N Einträge der ZIM-Datei (zum Testen)')
+    p.add_argument('--start', type=int, default=0, help='bei einem Test mit --limit: ab dem N-ten Eintrag lesen (z. B. 1500000 für Artikel mitten im Alphabet)')
     p.add_argument('--reader', default='auto', choices=['auto', 'libzim', 'eigen'], help='ZIM-Leser: auto (libzim, sonst eigener), libzim oder eigen (läuft auch in Termux)')
     a = p.parse_args(argv)
-    n = run(a.zim, a.ausgabe, a.lang, a.max_chars, not a.no_redirects, a.limit, a.reader)
+    n = run(a.zim, a.ausgabe, a.lang, a.max_chars, not a.no_redirects, a.limit, a.reader, a.start)
     print(f'Fertig: {n} Einträge -> {a.ausgabe}')
 
 

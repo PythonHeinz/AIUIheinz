@@ -82,6 +82,9 @@ class Zim(unittest.TestCase):
                 self.assertGreaterEqual(len(got['eigen']), 401)
                 self.assertTrue(any('"Alias 5"' in l and 'Artikel 5' in l for l in got['eigen']))
                 self.assertTrue(any('Einleitung 399' in l for l in got['eigen']))
+                for r in ('libzim', 'eigen'):
+                    b = os.path.join(d, 's.jsonl.gz'); z.run(a, b, 'de', reader=r, start=200, limit=10)
+                    self.assertLessEqual(len(list(gzip.open(b, 'rt', encoding='utf-8'))), 10)
 
 
 if __name__ == '__main__':
