@@ -377,3 +377,8 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 1. Bibliothek: Knopf „Einstellungen“. Dort KI-Modell wählen, „Vor jeder KI-Anfrage fragen“ und „Immer Vollbild“ umschalten; gilt für alle Bücher.
 2. Im Buch: Menü oben rechts zeigt nur Formatierung, Kapitel-KI und Vorlesen. Knopf mit Pfeilen oben schaltet Vollbild, Knopf mit Dokument-Symbol zeigt bei Foto- und PDF-Büchern die Originalseite.
 
+### Y18: Wikipedia-Kurztext online (nur simuliert getestet)
+1. Dashboard: „Online erlauben“ einschalten. Bibliothek, „Einstellungen“: „In Wikipedia nachschlagen (online)“ einschalten (ohne „Online erlauben“ ist der Schalter gesperrt).
+2. Im Buch einen Namen oder Begriff markieren, „Wörterbuch“: unter den Wörterbuch-Einträgen erscheint der Wikipedia-Kurztext mit Link. Gleiche Suche im Flugmodus: kommt aus dem Zwischenspeicher („auf dem Gerät gemerkt“).
+3. Zu beobachten: Die Suche nimmt den ersten Treffer der Wikipedia-Suche; bei ganz gewöhnlichen Wörtern kann das ein unpassender Artikel sein (Titel steht darüber).
+

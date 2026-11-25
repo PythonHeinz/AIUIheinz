@@ -8,6 +8,7 @@ import { buildRequest, trimHistory, MAX_CHARS, CHAPTER_MAX_ONLINE } from '../mod
 import { wordBounds } from '../mod/wahl.js';
 import { mdToHtml } from '../mod/markdown.js';
 import { lookup } from './woerterbuch.js';
+import { wikiOn, wikiLookup } from './wikipedia.js';
 import { sauber } from '../mod/sauber.js';
 import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS } from '../mod/markierung.js';
 
@@ -365,16 +366,31 @@ async function dictSearch(text) {
     openSheet(t('d_sheetT', { q }), '');
     const box = $('rs-body');
     box.appendChild(line('dh-sline', t('s_working')));
-    let r; try { r = await lookup(text, A.env.lang()); } catch { r = { none: false, groups: [], tried: [] }; }
+    const lang = A.env.lang(), rl = (A.env.rec && A.env.rec().language) || lang;
+    let r; try { r = await lookup(text, lang); } catch { r = { none: false, groups: [], tried: [] }; }
     if (my !== A.run) return;
     box.textContent = '';
-    if (r.none) { box.appendChild(line('dh-sline', t('d_none'))); return; }
-    if (!r.groups.length) { box.appendChild(line('dh-sline', t('d_nohit'))); return; }
     r.groups.forEach(g => g.items.forEach(it => {
         const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = it.o + (it.name ? ' · ' + it.name : '');
         const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = it.d;
         if (it.note) { const n = document.createElement('div'); n.className = 'help'; n.textContent = it.note; box.append(h, n, d); } else box.append(h, d);
     }));
+    let wikiShown = false;
+    if (wikiOn()) {                                                         // Wikipedia-Kurztext (nur mit Haken und „Online erlauben“; Treffer werden gemerkt)
+        const hold = line('dh-sline', t('w_working')); box.appendChild(hold);
+        const w = await wikiLookup(q, rl);
+        if (my !== A.run) return;
+        hold.remove();
+        if (w.page) {
+            wikiShown = true;
+            const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = w.page.title + ' · Wikipedia' + (w.cached ? ' · ' + t('w_cached') : '');
+            const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = w.page.extract;
+            const a = document.createElement('a'); a.href = w.page.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t('w_more'); a.className = 'help';
+            box.append(h, d, a);
+        } else if (w.blocked) box.appendChild(line('help', t('w_blocked')));
+        else box.appendChild(line('help', t(w.failed ? 'w_failed' : 'w_none')));
+    }
+    if (!r.groups.length && !wikiShown) box.appendChild(line('dh-sline', t(r.none ? 'd_none' : 'd_nohit')));
 }
 async function search(query) {
     query = normalizeQuery(query);

@@ -486,7 +486,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
         p.click("#b-dict")
         p.wait_for_selector("#dict:not([hidden])")
-        self.assertIn("Noch kein Wörterbuch", p.inner_text("#dict"))
+        p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)")       # Liste wird asynchron gefüllt
         tsv = "# Beispiel\nHaus\tGebäude zum Wohnen\nFluss\tgroßes fließendes Gewässer\nHaus\tauch: Familie\n".encode()
         p.set_input_files("#file-dict", {"name": "klein.tsv", "mimeType": "text/tab-separated-values", "buffer": tsv})
         p.wait_for_function("() => /3 Einträge/.test(document.getElementById('dict').innerText)")
@@ -543,6 +543,45 @@ class DocHeinzUiTests(DocHeinzBase):
         txt = p.inner_text("#rs-body")
         self.assertIn("Form von „dumm“", txt)
         self.assertNotIn("Dativ Plural", txt)                                   # keine Formenbeschreibung statt Bedeutung
+        self.assertEqual(p.errors, [])
+
+    def test_wikipedia_short_text_is_off_by_default_needs_online_and_is_cached(self):
+        import json
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# W\n\nOscar Wilde schrieb Bücher.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        calls = []
+        def wiki(route):
+            calls.append(route.request.url)
+            body = {"query": {"pages": [{"title": "Oscar Wilde", "extract": "Oscar Wilde war ein irischer Schriftsteller."}]}}
+            route.fulfill(status=200, content_type="application/json", headers={"access-control-allow-origin": "*"}, body=json.dumps(body))
+        p.route("https://de.wikipedia.org/**", wiki)
+        # ohne „Online erlauben“: Schalter gesperrt, Hinweis, keine Anfrage
+        p.click("#b-set")
+        self.assertTrue(p.locator("#sw-wiki").is_disabled())
+        self.assertIn("Online erlauben", p.inner_text("#wiki-hint"))
+        # mit „Online erlauben“ aber Wikipedia aus (Standard): keine Anfrage
+        p.evaluate("() => localStorage.setItem('heinz_online', 'true')")
+        p.reload(); p.wait_for_selector("html[data-dh=ready]")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Wilde"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Wörterbuch/.test(document.getElementById('rs-body').innerText)")
+        self.assertEqual(calls, [])
+        # Schalter an: Kurztext erscheint, nur das Wort ging nach außen
+        p.evaluate("() => document.getElementById('r-close').click()")
+        p.wait_for_selector("#reader", state="hidden")
+        p.click("#b-set"); p.check("#sw-wiki")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Wilde"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /irischer Schriftsteller/.test(document.getElementById('rs-body').innerText)")
+        self.assertEqual(len(calls), 1)
+        self.assertIn("gsrsearch=Wilde", calls[0])
+        self.assertNotIn("Bücher", calls[0])
+        # zweites Mal aus dem Zwischenspeicher
+        p.click("#rs-close") if p.locator("#rs-close").count() else None
+        self.select_text(p, "Wilde"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /auf dem Gerät gemerkt/.test(document.getElementById('rs-body').innerText)")
+        self.assertEqual(len(calls), 1)
         self.assertEqual(p.errors, [])
 
     def test_full_text_search_over_all_books_jumps_to_the_hit(self):
