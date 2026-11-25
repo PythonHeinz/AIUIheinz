@@ -5,7 +5,7 @@
  *   candidates(wort, sprache) -> Schlüssel in Reihenfolge der Genauigkeit (genau, Grundform-Versuche)
  *   parseLine(zeile, format) -> [schlüssel, erklärung] | null     parseJson(text) -> [[schlüssel, erklärung], …]
  *   detect(textprobe) -> 'tsv' | 'csv' | 'jsonl' | 'json'
- *   words(auswahl) -> Wörter der Auswahl (höchstens 6) */
+ *   wanted(eintrag) -> Sprache des Eintrags (lang_code) gehört zu KEEP_LANGS oder fehlt     words(auswahl) -> Wörter der Auswahl (höchstens 6) */
 const EDGE = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu;
 export const keyOf = (w) => String(w || '').normalize('NFC').replace(EDGE, '').toLowerCase().replace(/ß/g, 'ss').replace(/[’‘`´]/g, "'");
 
@@ -58,10 +58,13 @@ function glossOf(o) {
     }
     return '';
 }
+export const KEEP_LANGS = ['de', 'en'];                                  // Wiktionary enthält Wörter aller Sprachen; behalten werden deutsche und englische (Einträge ohne Sprachangabe immer)
+export const MAX_DEF = 1500;
 const entryOf = (o) => {
-    const w = o && (o.word || o.w || o.term || o.headword || o.key), d = glossOf(o);
-    return w && d ? [keyOf(w), d.trim(), String(w)] : null;
+    const w = o && (o.word || o.w || o.term || o.headword || o.key), d = glossOf(o).trim().slice(0, MAX_DEF);
+    return w && d ? [keyOf(w), d, String(w), o.lang_code ? String(o.lang_code) : ''] : null;
 };
+export const wanted = (e) => !!e && (!e[3] || KEEP_LANGS.includes(e[3]));
 
 export function parseJson(text) {
     let j; try { j = JSON.parse(String(text).replace(/^﻿/, '')); } catch { return []; }

@@ -3,7 +3,7 @@
  *   lookup(auswahl, sprache) -> Promise<{ none, groups: [{ word, items: [{ name, o, d }] }], tried }>   (none: kein Wörterbuch eingelesen)
  * Alles bleibt auf dem Gerät (IndexedDB, Stores dict und dictmeta). */
 import { $ } from './base.js';
-import { detect, parseLine, parseJson, candidates, keyOf, words } from '../mod/woerterbuch.js';
+import { detect, parseLine, parseJson, wanted, candidates, keyOf, words } from '../mod/woerterbuch.js';
 
 const D = { env: null, open: false, busy: '' };
 const BATCH = 4000;
@@ -32,24 +32,45 @@ export async function lookup(sel, lang) {
     return { none: false, groups, tried };
 }
 
+const isGz = async (file) => /\.gz$/i.test(file.name) || new Uint8Array(await file.slice(0, 2).arrayBuffer()).join() === '31,139';
+// Textstrom einer Datei, .gz wird beim Lesen entpackt (kein Entpacken von Hand nötig)
+function textStream(file, gz) {
+    let st = file.stream();
+    if (gz) st = st.pipeThrough(new DecompressionStream('gzip'));
+    return st.pipeThrough(new TextDecoderStream());
+}
+async function sampleOf(file, gz) {
+    if (!gz) return file.slice(0, 65536).text();
+    const rd = textStream(file, true).getReader();
+    let s = '';
+    while (s.length < 65536) { const { value, done } = await rd.read(); if (done) break; s += value; }
+    try { await rd.cancel(); } catch { /* Strom schon zu */ }
+    return s;
+}
+
 async function importFile(file) {
     const db = D.env.db(), t = D.env.t;
-    const sample = await file.slice(0, 65536).text(), fmt = detect(sample);
-    const meta = { id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: file.name.replace(/\.[^.]+$/, '') || file.name, count: 0, size: file.size, added: Date.now() };
+    const gz = await isGz(file);
+    if (gz && typeof DecompressionStream === 'undefined') throw new Error('nogz');
+    const fmt = detect(await sampleOf(file, gz));
+    const meta = { id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: file.name.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '') || file.name, count: 0, size: file.size, added: Date.now() };
     await db.dictCreate(meta);
-    let n = 0;
+    let n = 0, seen = 0;
     const flush = async (batch) => { if (!batch.length) return; await db.dictAdd(meta.id, batch); n += batch.length; D.busy = t('d_busy', { n, name: meta.name }); render(); };
     try {
-        if (fmt === 'json') { const all = parseJson(await file.text()); for (let i = 0; i < all.length; i += BATCH) await flush(all.slice(i, i + BATCH)); }
-        else {
-            const rd = file.stream().pipeThrough(new TextDecoderStream()).getReader();
+        if (fmt === 'json') {
+            let txt = ''; const rd = textStream(file, gz).getReader();
+            for (;;) { const { value, done } = await rd.read(); if (done) break; txt += value; }
+            const all = parseJson(txt).filter(wanted); for (let i = 0; i < all.length; i += BATCH) await flush(all.slice(i, i + BATCH));
+        } else {
+            const rd = textStream(file, gz).getReader();
             let rest = '', batch = [];
             for (;;) {
                 const { value, done } = await rd.read();
                 rest += value || '';
                 const lines = rest.split(/\r?\n/); rest = done ? '' : lines.pop();
                 if (done && lines.length === 0 && rest) lines.push(rest);
-                for (const l of lines) { const e = parseLine(l, fmt); if (e) { batch.push(e); if (batch.length >= BATCH) { await flush(batch); batch = []; } } }
+                for (const l of lines) { const e = parseLine(l, fmt); seen++; if (e && wanted(e)) { batch.push(e); if (batch.length >= BATCH) { await flush(batch); batch = []; } } }
                 if (done) break;
             }
             await flush(batch);
@@ -82,7 +103,7 @@ async function render() {
     else {
         const lab = document.createElement('label'); lab.className = 'pill acc dh-addbtn';
         const sp = document.createElement('span'); sp.textContent = t('d_add');
-        const inp = Object.assign(document.createElement('input'), { type: 'file', id: 'file-dict', className: 'sr-only', accept: '.tsv,.csv,.txt,.json,.jsonl,.ndjson,text/*,application/json' });
+        const inp = Object.assign(document.createElement('input'), { type: 'file', id: 'file-dict', className: 'sr-only', accept: '.tsv,.csv,.txt,.json,.jsonl,.ndjson,.gz,text/*,application/json,application/gzip' });
         inp.multiple = true; lab.append(sp, inp); box.appendChild(lab);
         const p = document.createElement('p'); p.className = 'help'; p.textContent = t('d_help'); box.appendChild(p);
     }

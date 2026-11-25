@@ -506,6 +506,20 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => /Gewässer/.test(document.getElementById('rs-body').innerText)")
         self.assertEqual(p.errors, [])
 
+    def test_dictionary_reads_gzip_jsonl_and_keeps_only_german_and_english(self):
+        import gzip, json
+        p = self.open(lang="de")
+        rows = [{"word": "Hund", "lang_code": "de", "pos": "noun", "senses": [{"glosses": ["Haustier, das bellt"]}]},
+                {"word": "chien", "lang_code": "fr", "pos": "noun", "senses": [{"glosses": ["Hund"]}]},
+                {"word": "dog", "lang_code": "en", "pos": "noun", "senses": [{"glosses": ["Hund (englisch)"]}]},
+                {"word": "leer", "lang_code": "de", "senses": []}]
+        data = gzip.compress("\n".join(json.dumps(r) for r in rows).encode())
+        p.click("#b-dict")
+        p.set_input_files("#file-dict", {"name": "de-extract.jsonl.gz", "mimeType": "application/gzip", "buffer": data})
+        p.wait_for_function("() => /2 Einträge/.test(document.getElementById('dict').innerText)")
+        self.assertIn("de-extract", p.inner_text("#dict"))
+        self.assertEqual(p.errors, [])
+
     def test_full_text_search_over_all_books_jumps_to_the_hit(self):
         p = self.open(lang="de")
         self.add(p, ("eins.md", "text/markdown", "# Buch Eins\n\nDer Übermensch kommt zuerst. Später wieder der Übermensch.".encode()),

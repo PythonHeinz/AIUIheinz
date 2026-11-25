@@ -38,3 +38,10 @@ test('Wörter der Auswahl', () => {
     assert.deepEqual(words(' „Guten Tag,“ sagte er. '), ['Guten', 'Tag', 'sagte', 'er']);
     assert.equal(words('a b c d e f g h').length, 6);
 });
+import { wanted } from '../../tools/docheinz/mod/woerterbuch.js';
+test('Sprachfilter: deutsch und englisch bleiben, andere Sprachen fallen weg, ohne Angabe bleibt', () => {
+    assert.equal(wanted(parseLine('{"word":"Hund","lang_code":"de","senses":[{"glosses":["Tier"]}]}', 'jsonl')), true);
+    assert.equal(wanted(parseLine('{"word":"chien","lang_code":"fr","senses":[{"glosses":["Hund"]}]}', 'jsonl')), false);
+    assert.equal(wanted(parseLine('Haus\tGebäude', 'tsv')), true);
+    assert.equal(parseLine('{"word":"x","senses":[{"glosses":["' + 'a'.repeat(3000) + '"]}]}', 'jsonl')[1].length, 1500);
+});

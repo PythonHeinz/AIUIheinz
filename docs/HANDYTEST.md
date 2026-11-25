@@ -368,6 +368,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 
 ### Y16: Wörterbuch offline (nur simuliert getestet)
 1. Eine kleine Wörterbuch-Datei aufs Handy legen (Textdatei, je Zeile „Wort, Tabulator, Erklärung“; oder ein Wiktionary-Auszug von kaikki.org als .jsonl). Bibliothek, „Wörterbücher“, „Wörterbuch-Datei hinzufügen“. Zeit und Fortschritt („n Einträge gelesen“) bei einer großen Datei notieren; im Speicherhinweis prüfen, wie viel Platz dazukommt.
+1a. Empfohlen: `de-extract.jsonl.gz` (deutsche Wiktionary-Ausgabe, 296 MB) von kaikki.org unverändert importieren (nicht entpacken). Zeit, Eintragszahl und Speicherzuwachs notieren; fehlen bei vielen Wörtern die Erklärungen, 5 Zeilen der Datei an den Strang schicken.
 2. Im Buch ein Wort markieren, „Wörterbuch“ in der Markierungsleiste. Gebeugte Formen (Häuser, wanderte, studies) sollen über die Grundform gefunden werden. Mehrere Wörter markieren: erst die ganze Gruppe, sonst jedes Wort.
 3. Flugmodus: dasselbe muss gehen. In der Bibliothek ein Wörterbuch löschen: Einträge sind danach weg.
 4. Zu beobachten: Dateien über etwa 100 MB können das Einlesen verlangsamen; die Grundform-Suche ist eine einfache Regel (keine Sprachanalyse) und findet unregelmäßige Formen (ging, went) nicht.
