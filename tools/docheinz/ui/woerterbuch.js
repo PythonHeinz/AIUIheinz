@@ -5,7 +5,7 @@
 import { $ } from './base.js';
 import { detect, parseLine, parseJson, wanted, candidates, keyOf, words } from '../mod/woerterbuch.js';
 
-const D = { env: null, open: false, busy: '' };
+const D = { env: null, open: false, busy: '', seq: 0 };
 const BATCH = 4000;
 // Lesbarer Name statt Dateiname: de-extract -> „Deutsches Wörterbuch (Wiktionary)“, simple-extract -> „Englisches Wörterbuch (Simple English)“
 function niceName(file, t, ui) {
@@ -102,6 +102,7 @@ async function importFile(file) {
 }
 
 async function render() {
+    const my = ++D.seq;
     const box = $('dict'); box.hidden = !D.open; box.textContent = '';
     if (!D.open) return;
     const t = D.env.t, db = D.env.db();
@@ -109,7 +110,9 @@ async function render() {
     const h = document.createElement('b'); h.textContent = t('d_title0');
     const x = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('ft_close') }); x.dataset.dc = 'close';
     head.append(h, x); box.appendChild(head);
+    // Nur der neueste Aufruf zeichnet (D.seq): mehrere gleichzeitige Aufrufe (Fortschritt beim Import) verdoppelten sonst die Liste
     const list = db ? await db.dictList() : [];
+    if (my !== D.seq) return;
     if (!list.length) { const p = document.createElement('p'); p.className = 'help'; p.textContent = t('d_empty'); box.appendChild(p); }
     list.forEach(m => {
         const r = document.createElement('div'); r.className = 'dh-dictrow';

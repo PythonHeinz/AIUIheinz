@@ -515,6 +515,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)")
         p.set_input_files("#file-dict", {"name": "gross.tsv", "mimeType": "text/tab-separated-values", "buffer": lines})
         p.wait_for_function("() => /45000 Einträge/.test(document.getElementById('dict').innerText)", timeout=60000)
+        self.assertEqual(p.locator("#dict .dh-dictrow").count(), 1)               # Fortschrittsanzeige beim Import darf die Liste nicht verdoppeln
         p.click("#dict [data-dc=del]")
         p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)", timeout=60000)
         n = p.evaluate("""() => new Promise(r => { const q = indexedDB.open('docheinz'); q.onsuccess = () => { const c = q.result.transaction('dict').objectStore('dict').count(); c.onsuccess = () => r(c.result); }; })""")
