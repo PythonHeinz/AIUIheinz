@@ -15,6 +15,7 @@
 <main class="page wh">
     <div class="seg2" id="tabs">
         <button type="button" data-tab="stoebern" class="on" data-i="tabBrowse"></button>
+        <button type="button" data-tab="fragen" data-i="tabAsk"></button>
         <button type="button" data-tab="wiki" data-i="tabWiki"></button>
         <button type="button" data-tab="quellen" data-i="tabSources"></button>
     </div>
@@ -36,6 +37,34 @@
             <div id="a-rueck" class="help" hidden></div>
             <div class="wh-quelle" id="a-quelle"></div>
         </article>
+    </section>
+
+    <section id="p-fragen" hidden>
+        <label class="fld"><span data-i="askLabel"></span><textarea id="f-frage" class="wh-ta wh-ask" spellcheck="false" data-ph="askPh"></textarea></label>
+        <div class="wh-row">
+            <button type="button" class="pill acc" id="b-ask"><svg class="i sm"><use href="../../lib/icons.svg#i-send"/></svg><span data-i="ask"></span></button>
+            <button type="button" class="pill" id="b-askstop" hidden><svg class="i sm"><use href="../../lib/icons.svg#i-stop"/></svg><span data-i="stop"></span></button>
+        </div>
+        <div class="notice warn" id="onl" hidden></div>
+        <div class="help" id="askstatus"></div>
+        <div id="antwort" class="wh-answer" hidden>
+            <div class="wh-text" id="ant-text"></div>
+            <div class="help" id="ant-hinweis"></div>
+            <div class="caps grp" id="ant-qkopf"><span data-i="usedExcerpts"></span></div>
+            <div id="ant-quellen" class="wh-list"></div>
+            <div class="help" id="ant-fact"></div>
+        </div>
+        <details class="wh-det" id="params">
+            <summary><span data-i="params"></span></summary>
+            <label class="fld"><span data-i="engine"></span><select id="provider" class="sel"></select></label>
+            <label class="fld"><span data-i="model"></span><select id="model" class="sel"></select></label>
+            <div class="help" id="modelhelp"></div>
+            <label class="fld"><span data-i="temp"></span><input id="temp" class="inp" type="number" step="0.1" min="0" max="2" inputmode="decimal"></label>
+            <label class="fld"><span data-i="maxTok"></span><input id="maxtok" class="inp" type="number" step="10" min="50" max="1500" inputmode="numeric"></label>
+            <label class="fld"><span data-i="scope"></span><select id="scope" class="sel"></select></label>
+            <div class="help" id="rtinfo"></div>
+        </details>
+        <div class="help" data-i="askHelp"></div>
     </section>
 
     <section id="p-wiki" hidden>

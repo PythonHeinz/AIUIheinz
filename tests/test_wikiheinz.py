@@ -1,8 +1,9 @@
 """WikiHeinz (tools/wikiheinz/): Node tests of the modules (tests/wikiheinz/) and browser tests of the IndexedDB layer (no request leaves the device)."""
-import gzip, json, os, shutil, subprocess, sys, tempfile, unittest, zipfile
+import gzip, importlib.util, io, contextlib, json, os, struct, shutil, subprocess, sys, tempfile, unittest, zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from helpers import Server
 from playwright.sync_api import sync_playwright
+from test_pages import FakeOllama
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NODE = shutil.which("node")
@@ -90,6 +91,27 @@ def weg(t, z):
 
 
 LINES = [art("Sokrates", "Sokrates war ein antiker Philosoph aus Athen."), weg("Socrates", "Sokrates"), art("Köln", "Köln ist eine Stadt am Rhein."), art("Platon", "Platon war ein Schüler des Sokrates.")]
+
+
+class Modell:
+    """Simulated Ollama: /api/chat answers the search-term call with JSON and the answer call with text; records every body."""
+    def __init__(self, page, begriffe='{"begriffe":["Sokrates"]}', antwort="Sokrates war ein Philosoph aus Athen [1].", fail_answer=False):
+        self.bodies, self.begriffe, self.antwort, self.fail_answer = [], begriffe, antwort, fail_answer
+        self.fake = FakeOllama(page)
+        page.route("**/localhost:11434/api/chat", self.chat)
+
+    def chat(self, route):
+        body = json.loads(route.request.post_data)
+        if (body.get("options") or {}).get("num_predict") == 1:
+            return route.fallback()
+        self.bodies.append(body)
+        sysm = [m for m in body["messages"] if m["role"] == "system"]
+        suche = bool(sysm) and "search terms" in sysm[0]["content"]
+        if not suche and self.fail_answer:
+            return route.fulfill(status=500, body="boom")
+        text = self.begriffe if suche else self.antwort
+        lines = [json.dumps({"message": {"role": "assistant", "content": text}, "done": False}), json.dumps({"done": True, "eval_count": 5})]
+        return route.fulfill(status=200, content_type="application/x-ndjson", body="\n".join(lines) + "\n")
 
 
 class WikiUiTests(unittest.TestCase):
@@ -257,12 +279,160 @@ class WikiUiTests(unittest.TestCase):
             finally:
                 ctx.close()
 
+    def open_asking(self, **kw):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        page = ctx.new_page()
+        self.outside = []
+        page.on("request", lambda r: self.outside.append(r.url) if not (r.url.startswith(self.server.base) or "localhost:11434" in r.url or r.url.startswith("blob:") or r.url.startswith("data:")) else None)
+        be = Modell(page, **kw)
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({lang: 'en'}))")
+        page.goto(self.server.base + URL)
+        page.wait_for_function("window.__wikiReady === true")
+        return ctx, page, be
+
+    def test_question_answers_from_excerpts_with_sources_and_nothing_leaves_the_device(self):
+        ctx, page, be = self.open_asking()
+        try:
+            self.importieren(page)
+            page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Wer war Sokrates?"); page.click("#b-ask")
+            page.wait_for_selector("#antwort:not([hidden])")
+            self.assertIn("Philosoph aus Athen", page.inner_text("#ant-text"))
+            self.assertEqual(page.locator("#ant-quellen .wh-ex").count(), 1)
+            self.assertIn("CC BY-SA 4.0", page.text_content("#ant-quellen"))
+            self.assertIn("search terms from the model", page.inner_text("#ant-fact"))
+            self.assertEqual(len(be.bodies), 2)
+            ants = be.bodies[1]
+            self.assertIn("ONLY the numbered excerpts", ants["messages"][0]["content"])
+            self.assertIn("[1] Sokrates\nSokrates war ein antiker Philosoph aus Athen.", ants["messages"][1]["content"])
+            self.assertEqual(be.bodies[0]["format"]["properties"]["begriffe"]["maxItems"], 4)
+            self.assertEqual(be.bodies[0]["options"]["temperature"], 0)
+            self.assertEqual(ants["options"]["num_predict"], 300)
+            self.assertEqual(self.outside, [])
+        finally:
+            ctx.close()
+
+    def test_nothing_found_means_not_found_without_asking_the_model_for_an_answer(self):
+        ctx, page, be = self.open_asking(begriffe='{"begriffe":["Zaphod Beeblebrox"]}')
+        try:
+            self.importieren(page)
+            page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Wer ist Zaphod Beeblebrox?"); page.click("#b-ask")
+            page.wait_for_selector("#antwort:not([hidden])")
+            self.assertIn("Not found in your sources", page.inner_text("#ant-text"))
+            self.assertEqual(len(be.bodies), 1, "only the search-term call, no answer call")
+            self.assertEqual(page.locator("#ant-quellen .wh-ex").count(), 0)
+        finally:
+            ctx.close()
+
+    def test_model_says_not_found_and_bad_search_terms_fall_back_to_the_words_of_the_question(self):
+        ctx, page, be = self.open_asking(begriffe="keine Ahnung", antwort="NOT_FOUND")
+        try:
+            self.importieren(page)
+            page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Wie alt wurde Sokrates?"); page.click("#b-ask")
+            page.wait_for_selector("#antwort:not([hidden])")
+            self.assertIn("Not found in your sources", page.inner_text("#ant-text"))
+            self.assertIn("sokrates", page.inner_text("#ant-text"), "the fallback words appear in the note")
+        finally:
+            ctx.close()
+
+    def test_answer_without_numbers_is_flagged_and_my_wiki_is_searched_too(self):
+        ctx, page, be = self.open_asking(begriffe='{"begriffe":["Notiz"]}', antwort="Das steht in der Notiz.")
+        try:
+            page.click("#tabs [data-tab=wiki]"); page.click("#b-neu"); page.fill("#e-titel", "Notiz"); page.fill("#e-text", "Mein Gedanke."); page.click("#b-save")
+            page.wait_for_function("document.querySelectorAll('#seiten .wh-hit').length === 1")
+            page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Was steht in der Notiz?"); page.click("#b-ask")
+            page.wait_for_selector("#antwort:not([hidden])")
+            self.assertIn("no excerpt numbers", page.inner_text("#ant-hinweis"))
+            self.assertIn("Mein Wiki", page.text_content("#ant-quellen"))
+            self.assertEqual(page.locator("#ant-quellen a[href^='https']").count(), 0, "no outside link for my own pages")
+            page.click("#ant-quellen summary"); page.click("#ant-quellen a[data-q]")
+            page.wait_for_function("document.querySelector('#v-art') && !document.querySelector('#v-art').hidden && document.querySelector('#a-titel').textContent === 'Notiz'")
+        finally:
+            ctx.close()
+
+    def test_engine_error_is_shown_and_online_engines_are_blocked_without_the_switch(self):
+        ctx, page, be = self.open_asking(fail_answer=True)
+        try:
+            self.importieren(page)
+            page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Wer war Sokrates?"); page.click("#b-ask")
+            page.wait_for_function("document.querySelector('#msg').textContent.includes('Stopped')")
+            self.assertTrue(page.is_visible("#b-ask"))
+            page.fill("#f-frage", ""); page.click("#b-ask")
+            self.assertIn("Type a question", page.inner_text("#msg"))
+            page.click("#params summary")
+            opts = page.eval_on_selector_all("#provider option", "els => els.map(e => e.value)")
+            self.assertEqual(opts, ["ollama", "litertlm"] if "litertlm" in opts else opts)
+            self.assertNotIn("openrouter", opts, "online engines are hidden while 'Allow online' is off")
+        finally:
+            ctx.close()
+
     def test_zip_file_is_valid_for_python(self):
         script = "import {zip} from './tools/wikiheinz/mod/zip.js'; import {writeFileSync} from 'node:fs'; writeFileSync(process.argv[1], zip([{name:'Äpfel.md', text:'Größe'}]));"
         out = os.path.join(tempfile.mkdtemp(), "t.zip")
         r = subprocess.run([NODE, "--input-type=module", "-e", script, out], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         z = zipfile.ZipFile(out); self.assertIsNone(z.testzip()); self.assertEqual(z.read("Äpfel.md").decode(), "Größe")
+
+
+def baue_zim(pfad, eintraege):
+    """Minimal ZIM (unkomprimierte Cluster), eintraege = [(url, titel, html | ('->', url))], sortiert nach url. Nur zum Testen von zim_roh.py."""
+    eintraege = sorted(eintraege, key=lambda e: e[0])
+    mime = b"text/html\0\0"
+    idx = {e[0]: i for i, e in enumerate(eintraege)}
+    blobs = [e[2].encode() for e in eintraege if not isinstance(e[2], tuple)]
+    cluster = struct.pack("<B", 1)
+    offs, pos = [], (len(blobs) + 1) * 4
+    for b in blobs:
+        offs.append(pos); pos += len(b)
+    offs.append(pos)
+    cluster += b"".join(struct.pack("<I", o) for o in offs) + b"".join(blobs)
+    dirents, blob_nr = [], 0
+    for url, titel, inhalt in eintraege:
+        if isinstance(inhalt, tuple):
+            d = struct.pack("<HBcII", 0xFFFF, 0, b"C", 0, idx[inhalt[1]])
+        else:
+            d = struct.pack("<HBcIII", 0, 0, b"C", 0, 0, blob_nr); blob_nr += 1
+        dirents.append(d + url.encode() + b"\0" + titel.encode() + b"\0")
+    kopf_len = 80
+    mime_pos = kopf_len; url_ptr = mime_pos + len(mime); title_ptr = url_ptr + 8 * len(eintraege)
+    cl_ptr = title_ptr + 4 * len(eintraege); dir_pos = cl_ptr + 8
+    ptrs, p = [], dir_pos
+    for d in dirents:
+        ptrs.append(p); p += len(d)
+    cluster_pos = p; checksum_pos = cluster_pos + len(cluster)
+    kopf = struct.pack("<IHH16sIIQQQQII", 72173914, 6, 1, b"\0" * 16, len(eintraege), 1, url_ptr, title_ptr, cl_ptr, mime_pos, 0, 0xFFFFFFFF)
+    kopf += struct.pack("<Q", checksum_pos); kopf = kopf.ljust(kopf_len, b"\0")
+    data = kopf + mime + b"".join(struct.pack("<Q", x) for x in ptrs) + b"".join(struct.pack("<I", i) for i in range(len(eintraege))) + struct.pack("<Q", cluster_pos)
+    data += b"".join(dirents) + cluster + b"\0" * 16
+    with open(pfad, "wb") as f:
+        f.write(data)
+
+
+class ZimRohTests(unittest.TestCase):
+    def test_roh_script_finds_articles_follows_redirects_and_reports_infobox(self):
+        spec = importlib.util.spec_from_file_location("zim_roh", os.path.join(ROOT, "tools", "wikiheinz", "skripte", "zim_roh.py"))
+        z = importlib.util.module_from_spec(spec); spec.loader.exec_module(z)
+        mit = "<html><body><table class='infobox'><tr><td>Geboren 470 v. Chr.</td></tr></table><p>Sokrates war Philosoph.</p></body></html>"
+        ohne = "<html><body><p>Koeln ist eine Stadt.</p></body></html>"
+        with tempfile.TemporaryDirectory() as d:
+            pfad = os.path.join(d, "t.zim")
+            baue_zim(pfad, [("Sokrates", "Sokrates", mit), ("Socrates", "Socrates", ("->", "Sokrates")), ("Koeln", "Köln", ohne), ("Zebra", "Zebra", ohne)])
+            leser = z.ZimLeser(pfad)
+            titel, html = z.finde(leser, "Socrates")
+            self.assertEqual(titel, "Sokrates"); self.assertIn(b"Geboren 470", html)
+            self.assertEqual(z.finde(leser, "Zebra")[0], "Zebra"); self.assertEqual(z.finde(leser, "Nichts"), (None, None))
+            self.assertEqual(z.untersuche(html)["tabellen"], 1); self.assertGreaterEqual(z.untersuche(html)["infobox"], 1)
+            self.assertEqual(z.untersuche(ohne.encode())["infobox"], 0)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                z.main([pfad, "Sokrates", "Koeln", "Fehlt", "--aus", os.path.join(d, "roh")])
+            text = out.getvalue()
+            self.assertIn("1 Tabellen", text); self.assertIn("nicht gefunden", text)
+            self.assertTrue(os.path.exists(os.path.join(d, "roh", "Sokrates.html")))
 
 
 if __name__ == "__main__":

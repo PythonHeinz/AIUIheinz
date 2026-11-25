@@ -25,4 +25,15 @@
 .wh-src b { display: block; font-weight: 600; overflow-wrap: anywhere; }
 .wh-src small { display: block; color: var(--sub); font-size: .78rem; margin-top: 2px; overflow-wrap: anywhere; }
 .wh-src .wh-row { margin: 8px 0 0; }
+.wh-ask { min-height: 90px; height: 110px; font-family: inherit; font-size: .95rem; }
+.wh-answer { margin-top: 10px; }
+.wh-answer .wh-text { margin-bottom: 8px; }
+.wh-det { margin-top: 14px; }
+.wh-det summary { cursor: pointer; font-size: .86rem; color: var(--txt); min-height: 32px; display: flex; align-items: center; }
+.wh-ex { padding: 8px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--edge); font-size: .86rem; }
+.wh-ex summary { cursor: pointer; font-family: var(--serif); font-weight: 600; overflow-wrap: anywhere; }
+.wh-ex.zit { border-color: var(--acc); }
+.wh-ex p { margin: 6px 0 0; font-family: var(--serif); line-height: 1.5; overflow-wrap: anywhere; }
+.wh-ex small { display: block; margin-top: 6px; color: var(--sub); overflow-wrap: anywhere; }
+.wh-ex a { color: var(--sub); }
 .wh [hidden] { display: none !important; }   /* .pill, .notice … set display and would override the hidden attribute */

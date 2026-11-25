@@ -2,7 +2,7 @@
 export const D = {
     en: {
         sub: 'wikiheinz', title: 'WikiHeinz',
-        tabBrowse: 'Browse', tabWiki: 'My wiki', tabSources: 'Sources',
+        tabBrowse: 'Browse', tabAsk: 'Ask', tabWiki: 'My wiki', tabSources: 'Sources',
         search: 'Search', searchPh: 'Search a title …', back: 'Back', edit: 'Edit',
         none: 'No sources yet. Import a Wikipedia file under “Sources” or write your first page under “My wiki”.',
         noHit: 'Nothing found for “{q}”.', hits: '{n} hits', fulltext: 'in text', redirectFrom: 'Redirect from “{v}”', mine: 'My wiki',
@@ -20,11 +20,21 @@ export const D = {
         exists: 'This source is already imported. Delete it first to import it again.', notAFile: 'This does not look like an extract file (jsonl with “word” and “senses”).',
         entries: '{n} entries', complete: 'complete', incomplete: 'incomplete', readOnly: 'read only', writable: 'writable', license: 'License: {l}', stand: 'as of {s}',
         delete: 'Delete source', deleting: 'Deleting … {n} of {m}', delDone: 'Source deleted.', confirmDel: 'Delete “{n}” from this device? Tap again.',
+        askLabel: 'Your question', askPh: 'Ask in your own words, e.g. Who was Socrates? …', ask: 'Ask', params: 'Parameters', engine: 'Engine', model: 'Model', temp: 'Temperature', maxTok: 'Answer limit (tokens)', scope: 'Look in',
+        modelHelp: 'Default: Qwen 2.5 3B. The list comes from the engine.', modelNone: 'No model list. Is the engine running?', scopeAll: 'All sources',
+        ctxInfo: 'Threads and context come from the shared runtime of this device and are not set here: {rt}', ctxNone: 'not set (engine default)',
+        askHelp: 'The model only turns your question into search terms and then reads the excerpts found. Searching and picking is done by the app. The answer comes only from the excerpts; if they do not contain it, you get “not found”.',
+        stSuche: 'searching …', stLese: 'reading …', stAntworte: 'answering …', noQuestion: 'Type a question first.', noModel: 'Choose a model first.',
+        notFoundAnswer: 'Not found in your sources. Nothing was answered from the model’s own memory. Searched for: {b}.', usedExcerpts: 'Excerpts used',
+        noCite: 'The answer carries no excerpt numbers. Check it against the excerpts below.', fact: '{engine} · {model} · search terms from {von}: {b}', vonModell: 'the model', vonCode: 'the app (fallback)',
+        cited: 'cited', offline: 'The engine is not reachable. Is it running?', modelNotFound: 'Model or address not found: {m}', blocked: 'Online is switched off.', failed: 'Stopped: {m}', aborted: 'Cancelled.',
+        onlineOff: 'This engine is online and “Allow online” is off. Switch it on in the dashboard menu, or pick a local engine.', onlineWarn: 'Online engine: your question and the excerpts are sent to {name}.',
+        onlineAsk: 'Send the question and the excerpts to {name}?', onlineYes: 'Yes, send', excerptOf: 'Excerpt',
         storeMem: 'Storage is not available; everything stays only while this page is open.', usage: 'Storage used by this site: {u} of {q}.', persisted: 'Protected from automatic clean-up.', notPersisted: 'Not protected: the browser may clear the data when space is short.'
     },
     de: {
         sub: 'wikiheinz', title: 'WikiHeinz',
-        tabBrowse: 'Stöbern', tabWiki: 'Mein Wiki', tabSources: 'Quellen',
+        tabBrowse: 'Stöbern', tabAsk: 'Fragen', tabWiki: 'Mein Wiki', tabSources: 'Quellen',
         search: 'Suche', searchPh: 'Titel suchen …', back: 'Zurück', edit: 'Bearbeiten',
         none: 'Noch keine Quellen. Importiere unter „Quellen“ eine Wikipedia-Datei oder schreibe unter „Mein Wiki“ deine erste Seite.',
         noHit: 'Nichts gefunden für „{q}“.', hits: '{n} Treffer', fulltext: 'im Text', redirectFrom: 'Weiterleitung von „{v}“', mine: 'Mein Wiki',
@@ -42,6 +52,16 @@ export const D = {
         exists: 'Diese Quelle ist schon importiert. Erst löschen, dann neu importieren.', notAFile: 'Das sieht nicht nach einer Auszugsdatei aus (jsonl mit „word“ und „senses“).',
         entries: '{n} Einträge', complete: 'vollständig', incomplete: 'unvollständig', readOnly: 'nur lesen', writable: 'beschreibbar', license: 'Lizenz: {l}', stand: 'Stand {s}',
         delete: 'Quelle löschen', deleting: 'Löschen … {n} von {m}', delDone: 'Quelle gelöscht.', confirmDel: '„{n}“ von diesem Gerät löschen? Nochmal tippen.',
+        askLabel: 'Deine Frage', askPh: 'In eigenen Worten fragen, z. B. Wer war Sokrates? …', ask: 'Fragen', params: 'Parameter', engine: 'Engine', model: 'Modell', temp: 'Temperatur', maxTok: 'Antwortgrenze (Token)', scope: 'Suchen in',
+        modelHelp: 'Vorgabe: Qwen 2.5 3B. Die Liste kommt von der Engine.', modelNone: 'Keine Modellliste. Läuft die Engine?', scopeAll: 'Alle Quellen',
+        ctxInfo: 'Threads und Kontext kommen aus der gemeinsamen Laufzeit dieses Geräts und werden hier nicht gesetzt: {rt}', ctxNone: 'nicht gesetzt (Vorgabe der Engine)',
+        askHelp: 'Das Modell übersetzt deine Frage nur in Suchbegriffe und liest dann die gefundenen Auszüge. Suchen und Auswählen macht die App. Die Antwort kommt nur aus den Auszügen; stehen sie dort nicht, bekommst du „nicht gefunden“.',
+        stSuche: 'suche …', stLese: 'lese …', stAntworte: 'antworte …', noQuestion: 'Erst eine Frage eintippen.', noModel: 'Erst ein Modell wählen.',
+        notFoundAnswer: 'In deinen Quellen nicht gefunden. Es wurde nichts aus dem Gedächtnis des Modells beantwortet. Gesucht nach: {b}.', usedExcerpts: 'Verwendete Auszüge',
+        noCite: 'Die Antwort nennt keine Auszugsnummern. Prüfe sie an den Auszügen unten.', fact: '{engine} · {model} · Suchbegriffe vom {von}: {b}', vonModell: 'Modell', vonCode: 'Programm (Rückfall)',
+        cited: 'zitiert', offline: 'Die Engine ist nicht erreichbar. Läuft sie?', modelNotFound: 'Modell oder Adresse nicht gefunden: {m}', blocked: 'Online ist ausgeschaltet.', failed: 'Abgebrochen: {m}', aborted: 'Abgebrochen.',
+        onlineOff: 'Diese Engine ist online und „Online erlauben“ ist aus. Im Dashboard-Menü einschalten oder eine lokale Engine wählen.', onlineWarn: 'Online-Engine: Frage und Auszüge gehen an {name}.',
+        onlineAsk: 'Frage und Auszüge an {name} senden?', onlineYes: 'Ja, senden', excerptOf: 'Auszug',
         storeMem: 'Speicher nicht verfügbar; alles bleibt nur, solange diese Seite offen ist.', usage: 'Speicher dieser Seite: {u} von {q}.', persisted: 'Vor automatischem Aufräumen geschützt.', notPersisted: 'Nicht geschützt: Der Browser kann die Daten bei Platzmangel löschen.'
     }
 };

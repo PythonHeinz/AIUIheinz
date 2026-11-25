@@ -6,6 +6,7 @@ import { oeffne } from '../mod/db.js';
 import { initStoebern } from './stoebern.js';
 import { initWiki } from './wiki.js';
 import { initQuellen } from './quellen.js';
+import { initFragen } from './fragen.js';
 
 function applyI18n() {
     document.documentElement.lang = Heinz.lang;
@@ -16,7 +17,8 @@ function applyI18n() {
 function tab(name) {
     S.tab = name;
     for (const b of document.querySelectorAll('#tabs button')) b.classList.toggle('on', b.dataset.tab === name);
-    for (const id of ['stoebern', 'wiki', 'quellen']) $('p-' + id).hidden = id !== name;
+    for (const id of ['stoebern', 'fragen', 'wiki', 'quellen']) $('p-' + id).hidden = id !== name;
+    emit('tabwechsel', name);
 }
 
 (async function init() {
@@ -27,7 +29,7 @@ function tab(name) {
     on('msg', msg); on('tab', tab);
     document.getElementById('tabs').addEventListener('click', (ev) => { const b = ev.target.closest('button[data-tab]'); if (b) tab(b.dataset.tab); });
     await ladeQuellen();
-    initStoebern(); initWiki(); initQuellen();
+    initStoebern(); initFragen(); initWiki(); initQuellen();
     if (S.sp.info().art === 'memory') msg(t('storeMem'), 'warn');
     Heinz.onLang(() => { applyI18n(); emit('lang'); });
     window.__wikiReady = true;
