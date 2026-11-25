@@ -382,3 +382,8 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Im Buch einen Namen oder Begriff markieren, „Wörterbuch“: unter den Wörterbuch-Einträgen erscheint der Wikipedia-Kurztext mit Link. Gleiche Suche im Flugmodus: kommt aus dem Zwischenspeicher („auf dem Gerät gemerkt“).
 3. Zu beobachten: Die Suche nimmt den ersten Treffer der Wikipedia-Suche; bei ganz gewöhnlichen Wörtern kann das ein unpassender Artikel sein (Titel steht darüber).
 
+### Y19: Großes englisches Wörterbuch (PC-Skript)
+1. Am PC: `python tools/docheinz/skripte/filter_wiktionary.py <große kaikki-Datei> englisch.jsonl.gz` (Datei danach aufs Handy kopieren).
+2. docHeinz, Bibliothek, Wörterbuch: `englisch.jsonl.gz` importieren und ggf. umbenennen („Wörterbuch Englisch“).
+3. Englische Wörter im Buch markieren: Eintrag mit englischer Bedeutung plus Zeile „DE: …“. Seltene Wörter sollten jetzt gefunden werden. Bitte Dateigröße, Zeilenzahl und Importdauer notieren.
+
