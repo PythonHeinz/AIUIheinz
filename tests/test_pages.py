@@ -2774,7 +2774,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(ids, ["chat", "dashboard", "vitals"])
         page.click("[data-area=tools]")
         ids = page.eval_on_selector_all("#main a.app[data-tool]", "els => els.map(e => e.dataset.tool)")
-        self.assertEqual(set(ids), {"convert2", "docheinz", "sheet", "filter", "scan", "studio"})
+        self.assertEqual(set(ids), {"convert2", "docheinz", "wikiheinz", "sheet", "filter", "scan", "studio"})
         page.click("[data-area=setup]")
         ids = page.eval_on_selector_all("#main a.row[data-tool]", "els => els.map(e => e.dataset.tool)")
         self.assertEqual(ids[:3], ["setup", "configs", "models"])
