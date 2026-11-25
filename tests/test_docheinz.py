@@ -496,7 +496,7 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_selector("#reader:not([hidden])")
         self.select_text(p, "Häuser")                                           # Beugung: findet „Haus“ über die Grundform
         p.click("#r-sel [data-sel=dict]")
-        p.wait_for_function("() => document.querySelectorAll('#rs-body .dh-dd').length === 2")
+        p.wait_for_function("() => /auch: Familie/.test(document.getElementById('rs-body').innerText)")
         txt = p.inner_text("#rs-body")
         self.assertIn("Gebäude zum Wohnen", txt); self.assertIn("auch: Familie", txt)
         self.assertEqual(p.external, [])
