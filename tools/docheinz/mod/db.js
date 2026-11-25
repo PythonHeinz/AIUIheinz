@@ -2,7 +2,7 @@
  * Stores: books (keyPath id: Metadaten, Lesestand), files (keyPath id: { id, blob } die Buchdatei) und texts (keyPath id: { id, key, chapters } Kapiteltexte für die Volltextsuche, ab Version 2). lib/store.js bleibt unberührt.
  *   openDb(name?) -> Promise<Db>; wirft Error('idb'), wenn IndexedDB fehlt oder gesperrt ist
  *   Db: put(record, blob), list(), get(id), file(id) -> Blob|null, update(id, patch) -> record|null, remove(id), clear(), close()
- *       dictList() -> [{ id, name, count }], dictCreate(meta), dictRename(id, name), dictAdd(id, [[schlüssel, text, original], …]), dictFind([schlüssel]) -> [{ dict, w, d, o }], dictRemove(id) (Wörterbücher, ab Version 3)
+ *       dictList() -> [{ id, name, count }], dictCreate(meta), dictRename(id, name), dictAdd(id, [[schlüssel, text, original], …]), dictFind([schlüssel]) -> [{ dict, w, d, o }], dictRemove(id, onProgress) (Wörterbücher, ab Version 3)
  *       getText(id) -> { id, key, chapters } | null, putText(id, key, chapters)
  *   storage() -> Promise<{ usage, quota, persisted }>   (Werte null, wo der Browser sie nicht nennt)
  *   persist() -> Promise<boolean>
@@ -90,12 +90,17 @@ function make(db) {
             for (const k of keys) { const r = await wrap(ix.getAll(k, 20)); r.forEach(x => out.push(x)); }
             return out;
         },
-        async dictRemove(id) {
-            const tx = db.transaction(['dict', 'dictmeta'], 'readwrite'); const fin = done(tx);
-            tx.objectStore('dictmeta').delete(id);
-            const cur = tx.objectStore('dict').index('dict').openKeyCursor(IDBKeyRange.only(id)), st = tx.objectStore('dict');
-            cur.onsuccess = () => { const c = cur.result; if (c) { st.delete(c.primaryKey); c.continue(); } };
-            await fin;
+        async dictRemove(id, onProgress) {                              // in Stücken von 20000 Einträgen: große Wörterbücher (1 Mio.+) sprengen sonst eine einzige Transaktion
+            let n = 0;
+            for (;;) {
+                const tx = db.transaction('dict', 'readwrite'), st = tx.objectStore('dict'), fin = done(tx);
+                const keys = await wrap(st.index('dict').getAllKeys(IDBKeyRange.only(id), 20000));
+                keys.forEach(k => st.delete(k));
+                await fin;
+                n += keys.length; if (onProgress) onProgress(n);
+                if (keys.length < 20000) break;
+            }
+            const tx = db.transaction('dictmeta', 'readwrite'); tx.objectStore('dictmeta').delete(id); await done(tx);   // Eintrag der Liste zuletzt: bei Abbruch bleibt er sichtbar und lässt sich erneut löschen
         },
         async remove(id) {
             const tx = db.transaction(['books', 'files', 'texts'], 'readwrite');

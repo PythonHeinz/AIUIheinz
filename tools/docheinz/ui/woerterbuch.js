@@ -139,7 +139,14 @@ export function initDict(env) {
             row.textContent = ''; row.append(inp, ok); inp.focus(); inp.select();
         }
         else if (b.dataset.dc === 'rok') { const v = b.parentElement.querySelector('input').value.trim(); if (v) await D.env.db().dictRename(b.dataset.id, v); render(); }
-        else if (b.dataset.dc === 'del') { await D.env.db().dictRemove(b.dataset.id); render(); }
+        else if (b.dataset.dc === 'del') {
+            if (D.busy) return;
+            const t = D.env.t; let last = 0;
+            D.busy = t('d_deleting', { n: 0 }); render();
+            try { await D.env.db().dictRemove(b.dataset.id, (n) => { if (n - last >= 20000) { last = n; D.busy = t('d_deleting', { n }); render(); } }); }
+            catch { D.env.say(t('d_delFail'), 'err'); }
+            D.busy = ''; render();
+        }
     });
     $('dict').addEventListener('change', async (e) => {
         if (e.target.id !== 'file-dict') return;

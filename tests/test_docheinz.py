@@ -506,6 +506,19 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => /Gewässer/.test(document.getElementById('rs-body').innerText)")
         self.assertEqual(p.errors, [])
 
+    def test_dictionary_delete_removes_large_dictionary_in_chunks(self):
+        p = self.open(lang="de")
+        lines = "".join(f"wort{i}\terklaerung {i}\n" for i in range(45000)).encode()
+        p.click("#b-dict"); p.wait_for_selector("#dict:not([hidden])")
+        p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)")
+        p.set_input_files("#file-dict", {"name": "gross.tsv", "mimeType": "text/tab-separated-values", "buffer": lines})
+        p.wait_for_function("() => /45000 Einträge/.test(document.getElementById('dict').innerText)", timeout=60000)
+        p.click("#dict [data-dc=del]")
+        p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)", timeout=60000)
+        n = p.evaluate("""() => new Promise(r => { const q = indexedDB.open('docheinz'); q.onsuccess = () => { const c = q.result.transaction('dict').objectStore('dict').count(); c.onsuccess = () => r(c.result); }; })""")
+        self.assertEqual(n, 0)
+        self.assertEqual(p.errors, [])
+
     def test_dictionary_reads_gzip_jsonl_and_keeps_only_german_and_english(self):
         import gzip, json
         p = self.open(lang="de")
