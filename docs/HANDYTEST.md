@@ -388,7 +388,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. Englische Wörter im Buch markieren: Eintrag mit englischer Bedeutung plus Zeile „DE: …“. Seltene Wörter sollten jetzt gefunden werden. Bitte Dateigröße, Zeilenzahl und Importdauer notieren.
 
 ### Y20: Wikipedia offline (PC-Skript, nur mit Mini-ZIM simuliert getestet)
-1. Am PC: `pip install libzim`, ZIM „wikipedia_de_all_mini“ (oder „en“) von Kiwix laden, dann `python tools/docheinz/skripte/zim_zu_woerterbuch.py wikipedia_de_all_mini_<Datum>.zim wikipedia-de.jsonl.gz --lang de`. Zum Probieren zuerst mit `--limit 100000`.
+1. Am PC `pip install libzim`; in Termux `pip install zstandard` (der eigene Leser wird dann automatisch genommen, bei Fehler vorher `pkg install clang`). ZIM „wikipedia_de_all_mini“ (oder „en“) von Kiwix laden, dann `python tools/docheinz/skripte/zim_zu_woerterbuch.py wikipedia_de_all_mini_<Datum>.zim wikipedia-de.jsonl.gz --lang de`. Zum Probieren zuerst mit `--limit 100000`.
 2. Datei aufs Handy, in docHeinz unter Bibliothek, Wörterbuch importieren (Name: „Wikipedia (offline, CC BY-SA)“).
 3. Begriff markieren, „Wörterbuch“: Einleitung des Artikels; Synonyme (Weiterleitungen) zeigen den Artikel des Haupteintrags. Bitte Dateigröße, Zeilenzahl, Laufzeit und Importdauer notieren.
 
