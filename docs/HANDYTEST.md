@@ -403,3 +403,11 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Über der Liste erscheint die Leiste mit den Schlagwörtern und Anzahl; antippen zeigt nur diese Bücher, „Alle“ hebt es auf. Die Suche findet Schlagwörter ebenfalls.
 3. Sortierung „Autor“: Gruppenköpfe je Autor, Bücher ohne Autor ganz unten unter „Unbekannter Autor“.
 4. App neu laden: Schlagwörter und Lesezeit bleiben erhalten.
+
+### Y23: Notizen und Markierungen über alle Bücher (nur simuliert getestet)
+1. Im Buch Text markieren, Notiz tippen: unter dem Notizfeld das Feld für Schlagwörter (Komma getrennt); bereits benutzte erscheinen als Vorschlag. Auch bei „Notiz zu dieser Seite“.
+2. In der Markierungsliste des Buchs stehen die Schlagwörter unter dem Eintrag.
+3. In der Bibliothek „Notizen“ antippen: alle Einträge aller Bücher. Filter: Farbe, Schlagwort, „Nur mit Notiz“, Suche. Gruppieren nach Buch, Schlagwort oder Farbe.
+4. Eintrag antippen springt im Buch an die Stelle; „#“ ändert die Schlagwörter, Mülleimer löscht.
+5. „Als Markdown kopieren“ / „exportieren“ gibt nur die gefilterte Auswahl aus, z. B. ein Schlagwort aus mehreren Büchern.
+

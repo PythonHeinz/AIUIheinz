@@ -351,3 +351,17 @@ body.dh-drop .dh-shelf { outline: 2px dashed var(--acc, var(--pri)); outline-off
 .dh-group:first-child { border-top: 0; }
 .dh-book.exp.tg { gap: 8px; }
 .dh-tagbar[hidden], .dh-stat[hidden], .dh-resume[hidden] { display: none; }
+
+/* ---------- Notizen-Übersicht ---------- */
+.dh-notes[hidden] { display: none; }
+.dh-notes { display: flex; flex-direction: column; gap: 8px; }
+.dh-ni { position: relative; display: flex; flex-wrap: wrap; align-items: stretch; border-top: 1px solid var(--line); }
+.dh-ni .dh-mq { flex: 1; min-width: 0; display: block; text-align: left; background: none; border: 0; color: inherit; font: inherit; padding: 10px 4px; cursor: pointer; }
+.dh-ni .dh-mq small { display: block; margin-top: 4px; opacity: .7; }
+.dh-ni .dh-mq .n { display: block; margin-top: 6px; white-space: pre-wrap; opacity: .85; }
+.dh-nside { display: flex; flex-direction: column; justify-content: center; }
+.dh-nedit { flex: 1 0 100%; display: flex; flex-direction: column; gap: 8px; padding: 6px 0 10px; }
+.dh-ntc::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.dh-ntc.c0::before { background: #e0b01c; } .dh-ntc.c1::before { background: #4aaa6e; } .dh-ntc.c2::before { background: #5a96e6; } .dh-ntc.c3::before { background: #dc6ea0; }
+.dh-tgf { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.dh-mq .dh-tags { margin-top: 4px; }

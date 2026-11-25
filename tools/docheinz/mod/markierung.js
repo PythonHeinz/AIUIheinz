@@ -1,6 +1,7 @@
 /* tools/docheinz/mod/markierung.js – Markierungen und Notizen eines Buchs (Insel-Modul, reine Funktionen, kein DOM).
  * Eine Markierung hängt am Kapitel (ch) und an Zeichenpositionen im Kapiteltext (start, len; derselbe Text wie in mod/suche.js und beim Anspringen),
  * dazu das Zitat (text). Passt der Text an der Stelle nicht mehr (anderes Kapitelbild), wird das Zitat im Kapitel neu gesucht.
+ *   tags (bis 6, wie Schlagwörter der Bücher) hängen an der Markierung; parseTags kommt aus bibliothek.js
  *   COLORS                       ['y','g','b','p'] (gelb, grün, blau, rosa)
  *   makeMark({ ch, start, len, text, color, note, ai, model, now, id, pn, frac }) -> Markierung
  *       pn = Notiz zur Seite ohne markierten Text (text = Anfang der Seite als Auszug, frac = Lesestand im Kapitel)
@@ -9,7 +10,9 @@
  *   markAt(list, ch, offset) -> Markierung | null   (bei Überlappung die kürzeste)
  *   relocate(chapterText, mark) -> Startposition | -1
  *   sortMarks(list, order?) -> nach Kapitel und Stelle;  toMarkdown(rec, list, chTitle, L) -> Text */
+import { parseTags } from './bibliothek.js';
 export const COLORS = ['y', 'g', 'b', 'p'];
+export const MAX_MARK_TAGS = 6;
 export const MAX_QUOTE = 2000, MAX_NOTE = 4000, MAX_MARKS = 2000;
 const squash = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
 const int = (v, d = 0) => (Number.isFinite(+v) ? Math.max(0, Math.floor(+v)) : d);
@@ -17,9 +20,10 @@ const int = (v, d = 0) => (Number.isFinite(+v) ? Math.max(0, Math.floor(+v)) : d
 let seq = 0;
 const newId = (now) => 'm' + (now || Date.now()).toString(36) + (seq++ % 1296).toString(36);
 
-export function makeMark({ ch, start, len, text, color = 0, note = '', ai = false, model = '', now = Date.now(), id = '', pn = false, frac = 0 } = {}) {
+export function makeMark({ ch, start, len, text, color = 0, note = '', ai = false, model = '', now = Date.now(), id = '', pn = false, frac = 0, tags = [] } = {}) {
     const q = String(text == null ? '' : text);
     const m = { id: id || newId(now), ch: int(ch), start: int(start), len: Math.min(int(len, q.length), MAX_QUOTE), text: q.slice(0, MAX_QUOTE), color: COLORS[color] ? color : 0, note: String(note || '').slice(0, MAX_NOTE), t: now };
+    const tg = parseTags(Array.isArray(tags) ? tags.join(',') : tags).slice(0, MAX_MARK_TAGS); if (tg.length) m.tags = tg;
     if (pn) { const f = Math.max(0, Math.min(1, +frac || 0)); m.pn = true; m.frac = f; m.start = Math.round(f * 100000); m.len = 0; m.text = q.slice(0, 160); }
     if (ai) { m.ai = true; if (model) m.model = String(model).slice(0, 120); }
     return m;
@@ -70,7 +74,7 @@ export function toMarkdown(rec, list, chTitle, L, { bare = false } = {}) {
         if (m.ch !== cur) { cur = m.ch; const t = squash(chTitle ? chTitle(m.ch) : ''); out.push('', '## ' + (t || (L && L.part ? L.part.replace('{n}', m.ch + 1) : String(m.ch + 1)))); }
         const col = L && L.color ? L.color[m.color] : '';
         if (m.pn) { if (m.text) out.push('', '> ' + squash(m.text) + ' …'); out.push('', '**' + ((L && L.pageNote) || 'Page note') + ':** ' + m.note.trim()); continue; }
-        out.push('', m.text.split(/\n+/).map(s => '> ' + squash(s)).filter(s => s !== '> ').join('\n') + (col ? ' *(' + col + ')*' : ''));
+        out.push('', m.text.split(/\n+/).map(s => '> ' + squash(s)).filter(s => s !== '> ').join('\n') + (col || (m.tags || []).length ? ' *(' + [col].concat((m.tags || []).map(x => '#' + x)).filter(Boolean).join(' ') + ')*' : ''));
         if (m.note) out.push('', (m.ai ? '**' + ((L && L.ai) || 'AI') + (m.model ? ' (' + m.model + ')' : '') + ':** ' : '**' + ((L && L.note) || 'Note') + ':** ') + m.note.trim().replace(/\n{3,}/g, '\n\n'));
     }
     return out.join('\n') + '\n';

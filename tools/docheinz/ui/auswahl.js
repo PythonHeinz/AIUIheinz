@@ -11,7 +11,8 @@ import { lookup } from './woerterbuch.js';
 import { shortDef } from '../mod/woerterbuch.js';
 import { wikiOn, wikiLookup } from './wikipedia.js';
 import { sauber } from '../mod/sauber.js';
-import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS } from '../mod/markierung.js';
+import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS, MAX_MARK_TAGS } from '../mod/markierung.js';
+import { parseTags } from '../mod/bibliothek.js';
 
 const MAX_QUERY = 80;
 const AI_KEY = 'heinz_docheinz_ai';
@@ -208,13 +209,27 @@ export function pageNote() {
     const box = $('rs-body');
     if (ex) { const q = document.createElement('blockquote'); q.className = 'dh-nq'; q.textContent = ex + ' …'; box.appendChild(q); }
     const ta = document.createElement('textarea'); ta.id = 'rs-note-t'; ta.className = 'dh-nt'; ta.maxLength = 4000; ta.placeholder = t('n_ph');
+    const tf = tagField([]);
     const go = document.createElement('button'); go.type = 'button'; go.className = 'pill acc'; go.id = 'rs-note-go'; go.textContent = t('n_save');
     go.addEventListener('click', () => {
         const v = ta.value.trim();
-        if (v) { A.marks = addMark(A.marks, makeMark({ ...at, pn: true, text: ex, note: v })); persist(); }
+        if (v) { A.marks = addMark(A.marks, makeMark({ ...at, pn: true, text: ex, note: v, tags: tf.value() })); persist(); }
         closeSheet();
     });
-    box.append(ta, go);
+    box.append(ta, tf.wrap, go);
+}
+// Eingabefeld für Schlagwörter (Komma getrennt) mit Vorschlägen aus allen schon benutzten (env.usedTags)
+function tagField(cur) {
+    const wrap = document.createElement('div'); wrap.className = 'dh-tgf';
+    const inp = document.createElement('input'); inp.id = 'rs-tags'; inp.className = 'inp'; inp.type = 'text'; inp.autocomplete = 'off'; inp.spellcheck = false;
+    inp.placeholder = t('tg_phM'); inp.value = (cur || []).join(', '); wrap.appendChild(inp);
+    const used = (A.env && A.env.usedTags ? A.env.usedTags() : []).filter(x => !(cur || []).some(c => c.toLowerCase() === x.toLowerCase())).slice(0, 10);
+    if (used.length) {
+        const box = document.createElement('div'); box.className = 'dh-chips';
+        used.forEach(x => { const c = document.createElement('button'); c.type = 'button'; c.className = 'pill'; c.textContent = '#' + x; c.addEventListener('click', () => { inp.value = parseTags(inp.value + ',' + x).join(', '); }); box.appendChild(c); });
+        wrap.appendChild(box);
+    }
+    return { wrap, value: () => parseTags(inp.value).slice(0, MAX_MARK_TAGS) };
 }
 const squashTxt = (x) => String(x || '').replace(/\s+/g, ' ').trim();
 function openNote(id) {
@@ -224,12 +239,13 @@ function openNote(id) {
     const box = $('rs-body');
     const q = document.createElement('blockquote'); q.className = 'dh-nq'; q.textContent = m.text.length > 300 ? m.text.slice(0, 300) + ' …' : m.text;
     const ta = document.createElement('textarea'); ta.id = 'rs-note-t'; ta.className = 'dh-nt'; ta.maxLength = 4000; ta.value = m.note; ta.placeholder = t('n_ph');
+    const tf = tagField(m.tags);
     const go = document.createElement('button'); go.type = 'button'; go.className = 'pill acc'; go.id = 'rs-note-go'; go.textContent = t('n_save');
     go.addEventListener('click', () => {
         const v = ta.value.trim();
-        A.marks = updateMark(A.marks, id, { note: v, ai: v === m.note ? m.ai : false }); persist(); closeSheet();
+        A.marks = updateMark(A.marks, id, { note: v, ai: v === m.note ? m.ai : false, tags: tf.value() }); persist(); closeSheet();
     });
-    box.append(q, ta, go);
+    box.append(q, ta, tf.wrap, go);
 }
 // KI-Antwort als Notiz an der markierten Stelle (legt die Markierung an, falls es sie noch nicht gibt)
 function aiToNote(c, text) {
@@ -272,6 +288,7 @@ export function renderMarkList(box, onGo, onNew) {
         const sm = document.createElement('small'); sm.textContent = (m.pn ? t('mk_pn') + ' · ' : '') + (chTitle(m.ch) || t('r_part', { n: m.ch + 1 }));
         b.append(q, sm);
         if (m.note) { const n = document.createElement('span'); n.className = 'n'; n.textContent = (m.ai ? t('mk_ai') + ': ' : '') + m.note; b.appendChild(n); }
+        if ((m.tags || []).length) { const g = document.createElement('small'); g.className = 'dh-tags'; g.textContent = m.tags.map(x => '#' + x).join(' '); b.appendChild(g); }
         b.addEventListener('click', () => onGo(m));
         const x = document.createElement('button'); x.type = 'button'; x.className = 'dh-mx'; x.setAttribute('aria-label', t('mk_del'));
         x.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg>';

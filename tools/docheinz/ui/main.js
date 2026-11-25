@@ -7,6 +7,8 @@ import { makeRecord, signature, filterSort, percent, initial, parseTags, allTags
 import { Clock, addSecs } from '../mod/statistik.js';
 import { initStat, resume as renderResume, renderStat } from './statistik.js';
 import { isReading } from './vorlesen.js';
+import { collect, markTags } from '../mod/sammlung.js';
+import { initNotes, renderNotes } from './notizen.js';
 import { findCover } from '../mod/cover.js';
 import { inkMap, textAxis, gutterAt, rotated, cropped, skewAngle, leveled, binarized, mainColumns, dewarped } from './seite.js';
 import { scaleCover, photoToPage, enhanceForOcr } from './bild.js';
@@ -395,7 +397,7 @@ function render() {
         }
         list.appendChild(bookRow(b));
     });
-    renderTagbar(); renderResume(); renderStat();
+    renderTagbar(); renderResume(); renderStat(); renderNotes();
     $('tools').hidden = state.books.length < 2 && !state.q && !state.tag;
     $('ftbar').hidden = !(state.books.length && state.q.trim().length >= MIN_QUERY);
     $('count').textContent = state.books.length ? (state.books.length === 1 ? t('count_one') : t('count_n', { n: state.books.length })) : '';
@@ -589,6 +591,7 @@ async function openBook(id, jumpTo = null) {
             },
             onProfiles: (list) => { state.profiles = list; HeinzStore.set(K('profiles'), list); },
             marks: rec.marks || [],
+            usedTags: () => markTags(collect(state.books)).map(x => x.tag),
             onMarks: async (list) => { rec.marks = list; try { await state.db.update(id, { marks: list }); } catch { /* Markierungen bleiben im Speicher, bis der Reader schließt */ } },
             onProgress: async ({ ch, frac, pct }) => { Object.assign(rec, { ch, frac, done: pct >= 99 || rec.done && pct >= 95 }); try { await state.db.update(id, { ch, frac, done: rec.done }); } catch { /* Fortschritt ist nicht kritisch */ } },
             onSettings: (p) => { if (p.size) { state.size = p.size; HeinzStore.set(K('size'), p.size); } if (p.theme) { state.theme = p.theme; HeinzStore.set(K('theme'), p.theme); } if (p.font) { state.font = p.font; HeinzStore.set(K('font'), p.font); } if ('gap' in p) { state.gap = p.gap; HeinzStore.set(K('gap'), p.gap ? 1 : 0); } if ('full' in p) { state.full = p.full; HeinzStore.set(K('full'), p.full ? 1 : 0); } if ('btns' in p) { state.btns = p.btns; HeinzStore.set(K('btns'), p.btns ? 1 : 0); } },
@@ -635,6 +638,7 @@ async function start() {
     state.log = HeinzStore.get(K('stats'), {}) || {};
     initDict({ db: () => state.db, t, say: msg });
     initStat({ t, lang: () => Heinz.lang, books: () => state.books, log: () => state.log, open: (id) => openBook(id), cover: (b) => { if (!(b.cover instanceof Blob)) return ''; const u = URL.createObjectURL(b.cover); coverUrls.push(u); return u; } });
+    initNotes({ t, say: msg, books: () => state.books, open: (id, jump) => openBook(id, jump), refresh: () => render(), save: async (id, marks) => { try { await state.db.update(id, { marks }); } catch { msg(t('e_open'), 'err'); } } });
     $('tagbar').addEventListener('click', (e) => { const c = e.target.closest('button[data-tag]'); if (!c) return; state.tag = c.dataset.tag; render(); });
     $('b-set').addEventListener('click', () => { const b = $('setp'); b.hidden = !b.hidden; if (!b.hidden) { $('sw-full').checked = state.full; buildAiChips(t); syncWiki(); } });
     const syncWiki = () => { const ok = wikiAllowed(); $('sw-wiki').checked = ok && wikiOn(); $('sw-wiki').disabled = !ok; $('wiki-hint').hidden = ok; $('wiki-hint').textContent = ok ? '' : t('w_needOnline'); };

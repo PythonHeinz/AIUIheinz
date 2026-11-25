@@ -380,7 +380,7 @@ export async function openReader(rec, src, ctx) {
     $('reader').hidden = false;
     document.body.style.overflow = 'hidden';
     history.pushState({ dh: 1 }, ''); S.pushed = true;
-    initSelection({ marks: ctx.marks, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, frac: () => fracOfPage(S.page, S.pages), isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
+    initSelection({ marks: ctx.marks, usedTags: ctx.usedTags, onMarks: (l) => S.cb.onMarks && S.cb.onMarks(l), ch: () => S.ch, frac: () => fracOfPage(S.page, S.pages), isOpen: () => S.open, rec: () => S.rec, src: () => S.src, t: (k, v) => S.t(k, v), lang: () => S.lang(), jump, pageText });
     initVorlesen({
         body, rec: () => S.rec, lang: () => S.lang(), t: (k, v) => S.t(k, v), isOpen: () => S.open,
         pageInfo: () => ({ page: S.page, step: S.step }),
@@ -401,7 +401,8 @@ export async function openReader(rec, src, ctx) {
     const start = !(rec.ch > 0 || rec.frac > 0);
     await show(rec.ch || 0, '', rec.frac || 0);
     showCover(start);
-    if (ctx.jumpTo) await jump(ctx.jumpTo.ch, ctx.jumpTo.start, ctx.jumpTo.len);          // Treffer der Volltextsuche der Bibliothek
+    if (ctx.jumpTo && ctx.jumpTo.frac != null) { showCover(false); await show(ctx.jumpTo.ch, '', ctx.jumpTo.frac); }          // Seitennotiz aus der Notizen-Übersicht
+    else if (ctx.jumpTo) await jump(ctx.jumpTo.ch, ctx.jumpTo.start, ctx.jumpTo.len);          // Treffer der Volltextsuche der Bibliothek
 }
 
 export function close() {

@@ -216,6 +216,8 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `ui/woerterbuch.js` | Wörterbücher: Import und Verwaltung in der Bibliothek, Nachschlagen für den Leser (IndexedDB `dict`, `dictmeta`). |
 | `mod/wikipedia.js` | Wikipedia-Anfrage (Suche, Einleitung als Klartext) bauen und Antwort lesen (rein). |
 | `mod/statistik.js` | Lesezeit-Uhr, Tagesprotokoll, Restzeit, „Weiterlesen“-Auswahl, Übersicht (rein). |
+| `mod/sammlung.js` | Markierungen und Notizen aller Bücher sammeln, filtern, gruppieren, als Markdown ausgeben (rein). |
+| `ui/notizen.js` | Übersicht „Notizen“ der Bibliothek über alle Bücher. |
 | `ui/statistik.js` | Karte „Weiterlesen“ und Statistik-Panel der Bibliothek. |
 | `ui/wikipedia.js` | Wikipedia-Kurztext online: Schalter, Sperre über „Online erlauben“, Zwischenspeicher der letzten 60 Treffer. |
 | `skripte/filter_wiktionary.py` | PC-Skript: verkleinert den großen Wiktionary-Auszug zu einem Wörterbuch fürs Handy (kein Teil der App). |
