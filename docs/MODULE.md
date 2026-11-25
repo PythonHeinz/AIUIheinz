@@ -217,6 +217,7 @@ Eigene Insel (Entscheidung A, 17.11.2026): Die Formatbausteine `zip.js`, `text.j
 | `mod/wikipedia.js` | Wikipedia-Anfrage (Suche, Einleitung als Klartext) bauen und Antwort lesen (rein). |
 | `ui/wikipedia.js` | Wikipedia-Kurztext online: Schalter, Sperre über „Online erlauben“, Zwischenspeicher der letzten 60 Treffer. |
 | `skripte/filter_wiktionary.py` | PC-Skript: verkleinert den großen Wiktionary-Auszug zu einem Wörterbuch fürs Handy (kein Teil der App). |
+| `skripte/zim_zu_woerterbuch.py` | PC-Skript: macht aus einer Kiwix-Wikipedia (ZIM, mini) ein Nachschlagewerk im Wörterbuch-Importformat (kein Teil der App). |
 | `mod/cloud-ocr.js` | Cloud-Erkennung: Anweisung an das Modell, Nachrichten mit Seitenbild, Antwort säubern, Modell vorwählen (rein). |
 | `ui/cloud.js` | Cloud-Erkennung über `lib/providers.js` (Anbieter google), nur mit „Online erlauben“ und Schlüssel. |
 | `ui/seite.js` | Foto-Seite für OCR: Drehung, Falz bei Doppelseiten, Schräglage, Säuberung (Hintergrund/Schatten). |

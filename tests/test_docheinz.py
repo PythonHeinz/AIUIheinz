@@ -543,6 +543,24 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertIn("Familienname", p.inner_text("#rs-body"))
         self.assertEqual(p.errors, [])
 
+    def test_wikipedia_file_gets_readable_name_and_redirect_works(self):
+        import json
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# Wort\n\nEine Kakerlake lief.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        p.click("#b-dict"); p.wait_for_selector("#dict:not([hidden])")
+        p.wait_for_function("() => /Noch kein Wörterbuch/.test(document.getElementById('dict').innerText)")
+        rows = [{"word": "Kakerlake", "lang_code": "de", "senses": [{"form_of": [{"word": "Küchenschabe"}]}]},
+                {"word": "Küchenschabe", "lang_code": "de", "senses": [{"glosses": ["Eine Gruppe von Schaben in Wohnungen."]}]}]
+        p.set_input_files("#file-dict", {"name": "wikipedia-de.jsonl", "mimeType": "application/json", "buffer": "\n".join(json.dumps(r) for r in rows).encode()})
+        p.wait_for_function("() => /Wikipedia \\(offline/.test(document.getElementById('dict').innerText)")
+        p.click("#dict [data-dc=close]")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Kakerlake")
+        p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Gruppe von Schaben/.test(document.getElementById('rs-body').innerText)")
+        self.assertEqual(p.errors, [])
+
     def test_dictionary_reads_gzip_jsonl_and_keeps_only_german_and_english(self):
         import gzip, json
         p = self.open(lang="de")

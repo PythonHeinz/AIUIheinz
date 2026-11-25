@@ -10,6 +10,7 @@ const BATCH = 4000;
 // Lesbarer Name statt Dateiname: de-extract -> „Deutsches Wörterbuch (Wiktionary)“, simple-extract -> „Englisches Wörterbuch (Simple English)“
 function niceName(file, t, ui) {
     const base = file.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '') || file, m = /^([a-z]{2,6})-extract/i.exec(base);
+    if (/^wikipedia/i.test(base)) return t('d_nameWiki');
     if (!m) return base;
     const c = m[1].toLowerCase();
     if (c === 'de') return t('d_nameDe');
