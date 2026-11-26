@@ -32,6 +32,9 @@
         .top .lang-btn { --acc: #5f6368; --onacc: #fff; }
         .top .lang-btn span.active { background: #5f6368; color: #fff; }
         .top .lang-btn span { width: 27px; height: 26px; min-width: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+        .msg-assistant .src { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .msg-assistant .srcl { align-self: center; color: var(--sub); font-size: .72rem; }
+        .msg-assistant .schip { display: inline-block; max-width: 100%; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--ol); background: var(--card); color: var(--sub); font-size: .72rem; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .chip { position: relative; flex: 1; min-width: 0; height: 44px; border-radius: 14px; background: var(--lcd-bg); border: 1px solid var(--line); padding: 0; display: block; overflow: hidden; cursor: pointer; line-height: 0; color: var(--txt); }
         .chip canvas { display: block; width: 100%; height: 100%; }
         .chip .hid { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -335,6 +338,7 @@
             <small id="think-note"></small>
         </div>
 
+        <div id="wissen-host"></div>
         <div class="prompt" id="prompt-wrap">
             <textarea id="query" rows="1" data-i18n-ph="queryPh" placeholder="What should Heinz do?"></textarea>
             <button class="ibtn xp" type="button" data-click="toggleFull" data-arg="prompt-wrap" data-i18n-title="expandTitle" title="Full screen editor"><svg class="i sm"><use href="lib/icons.svg#i-expand"/></svg></button>
@@ -425,15 +429,7 @@
                     <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" data-change="renderConfigs" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-model" data-click="assignModelConfig"><span id="cfg-model-t" data-i18n="cfgModel">Assign to its model</span></button></div>
                     <small class="help" data-i18n="cfgModelHelp">Assigned to its model, the configuration loads automatically every time that model loads (also after a restart).</small>
-                    <label class="chkrow"><input type="checkbox" id="cfg-wissen" data-change="onWissenToggle"><span data-i18n="cfgWissen">Use knowledge</span></label>
-                    <div id="cfg-wissen-box" hidden>
-                        <small class="help" data-i18n="cfgWissenSrc">Sources</small>
-                        <select class="inp" id="cfg-wissen-src" aria-label="Sources" style="width:100%;margin:4px 0"></select>
-                        <small class="help" data-i18n="cfgWissenTerms">Search terms</small>
-                        <select class="inp" id="cfg-wissen-terms" aria-label="Search terms" style="width:100%;margin:4px 0"><option value="app" data-i18n="cfgWissenApp">App</option><option value="modell" data-i18n="cfgWissenModel">Model</option></select>
-                        <small class="help" data-i18n="cfgWissenTermsHelp">App: the code takes the words of the question (fast). Model: the model first turns the question into article titles (better for other languages, one more model call).</small>
-                    </div>
-                    <small class="help" data-i18n="cfgWissenHelp">The Heinz Chat looks up sourced excerpts before answering. Off by default.</small>
+                    <small class="help" data-i18n="cfgWissenHelp">Knowledge lookup is switched next to the input field.</small>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>
                     <small class="help" data-i18n="cfgUseHelp">The Heinz Chat runs with exactly one configuration of its own, independent of what is loaded here.</small>
                     <small class="help" id="cfg-empty" data-i18n="cfgEmpty">No configuration saved yet.</small>

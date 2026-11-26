@@ -23,6 +23,7 @@ Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundam
 | `lib/core.js` | Thema, Sprache, Kopfzeile, Blätter, Hilfen | klassisches Skript im `<head>` (Kopf-Block), `window.Heinz` |
 | `lib/dashboard/*.js` | Dashboard (`dashboard.html`) | Module; `main.js` ist der Einstieg, `failsafe.js` klassisch |
 | `lib/chat/*.js` | Heinz Chat (`chat.html`) | Module; `main.js` ist der Einstieg |
+| `lib/shared/wissen-schalter.js` | Wissensabfrage zuschaltbar: Zustand `heinz_wissen` (localStorage, Standard aus; Voreinstellung aus dem Feld `wissen` der Konfiguration), Schalterzeile „Wissen ▾“, Zusatz für den Systemtext, Chip-Auswahl; Heinz Chat und Dashboard nutzen sie |
 | `lib/shared/postfach.js` | `HeinzPostfach`: Briefkasten zwischen Werkzeugen (Merkzettel), Ablage in `HeinzStore` (`heinz_postfach`), BroadcastChannel für neue Einträge; importiert nur `../store.js` | Modul (Ordner `lib/shared/`, kennt weder Dashboard noch Chat); Werkzeuge holen es über ihre `base.js` |
 | `lib/wissen/*.js` | Wissensbaustein `HeinzWissen` (Wikipedia aus IndexedDB und ZIM, „Mein Wiki“); Einstieg `index.js`, die übrigen Dateien (`db`, `eigene`, `frage`, `import`, `quelle`, `schluessel`, `speicher`, `suche`, `volltext`, `zip`) sind die reinen Module, die bis 26.11.2026 unter `tools/wikiheinz/mod/` lagen | Module; importieren nur Dateien ihres Ordners (`./name.js`), nie ein Werkzeug, nie `lib/providers.js`; kein Modellaufruf, kein fremdes Netz (Test `tests/test_wissen.py`) |
 | `lib/data/*.json` | Daten (Texte, Modi, Prüfsätze, Fähigkeiten) | Daten, keine Module |
@@ -46,6 +47,7 @@ Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in E
 | `build.js` | Anfrage bauen: Systemprompt, Nachrichten, Optionen, `sysSrc` |
 | `protocol.js` | Texte für „Parameter kopieren“ und das Testprotokoll einer Antwort |
 | `status.js` | Statusring |
+| `wissen.js` | Wissensabfrage im Dashboard: Schalterzeile, Auszüge vor dem Senden (`holeWissen`, `mitWissen`), Nachfragen mit der vorigen Frage |
 | `update.js` | Update, Version |
 | `pixelbar.js` | Pixelanzeigen, Equalizer, Modellchip |
 | `menu.js` | Menü, Seiten, Sicherung, Export |
@@ -58,7 +60,8 @@ Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in E
 | `messages.js` | Nachrichten zeichnen, Kennzahlen, Kopieren |
 | `conversations.js` | Unterhaltungen, Liste, Auswahl |
 | `preload.js` | Vorladen, Modusleiste, Sprachknopf |
-| `send.js` | Senden, Abbruch |
+| `send.js` | Senden, Abbruch, Auszüge der Wissensabfrage vor dem Senden |
+| `wissen.js` | Schalterzeile „Wissen ▾“ über dem Eingabefeld (nutzt `lib/shared/wissen-schalter.js`) |
 | `series.js` | Testreihen |
 | `speedtest.js` | Tempo-Test |
 | `init.js` | Start; registriert die Hooks |
@@ -69,7 +72,7 @@ Seit Phase 2 (13.11.2026) gibt es **keine Kreise** mehr: Die Dateien liegen in E
 <!-- graph:begin -->
 Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Hand ändern. Ebene 0 importiert keine Datei des Ordners; jede Datei liegt eine Ebene über ihrer höchsten Abhängigkeit, Importe gehen nur nach unten.
 
-**Dashboard** (`lib/dashboard/`, 31 Dateien)
+**Dashboard** (`lib/dashboard/`, 32 Dateien)
 
 | Ebene | Datei | importiert |
 |---|---|---|
@@ -83,6 +86,7 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 2 | `persist.js` | `base`, `hooks`, `i18n`, `state` |
 | 2 | `pixelbar.js` | `base`, `i18n`, `state` |
 | 2 | `update.js` | `base`, `i18n`, `state` |
+| 2 | `wissen.js` | `base`, `i18n`, `state` |
 | 3 | `menu.js` | `base`, `hooks`, `i18n`, `persist`, `state`, `update` |
 | 3 | `params.js` | `base`, `hooks`, `persist`, `sliders`, `state` |
 | 4 | `caps.js` | `base`, `hooks`, `i18n`, `menu`, `params`, `persist`, `pixelbar`, `state` |
@@ -99,13 +103,13 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 10 | `messages.js` | `base`, `caps`, `clipboard`, `i18n`, `menu`, `pixelbar`, `speech`, `state` |
 | 11 | `conversations.js` | `base`, `caps`, `clipboard`, `config`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `state` |
 | 12 | `preload.js` | `base`, `build`, `caps`, `config`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `params`, `persist`, `settings`, `speech`, `state`, `status` |
-| 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status` |
+| 13 | `send.js` | `base`, `build`, `caps`, `i18n`, `messages`, `persist`, `pixelbar`, `preload`, `protocol`, `state`, `status`, `wissen` |
 | 14 | `series.js` | `base`, `caps`, `clipboard`, `i18n`, `preload`, `protocol`, `send`, `state` |
 | 15 | `actions.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `menu`, `messages`, `params`, `persist`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `speedtest`, `state`, `update` |
-| 15 | `init.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update` |
+| 15 | `init.js` | `base`, `caps`, `config`, `configs`, `conversations`, `engine`, `hooks`, `i18n`, `menu`, `messages`, `params`, `persist`, `preload`, `quick`, `send`, `series`, `settings`, `sliders`, `speedtest`, `state`, `status`, `update`, `wissen` |
 | 16 | `main.js` | `actions`, `base`, `build`, `caps`, `config`, `conversations`, `engine`, `i18n`, `init`, `menu`, `messages`, `params`, `persist`, `pixelbar`, `preload`, `protocol`, `quick`, `send`, `series`, `settings`, `speech`, `state`, `status` |
 
-**Heinz Chat** (`lib/chat/`, 10 Dateien)
+**Heinz Chat** (`lib/chat/`, 11 Dateien)
 
 | Ebene | Datei | importiert |
 |---|---|---|
@@ -114,11 +118,12 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 1 | `actions.js` | `base` |
 | 1 | `i18n.js` | `base` |
 | 2 | `status.js` | `base`, `i18n`, `state` |
+| 2 | `wissen.js` | `base`, `i18n`, `state` |
 | 3 | `view.js` | `base`, `i18n`, `state`, `status` |
 | 4 | `conversations.js` | `base`, `i18n`, `state`, `view` |
 | 5 | `model.js` | `base`, `conversations`, `i18n`, `state`, `view` |
 | 6 | `send.js` | `base`, `conversations`, `i18n`, `model`, `state`, `status`, `view` |
-| 7 | `main.js` | `actions`, `base`, `conversations`, `i18n`, `model`, `send`, `state`, `status`, `view` |
+| 7 | `main.js` | `actions`, `base`, `conversations`, `i18n`, `model`, `send`, `state`, `status`, `view`, `wissen` |
 
 <!-- graph:end -->
 

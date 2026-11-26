@@ -277,7 +277,74 @@ class WissenChatTests(unittest.TestCase):
         finally:
             ctx.close()
 
-    def test_the_dashboard_switch_saves_and_loads_the_field(self):
+    def test_the_switch_works_without_any_configuration_and_beats_the_preset(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            modell = Modell(page, antwort="Sokrates war ein Philosoph aus Athen [1].")
+            page.goto(self.server.base + "/chat.html")
+            page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            page.evaluate(SEED_JS)
+            self.assertFalse(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"), "off by default")
+            page.click(".wsw-an")
+            self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_wissen')).an"))
+            modell.bodies.clear()
+            page.fill("#q", "Wer war Sokrates?"); page.click("#send")
+            page.wait_for_function("document.querySelector('#log .msg.a .src .chip')")
+            self.assertIn("antiker Philosoph", self.sysmsg(modell.bodies[-1]))
+            page.reload(); page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            self.assertTrue(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"), "the state survives a restart")
+            page.click(".wsw-an")
+            modell.bodies.clear()
+            page.fill("#q", "Wer war Sokrates?"); page.click("#send")
+            page.wait_for_function("document.querySelectorAll('#log .msg.a').length === 2 && !document.querySelector('#log .cur')")
+            self.assertNotIn("excerpt", self.sysmsg(modell.bodies[-1]).lower(), "switched off: no excerpts")
+            # a configuration preset is only the starting point: the switch, once used, wins
+            page.evaluate(CONFIG_JS, {"an": True, "quellen": [], "begriffe": "app"})
+            page.reload(); page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            self.assertFalse(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"))
+            page.evaluate("localStorage.removeItem('heinz_wissen')"); page.reload(); page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            self.assertTrue(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"), "never used: the preset of the configuration applies")
+        finally:
+            ctx.close()
+
+    def test_the_dashboard_has_the_same_switch_adds_excerpts_and_stores_the_chips(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            modell = Modell(page, antwort="Sokrates war ein Philosoph aus Athen [1].")
+            page.goto(self.server.base + "/dashboard.html")
+            page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
+            page.evaluate(SEED_JS)
+            self.assertEqual(page.locator("#wissen-host .wsw-an").count(), 1)
+            page.click("#wissen-host .wsw-an")
+            page.click("#wissen-host .wsw-mehr")
+            page.wait_for_function("document.querySelectorAll('#wissen-host select')[0].options.length >= 2")
+            modell.bodies.clear()
+            page.fill("#query", "Wer war Sokrates?"); page.click("#send-btn")
+            page.wait_for_selector(".msg-assistant .src .schip")
+            self.assertIn("[1] Sokrates", page.text_content(".msg-assistant .src .schip"))
+            sysm = self.sysmsg(modell.bodies[-1])
+            self.assertIn("antiker Philosoph", sysm); self.assertIn("numbered", sysm)
+            self.assertEqual(len(modell.bodies), 1, "terms from the app: no extra model call")
+            # a short follow-up searches with the previous question
+            page.wait_for_function("!document.body.classList.contains('gen')")
+            modell.bodies.clear()
+            page.fill("#query", "Das ist falsch"); page.click("#send-btn")
+            page.wait_for_function("document.querySelectorAll('.msg-assistant .src').length === 2")
+            self.assertIn("antiker Philosoph", self.sysmsg(modell.bodies[-1]))
+            hist = page.evaluate("HeinzDashboard.chatHistory.filter(m => m.role === 'assistant').map(m => (m.quellen || []).length)")
+            self.assertEqual(hist, [1, 1], "the chips are part of the stored conversation")
+            # with the switch off the request carries no excerpts
+            page.wait_for_function("!document.body.classList.contains('gen')")
+            page.click("#wissen-host .wsw-an"); modell.bodies.clear()
+            page.fill("#query", "Noch eine Frage"); page.click("#send-btn")
+            page.wait_for_function("document.querySelectorAll('.msg-assistant').length === 3 && !document.body.classList.contains('gen')")
+            self.assertNotIn("excerpt", self.sysmsg(modell.bodies[-1]).lower())
+        finally:
+            ctx.close()
+
+    def test_a_configuration_saves_the_switch_state_and_switches_it_on_again_when_loaded(self):
         ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
         try:
             page = ctx.new_page()
@@ -285,17 +352,20 @@ class WissenChatTests(unittest.TestCase):
             page.goto(self.server.base + "/dashboard.html")
             page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
             page.evaluate(SEED_JS)
+            self.assertEqual(page.locator("#cfg-wissen, #cfg-wissen-box").count(), 0, "the configuration menu has no switch of its own any more")
+            page.click("#wissen-host .wsw-an"); page.click("#wissen-host .wsw-mehr")
+            page.wait_for_function("document.querySelectorAll('#wissen-host select')[0].options.length >= 2")
+            page.select_option("#wissen-host select >> nth=0", "wikipedia-de"); page.select_option("#wissen-host select >> nth=1", "modell")
             page.click(".burger-btn")
-            self.assertFalse(page.is_visible("#cfg-wissen-box"), "off by default")
-            page.check("#cfg-wissen")
-            page.wait_for_function("document.querySelectorAll('#cfg-wissen-src option').length >= 2")
-            page.select_option("#cfg-wissen-src", "wikipedia-de"); page.select_option("#cfg-wissen-terms", "modell")
             page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
             self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
-            page.uncheck("#cfg-wissen"); page.click("#cfg-load-btn")
-            self.assertTrue(page.is_checked("#cfg-wissen")); self.assertEqual(page.input_value("#cfg-wissen-terms"), "modell")
+            page.evaluate("localStorage.removeItem('heinz_wissen'); window.dispatchEvent(new CustomEvent('heinz-wissen'))")
+            page.click("#cfg-load-btn")
+            self.assertTrue(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"))
+            self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_wissen')).begriffe"), "modell")
         finally:
             ctx.close()
+
 
 
 POSTFACH_JS = """async () => {

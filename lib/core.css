@@ -43,6 +43,12 @@ button { font-family: inherit; color: inherit; }
 /* ---------- building blocks ---------- */
 .caps { font-size: .69rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--sub); }
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: 99px; background: var(--card); border: 1px solid var(--ol); color: var(--txt); font-size: .86rem; font-weight: 500; cursor: pointer; }
+.wsw { margin: 0 0 6px; }
+.wsw-row { display: flex; gap: 6px; align-items: center; }
+.wsw-row .pill { min-height: 34px; padding: 0 14px; font-size: .84rem; }
+.wsw-an.on { background: var(--acc); border-color: var(--acc); color: var(--onacc); }
+.wsw-panel { margin-top: 6px; padding: 8px 10px; border: 1px solid var(--ol); border-radius: 14px; background: var(--card); }
+.wsw-panel .inp { height: 40px; margin: 2px 0 8px; }
 .pill.acc { background: var(--acc); border-color: var(--acc); color: var(--onacc); }
 .pill.danger { background: var(--red); border-color: var(--red); color: #fff; }
 .pill:disabled { opacity: .45; cursor: default; }
