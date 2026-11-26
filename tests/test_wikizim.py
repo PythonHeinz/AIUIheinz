@@ -32,6 +32,16 @@ class ZerlegenTests(unittest.TestCase):
         self.assertIn(["Einwohner", "1.083.498"], a["infobox"]); self.assertIn(["Fläche", "405,02 km²"], a["infobox"])
         self.assertGreater(a["zeichen"], 100)
 
+    def test_infobox_skips_hidden_parts_joins_lists_and_drops_rows_without_value(self):
+        html = ('<table class="infobox"><tr><th colspan="2">Grünten</th></tr><tr><td colspan="2">Blick von Westen</td></tr>'
+                '<tr><th>Koordinaten</th><td><span class="geo-default"><span>47° 33′ N, 10° 19′ O</span></span>'
+                '<span class="geo-multi-punct"> / </span><span class="geo-nondefault">47.55°N 10.32°O</span>'
+                '<span style="display:none">; <span class="geo">47.55; 10.32</span></span></td></tr>'
+                '<tr><th>Besonderheiten</th><td><ul><li>Haus</li><li>Hütte</li></ul></td></tr>'
+                '<tr><th>Typ</th><td>Berg</td></tr><tr><th>Typ</th><td>Berg</td></tr></table><p>Der Grünten ist ein Berg.</p>')
+        ib = wikizim.zerlege("Grünten", html)["infobox"]
+        self.assertEqual(ib, [["Koordinaten", "47° 33′ N, 10° 19′ O"], ["Besonderheiten", "Haus · Hütte"], ["Typ", "Berg"]])
+
     def test_article_without_infobox_or_sections(self):
         a = wikizim.zerlege("Kurz", OHNE)
         self.assertEqual(a["infobox"], []); self.assertEqual(a["abschnitte"], []); self.assertIn("Einleitung", a["intro"])

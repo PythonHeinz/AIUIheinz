@@ -214,35 +214,59 @@ class _Seite(HTMLParser):
 
 
 class _Info(HTMLParser):
-    """Liest nur die Zeilen der Infobox (Name: Wert)."""
+    """Liest nur die Zeilen der Infobox (Name: Wert). Versteckte Teile (z. B. Koordinaten-Duplikate) werden übersprungen,
+    Listenpunkte mit " · " getrennt, Zeilen ohne Wert (Titel, Bildunterschrift) verworfen."""
+    VOID = {'br', 'img', 'hr', 'wbr', 'meta', 'link', 'input'}
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.depth, self.row, self.cell, self.in_cell, self.out = 0, [], [], False, []
+        self.skip = []          # Stapel der Tags, die gerade übersprungen werden
+
+    @staticmethod
+    def _versteckt(tag, attrs):
+        a = dict(attrs); cls = (a.get('class', '') or '').lower(); st = (a.get('style', '') or '').lower().replace(' ', '')
+        return ('display:none' in st or 'visibility:hidden' in st or 'hidden' in a
+                or any(k in cls for k in ('geo-nondefault', 'geo-multi-punct', 'noprint', 'mw-empty-elt', 'reference', 'navbar'))
+                or tag in ('style', 'script'))
 
     def handle_starttag(self, tag, attrs):
+        if not self.depth and tag != 'table':
+            return
+        if self.skip:
+            if tag not in self.VOID:
+                self.skip.append(tag)
+            return
         cls = (dict(attrs).get('class', '') or '').lower()
         if tag == 'table':
             self.depth += 1 if self.depth else (1 if 'infobox' in cls else 0)
-        elif self.depth and tag == 'tr':
+            return
+        if tag not in self.VOID and self._versteckt(tag, attrs):
+            self.skip.append(tag); return
+        if tag == 'tr':
             self.row = []
-        elif self.depth and tag in ('td', 'th'):
+        elif tag in ('td', 'th'):
             self.in_cell, self.cell = True, []
+        elif self.in_cell and tag in ('li', 'br') and ''.join(self.cell).strip():
+            self.cell.append(' \u00b7 ')
 
     def handle_endtag(self, tag):
+        if self.skip:
+            if tag == self.skip[-1]:
+                self.skip.pop()
+            return
         if tag == 'table' and self.depth:
             self.depth -= 1
         elif self.depth and tag in ('td', 'th') and self.in_cell:
             self.in_cell = False
-            self.row.append(_sauber(''.join(self.cell)))
+            self.row.append(re.sub(r'(\s*\u00b7\s*)+$', '', _sauber(''.join(self.cell))))
         elif self.depth and tag == 'tr':
             r = [c for c in self.row if c]
-            if len(r) >= 2:
+            if len(r) >= 2 and [r[0], ' '.join(r[1:])] not in self.out:
                 self.out.append([r[0], ' '.join(r[1:])])
-            elif len(r) == 1 and len(r[0]) < 80:
-                self.out.append([r[0], ''])
 
     def handle_data(self, data):
-        if self.in_cell and self.depth:
+        if self.in_cell and self.depth and not self.skip:
             self.cell.append(data)
 
 
