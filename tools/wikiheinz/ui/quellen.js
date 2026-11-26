@@ -1,5 +1,5 @@
 /* tools/wikiheinz/ui/quellen.js – Reiter „Quellen“: Liste, Import einer Wikipedia-Datei mit Fortschritt, Anhalten und Fortsetzen, Löschen in Stücken. Logik in ../mod/import.js. */
-import { $, t, S, on, esc, msg, quelleVon, ladeQuellen, zahl } from './state.js';
+import { $, t, S, on, esc, msg, quelleVon, ladeQuellen, zahl, zim } from './state.js';
 import { neueQuelle, ausDatei, ART } from '../mod/quelle.js';
 import { importiere, zeilenAus, parseZeile } from '../mod/import.js';
 
@@ -71,7 +71,14 @@ async function loeschen(id) {
     S.laeuft = false; await ladeQuellen(); speicherInfo();
 }
 
+export async function renderZim() {
+    const st = await zim.status(true), el = $('zimstat');
+    el.textContent = st.available ? t('zimOn', { f: st.datei, n: zahl(st.eintraege) }) : t(st.error === 'zstd' ? 'zimZstd' : st.error === 'offline' ? 'zimOffline' : st.error === 'none' ? 'zimNone' : 'zimBad', { x: st.text || '' });
+}
+
 export function initQuellen() {
+    on('tabwechsel', (name) => { if (name === 'quellen') renderZim(); });
+    on('lang', renderZim); renderZim();
     $('f-import').addEventListener('change', (ev) => { const f = ev.target.files[0]; ev.target.value = ''; if (f) importieren(f); });
     $('b-stop').addEventListener('click', () => { if (ac) ac.abort(); });
     $('quellen').addEventListener('click', (ev) => { const b = ev.target.closest('[data-del]'); if (b) loeschen(b.dataset.del); });

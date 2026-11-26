@@ -102,3 +102,14 @@ test('Suchbegriffe: Form ohne Artikel wird angehängt, Herkunft der Modellbegrif
     const r3 = await beantworte({ frage: 'x', sp, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["The Platon"]}' : 'Schüler [1]' });
     assert.equal(r3.von, 'modell');
 });
+test('Volltext (Variante B): passende Abschnitte statt der Einleitung, Quelle ohne Volltext bleibt unverändert', async () => {
+    const sp = await aufbau(); const gefragt = []; let kontext = '';
+    const artikel = async (titel) => { gefragt.push(titel); return titel === 'Sokrates' ? { titel, intro: 'Sokrates war ein antiker Philosoph aus Athen.', infobox: [], abschnitte: [{ h: 'Leben', text: 'Er wurde im Jahr 399 v. Chr. zum Tode verurteilt und trank den Schierlingsbecher.' }] } : null; };
+    const r = await beantworte({ frage: 'Wie starb Sokrates?', sp, artikel, senden: async (a) => { if (a.art === 'begriffe') return '{"begriffe":["Sokrates","Tod Schierlingsbecher"]}'; kontext = a.user; return 'Durch den Schierlingsbecher [1]'; } });
+    assert.ok(gefragt.includes('Sokrates')); assert.match(kontext, /Schierlingsbecher/); assert.equal(r.quellen[0].voll, true);
+    const r2 = await beantworte({ frage: 'Sokrates', sp, artikel: async () => { throw new Error('Server weg'); }, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["Sokrates"]}' : 'Philosoph [1]' });
+    assert.equal(r2.status, 'ok'); assert.ok(!r2.quellen[0].voll);
+    await sp.quelleSetzen(neueQuelle({ id: 'mein-wiki', name: 'Mein Wiki', art: ART.EIGEN })); await sp.put({ ...e('Eigen', 'Meine Notiz.'), q: 'mein-wiki' });
+    const gef = []; await beantworte({ frage: 'Eigen', sp, quellen: ['mein-wiki'], artikel: async (t) => { gef.push(t); return null; }, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["Eigen"]}' : 'Notiz [1]' });
+    assert.deepEqual(gef, []);
+});

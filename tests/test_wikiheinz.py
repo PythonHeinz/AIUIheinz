@@ -1,6 +1,7 @@
 """WikiHeinz (tools/wikiheinz/): Node tests of the modules (tests/wikiheinz/) and browser tests of the IndexedDB layer (no request leaves the device)."""
 import gzip, importlib.util, io, contextlib, json, os, struct, shutil, subprocess, sys, tempfile, unittest, zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from zimbau import baue_zim
 from helpers import Server
 from playwright.sync_api import sync_playwright
 from test_pages import FakeOllama
@@ -316,6 +317,29 @@ class WikiUiTests(unittest.TestCase):
         finally:
             ctx.close()
 
+    def test_full_articles_from_the_zim_file_in_the_article_view_and_in_the_answer(self):
+        html = ("<html><body><table class='infobox'><tr><th>Geboren</th><td>469 v. Chr.</td></tr></table><p>Sokrates war ein antiker Philosoph aus Athen.</p>"
+                "<h2>Tod</h2><p>Er wurde 399 v. Chr. verurteilt und trank den Schierlingsbecher.</p></body></html>")
+        srv = Server()
+        os.makedirs(os.path.join(srv.data, "wiki")); baue_zim(os.path.join(srv.data, "wiki", "w.zim"), [("Sokrates", "Sokrates", html)])
+        srv.start()
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803}); page = ctx.new_page()
+        be = Modell(page, begriffe='{"begriffe":["Sokrates","Tod"]}', antwort="Durch den Schierlingsbecher [1].")
+        page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({lang: 'en'}))")
+        try:
+            page.goto(srv.base + URL); page.wait_for_function("window.__wikiReady === true")
+            self.importieren(page)
+            page.wait_for_function("document.querySelector('#zimstat').textContent.includes('w.zim')", timeout=15000)
+            page.click("#tabs [data-tab=stoebern]"); page.fill("#q", "sokrates"); page.wait_for_selector(".wh-hit"); page.click(".wh-hit")
+            page.wait_for_selector("#a-voll:not([hidden])")
+            self.assertIn("Schierlingsbecher", page.inner_text("#a-voll")); self.assertIn("469 v. Chr.", page.inner_text("#a-voll"))
+            page.click("#b-back"); page.click("#tabs [data-tab=fragen]")
+            page.fill("#f-frage", "Wie starb Sokrates?"); page.click("#b-ask"); page.wait_for_selector("#antwort:not([hidden])")
+            self.assertIn("Schierlingsbecher", be.bodies[-1]["messages"][1]["content"])
+            self.assertIn("full articles", page.inner_text("#ant-fact"))
+        finally:
+            ctx.close(); srv.stop()
+
     def test_question_answers_from_excerpts_with_sources_and_nothing_leaves_the_device(self):
         ctx, page, be = self.open_asking()
         try:
@@ -402,40 +426,6 @@ class WikiUiTests(unittest.TestCase):
         r = subprocess.run([NODE, "--input-type=module", "-e", script, out], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         z = zipfile.ZipFile(out); self.assertIsNone(z.testzip()); self.assertEqual(z.read("Äpfel.md").decode(), "Größe")
-
-
-def baue_zim(pfad, eintraege):
-    """Minimal ZIM (unkomprimierte Cluster), eintraege = [(url, titel, html | ('->', url))], sortiert nach url. Nur zum Testen von zim_roh.py."""
-    eintraege = sorted(eintraege, key=lambda e: e[0])
-    mime = b"text/html\0\0"
-    idx = {e[0]: i for i, e in enumerate(eintraege)}
-    blobs = [e[2].encode() for e in eintraege if not isinstance(e[2], tuple)]
-    cluster = struct.pack("<B", 1)
-    offs, pos = [], (len(blobs) + 1) * 4
-    for b in blobs:
-        offs.append(pos); pos += len(b)
-    offs.append(pos)
-    cluster += b"".join(struct.pack("<I", o) for o in offs) + b"".join(blobs)
-    dirents, blob_nr = [], 0
-    for url, titel, inhalt in eintraege:
-        if isinstance(inhalt, tuple):
-            d = struct.pack("<HBcII", 0xFFFF, 0, b"C", 0, idx[inhalt[1]])
-        else:
-            d = struct.pack("<HBcIII", 0, 0, b"C", 0, 0, blob_nr); blob_nr += 1
-        dirents.append(d + url.encode() + b"\0" + titel.encode() + b"\0")
-    kopf_len = 80
-    mime_pos = kopf_len; url_ptr = mime_pos + len(mime); title_ptr = url_ptr + 8 * len(eintraege)
-    cl_ptr = title_ptr + 4 * len(eintraege); dir_pos = cl_ptr + 8
-    ptrs, p = [], dir_pos
-    for d in dirents:
-        ptrs.append(p); p += len(d)
-    cluster_pos = p; checksum_pos = cluster_pos + len(cluster)
-    kopf = struct.pack("<IHH16sIIQQQQII", 72173914, 6, 1, b"\0" * 16, len(eintraege), 1, url_ptr, title_ptr, cl_ptr, mime_pos, 0, 0xFFFFFFFF)
-    kopf += struct.pack("<Q", checksum_pos); kopf = kopf.ljust(kopf_len, b"\0")
-    data = kopf + mime + b"".join(struct.pack("<Q", x) for x in ptrs) + b"".join(struct.pack("<I", i) for i in range(len(eintraege))) + struct.pack("<Q", cluster_pos)
-    data += b"".join(dirents) + cluster + b"\0" * 16
-    with open(pfad, "wb") as f:
-        f.write(data)
 
 
 class ZimRohTests(unittest.TestCase):

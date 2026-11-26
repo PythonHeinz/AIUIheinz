@@ -1,6 +1,6 @@
 /* tools/wikiheinz/ui/stoebern.js – Reiter „Stöbern“: Suche, Trefferliste, Artikelansicht mit Quellenangabe. Logik in ../mod/. */
 import { HeinzMarkdown } from './base.js';
-import { $, t, S, on, emit, esc, quelleVon, eigene } from './state.js';
+import { $, t, S, on, emit, esc, quelleVon, eigene, zim } from './state.js';
 import { suche, volltext } from '../mod/suche.js';
 import { angabe, linkZu } from '../mod/quelle.js';
 import { rueckverweise } from '../mod/eigene.js';
@@ -43,6 +43,18 @@ export async function oeffne(qid, titel) {
     cur = { q: qid, e, via }; zeige(); window.scrollTo(0, 0);
 }
 
+async function zeigeVoll(c) {
+    const box = $('a-voll'); box.hidden = true; box.replaceChildren();
+    const q = quelleVon(c.q); if (!q || !q.wikipedia) return;
+    const st = await zim.status(); if (!st.available) return;
+    const a = await zim.artikel(c.e.t); if (!a || cur !== c) return;
+    const h = [];
+    if (a.infobox && a.infobox.length) h.push('<h3>' + esc(t('infobox')) + '</h3><dl class="wh-info">' + a.infobox.map(([n, v]) => '<dt>' + esc(n) + '</dt><dd>' + esc(v) + '</dd>').join('') + '</dl>');
+    for (const s of a.abschnitte || []) h.push('<h3>' + esc(s.h) + '</h3><p>' + esc(s.text) + '</p>');
+    if (!h.length) return;
+    box.innerHTML = '<div class="help">' + esc(t('fullFromZim', { f: st.datei })) + '</div>' + h.join(''); box.hidden = false;
+}
+
 async function zeige() {
     if (!cur) return;
     const { e, via } = cur, q = quelleVon(cur.q), mein = q && q.art === 'eigen';
@@ -61,6 +73,7 @@ async function zeige() {
         const l = linkZu(q, e.t); if (l) teile.push('<a href="' + attr(l) + '" target="_blank" rel="noopener noreferrer">' + esc(t('openWiki')) + '</a>');
     }
     $('a-quelle').innerHTML = teile.join('<br>');
+    zeigeVoll(cur);
     const rb = mein ? await rueckverweise(S.sp, cur.q, e.t) : [];
     $('a-rueck').hidden = !rb.length;
     $('a-rueck').innerHTML = rb.length ? esc(t('backlinks', { l: '' })) + rb.map(x => '<a data-wh="' + attr(x.t) + '" class="wh-text"><u>' + esc(x.t) + '</u></a>').join(', ') : '';

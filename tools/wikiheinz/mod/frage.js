@@ -5,13 +5,15 @@
  *   baueKontext(treffer, opts)          -> { text, verwendet: [{ nr, q, titel, auszug }] }   (Auszüge gekürzt, Gesamtlänge begrenzt)
  *   baueAntwortAnfrage(frage, verwendet, sprache) -> { system, user, art: 'antwort' }
  *   pruefeAntwort(roh, verwendet)       -> { status: 'ok' | 'nichtGefunden', text, zitiert: [nr], ohneBeleg }
- *   beantworte({ frage, sp, quellen, senden, signal, onStatus, maxTreffer }) -> { status, antwort, ohneBeleg, quellen: [{ nr, q, titel, auszug, angabe, link, zitiert }], begriffe, von }
+ *   beantworte({ frage, sp, quellen, senden, signal, onStatus, maxTreffer, sprache, artikel }) -> { status, antwort, ohneBeleg, quellen: [{ nr, q, titel, auszug, angabe, link, zitiert }], begriffe, von }
+ * `artikel(titel)` (optional, Variante B) liefert den ganzen Artikel vom Server; ohne ihn oder ohne ZIM bleibt es bei den gespeicherten Einleitungen.
  * Nichts gefunden oder „NOT_FOUND“ vom Modell = „nicht gefunden“; das Modell antwortet nie aus eigenem Wissen. */
 import { keyOf, woerter } from './schluessel.js';
 import { suchbegriffe } from './suche.js';
 import { angabe, linkZu } from './quelle.js';
+import { waehleAbschnitte } from './volltext.js';
 
-export const MAX_BEGRIFFE = 4, MAX_KONTEXT = 3200, MAX_AUSZUG = 900, NICHT_GEFUNDEN = 'NOT_FOUND';
+export const MAX_BEGRIFFE = 4, MAX_KONTEXT = 3200, MAX_AUSZUG = 900, MAX_KONTEXT_VOLL = 3600, MAX_AUSZUG_VOLL = 1200, NICHT_GEFUNDEN = 'NOT_FOUND';
 const SCHEMA = { type: 'object', properties: { begriffe: { type: 'array', items: { type: 'string' }, maxItems: MAX_BEGRIFFE } }, required: ['begriffe'] };
 
 const NAMEN = { de: 'German', en: 'English', fr: 'French', es: 'Spanish', it: 'Italian', nl: 'Dutch', pt: 'Portuguese', pl: 'Polish', ru: 'Russian', sv: 'Swedish', cs: 'Czech', tr: 'Turkish' };
@@ -47,7 +49,7 @@ export function baueKontext(treffer, o) {
     for (const t of treffer || []) {
         const nr = verwendet.length + 1, auszug = kuerze(t.text, maxA), kopf = '[' + nr + '] ' + t.titel + '\n';
         if (len + kopf.length + auszug.length > maxK && verwendet.length) break;
-        verwendet.push({ nr, q: t.q, titel: t.titel, auszug: len + kopf.length + auszug.length > maxK ? kuerze(auszug, Math.max(80, maxK - len - kopf.length)) : auszug });
+        verwendet.push({ nr, q: t.q, titel: t.titel, voll: !!t.voll, auszug: len + kopf.length + auszug.length > maxK ? kuerze(auszug, Math.max(80, maxK - len - kopf.length)) : auszug });
         len += kopf.length + auszug.length + 2;
     }
     return { text: verwendet.map(v => '[' + v.nr + '] ' + v.titel + '\n' + v.auszug).join('\n\n'), verwendet };
@@ -93,9 +95,19 @@ export async function beantworte(o) {
     if (!treffer.length && von === 'modell') { const w = woerter(frage); if (w.length) { treffer = await suchbegriffe(sp, w, opts); if (treffer.length) { begriffe = w; von = 'code'; } } }
     if (!treffer.length) return { status: 'nichtGefunden', antwort: '', ohneBeleg: false, quellen: [], begriffe, von, modellBegriffe };
     st('lese');
-    const k = baueKontext(treffer), meta = new Map(alle.map(q => [q.id, q]));
+    const meta = new Map(alle.map(q => [q.id, q]));
+    let voll = false;                                                    // Variante B: ganze Artikel vom Server, der Code wählt die passenden Abschnitte
+    if (o.artikel) {
+        const ws = begriffe.concat(woerter(frage));
+        await Promise.all(treffer.map(async (t) => {
+            const q = meta.get(t.q); if (!q || !q.wikipedia) return;
+            let a = null; try { a = await o.artikel(t.titel); } catch (e) { a = null; }
+            const x = a ? waehleAbschnitte(a, ws, { maxZeichen: MAX_AUSZUG_VOLL }) : ''; if (x) { t.text = x; t.voll = true; voll = true; }
+        }));
+    }
+    const k = baueKontext(treffer, voll ? { maxAuszug: MAX_AUSZUG_VOLL, maxKontext: MAX_KONTEXT_VOLL } : undefined);
     st('antworte');
     const p = pruefeAntwort(await senden(baueAntwortAnfrage(frage, k.verwendet, o.sprache), signal), k.verwendet);
-    const quellen = k.verwendet.map(v => { const q = meta.get(v.q); return { nr: v.nr, q: v.q, titel: v.titel, auszug: v.auszug, angabe: angabe(q, v.titel), link: linkZu(q, v.titel), zitiert: p.zitiert.includes(v.nr) }; });
+    const quellen = k.verwendet.map(v => { const q = meta.get(v.q); return { nr: v.nr, q: v.q, titel: v.titel, auszug: v.auszug, angabe: angabe(q, v.titel), link: linkZu(q, v.titel), voll: v.voll, zitiert: p.zitiert.includes(v.nr) }; });
     return { status: p.status, antwort: p.text, ohneBeleg: p.ohneBeleg, quellen: p.status === 'ok' ? quellen : [], begriffe, von, modellBegriffe };
 }

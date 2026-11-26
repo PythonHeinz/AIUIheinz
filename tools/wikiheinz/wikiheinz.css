@@ -40,3 +40,8 @@
 .wh-mstat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
 .wh-ring.ring-btn { width: 20px; height: 20px; border-width: 2px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--s) 22%, transparent); }
 .wh-ring.ring-btn.s-yellow { --s: var(--yellow); }
+.wh-voll h3 { font-size: 1rem; margin: 18px 0 4px; }
+.wh-voll p { margin: 0 0 8px; }
+.wh-info { display: grid; grid-template-columns: minmax(90px, 36%) 1fr; gap: 4px 10px; margin: 6px 0 10px; font-size: .9rem; }
+.wh-info dt { color: var(--sub); } .wh-info dd { margin: 0; }
+

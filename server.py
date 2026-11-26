@@ -6,6 +6,8 @@ Options:                                          python server.py --port 3000 -
 
 Uses only the Python standard library (nothing to install).
 POST /api/update runs `git pull --ff-only` in this folder (needs X-Heinz header); if server.py changed, the server restarts itself.
+GET /api/wiki/status and /api/wiki/artikel?titel=... read whole Wikipedia articles from a ZIM file (WikiHeinz, wikizim.py, read only):
+python server.py --zim file.zim, or the environment variable HEINZ_ZIM, or the first *.zim in data/wiki/. Newer ZIM files need: pip install zstandard
 Listens on 127.0.0.1 only, so other devices in the Wi-Fi cannot reach it.
 """
 import argparse
@@ -23,7 +25,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 VERSION = "1"
 MAX_BYTES = 5 * 1024 * 1024
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,63}\.(csv|json|txt)$")
-BLOCKED_STATIC = ("/data", "/server.py", "/start.sh")
+BLOCKED_STATIC = ("/data", "/server.py", "/start.sh", "/wikizim.py")
 
 VITALS_COLS = ["ts", "batt", "status", "plugged", "batt_temp", "cpu_temp", "mem_avail_mb", "mem_total_mb", "load1", "pressure"]
 VITALS_INTERVAL = 60
@@ -33,6 +35,45 @@ _vitals_latest = {}
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(APP_DIR, "data")
+
+
+# ---------- Wikipedia from a ZIM file (WikiHeinz, read only) ----------
+WIKI_ZIM = ""            # explicit path (--zim or HEINZ_ZIM); empty = first *.zim in data/wiki/
+_wiki = {"zim": None, "path": None, "error": None}
+_wiki_lock = threading.Lock()
+
+
+def wiki_zim():
+    """-> (Zim | None, error dict | None). Opens the file once (lazily); an error is {"code": ..., "text": ...}."""
+    with _wiki_lock:
+        try:
+            import wikizim
+        except ImportError as e:
+            return None, {"code": "module", "text": str(e)}
+        path = wikizim.finde_zim(WIKI_ZIM, os.path.join(DATA_DIR, "wiki"))
+        if not path:
+            return None, {"code": "none", "text": "no ZIM file (data/wiki/*.zim, --zim or HEINZ_ZIM)"}
+        if _wiki["zim"] is not None and _wiki["path"] == path:
+            return _wiki["zim"], None
+        try:
+            _wiki["zim"], _wiki["path"] = wikizim.Zim(path), path
+        except wikizim.ZimFehler as e:
+            return None, {"code": e.code, "text": e.args[0]}
+        return _wiki["zim"], None
+
+
+def wiki_status():
+    z, err = wiki_zim()
+    if err:
+        return {"available": False, "error": err["code"], "text": err["text"]}
+    try:
+        import wikizim
+        z.cluster(0)             # tests decompression (zstd needs the package `zstandard`)
+        out = {"available": True, **z.status()}
+    except Exception as e:
+        code = getattr(e, "code", "format")
+        return {"available": False, "error": code, "text": str(e.args[0] if e.args else e)}
+    return out
 
 
 _update_lock = threading.Lock()
@@ -87,7 +128,7 @@ def update_from_git():
             files = [f for f in _git(["diff", "--name-only", old, new]).stdout.split("\n") if f]
         ver = app_version(refresh=True) or {}
         old_short = _git(["rev-parse", "--short", old]).stdout.strip() if old else ""
-        return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files, "output": out,
+        return 200, {"ok": True, "changed": new != old, "files": files, "restarting": "server.py" in files or "wikizim.py" in files, "output": out,
                      "from": old_short, "to": ver.get("commit", ""), "date": ver.get("date", ""), "version": ver.get("version", "")}
     except FileNotFoundError:
         return 500, {"ok": False, "error": "git is not installed"}
@@ -344,6 +385,24 @@ class Handler(SimpleHTTPRequestHandler):
             except ValueError:
                 hours = 6
             return self._json(200, {"cols": VITALS_COLS, "rows": vitals_history(hours)})
+        if path == "/api/wiki/status":
+            return self._json(200, wiki_status())
+        if path == "/api/wiki/artikel":
+            q = parse_qs(urlparse(self.path).query)
+            titel = (q.get("titel", [""])[0] or "").strip()
+            if not titel or len(titel) > 200:
+                return self._json(400, {"error": "missing or too long titel"})
+            z, err = wiki_zim()
+            if err:
+                return self._json(503, {"error": err["code"], "text": err["text"]})
+            try:
+                import wikizim
+                a = wikizim.artikel(z, titel)
+            except Exception as e:
+                return self._json(500, {"error": getattr(e, "code", "read"), "text": str(e.args[0] if e.args else e)})
+            if a is None:
+                return self._json(404, {"error": "not found"})
+            return self._json(200, a)
         if path == "/api/files":
             items = []
             for n in sorted(os.listdir(DATA_DIR)):
@@ -448,13 +507,17 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main():
-    global DATA_DIR
+    global DATA_DIR, WIKI_ZIM
     ap = argparse.ArgumentParser(description="Heinz UI server")
     ap.add_argument("--port", type=int, default=3000)
     ap.add_argument("--data", default=DATA_DIR, help="folder for saved tables")
     ap.add_argument("--vitals-interval", type=int, default=VITALS_INTERVAL, help="seconds between phone readings, 0 = off")
+    ap.add_argument("--zim", default=os.environ.get("HEINZ_ZIM", ""), help="Wikipedia ZIM file for WikiHeinz (default: first *.zim in data/wiki/)")
     args = ap.parse_args()
     DATA_DIR = os.path.abspath(args.data)
+    WIKI_ZIM = os.path.abspath(args.zim) if args.zim else ""
+    if WIKI_ZIM and not os.path.isfile(WIKI_ZIM):
+        print("Warning: ZIM file not found: %s (WikiHeinz works with the imported file only)" % WIKI_ZIM)
     os.makedirs(DATA_DIR, exist_ok=True)
     try:
         httpd = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)

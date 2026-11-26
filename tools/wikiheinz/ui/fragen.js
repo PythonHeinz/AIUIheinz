@@ -1,6 +1,6 @@
 /* tools/wikiheinz/ui/fragen.js – Reiter „Fragen“: Frage eingeben, Modell wählen, Antwort mit den verwendeten Auszügen. Modellzugriff nur über HeinzProviders; der Ablauf steht in ../mod/frage.js. */
 import { Heinz, HeinzStore, HeinzProviders as PV, $ } from './base.js';
-import { S, t, on, emit, msg, esc } from './state.js';
+import { S, t, on, emit, msg, esc, zim } from './state.js';
 import { beantworte } from '../mod/frage.js';
 
 const KEY = 'heinz_wikiheinz_settings', DEF = { provider: 'ollama', model: 'qwen2.5:3b', temp: 0.2, maxTok: 300, scope: '', config: '' };
@@ -54,7 +54,7 @@ function zeigeAntwort() {
     $('ant-qkopf').hidden = !r.quellen.length;
     $('ant-quellen').innerHTML = r.quellen.map(q => '<details class="wh-ex' + (q.zitiert ? ' zit' : '') + '"><summary>[' + q.nr + '] ' + esc(q.titel) + (q.zitiert ? ' · ' + esc(t('cited')) : '') + '</summary><p>' + esc(q.auszug) + '</p><small>' + esc(q.angabe) +
         (q.link ? ' · <a href="' + attr(q.link) + '" target="_blank" rel="noopener noreferrer">' + esc(t('openWiki')) + '</a>' : '') + ' · <a href="#" data-q="' + attr(q.q) + '" data-t="' + attr(q.titel) + '">' + esc(t('excerptOf')) + '</a></small></details>').join('');
-    $('ant-fact').textContent = t('fact', { engine: r.engine, model: r.model, von: t(r.von === 'modell' ? 'vonModell' : 'vonCode'), b }) + (r.von === 'code' ? ' ' + (r.modellBegriffe ? t('modelTerms', { m: r.modellBegriffe.join(', ') }) : t('modelNoTerms')) : '');
+    $('ant-fact').textContent = t('fact', { engine: r.engine, model: r.model, von: t(r.von === 'modell' ? 'vonModell' : 'vonCode'), b }) + (r.quellen.some(x => x.voll) ? ' ' + t('usedFull') : '') + (r.von === 'code' ? ' ' + (r.modellBegriffe ? t('modelTerms', { m: r.modellBegriffe.join(', ') }) : t('modelNoTerms')) : '');
 }
 function errText(e) {
     if (e instanceof TypeError) return t('offline');
@@ -126,7 +126,7 @@ async function fragen() {
         return r.text;
     };
     try {
-        const r = await beantworte({ frage, sp: S.sp, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: zeigeStatus, sprache: Heinz.lang });
+        const zs = await zim.status(), r = await beantworte({ frage, sp: S.sp, artikel: zs.available ? (ti) => zim.artikel(ti) : undefined, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: zeigeStatus, sprache: Heinz.lang });
         last = { ...r, engine: cfg.provider, model: cfg.model };
     } catch (e) { if (ac.signal.aborted) msg(t('aborted'), 'warn'); else msg(errText(e), 'err'); }
     ac = null; zeigeStatus(''); zeigeModell(); $('b-ask').hidden = false; $('b-askstop').hidden = true; renderOnline(); zeigeAntwort();

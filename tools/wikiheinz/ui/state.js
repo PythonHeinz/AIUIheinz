@@ -1,8 +1,11 @@
 /* tools/wikiheinz/ui/state.js – gemeinsamer Zustand, Meldungen, kleine Ereignisse, Hilfen. */
 import { Heinz, $, HeinzMarkdown } from './base.js';
 import { D } from './i18n.js';
+import { volltextQuelle } from '../mod/volltext.js';
 export const t = (k, v) => Heinz.t(D, k, v);
 export { $ };
+/** Ganze Artikel vom eigenen Server (ZIM-Datei, Variante B); nur Anfragen an die eigene Adresse. */
+export const zim = volltextQuelle(async (u) => { const r = await fetch(u, { cache: 'no-store' }); let j = null; try { j = await r.json(); } catch (e) { j = null; } return { status: r.status, json: j }; });
 export const S = { sp: null, quellen: [], tab: 'stoebern', laeuft: false };
 const subs = {};
 export const on = (n, f) => { (subs[n] = subs[n] || []).push(f); };
