@@ -121,7 +121,7 @@ SEED_JS = """async () => {
   const { keyOf } = await import('/lib/wissen/schluessel.js');
   const sp = await oeffne(), e = (t, x) => ({ k: keyOf(t), t, x, v: '' });
   await sp.quelleSetzen(neueQuelle({ id: 'wikipedia-de', name: 'Wikipedia (de, offline)', wikipedia: true, lizenz: 'CC BY-SA 4.0', stand: '2026-10', anzahl: 2 }));
-  await sp.add('wikipedia-de', [e('Sokrates', 'Sokrates war ein antiker Philosoph aus Athen.'), e('Köln', 'Köln ist eine Stadt am Rhein.')]);
+  await sp.add('wikipedia-de', [e('Sokrates', 'Sokrates war ein antiker Philosoph aus Athen.'), e('Köln', 'Köln ist eine Stadt am Rhein.'), e('Köln-Deutz', 'Deutz ist ein Stadtteil von Köln.'), e('Köln 75', 'Ein Album.')]);
   return true;
 }"""
 
@@ -147,12 +147,12 @@ class WissenChatTests(unittest.TestCase):
         cls.pw.stop()
         cls.server.stop()
 
-    def chat(self, wissen, frage, begriffe='{"begriffe":["Nirgendwo"]}'):
+    def chat(self, wissen, frage, begriffe='{"begriffe":["Nirgendwo"]}', antwort="Sokrates war ein Philosoph aus Athen [1]."):
         ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
         page = ctx.new_page()
         fremd = []
         page.on("request", lambda r: fremd.append(r.url) if not re.match(r"^(http://(127\.0\.0\.1|localhost)[:/]|data:|blob:)", r.url) else None)
-        modell = Modell(page, begriffe=begriffe, antwort="Sokrates war ein Philosoph aus Athen [1].")
+        modell = Modell(page, begriffe=begriffe, antwort=antwort)
         page.goto(self.server.base + "/chat.html")
         page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
         page.evaluate(SEED_JS)
@@ -227,6 +227,26 @@ class WissenChatTests(unittest.TestCase):
             self.assertEqual(len(modell.bodies), 1)
             self.assertEqual(self.sysmsg(modell.bodies[0]), "Be brief.")
             self.assertEqual(page.locator("#log .msg.a .src").count(), 0)
+        finally:
+            ctx.close()
+
+    def test_chips_show_only_the_cited_excerpts_else_all_of_them_labelled(self):
+        w = {"an": True, "quellen": [], "begriffe": "app"}
+        ctx, page, modell, fremd = self.chat(w, "Was ist Köln?", antwort="Philosoph? Nein, Köln ist eine Stadt [2].")
+        try:
+            chips = page.locator("#log .msg.a .src .chip")
+            self.assertEqual(chips.count(), 1); self.assertIn("[2]", chips.first.text_content())
+            self.assertEqual(page.locator("#log .msg.a .src .srcl").count(), 0)
+            ts = page.evaluate("[...document.querySelectorAll('#log .msg.a .chip')].map(c => c.textContent)")
+            self.assertNotIn("Köln 75", " ".join(ts))
+        finally:
+            ctx.close()
+        ctx, page, modell, fremd = self.chat(w, "Was ist Köln?", antwort="Philosoph? Nein, Köln ist eine Stadt.")
+        try:
+            self.assertEqual(page.locator("#log .msg.a .src .chip").count(), 3)
+            self.assertEqual(page.text_content("#log .msg.a .src .srcl"), "Excerpts:")
+            titles = page.evaluate("[...document.querySelectorAll('#log .msg.a .chip')].map(c => c.textContent)")
+            self.assertTrue(titles[0].startswith("[1] Köln ·") and titles[-1].startswith("[3] Köln 75"), titles)
         finally:
             ctx.close()
 

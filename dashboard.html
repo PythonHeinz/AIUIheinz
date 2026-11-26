@@ -427,8 +427,11 @@
                     <small class="help" data-i18n="cfgModelHelp">Assigned to its model, the configuration loads automatically every time that model loads (also after a restart).</small>
                     <label class="chkrow"><input type="checkbox" id="cfg-wissen" data-change="onWissenToggle"><span data-i18n="cfgWissen">Use knowledge</span></label>
                     <div id="cfg-wissen-box" hidden>
+                        <small class="help" data-i18n="cfgWissenSrc">Sources</small>
                         <select class="inp" id="cfg-wissen-src" aria-label="Sources" style="width:100%;margin:4px 0"></select>
+                        <small class="help" data-i18n="cfgWissenTerms">Search terms</small>
                         <select class="inp" id="cfg-wissen-terms" aria-label="Search terms" style="width:100%;margin:4px 0"><option value="app" data-i18n="cfgWissenApp">App</option><option value="modell" data-i18n="cfgWissenModel">Model</option></select>
+                        <small class="help" data-i18n="cfgWissenTermsHelp">App: the code takes the words of the question (fast). Model: the model first turns the question into article titles (better for other languages, one more model call).</small>
                     </div>
                     <small class="help" data-i18n="cfgWissenHelp">The Heinz Chat looks up sourced excerpts before answering. Off by default.</small>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>

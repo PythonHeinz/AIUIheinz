@@ -97,3 +97,11 @@ test('merke: ohne Postfach Zustand kein-postfach, mit Postfach wird abgelegt (ni
     assert.deepEqual(gelegt[0].slice(0, 2), ['wikiheinz', 'merke']); assert.equal(gelegt[0][2].titel, 'T');
     assert.equal((await sp.quellen()).some(q => q.art === 'eigen'), false);
 });
+
+test('suche: Titel mit reinem Zahlenzusatz (Postleitzahl, Nummer) kommen hinter Titel mit Wortzusatz, der genaue Treffer bleibt vorn', async () => {
+    const sp = await aufbau(false, null, false);
+    await sp.quelleSetzen(neueQuelle({ id: 'wikipedia-de', name: 'Wikipedia (de, offline)', wikipedia: true, lizenz: 'CC BY-SA 4.0', stand: '2026-10', anzahl: 5 }));
+    await sp.add('wikipedia-de', [e('Köln', 'Stadt.'), e('Köln 75', 'Album.'), e('Köln 50667', 'Postleitzahl.'), e('Köln-Deutz', 'Stadtteil.'), e('Kölner Dom', 'Kirche.')]);
+    const r = await HeinzWissen.suche('Köln', { max: 5 });
+    assert.deepEqual(r.treffer.map(t => t.titel), ['Köln', 'Köln-Deutz', 'Kölner Dom', 'Köln 75', 'Köln 50667']);
+});

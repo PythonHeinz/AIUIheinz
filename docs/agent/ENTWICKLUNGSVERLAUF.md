@@ -986,3 +986,11 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Tests:** `tests/test_wissen.py` Klasse `WissenChatTests` (Feld geprüft, exportiert, importiert, Modelfile ohne Feld; Chat mit Treffer: ein Modellaufruf, Zusatz, Chip, Speicherung, Verlauf ohne Quellenfelder; ohne Treffer; Konfiguration ohne Feld unverändert; Dashboard-Schalter; Hub-Anzeige). Voller Lauf grün (nach einer Importregel-Korrektur: nur `base.js` greift auf `lib/`). Nur simuliert getestet.
 - **Handytest:** Y26 offen.
 - **Offen:** Stufe 4 (docHeinz-Knopf „An WikiHeinz senden“, Tabelle/Sheet, Filter) nur auf Zuruf, jeweils einzeln.
+
+## 26.11.2026 – Nachbesserung Stufe 3 nach Handytest Y26 (Strang AIUIheinz-Wissen, Freigabe des Entwicklers 12:32 auch für `lib/wissen/suche.js`)
+- **Handytest (Entwickler, 26.11.2026):** Chat mit Wissen läuft: Auszüge, Chips mit Lizenz, Antworten zum Grünten (Höhe, Landkreis, Gipfel) kommen erkennbar aus dem Wikipedia-Eintrag; „Wo liegt Rüsselsheim?“ im Dashboard (ohne Wissen) war dagegen erfunden. Das Dashboard nutzt das Feld bewusst nicht. Qwen 2.5 3B setzt keine [n] in den Text.
+- **Chips:** Steht [n] in der Antwort, zeigt der Chat nur diese Chips; sonst alle vorgelegten Auszüge mit der Beschriftung „Auszüge:“ / „Excerpts:“.
+- **Suche (`lib/wissen/suche.js`):** Titel, die nach dem Suchtext nur Zahlen haben („Köln 75“, „Köln 50667“), kommen hinter Titel mit Wortzusatz; der genaue Treffer bleibt vorn. Gilt für alle Aufrufer der Suche (auch WikiHeinz-Stöbern). Node-Test ergänzt.
+- **Dashboard:** Beschriftungen „Quellen“ und „Suchbegriffe“, Erklärung App/Modell, Hinweis „Gilt nur im Heinz Chat“.
+- **Tests:** `tests/test_wissen.py` (Chips zitiert/alle), `tests/wissen/wissen.test.mjs`; voller Lauf grün. Handytest Y26 erneut mit „Was ist Köln?“ (nur noch sinnvolle Treffer, Beschriftung der Chips).
+

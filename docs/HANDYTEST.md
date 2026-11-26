@@ -435,3 +435,4 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 4. Frage ohne Treffer (Unsinnswort): das Modell sagt, dass nichts gefunden wurde, und kennzeichnet eigenes Wissen als Einschätzung. Unterhaltung beenden, neu öffnen: die Chips sind noch da.
 5. Konfiguration ohne Wissen im Chat zuweisen: Verhalten wie vorher. Hub „Konfigurationen“ zeigt bei der Wissens-Konfiguration „Wissen: …“.
 6. Messwerte (Antwortzeit mit und ohne Wissen, Häufigkeit des Modell-Rückfalls) nach `docs/KONZEPT.md` 19.6 eintragen.
+7. (Nachbesserung) „Was ist Köln?“: „Köln 75“ und „Köln 50667“ stehen nicht mehr vorn; ohne [n] im Text steht „Auszüge:“ vor den Chips. Dashboard → Konfiguration: „Quellen“, „Suchbegriffe“ und der Hinweis „Gilt nur im Heinz Chat“ sind sichtbar.
