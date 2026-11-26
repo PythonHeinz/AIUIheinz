@@ -425,6 +425,12 @@
                     <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" data-change="renderConfigs" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-model" data-click="assignModelConfig"><span id="cfg-model-t" data-i18n="cfgModel">Assign to its model</span></button></div>
                     <small class="help" data-i18n="cfgModelHelp">Assigned to its model, the configuration loads automatically every time that model loads (also after a restart).</small>
+                    <label class="chkrow"><input type="checkbox" id="cfg-wissen" data-change="onWissenToggle"><span data-i18n="cfgWissen">Use knowledge</span></label>
+                    <div id="cfg-wissen-box" hidden>
+                        <select class="inp" id="cfg-wissen-src" aria-label="Sources" style="width:100%;margin:4px 0"></select>
+                        <select class="inp" id="cfg-wissen-terms" aria-label="Search terms" style="width:100%;margin:4px 0"><option value="app" data-i18n="cfgWissenApp">App</option><option value="modell" data-i18n="cfgWissenModel">Model</option></select>
+                    </div>
+                    <small class="help" data-i18n="cfgWissenHelp">The Heinz Chat looks up sourced excerpts before answering. Off by default.</small>
                     <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>
                     <small class="help" data-i18n="cfgUseHelp">The Heinz Chat runs with exactly one configuration of its own, independent of what is loaded here.</small>
                     <small class="help" id="cfg-empty" data-i18n="cfgEmpty">No configuration saved yet.</small>

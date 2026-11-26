@@ -37,13 +37,13 @@ import { HeinzProviders as PV } from '/lib/providers.js';
         en: { sub: 'configurations', intro: 'A configuration is a named set for one model: engine, person, prompt, tone and a snapshot of the runtime. Save them in the Heinz Dashboard (menu, Configuration). Here you assign one to the Heinz Chat, rename, export or delete them.',
               imp: 'Import from file', none: 'No configuration saved yet. Open the Heinz Dashboard, set up a model and save it under a name.',
               chat: 'Heinz Chat', chatOn: 'In the Heinz Chat', chatOff: 'Use in Heinz Chat', exp: 'Export', del: 'Delete', del2: 'Really delete?',
-              tone: 'tone', noTone: 'model’s own tone', noPrompt: 'no prompt', ctx: 'context window', thr: 'threads', person: 'person',
+              tone: 'tone', noTone: 'model’s own tone', wis: 'knowledge', wisAll: 'all sources', wisApp: 'terms: app', wisMod: 'terms: model', noPrompt: 'no prompt', ctx: 'context window', thr: 'threads', person: 'person',
               imported: 'Imported “{n}”.', badFile: 'This file is not a configuration of this app.', assigned: '“{n}” is now used by the Heinz Chat.', unassigned: 'The Heinz Chat uses its default configuration again.',
               cloud: 'Online engine: only used when “Allow online” is on.', param: 'Configure now', mf: 'Modelfile', mfHint: 'Modelfile (Ollama): ollama create <name> -f <file>', dflt: 'Default configuration', lock: 'built in, cannot be deleted', dfltInfo: 'The Heinz Chat uses it as long as no configuration is assigned. To change it: configure it, save under a new name and assign that one.' },
         de: { sub: 'konfigurationen', intro: 'Eine Konfiguration ist ein benannter Satz für ein Modell: Engine, Person, Prompt, Ton und ein Abbild der Laufzeit. Gespeichert wird im Heinz Dashboard (Menü, Konfiguration). Hier weist du eine dem Heinz Chat zu, benennst um, exportierst oder löschst.',
               imp: 'Aus Datei importieren', none: 'Noch keine Konfiguration gespeichert. Öffne das Heinz Dashboard, richte ein Modell ein und speichere es unter einem Namen.',
               chat: 'Heinz Chat', chatOn: 'Im Heinz Chat', chatOff: 'Im Heinz Chat verwenden', exp: 'Exportieren', del: 'Löschen', del2: 'Wirklich löschen?',
-              tone: 'Ton', noTone: 'Ton des Modells', noPrompt: 'kein Prompt', ctx: 'Kontextfenster', thr: 'Threads', person: 'Person',
+              tone: 'Ton', noTone: 'Ton des Modells', wis: 'Wissen', wisAll: 'alle Quellen', wisApp: 'Begriffe: App', wisMod: 'Begriffe: Modell', noPrompt: 'kein Prompt', ctx: 'Kontextfenster', thr: 'Threads', person: 'Person',
               imported: '„{n}“ importiert.', badFile: 'Diese Datei ist keine Konfiguration dieser App.', assigned: '„{n}“ gilt jetzt im Heinz Chat.', unassigned: 'Der Heinz Chat nutzt wieder seine Standardkonfiguration.',
               cloud: 'Online-Engine: wird nur genutzt, wenn „Online erlauben“ an ist.', param: 'Jetzt parametrieren', mf: 'Modelfile', mfHint: 'Modelfile (Ollama): ollama create <Name> -f <Datei>', dflt: 'Standardkonfiguration', lock: 'eingebaut, nicht löschbar', dfltInfo: 'Der Heinz Chat nutzt sie, solange keine Konfiguration zugewiesen ist. Ändern: parametrieren, unter neuem Namen speichern und diese zuweisen.' }
     };
@@ -56,6 +56,7 @@ import { HeinzProviders as PV } from '/lib/providers.js';
         if (!c.prompt) a.push(t('noPrompt'));
         if (c.runtime && c.runtime.ctx) a.push(t('ctx') + ' ' + c.runtime.ctx);
         if (c.runtime && typeof c.runtime.threads === 'number') a.push(t('thr') + ' ' + c.runtime.threads);
+        if (c.wissen && c.wissen.an) a.push(t('wis') + ': ' + (c.wissen.quellen && c.wissen.quellen.length ? c.wissen.quellen.join(', ') : t('wisAll')) + ', ' + t(c.wissen.begriffe === 'modell' ? 'wisMod' : 'wisApp'));
         var p = PV.get(c.provider);
         return a.map(Heinz.esc).join(' · ') + (p && !p.local ? '<br>' + Heinz.esc(t('cloud')) : '');
     }

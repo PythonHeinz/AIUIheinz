@@ -115,6 +115,155 @@ class WissenBrowserTests(unittest.TestCase):
             ctx.close()
 
 
+SEED_JS = """async () => {
+  const { oeffne } = await import('/lib/wissen/db.js');
+  const { neueQuelle } = await import('/lib/wissen/quelle.js');
+  const { keyOf } = await import('/lib/wissen/schluessel.js');
+  const sp = await oeffne(), e = (t, x) => ({ k: keyOf(t), t, x, v: '' });
+  await sp.quelleSetzen(neueQuelle({ id: 'wikipedia-de', name: 'Wikipedia (de, offline)', wikipedia: true, lizenz: 'CC BY-SA 4.0', stand: '2026-10', anzahl: 2 }));
+  await sp.add('wikipedia-de', [e('Sokrates', 'Sokrates war ein antiker Philosoph aus Athen.'), e('Köln', 'Köln ist eine Stadt am Rhein.')]);
+  return true;
+}"""
+
+CONFIG_JS = """(w) => {
+  const PV = HeinzProviders;
+  const c = PV.saveConfig(Object.assign({ name: 'Wissen', provider: 'ollama', model: 'qwen2.5:3b', person: 'heinz', prompt: 'Be brief.' }, w ? { wissen: w } : {}));
+  PV.setChatConfig(c.id);
+  return c.id;
+}"""
+
+
+class WissenChatTests(unittest.TestCase):
+    """Stufe 3: the optional field `wissen` of a configuration and the Heinz Chat that uses it (simulated Ollama, real IndexedDB)."""
+    @classmethod
+    def setUpClass(cls):
+        cls.server = Server().start()
+        cls.pw = sync_playwright().start()
+        cls.browser = cls.pw.chromium.launch()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.pw.stop()
+        cls.server.stop()
+
+    def chat(self, wissen, frage, begriffe='{"begriffe":["Nirgendwo"]}'):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        page = ctx.new_page()
+        fremd = []
+        page.on("request", lambda r: fremd.append(r.url) if not re.match(r"^(http://(127\.0\.0\.1|localhost)[:/]|data:|blob:)", r.url) else None)
+        modell = Modell(page, begriffe=begriffe, antwort="Sokrates war ein Philosoph aus Athen [1].")
+        page.goto(self.server.base + "/chat.html")
+        page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+        page.evaluate(SEED_JS)
+        page.evaluate(CONFIG_JS, wissen)
+        page.reload()
+        page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+        modell.bodies.clear()
+        page.fill("#q", frage); page.click("#send")
+        page.wait_for_function("document.querySelector('#log .msg.a') && document.querySelector('#log .msg.a').textContent.indexOf('Philosoph') >= 0 && !document.querySelector('#log .msg.a .cur')")
+        return ctx, page, modell, fremd
+
+    def sysmsg(self, body):
+        return ([m for m in body["messages"] if m["role"] == "system"] or [{"content": ""}])[0]["content"]
+
+    def test_the_field_is_validated_exported_imported_and_ignored_by_the_modelfile(self):
+        ctx = self.browser.new_context()
+        try:
+            page = ctx.new_page(); page.goto(self.server.base + "/chat.html")
+            o = page.evaluate("""() => {
+              const PV = HeinzProviders, out = {};
+              const a = PV.saveConfig({ name: 'A', provider: 'ollama', model: 'm', person: 'heinz', prompt: 'p', wissen: { an: true, quellen: ['wikipedia-de', 5], begriffe: 'x', fremd: 1 } });
+              const b = PV.saveConfig({ name: 'B', provider: 'ollama', model: 'm', person: 'heinz', prompt: 'p' });
+              out.a = a.wissen; out.b = 'wissen' in b;
+              const ex = PV.exportConfig(a); out.exWissen = ex.wissen; out.exFormat = ex.format;
+              out.exB = 'wissen' in JSON.parse(JSON.stringify(PV.exportConfig(b)));
+              out.imp = PV.importConfig(JSON.parse(JSON.stringify(ex))).wissen;
+              out.alt = PV.importConfig({ format: 1, kind: 'heinz-configuration', name: 'Alt', provider: 'ollama', model: 'm', person: 'heinz', prompt: '' }).name;
+              out.mf = PV.exportModelfile(a);
+              return out;
+            }""")
+            self.assertEqual(o["a"], {"an": True, "quellen": ["wikipedia-de", "5"], "begriffe": "app"})
+            self.assertFalse(o["b"], "a configuration without the field stays without it")
+            self.assertEqual(o["exWissen"], o["a"]); self.assertEqual(o["exFormat"], 1, "format version unchanged: older files stay valid")
+            self.assertFalse(o["exB"]); self.assertEqual(o["imp"], o["a"]); self.assertEqual(o["alt"], "Alt")
+            self.assertNotIn("wissen", o["mf"].lower().replace("# heinz configuration: a", "")); self.assertIn("FROM m", o["mf"])
+        finally:
+            ctx.close()
+
+    def test_chat_with_knowledge_adds_numbered_excerpts_shows_source_chips_and_stores_them(self):
+        ctx, page, modell, fremd = self.chat({"an": True, "quellen": [], "begriffe": "app"}, "Wer war Sokrates?")
+        try:
+            self.assertEqual(len(modell.bodies), 1, "terms from the app: one model call only, the answer")
+            sysm = self.sysmsg(modell.bodies[0])
+            self.assertTrue(sysm.startswith("Be brief."))
+            self.assertIn("numbered", sysm); self.assertIn("[1]", sysm); self.assertIn("antiker Philosoph", sysm)
+            chip = page.text_content("#log .msg.a .src .chip")
+            self.assertIn("[1] Sokrates", chip); self.assertIn("CC BY-SA 4.0", chip)
+            self.assertTrue(page.get_attribute("#log .msg.a .src .chip", "href").startswith("http"))
+            saved = page.evaluate("HeinzStore.get('heinz_slim_chats', [])[0].messages.filter(m => m.role === 'assistant')[0].quellen")
+            self.assertEqual(saved[0]["titel"], "Sokrates")
+            page.fill("#q", "Und weiter?"); page.click("#send")
+            page.wait_for_function("document.querySelectorAll('#log .msg.a').length === 2 && !document.querySelector('#log .cur')")
+            second = [m for m in modell.bodies[-1]["messages"] if m["role"] != "system"]
+            self.assertEqual(set(k for m in second for k in m), {"role", "content"}, "history carries no source fields to the model")
+            self.assertEqual(fremd, [], "no request leaves the device")
+        finally:
+            ctx.close()
+
+    def test_without_a_hit_the_model_is_told_so_and_no_chip_appears(self):
+        ctx, page, modell, fremd = self.chat({"an": True, "quellen": [], "begriffe": "app"}, "Zxqvw Qwertzuiop?")
+        try:
+            sysm = self.sysmsg(modell.bodies[-1])
+            self.assertIn("No knowledge excerpt was found", sysm); self.assertIn("own assessment", sysm)
+            self.assertEqual(page.locator("#log .msg.a .src").count(), 0)
+            self.assertEqual(fremd, [])
+        finally:
+            ctx.close()
+
+    def test_a_configuration_without_the_field_behaves_exactly_as_before(self):
+        ctx, page, modell, fremd = self.chat(None, "Wer war Sokrates?")
+        try:
+            self.assertEqual(len(modell.bodies), 1)
+            self.assertEqual(self.sysmsg(modell.bodies[0]), "Be brief.")
+            self.assertEqual(page.locator("#log .msg.a .src").count(), 0)
+        finally:
+            ctx.close()
+
+    def test_the_hub_tile_shows_the_field_read_only(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page(); page.goto(self.server.base + "/chat.html")
+            page.evaluate(CONFIG_JS, {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
+            page.goto(self.server.base + "/tools/configs/")
+            page.wait_for_selector(".cfg[data-id] .meta")
+            txt = page.text_content("#list")
+            self.assertIn("knowledge: wikipedia-de", txt); self.assertIn("terms: model", txt)
+            self.assertEqual(page.locator("#list [data-act=wissen], #list input[type=checkbox]").count(), 0, "no control for the field on the hub")
+        finally:
+            ctx.close()
+
+    def test_the_dashboard_switch_saves_and_loads_the_field(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            Modell(page)
+            page.goto(self.server.base + "/dashboard.html")
+            page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
+            page.evaluate(SEED_JS)
+            page.click(".burger-btn")
+            self.assertFalse(page.is_visible("#cfg-wissen-box"), "off by default")
+            page.check("#cfg-wissen")
+            page.wait_for_function("document.querySelectorAll('#cfg-wissen-src option').length >= 2")
+            page.select_option("#cfg-wissen-src", "wikipedia-de"); page.select_option("#cfg-wissen-terms", "modell")
+            page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
+            self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
+            page.uncheck("#cfg-wissen"); page.click("#cfg-load-btn")
+            self.assertTrue(page.is_checked("#cfg-wissen")); self.assertEqual(page.input_value("#cfg-wissen-terms"), "modell")
+        finally:
+            ctx.close()
+
+
 POSTFACH_JS = """async () => {
   const { HeinzStore } = await import('/lib/store.js');
   const { HeinzPostfach, GRENZEN } = await import('/lib/shared/postfach.js');
