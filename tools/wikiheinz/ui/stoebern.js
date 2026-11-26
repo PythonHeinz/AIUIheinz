@@ -1,10 +1,10 @@
-/* tools/wikiheinz/ui/stoebern.js – Reiter „Stöbern“: Suche, Trefferliste, Artikelansicht mit Quellenangabe. Logik in ../mod/. */
+/* tools/wikiheinz/ui/stoebern.js – Reiter „Stöbern“: Suche, Trefferliste, Artikelansicht mit Quellenangabe. Logik in ../../../lib/wissen/. */
 import { HeinzMarkdown } from './base.js';
 import { $, t, S, on, emit, esc, quelleVon, eigene, zim } from './state.js';
-import { suche, volltext } from '../mod/suche.js';
-import { angabe, linkZu } from '../mod/quelle.js';
-import { rueckverweise } from '../mod/eigene.js';
-import { keyOf } from '../mod/schluessel.js';
+import { suche, volltext } from '../../../lib/wissen/suche.js';
+import { angabe, linkZu } from '../../../lib/wissen/quelle.js';
+import { rueckverweise } from '../../../lib/wissen/eigene.js';
+import { keyOf } from '../../../lib/wissen/schluessel.js';
 
 const attr = (s) => esc(String(s)).replace(/"/g, '&quot;');
 const kurz = (x) => { const s = String(x || '').replace(/[#>*_`\[\]]+/g, ' ').replace(/\s+/g, ' ').trim(); return s.length > 140 ? s.slice(0, 137).replace(/\s+\S*$/, '') + ' …' : s; };

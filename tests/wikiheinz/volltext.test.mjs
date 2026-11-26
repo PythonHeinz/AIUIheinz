@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { volltextQuelle, waehleAbschnitte } from '../../tools/wikiheinz/mod/volltext.js';
+import { volltextQuelle, waehleAbschnitte } from '../../lib/wissen/volltext.js';
 
 const A = { titel: 'Köln', intro: 'Köln ist eine Großstadt am Rhein. Sie ist die viertgrößte Stadt Deutschlands.', infobox: [['Einwohner', '1.083.498'], ['Fläche', '405 km²']],
     abschnitte: [{ h: 'Geschichte', text: 'Die Stadt wurde als Colonia gegründet und erhielt im Jahr 50 Stadtrechte.' }, { h: 'Wirtschaft', text: 'Köln ist ein Medienstandort mit Ford und Rewe.' }, { h: 'Klima', text: 'Das Klima ist mild.' }] };

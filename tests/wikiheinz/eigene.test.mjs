@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as W from '../../tools/wikiheinz/mod/eigene.js';
-import { neuerSpeicher } from '../../tools/wikiheinz/mod/speicher.js';
+import * as W from '../../lib/wissen/eigene.js';
+import { neuerSpeicher } from '../../lib/wissen/speicher.js';
 
 const Q = 'mein-wiki';
 test('verweise und tags: Alias, Doppelte, Überschrift ist kein Schlagwort', () => {

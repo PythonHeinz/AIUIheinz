@@ -1,8 +1,8 @@
-/* tools/wikiheinz/ui/main.js – Einstieg von WikiHeinz: Speicher öffnen, Reiter, Sprache. Nur Oberfläche; Logik in ../mod/. */
+/* tools/wikiheinz/ui/main.js – Einstieg von WikiHeinz: Speicher öffnen, Reiter, Sprache. Nur Oberfläche; Logik in ../../../lib/wissen/. */
 import { Heinz, HeinzStore, $ } from './base.js';
 import { D } from './i18n.js';
 import { S, t, on, emit, msg, ladeQuellen } from './state.js';
-import { oeffne } from '../mod/db.js';
+import { oeffne } from '../../../lib/wissen/db.js';
 import { initStoebern } from './stoebern.js';
 import { initWiki } from './wiki.js';
 import { initQuellen } from './quellen.js';

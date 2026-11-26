@@ -20,11 +20,11 @@ class WikiModuleTests(unittest.TestCase):
 
 
 DB_JS = """async () => {
-  const { oeffne } = await import('/tools/wikiheinz/mod/db.js');
-  const { suche } = await import('/tools/wikiheinz/mod/suche.js');
-  const { importiere } = await import('/tools/wikiheinz/mod/import.js');
-  const { neueQuelle } = await import('/tools/wikiheinz/mod/quelle.js');
-  const { speichere, seiten } = await import('/tools/wikiheinz/mod/eigene.js');
+  const { oeffne } = await import('/lib/wissen/db.js');
+  const { suche } = await import('/lib/wissen/suche.js');
+  const { importiere } = await import('/lib/wissen/import.js');
+  const { neueQuelle } = await import('/lib/wissen/quelle.js');
+  const { speichere, seiten } = await import('/lib/wissen/eigene.js');
   const sp = await oeffne(); const out = { art: sp.info().art };
   const art = (t, x) => JSON.stringify({ word: t, senses: [{ glosses: [x] }] });
   const weg = (t, z) => JSON.stringify({ word: t, senses: [{ form_of: [{ word: z }] }] });
@@ -424,7 +424,7 @@ class WikiUiTests(unittest.TestCase):
             ctx.close()
 
     def test_zip_file_is_valid_for_python(self):
-        script = "import {zip} from './tools/wikiheinz/mod/zip.js'; import {writeFileSync} from 'node:fs'; writeFileSync(process.argv[1], zip([{name:'Äpfel.md', text:'Größe'}]));"
+        script = "import {zip} from './lib/wissen/zip.js'; import {writeFileSync} from 'node:fs'; writeFileSync(process.argv[1], zip([{name:'Äpfel.md', text:'Größe'}]));"
         out = os.path.join(tempfile.mkdtemp(), "t.zip")
         r = subprocess.run([NODE, "--input-type=module", "-e", script, out], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { crc32, zip } from '../../tools/wikiheinz/mod/zip.js';
+import { crc32, zip } from '../../lib/wissen/zip.js';
 import { writeFileSync } from 'node:fs';
 
 test('crc32: bekannter Wert', () => { assert.equal(crc32(new TextEncoder().encode('123456789')), 0xCBF43926); });

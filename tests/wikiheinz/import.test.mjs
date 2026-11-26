@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { zeilenAus, parseZeile, importiere } from '../../tools/wikiheinz/mod/import.js';
-import { neuerSpeicher } from '../../tools/wikiheinz/mod/speicher.js';
-import { neueQuelle } from '../../tools/wikiheinz/mod/quelle.js';
+import { zeilenAus, parseZeile, importiere } from '../../lib/wissen/import.js';
+import { neuerSpeicher } from '../../lib/wissen/speicher.js';
+import { neueQuelle } from '../../lib/wissen/quelle.js';
 
 const art = (t, x) => JSON.stringify({ word: t, senses: [{ glosses: [x] }], lang_code: 'de' });
 const weg = (t, z) => JSON.stringify({ word: t, senses: [{ form_of: [{ word: z }] }] });

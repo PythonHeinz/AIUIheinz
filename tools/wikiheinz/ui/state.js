@@ -1,7 +1,7 @@
 /* tools/wikiheinz/ui/state.js – gemeinsamer Zustand, Meldungen, kleine Ereignisse, Hilfen. */
 import { Heinz, $, HeinzMarkdown } from './base.js';
 import { D } from './i18n.js';
-import { volltextQuelle } from '../mod/volltext.js';
+import { volltextQuelle } from '../../../lib/wissen/volltext.js';
 export const t = (k, v) => Heinz.t(D, k, v);
 export { $ };
 /** Ganze Artikel vom eigenen Server (ZIM-Datei, Variante B); nur Anfragen an die eigene Adresse. */

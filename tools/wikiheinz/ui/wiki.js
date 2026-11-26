@@ -1,11 +1,11 @@
-/* tools/wikiheinz/ui/wiki.js – Reiter „Mein Wiki“: Seitenliste, Editor, Export und Wiederherstellen. Logik in ../mod/eigene.js. */
+/* tools/wikiheinz/ui/wiki.js – Reiter „Mein Wiki“: Seitenliste, Editor, Export und Wiederherstellen. Logik in ../../../lib/wissen/eigene.js. */
 import { HeinzStore } from './base.js';
 import { $, t, S, on, emit, msg, jetzt, eigene, ladeQuellen, herunterladen } from './state.js';
-import { neueQuelle, ART, EIGEN_ID } from '../mod/quelle.js';
-import { speichere, seiten, loescheSeite, exportJSON, exportDateien, wiederherstellen } from '../mod/eigene.js';
-import { volltext } from '../mod/suche.js';
-import { keyOf } from '../mod/schluessel.js';
-import { zip } from '../mod/zip.js';
+import { neueQuelle, ART, EIGEN_ID } from '../../../lib/wissen/quelle.js';
+import { speichere, seiten, loescheSeite, exportJSON, exportDateien, wiederherstellen } from '../../../lib/wissen/eigene.js';
+import { volltext } from '../../../lib/wissen/suche.js';
+import { keyOf } from '../../../lib/wissen/schluessel.js';
+import { zip } from '../../../lib/wissen/zip.js';
 
 let bearbeitet = null, loeschScharf = 0;
 const einst = () => HeinzStore.get('heinz_wikiheinz_settings', {}) || {};

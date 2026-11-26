@@ -1,7 +1,7 @@
-/* tools/wikiheinz/ui/quellen.js – Reiter „Quellen“: Liste, Import einer Wikipedia-Datei mit Fortschritt, Anhalten und Fortsetzen, Löschen in Stücken. Logik in ../mod/import.js. */
+/* tools/wikiheinz/ui/quellen.js – Reiter „Quellen“: Liste, Import einer Wikipedia-Datei mit Fortschritt, Anhalten und Fortsetzen, Löschen in Stücken. Logik in ../../../lib/wissen/import.js. */
 import { $, t, S, on, esc, msg, quelleVon, ladeQuellen, zahl, zim } from './state.js';
-import { neueQuelle, ausDatei, ART } from '../mod/quelle.js';
-import { importiere, zeilenAus, parseZeile } from '../mod/import.js';
+import { neueQuelle, ausDatei, ART } from '../../../lib/wissen/quelle.js';
+import { importiere, zeilenAus, parseZeile } from '../../../lib/wissen/import.js';
 
 let ac = null, scharf = '';
 

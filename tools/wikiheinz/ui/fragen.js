@@ -1,7 +1,7 @@
-/* tools/wikiheinz/ui/fragen.js – Reiter „Fragen“: Frage eingeben, Modell wählen, Antwort mit den verwendeten Auszügen. Modellzugriff nur über HeinzProviders; der Ablauf steht in ../mod/frage.js. */
+/* tools/wikiheinz/ui/fragen.js – Reiter „Fragen“: Frage eingeben, Modell wählen, Antwort mit den verwendeten Auszügen. Modellzugriff nur über HeinzProviders; der Ablauf steht in ../../../lib/wissen/frage.js. */
 import { Heinz, HeinzStore, HeinzProviders as PV, $ } from './base.js';
 import { S, t, on, emit, msg, esc, zim } from './state.js';
-import { beantworte } from '../mod/frage.js';
+import { beantworte } from '../../../lib/wissen/frage.js';
 
 const KEY = 'heinz_wikiheinz_settings', DEF = { provider: 'ollama', model: 'qwen2.5:3b', temp: 0.2, maxTok: 300, scope: '', config: '' };
 let cfg = { ...DEF }, ac = null, onlineOk = '', last = null, status = '', modelSeq = 0, modelleGeladen = false;

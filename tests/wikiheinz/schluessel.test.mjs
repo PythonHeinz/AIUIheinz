@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { keyOf, woerter } from '../../tools/wikiheinz/mod/schluessel.js';
-import { neueQuelle, ausDatei, istSchreibbar, angabe, linkZu, ART, EIGEN_ID } from '../../tools/wikiheinz/mod/quelle.js';
+import { keyOf, woerter } from '../../lib/wissen/schluessel.js';
+import { neueQuelle, ausDatei, istSchreibbar, angabe, linkZu, ART, EIGEN_ID } from '../../lib/wissen/quelle.js';
 
 test('keyOf: klein, ß, Umlaute und Akzente gefaltet, Rand-Interpunktion, Unterstrich als Leerzeichen', () => {
     assert.equal(keyOf('  „Straße“! '), 'strasse');

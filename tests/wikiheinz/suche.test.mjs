@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { suche, volltext, suchbegriffe } from '../../tools/wikiheinz/mod/suche.js';
-import { neuerSpeicher } from '../../tools/wikiheinz/mod/speicher.js';
-import { neueQuelle, ART } from '../../tools/wikiheinz/mod/quelle.js';
-import { keyOf } from '../../tools/wikiheinz/mod/schluessel.js';
+import { suche, volltext, suchbegriffe } from '../../lib/wissen/suche.js';
+import { neuerSpeicher } from '../../lib/wissen/speicher.js';
+import { neueQuelle, ART } from '../../lib/wissen/quelle.js';
+import { keyOf } from '../../lib/wissen/schluessel.js';
 
 const e = (t, x, v = '') => ({ k: keyOf(t), t, x, v });
 async function aufbau() {
