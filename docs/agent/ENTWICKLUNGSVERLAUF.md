@@ -930,5 +930,4 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 
 ## 26.11.2026 – WikiHeinz: Antwortsprache (Strang AIUIheinz-WikiHeinz, Befund aus dem Handytest)
 - Befund (Entwickler, Handy): englische Frage, Antwort deutsch. Ursache: Qwen 2.5 3B übernahm den deutschen Auszug fast wörtlich; „in the language of the question“ genügte nicht.
-- Fix in `mod/frage.js`: `erkenneSprache` (Füllwörter Deutsch/Englisch, ohne Modell; bei unklarer Frage gilt die Oberflächensprache) und ausdrückliche Vorgabe „Write your answer in English/German … translate the facts, keep names“ im Systemprompt plus Schlusszeile im Nutzertext; Auszüge in eigenen Worten. Test in `tests/wikiheinz/frage.test.mjs`. Am Handy erneut prüfen (Y24, Punkt 4).
-
+- Fix in `mod/frage.js` (Vorgabe des Entwicklers: Antwortsprache aus der Spracheinstellung): `beantworte` bekommt `sprache` (`Heinz.lang`, EN/DE-Umschalter) und schreibt „Write your answer in English/German … translate the facts, keep names“ in den Systemprompt plus Schlusszeile im Nutzertext; keine Spracherkennung der Frage. Test in `tests/wikiheinz/frage.test.mjs`. Am Handy erneut prüfen (Y24, Punkt 4).
