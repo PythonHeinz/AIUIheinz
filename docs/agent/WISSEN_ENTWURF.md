@@ -33,7 +33,7 @@ Gemeinsamer Briefkasten zwischen Werkzeugen, läuft über `HeinzStore` (nicht ü
 4. **docHeinz:** Knopf „An WikiHeinz senden“ und „Nachschlagen“ (Kurzinfo zu einem markierten Wort) über Postfach und `suche()`.
 5. **Später:** Faktencheck einer Behauptung („stützt / widerspricht / nicht gefunden“), automatische Verlinkung von Titeln im Text (nur Code), Bücher aus docHeinz als eigene Quelle.
 
-## Entschieden (26.11.2026, Entwickler)
+## Entschieden (26.11.2026, Entwickler; Auftrag: `AUFTRAG_Wissen.md`)
 - Module ziehen nach `lib/wissen/`, keine Fassade, IndexedDB `heinz_wikiheinz` bleibt.
 - Eigener Strang **AIUIheinz-Wissen** (`lib/wissen/`, Postfach, Konfigurationsfeld). Start erst, wenn der WikiHeinz-Strang fertig ist und seine Zeile unter „Aktive Arbeit“ entfernt hat (beide berühren `server.py`). Ein Chat-Strang läuft nicht, `lib/chat` ist frei, wird aber nicht angefasst.
 - **Standard: Suchbegriffe von der App** (am Handy kostet jeder Modellaufruf viel, 0,8 bis 1,9 Token/s mit Ollama). Das Modell ist Rückfall, wenn die App keinen Treffer findet, und Option für Fremdsprachen und Umschreibungen. Wie oft der Rückfall greift, misst der Entwickler am Handy; Messwert wird hier eingetragen: _offen_.
