@@ -4,7 +4,8 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
-Aktuell: keine Zeile.
+Aktuell:
+- 26.11.2026, AIUIheinz-Wissen, Stufe 2 (Freigabe des Entwicklers, 09:41): Postfach `HeinzPostfach` (neu `lib/postfach.js`), Schlüssel `heinz_postfach` in `lib/store.js` (ROUTE, nicht in den Sicherungen mit API-Schlüsseln), `lib/wissen/index.js` (`merke`), WikiHeinz-Rückfrage `tools/wikiheinz/ui/*`; Tests `tests/test_store.py`, `tests/test_wissen.py`, `tests/test_wikiheinz.py`.
 
 Stand: 26.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
