@@ -428,3 +428,10 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. Dashboard ☰ → Sicherung exportieren und wieder importieren: Unterhaltungen und Einstellungen bleiben; Info-Zeile zeigt weiter „IndexedDB“.
 4. WikiHeinz: Quellen zeigen die importierte Wikipedia, Mein Wiki öffnet, ohne Zettel erscheint kein Kasten und kein „(n)“ am Reiter.
 
+### Y26: Heinz Chat mit Wissen (Strang AIUIheinz-Wissen, Stufe 3; nur simuliert getestet)
+1. `git pull`, `bash start.sh`, Seite hart neu laden. Dashboard ☰ → Konfiguration: Schalter „Wissen nutzen“ ist aus; anschalten, Quelle „Alle“, Suchbegriffe „App“, unter einem Namen speichern, „Im Heinz Chat verwenden“.
+2. Heinz Chat: eine Sachfrage stellen (z. B. „Wer war Sokrates?“). Erwartet: Status-Ring zeigt kurz Suche/Lesen, die Antwort nennt [1], darunter ein Chip mit Titel und Lizenz; Tipp auf den Chip öffnet den Wikipedia-Artikel.
+3. Flugmodus an, dieselbe Frage: gleiches Verhalten (nur der Chip-Link geht nicht). Ohne ZIM (Variante A) kommen Auszüge aus den Einleitungen.
+4. Frage ohne Treffer (Unsinnswort): das Modell sagt, dass nichts gefunden wurde, und kennzeichnet eigenes Wissen als Einschätzung. Unterhaltung beenden, neu öffnen: die Chips sind noch da.
+5. Konfiguration ohne Wissen im Chat zuweisen: Verhalten wie vorher. Hub „Konfigurationen“ zeigt bei der Wissens-Konfiguration „Wissen: …“.
+6. Messwerte (Antwortzeit mit und ohne Wissen, Häufigkeit des Modell-Rückfalls) nach `docs/KONZEPT.md` 19.6 eintragen.
