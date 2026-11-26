@@ -5,6 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
+- 26.11.2026, AIUIheinz-Wissen, Umbau Schalter (Freigabe des Entwicklers 23:22): App-weiter Wissensschalter in Heinz Chat und Dashboard (`lib/shared/wissen-schalter.js`, `lib/chat/*`, `lib/dashboard/send.js`, `messages.js`, `configs.js`, `init.js`, `dashboard.html`, `chat.html`, `lib/core.css`, i18n), Konfigurationsfeld `wissen` nur noch Voreinstellung; Tests `tests/test_wissen.py`.
 
 Stand: 26.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
