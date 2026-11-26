@@ -4,7 +4,8 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
-Aktuell: keine Zeile (WikiHeinz hat seine Zeile am 25.11.2026 entfernt).
+Aktuell:
+- 26.11.2026, AIUIheinz-WikiHeinz (Freigabe des Entwicklers für Variante B): `server.py` (neue GET-Endpunkte `/api/wiki/status` und `/api/wiki/artikel`, Option `--zim`, nur lesen), neue Datei `wikizim.py`, `tests/test_server.py` (Endpunkte), `tests/test_wikizim.py`; WikiHeinz `tools/wikiheinz/` (Volltext aus der ZIM für Stöbern und Fragen).
 
 Stand: 25.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
