@@ -37,3 +37,6 @@
 .wh-ex small { display: block; margin-top: 6px; color: var(--sub); overflow-wrap: anywhere; }
 .wh-ex a { color: var(--sub); }
 .wh [hidden] { display: none !important; }   /* .pill, .notice … set display and would override the hidden attribute */
+.wh-mstat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.wh-ring.ring-btn { width: 20px; height: 20px; border-width: 2px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--s) 22%, transparent); }
+.wh-ring.ring-btn.s-yellow { --s: var(--yellow); }

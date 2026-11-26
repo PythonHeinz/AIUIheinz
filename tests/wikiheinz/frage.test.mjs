@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { baueBegriffeAnfrage, pruefeBegriffe, baueKontext, baueAntwortAnfrage, pruefeAntwort, beantworte } from '../../tools/wikiheinz/mod/frage.js';
+import { baueBegriffeAnfrage, pruefeBegriffe, baueKontext, baueAntwortAnfrage, pruefeAntwort, beantworte, mitOhneArtikel } from '../../tools/wikiheinz/mod/frage.js';
 import { neuerSpeicher } from '../../tools/wikiheinz/mod/speicher.js';
 import { neueQuelle, ART } from '../../tools/wikiheinz/mod/quelle.js';
 import { keyOf } from '../../tools/wikiheinz/mod/schluessel.js';
@@ -90,4 +90,15 @@ test('Suchbegriffe: Prompt nennt die Sprache der Quelle, damit „Cologne“ zu 
     const sp = await aufbau(); const gesehen = [];
     await beantworte({ frage: 'Platon?', sp, senden: async (a) => { gesehen.push(a); return a.art === 'begriffe' ? '{"begriffe":["Platon"]}' : 'Schüler [1]'; } });
     assert.match(gesehen[0].system, /titles are in German/);
+});
+test('Suchbegriffe: Form ohne Artikel wird angehängt, Herkunft der Modellbegriffe bleibt sichtbar', async () => {
+    assert.deepEqual(mitOhneArtikel(['The Matrix', 'Köln']), ['The Matrix', 'Köln', 'Matrix']);
+    assert.deepEqual(mitOhneArtikel(['Matrix', 'The Matrix']), ['Matrix', 'The Matrix']);
+    const sp = await aufbau();
+    const r = await beantworte({ frage: 'Platon?', sp, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["Nirgends"]}' : 'Schüler [1]' });
+    assert.equal(r.von, 'code'); assert.deepEqual(r.modellBegriffe, ['Nirgends']);
+    const r2 = await beantworte({ frage: 'Platon?', sp, senden: async (a) => a.art === 'begriffe' ? 'kein json' : 'Schüler [1]' });
+    assert.equal(r2.modellBegriffe, null);
+    const r3 = await beantworte({ frage: 'x', sp, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["The Platon"]}' : 'Schüler [1]' });
+    assert.equal(r3.von, 'modell');
 });

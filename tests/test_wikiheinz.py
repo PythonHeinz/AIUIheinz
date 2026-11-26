@@ -290,6 +290,32 @@ class WikiUiTests(unittest.TestCase):
         page.wait_for_function("window.__wikiReady === true")
         return ctx, page, be
 
+    def test_model_status_line_and_configuration_from_the_dashboard_with_reset(self):
+        ctx, page, be = self.open_asking()
+        try:
+            cfgs = json.dumps([{"id": "c1", "name": "Schnell", "provider": "ollama", "model": "gemma2:2b", "person": "heinz", "prompt": "", "tone": {"temperature": 0.7, "top_k": 20}, "stop": [], "runtime": {"ctx": 2048, "threads": 2}}])
+            page.evaluate("c => localStorage.setItem('heinz_configs', c)", cfgs)
+            page.reload(); page.wait_for_function("window.__wikiReady === true")
+            self.importieren(page)
+            page.click("#tabs [data-tab=fragen]")
+            page.wait_for_function("document.querySelector('#mstat .ring-btn') !== null")
+            self.assertRegex(page.get_attribute("#mstat .ring-btn", "class"), r"s-(red|orange|blue|green|yellow)")
+            self.assertNotEqual(page.inner_text("#mstat").strip(), "")
+            self.assertEqual(page.locator("#cfgsel option").count(), 2)
+            page.select_option("#cfgsel", "c1")
+            page.wait_for_function("document.querySelector('#model').value === 'gemma2:2b'")
+            self.assertEqual(page.input_value("#temp"), "0.7")
+            page.fill("#f-frage", "Wer war Sokrates?"); page.click("#b-ask")
+            page.wait_for_selector("#antwort:not([hidden])")
+            opts = be.bodies[-1]["options"]
+            self.assertEqual(be.bodies[-1]["model"], "gemma2:2b"); self.assertEqual(opts["top_k"], 20); self.assertEqual(opts["num_ctx"], 2048)
+            page.select_option("#cfgsel", "")
+            page.wait_for_function("document.querySelector('#model').value === 'qwen2.5:3b'")
+            self.assertEqual(page.input_value("#model"), "qwen2.5:3b"); self.assertEqual(page.input_value("#temp"), "0.2")
+            self.assertEqual(self.outside, [])
+        finally:
+            ctx.close()
+
     def test_question_answers_from_excerpts_with_sources_and_nothing_leaves_the_device(self):
         ctx, page, be = self.open_asking()
         try:

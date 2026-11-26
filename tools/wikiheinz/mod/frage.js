@@ -74,20 +74,28 @@ export function pruefeAntwort(roh, verwendet) {
     return { status: 'ok', text, zitiert: zitiert.sort((a, b) => a - b), ohneBeleg: !zitiert.length };
 }
 
+const ARTIKEL = /^(the|a|an|der|die|das|ein|eine|le|la|les|el|il)\s+/i;
+/** „The Matrix“ findet in einer deutschen Wikipedia oft nichts; die Form ohne Artikel wird hinten angehängt. */
+export function mitOhneArtikel(liste) {
+    const out = liste.slice(), keys = new Set(liste.map(keyOf));
+    for (const b of liste) { const k = b.replace(ARTIKEL, '').trim(); if (k && k !== b && !keys.has(keyOf(k))) { keys.add(keyOf(k)); out.push(k); } }
+    return out.slice(0, MAX_BEGRIFFE + 2);
+}
 export async function beantworte(o) {
     const { frage, sp, senden, signal } = o, st = o.onStatus || (() => {}), gesamt = o.maxTreffer || 3, opts = { quellen: o.quellen, gesamt };
     st('suche');
     const alle = await sp.quellen(), gewaehlt = alle.filter(q => !o.quellen || o.quellen.includes(q.id)), wq = gewaehlt.find(q => q.wikipedia) || gewaehlt[0], wikiSprache = wq ? wq.sprache : 'de';
-    let begriffe = null, von = 'modell';
-    try { begriffe = pruefeBegriffe(await senden(baueBegriffeAnfrage(frage, wikiSprache), signal)); } catch (e) { if (signal && signal.aborted) throw e; begriffe = null; }
+    let begriffe = null, von = 'modell', modellBegriffe = null;
+    try { begriffe = modellBegriffe = pruefeBegriffe(await senden(baueBegriffeAnfrage(frage, wikiSprache), signal)); } catch (e) { if (signal && signal.aborted) throw e; begriffe = null; }
+    if (begriffe) begriffe = mitOhneArtikel(begriffe);
     if (!begriffe) { begriffe = woerter(frage); von = 'code'; }
     let treffer = begriffe.length ? await suchbegriffe(sp, begriffe, opts) : [];
     if (!treffer.length && von === 'modell') { const w = woerter(frage); if (w.length) { treffer = await suchbegriffe(sp, w, opts); if (treffer.length) { begriffe = w; von = 'code'; } } }
-    if (!treffer.length) return { status: 'nichtGefunden', antwort: '', ohneBeleg: false, quellen: [], begriffe, von };
+    if (!treffer.length) return { status: 'nichtGefunden', antwort: '', ohneBeleg: false, quellen: [], begriffe, von, modellBegriffe };
     st('lese');
     const k = baueKontext(treffer), meta = new Map(alle.map(q => [q.id, q]));
     st('antworte');
     const p = pruefeAntwort(await senden(baueAntwortAnfrage(frage, k.verwendet, o.sprache), signal), k.verwendet);
     const quellen = k.verwendet.map(v => { const q = meta.get(v.q); return { nr: v.nr, q: v.q, titel: v.titel, auszug: v.auszug, angabe: angabe(q, v.titel), link: linkZu(q, v.titel), zitiert: p.zitiert.includes(v.nr) }; });
-    return { status: p.status, antwort: p.text, ohneBeleg: p.ohneBeleg, quellen: p.status === 'ok' ? quellen : [], begriffe, von };
+    return { status: p.status, antwort: p.text, ohneBeleg: p.ohneBeleg, quellen: p.status === 'ok' ? quellen : [], begriffe, von, modellBegriffe };
 }
