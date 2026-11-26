@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { HeinzWissen } from '../../lib/wissen/index.js';
 import { neuerSpeicher } from '../../lib/wissen/speicher.js';
 import { neueQuelle, ART } from '../../lib/wissen/quelle.js';
-import { keyOf } from '../../lib/wissen/schluessel.js';
+import { keyOf, woerter } from '../../lib/wissen/schluessel.js';
 
 const e = (t, x, v = '') => ({ k: keyOf(t), t, x, v });
 const ARTIKEL = { titel: 'Grünten', intro: 'Der Grünten ist ein Berg im Allgäu.', infobox: [['Höhe', '1738 m'], ['Gebirge', 'Allgäuer Voralpen']], abschnitte: [{ h: 'Geschichte', text: 'Auf dem Grünten wurde Erz abgebaut.' }], zeichen: 120 };
@@ -104,4 +104,19 @@ test('suche: Titel mit reinem Zahlenzusatz (Postleitzahl, Nummer) kommen hinter 
     await sp.add('wikipedia-de', [e('Köln', 'Stadt.'), e('Köln 75', 'Album.'), e('Köln 50667', 'Postleitzahl.'), e('Köln-Deutz', 'Stadtteil.'), e('Kölner Dom', 'Kirche.')]);
     const r = await HeinzWissen.suche('Köln', { max: 5 });
     assert.deepEqual(r.treffer.map(t => t.titel), ['Köln', 'Köln-Deutz', 'Kölner Dom', 'Köln 75', 'Köln 50667']);
+});
+
+test('woerter: Stoppwörter mit Umlaut und ß greifen (über, weißt), Nachfrage-Floskeln („Das ist falsch“) ergeben keine Suchwörter', () => {
+    assert.deepEqual(woerter('Was weißt du über Kempten?'), ['kempten']);
+    assert.deepEqual(woerter('Das ist falsch'), []);
+});
+
+test('suchbegriffe: genaue Titeltreffer vor Vorsilbentreffern anderer Begriffe; Vorsilbentreffer nur von Begriffen mit genauem Treffer', async () => {
+    const sp = await aufbau(false, null, false);
+    await sp.quelleSetzen(neueQuelle({ id: 'wikipedia-de', name: 'Wikipedia (de, offline)', wikipedia: true, lizenz: 'CC BY-SA 4.0', stand: '2026-10', anzahl: 5 }));
+    await sp.add('wikipedia-de', [e('Weißtafel', 'Tafel.'), e('Weißtanne', 'Baum.'), e('Kempten', 'Stadt im Allgäu.'), e('Kempten-Ost', 'Stadtteil.')]);
+    let r = await HeinzWissen.kontext('weißta kempten', { begriffeVom: 'app' });
+    assert.deepEqual(r.verwendet.map(v => v.titel), ['Kempten', 'Kempten-Ost'], 'Weißtafel und Weißtanne gehören zu einem Begriff ohne genauen Treffer');
+    r = await HeinzWissen.kontext('weißta', { begriffeVom: 'app' });
+    assert.ok(r.verwendet.length >= 1 && r.verwendet.every(v => v.titel.startsWith('Weiß')), 'ohne genauen Treffer bleibt es bei der Vorsilbensuche');
 });

@@ -250,6 +250,20 @@ class WissenChatTests(unittest.TestCase):
         finally:
             ctx.close()
 
+    def test_a_short_follow_up_searches_with_the_previous_question(self):
+        w = {"an": True, "quellen": [], "begriffe": "app"}
+        ctx, page, modell, fremd = self.chat(w, "Wer war Sokrates?")
+        try:
+            modell.bodies.clear()
+            page.fill("#q", "Das ist falsch"); page.click("#send")
+            page.wait_for_function("document.querySelectorAll('#log .msg.a').length === 2 && !document.querySelector('#log .cur')")
+            sysm = self.sysmsg(modell.bodies[-1])
+            self.assertIn("antiker Philosoph", sysm, "the excerpts of the topic are given again")
+            self.assertEqual(len(modell.bodies), 1, "no model call for search terms")
+            self.assertEqual(page.locator("#log .msg.a").nth(1).locator(".src .chip").first.text_content().split(" ·")[0], "[1] Sokrates")
+        finally:
+            ctx.close()
+
     def test_the_hub_tile_shows_the_field_read_only(self):
         ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
         try:

@@ -994,3 +994,10 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Dashboard:** Beschriftungen „Quellen“ und „Suchbegriffe“, Erklärung App/Modell, Hinweis „Gilt nur im Heinz Chat“.
 - **Tests:** `tests/test_wissen.py` (Chips zitiert/alle), `tests/wissen/wissen.test.mjs`; voller Lauf grün. Handytest Y26 erneut mit „Was ist Köln?“ (nur noch sinnvolle Treffer, Beschriftung der Chips).
 
+## 26.11.2026 – Fehlersuche „Kempten“ (Strang AIUIheinz-Wissen, Handytest 13:00)
+- **Befund (Entwickler, Handy):** „Was weißt du über Kempten?“ lieferte Weißtafel, Weiß-Tanne, „Weißt du noch“; „Das ist falsch“ lieferte Falschauer, Falschalarm, Falschantwort. Die Antworten waren entsprechend falsch (Kempten angeblich in Baden-Württemberg).
+- **Ursachen:** (1) Die Stoppwortliste in `lib/wissen/schluessel.js` hatte Wörter mit Umlaut und ß („über“, „weißt“ fehlte ganz), verglichen wurde aber mit dem Schlüssel (ü = u, ß = ss): „über“ und Verwandte griffen nie. (2) `suchbegriffe` brach nach dem ersten Begriff ab, sobald drei Treffer da waren: die Vorsilbentreffer von „weisst“ füllten die Liste, „Kempten“ wurde nie gesucht. (3) Eine Nachfrage ohne Thema suchte nur mit ihren eigenen Wörtern.
+- **Behebung:** Stoppwörter werden in Schlüsselform abgelegt und um Frageverben (weißt, kennst, sag, nenne, erzähl, zeig, liegt …) und Floskeln (ja, nein, falsch, richtig, stimmt, danke …) ergänzt. `suchbegriffe` sucht alle Begriffe, nimmt genaue Titeltreffer zuerst und Vorsilbentreffer nur von Begriffen mit genauem Treffer; ohne genauen Treffer bleibt es wie bisher. Im Heinz Chat geht bei einer kurzen Nachfrage (höchstens 4 Wörter) nach einer Antwort mit Quellen die vorige Frage in die Suche ein.
+- **Tests:** `tests/wissen/wissen.test.mjs` (Stoppwörter, genau vor Vorsilbe), `tests/test_wissen.py` (Nachfrage). Voller Lauf grün. Nur simuliert getestet; Handytest Y26 Punkt 8.
+- **Offen:** Heißt der Titel „Kempten“ in der Wikipedia eine Begriffsklärung, ist der genaue Treffer deren Einleitung und nicht der Artikel „Kempten (Allgäu)“; am Handy prüfen.
+

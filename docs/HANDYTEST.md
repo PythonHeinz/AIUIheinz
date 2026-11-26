@@ -436,3 +436,4 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 5. Konfiguration ohne Wissen im Chat zuweisen: Verhalten wie vorher. Hub „Konfigurationen“ zeigt bei der Wissens-Konfiguration „Wissen: …“.
 6. Messwerte (Antwortzeit mit und ohne Wissen, Häufigkeit des Modell-Rückfalls) nach `docs/KONZEPT.md` 19.6 eintragen.
 7. (Nachbesserung) „Was ist Köln?“: „Köln 75“ und „Köln 50667“ stehen nicht mehr vorn; ohne [n] im Text steht „Auszüge:“ vor den Chips. Dashboard → Konfiguration: „Quellen“, „Suchbegriffe“ und der Hinweis „Gilt nur im Heinz Chat“ sind sichtbar.
+8. (Kempten) „Was weißt du über Kempten?“: Treffer „Kempten …“ als [1], keine „Weiß…“-Titel. Danach „Das ist falsch“: die Chips zeigen wieder Kempten, keine „Falsch…“-Titel. Auch „Wo liegt Rüsselsheim?“ und „Erzähl mir etwas über den Grünten“ prüfen.
