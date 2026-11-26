@@ -140,7 +140,7 @@ class WikiUiTests(unittest.TestCase):
         ctx = self.browser.new_context(viewport={"width": w, "height": h}, accept_downloads=True)
         page = ctx.new_page()
         self.outside = []
-        page.on("request", lambda r: self.outside.append(r.url) if not r.url.startswith(self.server.base) and not r.url.startswith("blob:") and not r.url.startswith("data:") else None)
+        page.on("request", lambda r: self.outside.append(r.url) if not r.url.startswith(self.server.base) and not r.url.endswith("localhost:11434/api/ps") and not r.url.startswith("blob:") and not r.url.startswith("data:") else None)
         page.add_init_script("localStorage.setItem('heinz_settings', JSON.stringify({lang: '%s'}))" % lang)
         page.goto(self.server.base + URL)
         page.wait_for_function("window.__wikiReady === true")
@@ -302,12 +302,15 @@ class WikiUiTests(unittest.TestCase):
             page.wait_for_function("document.querySelector('#mstat .ring-btn') !== null")
             self.assertRegex(page.get_attribute("#mstat .ring-btn", "class"), r"s-(red|orange|blue|green|yellow)")
             self.assertNotEqual(page.inner_text("#mstat").strip(), "")
+            self.assertRegex(page.get_attribute("#app-header .ring", "class"), r"wh-status s-(red|orange|blue|green|yellow)")      # der Ring der Kopfzeile zeigt den Zustand
             self.assertEqual(page.locator("#cfgsel option").count(), 2)
             page.select_option("#cfgsel", "c1")
             page.wait_for_function("document.querySelector('#model').value === 'gemma2:2b'")
             self.assertEqual(page.input_value("#temp"), "0.7")
             page.fill("#f-frage", "Wer war Sokrates?"); page.click("#b-ask")
             page.wait_for_selector("#antwort:not([hidden])")
+            self.assertEqual(page.inner_text("#askstatus").strip(), "")
+            self.assertRegex(page.get_attribute("#app-header .ring", "class"), r"s-(red|orange|blue|green)")
             opts = be.bodies[-1]["options"]
             self.assertEqual(be.bodies[-1]["model"], "gemma2:2b"); self.assertEqual(opts["top_k"], 20); self.assertEqual(opts["num_ctx"], 2048)
             page.select_option("#cfgsel", "")

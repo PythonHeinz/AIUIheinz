@@ -44,4 +44,7 @@
 .wh-voll p { margin: 0 0 8px; }
 .wh-info { display: grid; grid-template-columns: minmax(90px, 36%) 1fr; gap: 4px 10px; margin: 6px 0 10px; font-size: .9rem; }
 .wh-info dt { color: var(--sub); } .wh-info dd { margin: 0; }
+/* Kopfzeilen-Ring als Statusanzeige (Farben wie im Dashboard: rot offline, orange lädt/schläft, blau bereit, grün antwortet) */
+header .ring.wh-status { border-color: var(--s, var(--blue)); background: color-mix(in srgb, var(--s, var(--blue)) 18%, var(--bg)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--s, var(--blue)) 22%, transparent); }
+.wh-status.s-red { --s: var(--red); } .wh-status.s-orange { --s: var(--orange); } .wh-status.s-blue { --s: var(--blue); } .wh-status.s-green { --s: var(--green); } .wh-status.s-yellow { --s: var(--yellow); }
 

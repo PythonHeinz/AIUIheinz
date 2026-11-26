@@ -85,11 +85,12 @@ export function mitOhneArtikel(liste) {
 }
 export async function beantworte(o) {
     const { frage, sp, senden, signal } = o, st = o.onStatus || (() => {}), gesamt = o.maxTreffer || 3, opts = { quellen: o.quellen, gesamt };
-    st('suche');
+    st('begriffe');
     const alle = await sp.quellen(), gewaehlt = alle.filter(q => !o.quellen || o.quellen.includes(q.id)), wq = gewaehlt.find(q => q.wikipedia) || gewaehlt[0], wikiSprache = wq ? wq.sprache : 'de';
     let begriffe = null, von = 'modell', modellBegriffe = null;
     try { begriffe = modellBegriffe = pruefeBegriffe(await senden(baueBegriffeAnfrage(frage, wikiSprache), signal)); } catch (e) { if (signal && signal.aborted) throw e; begriffe = null; }
     if (begriffe) begriffe = mitOhneArtikel(begriffe);
+    st('suche');
     if (!begriffe) { begriffe = woerter(frage); von = 'code'; }
     let treffer = begriffe.length ? await suchbegriffe(sp, begriffe, opts) : [];
     if (!treffer.length && von === 'modell') { const w = woerter(frage); if (w.length) { treffer = await suchbegriffe(sp, w, opts); if (treffer.length) { begriffe = w; von = 'code'; } } }

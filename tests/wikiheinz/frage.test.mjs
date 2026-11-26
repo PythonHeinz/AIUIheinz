@@ -43,7 +43,7 @@ test('beantworte: Modell liefert Begriffe, Antwort mit Quellenliste und Lizenz',
     const sp = await aufbau(), calls = [];
     const senden = async (a) => { calls.push(a.art); return a.art === 'begriffe' ? '{"begriffe":["Sokrates"]}' : 'Ein Philosoph aus Athen [1].'; };
     const r = await beantworte({ frage: 'Wer war Sokrates?', sp, senden, onStatus: (s) => calls.push('st:' + s) });
-    assert.deepEqual(calls, ['st:suche', 'begriffe', 'st:lese', 'st:antworte', 'antwort']);
+    assert.deepEqual(calls, ['st:begriffe', 'begriffe', 'st:suche', 'st:lese', 'st:antworte', 'antwort']);
     assert.equal(r.status, 'ok'); assert.equal(r.von, 'modell'); assert.equal(r.quellen[0].titel, 'Sokrates'); assert.equal(r.quellen[0].zitiert, true);
     assert.match(r.quellen[0].angabe, /CC BY-SA 4\.0/); assert.equal(r.quellen[0].link, 'https://de.wikipedia.org/wiki/Sokrates');
 });

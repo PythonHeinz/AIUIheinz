@@ -45,7 +45,8 @@ function fillScope() {
     sel.value = S.quellen.some(q => q.id === cfg.scope) ? cfg.scope : '';
 }
 
-function zeigeStatus(s) { status = s; $('askstatus').textContent = s ? t({ suche: 'stSuche', lese: 'stLese', antworte: 'stAntworte' }[s]) : ''; }
+/* Phasen einer Frage: Ring und Statuszeile zeigen sie wie im Dashboard (blau = wartet/arbeitet, grün = das Modell schreibt, orange = lädt). */
+function phase(s) { setLauf(...({ begriffe: ['blue', 'stBegriffeSenden'], suche: ['blue', 'stSuchen'], lese: ['blue', 'stLesen'], antworte: ['blue', 'stAntwortSenden'] }[s] || [])); }
 function zeigeAntwort() {
     const r = last, box = $('antwort'); box.hidden = !r; if (!r) return;
     const b = r.begriffe.join(', ');
@@ -65,17 +66,30 @@ function errText(e) {
 
 
 // ---- Modellstatus (geladen / schläft / offline), wie Ring und LED der anderen Seiten: Zustand und Farbe kommen aus HeinzProviders.status ----
-let stSeq = 0, laedt = null;
-async function zeigeModell() {
-    const el = $('mstat'), seq = ++stSeq;
-    if (!cfg.model) { el.textContent = ''; return; }
-    let st = null; try { st = await PV.status(cfg.provider, cfg.model); } catch (e) { st = null; }
-    if (seq !== stSeq) return;
-    const key = laedt ? 'stLoading' : st ? st.key : 'stOffline', color = laedt ? 'orange' : st ? st.color : 'red';
-    el.replaceChildren();
+let stSeq = 0, laedt = null, lauf = null, anz = null;
+function ringSetzen(color, key) {                                       // der Ring in der Kopfzeile zeigt den Zustand wie im Dashboard
+    anz = anz && anz.color === color && anz.key === key ? anz : { color, key };
+    const r = document.querySelector('#app-header .ring'); if (!r) return;
+    r.className = 'ring wh-status s-' + color; r.title = t(key); r.setAttribute('aria-label', t(key));
+}
+function anzeigen(color, key, knopf) {
+    const el = $('mstat'); el.replaceChildren();
     const dot = document.createElement('span'); dot.className = 'ring-btn wh-ring s-' + color; dot.title = t(key); el.appendChild(dot);
     const tx = document.createElement('span'); tx.textContent = t(key); el.appendChild(tx);
-    if (!laedt && st && st.code === 'asleep') { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill'; b.textContent = t('loadNow'); b.addEventListener('click', ladeModell); el.appendChild(b); }
+    if (knopf) { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill'; b.textContent = t('loadNow'); b.addEventListener('click', ladeModell); el.appendChild(b); }
+    ringSetzen(color, key);
+}
+function setLauf(color, key) {
+    lauf = color ? { color, key } : null; $('askstatus').textContent = lauf ? t(key) : '';
+    if (lauf) anzeigen(lauf.color, lauf.key); else zeigeModell();
+}
+async function zeigeModell() {
+    const seq = ++stSeq;
+    if (lauf) return anzeigen(lauf.color, lauf.key);
+    if (!cfg.model) { $('mstat').textContent = ''; return; }
+    let st = null; try { st = await PV.status(cfg.provider, cfg.model); } catch (e) { st = null; }
+    if (seq !== stSeq || lauf) return;
+    anzeigen(laedt ? 'orange' : st ? st.color : 'red', laedt ? 'stLoading' : st ? st.key : 'stOffline', !laedt && st && st.code === 'asleep');
 }
 async function ladeModell() {
     const p = PV.get(cfg.provider); if (!cfg.model || !p || !p.local || p.format !== 'ollama' || laedt || ac) return zeigeModell();
@@ -117,19 +131,21 @@ async function fragen() {
         b.addEventListener('click', () => { onlineOk = cfg.provider; renderOnline(); fragen(); }); el.appendChild(b); return;
     }
     ac = new AbortController(); $('b-ask').hidden = true; $('b-askstop').hidden = false; last = null; zeigeAntwort();
+    setLauf('orange', 'stLoading');
     try { await PV.prepare(cfg.provider, cfg.model); } catch (e) { /* die erste Anfrage meldet ein echtes Problem */ }
     const kf = cfgObj(), rt = PV.runtime(cfg.provider, cfg.model, undefined, kf && kf.runtime) || {};
     const senden = async (a, signal) => {
-        const suche = a.art === 'begriffe';
-        const r = await PV.chat(cfg.provider, { model: cfg.model, system: a.system, messages: [{ role: 'user', content: a.user }], format: a.format, signal,
+        const suche = a.art === 'begriffe'; let erstes = true;
+        setLauf('blue', suche ? 'stBegriffeSenden' : 'stAntwortSenden');
+        const r = await PV.chat(cfg.provider, { model: cfg.model, system: a.system, messages: [{ role: 'user', content: a.user }], format: a.format, signal, onDelta: () => { if (erstes) { erstes = false; setLauf('green', suche ? 'stBegriffeToken' : 'stAntwortToken'); } },
             options: Object.assign({}, rt.options || {}, kf && kf.tone ? kf.tone : {}, kf && kf.stop && kf.stop.length ? { stop: kf.stop.slice() } : {}, { temperature: suche ? 0 : cfg.temp, num_predict: suche ? 80 : cfg.maxTok }), keepAlive: rt.keepAlive });
         return r.text;
     };
     try {
-        const zs = await zim.status(), r = await beantworte({ frage, sp: S.sp, artikel: zs.available ? (ti) => zim.artikel(ti) : undefined, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: zeigeStatus, sprache: Heinz.lang });
+        const zs = await zim.status(), r = await beantworte({ frage, sp: S.sp, artikel: zs.available ? (ti) => zim.artikel(ti) : undefined, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: phase, sprache: Heinz.lang });
         last = { ...r, engine: cfg.provider, model: cfg.model };
     } catch (e) { if (ac.signal.aborted) msg(t('aborted'), 'warn'); else msg(errText(e), 'err'); }
-    ac = null; zeigeStatus(''); zeigeModell(); $('b-ask').hidden = false; $('b-askstop').hidden = true; renderOnline(); zeigeAntwort();
+    ac = null; setLauf(null); $('b-ask').hidden = false; $('b-askstop').hidden = true; renderOnline(); zeigeAntwort();
 }
 
 export function initFragen() {
@@ -146,7 +162,8 @@ export function initFragen() {
     $('b-askstop').addEventListener('click', () => { if (ac) ac.abort(); });
     $('f-frage').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fragen(); } });
     $('ant-quellen').addEventListener('click', (ev) => { const a = ev.target.closest('a[data-q]'); if (a) { ev.preventDefault(); emit('open', { q: a.dataset.q, titel: a.dataset.t }); } });
-    on('quellen', fillScope); on('lang', () => { fillProviders(); fillScope(); fillConfigs(); zeigeModell(); renderOnline(); zeigeAntwort(); zeigeStatus(status); });
+    on('quellen', fillScope); on('lang', () => { fillProviders(); fillScope(); fillConfigs(); zeigeModell(); renderOnline(); zeigeAntwort(); if (anz) ringSetzen(anz.color, anz.key); });
     on('tabwechsel', (name) => { if (name !== 'fragen') return; if (!modelleGeladen) { modelleGeladen = true; fillModels().then(() => { zeigeModell(); ladeModell(); }); } else zeigeModell(); });   // die Modellliste wird erst beim ersten Öffnen des Reiters von der lokalen Engine geholt
     fillProviders(); fillScope(); fillConfigs(); renderOnline();
+    zeigeModell(); setInterval(() => { if (!document.hidden && !ac && !laedt) zeigeModell(); }, 15000);   // Ring in der Kopfzeile: Modellstatus auf jedem Reiter
 }
