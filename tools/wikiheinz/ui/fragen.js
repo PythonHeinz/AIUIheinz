@@ -84,7 +84,7 @@ async function fragen() {
         return r.text;
     };
     try {
-        const r = await beantworte({ frage, sp: S.sp, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: zeigeStatus });
+        const r = await beantworte({ frage, sp: S.sp, quellen: cfg.scope ? [cfg.scope] : undefined, senden, signal: ac.signal, onStatus: zeigeStatus, sprache: Heinz.lang });
         last = { ...r, engine: cfg.provider, model: cfg.model };
     } catch (e) { if (ac.signal.aborted) msg(t('aborted'), 'warn'); else msg(errText(e), 'err'); }
     ac = null; zeigeStatus(''); $('b-ask').hidden = false; $('b-askstop').hidden = true; renderOnline(); zeigeAntwort();

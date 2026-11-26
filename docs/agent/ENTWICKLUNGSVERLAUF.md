@@ -928,3 +928,7 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - Tests: `tests/wikiheinz/*.test.mjs` (Node), `tests/test_wikiheinz.py` (IndexedDB im Browser, Seiten mit simuliertem Ollama, Mini-ZIM); Werkzeugliste in `tests/test_server.py`, Seitenliste in `tests/test_pages.py`, `tests/run_all.sh`. Alles nur simuliert; Handytest Y24.
 - Nicht berührt: `lib/`, `server.py`, `index.html` (der Hub-Eintrag fehlt noch, Mini-Commit nach Rückfrage).
 
+## 26.11.2026 – WikiHeinz: Antwortsprache (Strang AIUIheinz-WikiHeinz, Befund aus dem Handytest)
+- Befund (Entwickler, Handy): englische Frage, Antwort deutsch. Ursache: Qwen 2.5 3B übernahm den deutschen Auszug fast wörtlich; „in the language of the question“ genügte nicht.
+- Fix in `mod/frage.js`: `erkenneSprache` (Füllwörter Deutsch/Englisch, ohne Modell; bei unklarer Frage gilt die Oberflächensprache) und ausdrückliche Vorgabe „Write your answer in English/German … translate the facts, keep names“ im Systemprompt plus Schlusszeile im Nutzertext; Auszüge in eigenen Worten. Test in `tests/wikiheinz/frage.test.mjs`. Am Handy erneut prüfen (Y24, Punkt 4).
+

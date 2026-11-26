@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { baueBegriffeAnfrage, pruefeBegriffe, baueKontext, baueAntwortAnfrage, pruefeAntwort, beantworte } from '../../tools/wikiheinz/mod/frage.js';
+import { baueBegriffeAnfrage, pruefeBegriffe, baueKontext, baueAntwortAnfrage, pruefeAntwort, beantworte, erkenneSprache } from '../../tools/wikiheinz/mod/frage.js';
 import { neuerSpeicher } from '../../tools/wikiheinz/mod/speicher.js';
 import { neueQuelle, ART } from '../../tools/wikiheinz/mod/quelle.js';
 import { keyOf } from '../../tools/wikiheinz/mod/schluessel.js';
@@ -26,7 +26,7 @@ test('Anfragen: Schema, Frage steckt nur im Nutzertext, Auszüge nummeriert, Mar
     const b = baueBegriffeAnfrage('Wer war Sokrates?'); assert.equal(b.format.properties.begriffe.maxItems, 4); assert.equal(b.user, 'Wer war Sokrates?');
     const k = baueKontext([{ q: 'w', titel: 'Sokrates', text: 'Text eins.' }, { q: 'w', titel: 'Platon', text: 'Text zwei.' }]);
     const a = baueAntwortAnfrage('Wer war Sokrates?', k.verwendet);
-    assert.match(a.user, /\[1\] Sokrates\nText eins\.\n\n\[2\] Platon/); assert.match(a.user, /Question: Wer war Sokrates\?$/); assert.match(a.system, /NOT_FOUND/); assert.match(a.system, /ONLY/);
+    assert.match(a.user, /\[1\] Sokrates\nText eins\.\n\n\[2\] Platon/); assert.match(a.user, /Question: Wer war Sokrates\?\n\nAnswer in German\.$/); assert.match(a.system, /NOT_FOUND/); assert.match(a.system, /ONLY/);
 });
 test('baueKontext: Auszug und Gesamtlänge begrenzt, mindestens ein Treffer bleibt', () => {
     const lang = 'wort '.repeat(1000), k = baueKontext([{ q: 'w', titel: 'A', text: lang }, { q: 'w', titel: 'B', text: lang }, { q: 'w', titel: 'C', text: lang }]);
@@ -74,4 +74,16 @@ test('beantworte: Mein Wiki wird mitdurchsucht, Quelle ohne Link', async () => {
     const sp = await aufbau(); await sp.put({ ...e('Sokrates-Notiz', 'Mein Gedanke zu Sokrates.'), q: 'mein-wiki' });
     const r = await beantworte({ frage: 'Sokrates-Notiz', sp, quellen: ['mein-wiki'], senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["Sokrates-Notiz"]}' : 'Notiz [1]' });
     assert.equal(r.quellen[0].q, 'mein-wiki'); assert.equal(r.quellen[0].link, '');
+});
+test('Antwortsprache folgt der Frage, nicht den Auszügen', () => {
+    assert.equal(erkenneSprache('Who was Sokrates?'), 'en');
+    assert.equal(erkenneSprache('Wer war Sokrates?'), 'de');
+    assert.equal(erkenneSprache('What is the difference between Plato and Sokrates?'), 'en');
+    assert.equal(erkenneSprache('Sokrates'), '');
+    const v = [{ nr: 1, titel: 'Sokrates', auszug: 'Sokrates war ein Philosoph.' }];
+    const en = baueAntwortAnfrage('Who was Sokrates?', v);
+    assert.match(en.system, /Write your answer in English/); assert.match(en.user, /Answer in English\.$/);
+    assert.match(baueAntwortAnfrage('Wer war Sokrates?', v).system, /in German/);
+    assert.match(baueAntwortAnfrage('Sokrates', v, 'en').system, /in English/);
+    assert.doesNotMatch(baueAntwortAnfrage('Sokrates', v).system, /Write your answer in/);
 });
