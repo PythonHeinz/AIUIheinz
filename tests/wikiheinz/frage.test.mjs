@@ -113,3 +113,11 @@ test('Volltext (Variante B): passende Abschnitte statt der Einleitung, Quelle oh
     const gef = []; await beantworte({ frage: 'Eigen', sp, quellen: ['mein-wiki'], artikel: async (t) => { gef.push(t); return null; }, senden: async (a) => a.art === 'begriffe' ? '{"begriffe":["Eigen"]}' : 'Notiz [1]' });
     assert.deepEqual(gef, []);
 });
+
+test('Fragewort als Titel: Modell ersetzt „Grünten“ durch Verwandtes, der genaue Titel wird trotzdem gefunden', async () => {
+    const sp = await aufbau();
+    await sp.add('wikipedia-de', [e('Grünten', 'Der Grünten ist ein Berg im Allgäu.'), e('Umwelt', 'Die Umwelt ist das Umfeld eines Lebewesens.')]);
+    let kontext = '';
+    const r = await beantworte({ frage: 'Was ist der grünten?', sp, senden: async (a) => { if (a.art === 'begriffe') return '{"begriffe":["Umwelt"]}'; kontext = a.user; return 'Ein Berg im Allgäu [1].'; } });
+    assert.equal(r.status, 'ok'); assert.ok(r.quellen.some(q => q.titel === 'Grünten')); assert.match(kontext, /Grünten\nDer Grünten ist ein Berg/);
+});

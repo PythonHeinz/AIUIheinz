@@ -9,7 +9,7 @@
  * `artikel(titel)` (optional, Variante B) liefert den ganzen Artikel vom Server; ohne ihn oder ohne ZIM bleibt es bei den gespeicherten Einleitungen.
  * Nichts gefunden oder „NOT_FOUND“ vom Modell = „nicht gefunden“; das Modell antwortet nie aus eigenem Wissen. */
 import { keyOf, woerter } from './schluessel.js';
-import { suchbegriffe } from './suche.js';
+import { suche, suchbegriffe } from './suche.js';
 import { angabe, linkZu } from './quelle.js';
 import { waehleAbschnitte } from './volltext.js';
 
@@ -25,7 +25,7 @@ export function baueBegriffeAnfrage(frage, wiki) {
         system: 'You turn a question into search terms for an encyclopedia whose article titles are in ' + name + '. Answer only as JSON: {"begriffe": ["<article title>", …]}. ' +
             'Give at most ' + MAX_BEGRIFFE + ' terms, the main subject first, each as the exact title of an encyclopedia article in ' + name + ' (nominative, no question words). ' +
             'If the question is in another language, translate the subject into ' + name + ', for example place and person names. ' +
-            'Do not answer the question. Examples: "Wer war Sokrates und was lehrte er?" -> {"begriffe": ["Sokrates", "Sokratische Methode"]}; "What is Cologne?" -> {"begriffe": ["Köln"]}.',
+            'Keep names and rare words of the question unchanged; never replace a name by a related topic. Do not answer the question. Examples: "Wer war Sokrates und was lehrte er?" -> {"begriffe": ["Sokrates", "Sokratische Methode"]}; "What is Cologne?" -> {"begriffe": ["Köln"]}.',
         user: String(frage || '').slice(0, 500)
     };
 }
@@ -83,6 +83,16 @@ export function mitOhneArtikel(liste) {
     for (const b of liste) { const k = b.replace(ARTIKEL, '').trim(); if (k && k !== b && !keys.has(keyOf(k))) { keys.add(keyOf(k)); out.push(k); } }
     return out.slice(0, MAX_BEGRIFFE + 2);
 }
+/* Die längsten Wörter der Frage werden zusätzlich als Titel gesucht (nur genaue Treffer), damit ein unbekanntes Wort
+ * („Grünten“) nicht verloren geht, wenn das Modell es durch Verwandtes ersetzt. Reihenfolge: genaue Modelltreffer, genaue Fragewort-Treffer, Rest. */
+async function mitFragewoertern(sp, frage, treffer, opts) {
+    const ws = woerter(frage).filter(w => w.length >= 4).sort((a, b) => b.length - a.length).slice(0, 2), extra = [];
+    for (const w of ws) for (const t of await suche(sp, w, { quellen: opts.quellen, limit: 3 })) if (t.genau) extra.push(t);
+    const out = [], gesehen = new Set(), add = (t) => { const id = t.q + '|' + t.titel; if (!gesehen.has(id)) { gesehen.add(id); out.push(t); } };
+    treffer.filter(t => t.genau).forEach(add); extra.forEach(add); treffer.forEach(add);
+    return out;
+}
+
 export async function beantworte(o) {
     const { frage, sp, senden, signal } = o, st = o.onStatus || (() => {}), gesamt = o.maxTreffer || 3, opts = { quellen: o.quellen, gesamt };
     st('begriffe');
@@ -92,7 +102,9 @@ export async function beantworte(o) {
     if (begriffe) begriffe = mitOhneArtikel(begriffe);
     st('suche');
     if (!begriffe) { begriffe = woerter(frage); von = 'code'; }
-    let treffer = begriffe.length ? await suchbegriffe(sp, begriffe, opts) : [];
+    let treffer = begriffe.length ? await suchbegriffe(sp, begriffe, { ...opts, gesamt: gesamt + 3 }) : [];
+    if (von === 'modell') { const leer = !treffer.length; treffer = await mitFragewoertern(sp, frage, treffer, opts); if (leer && treffer.length) { begriffe = woerter(frage); von = 'code'; } }
+    treffer = treffer.slice(0, gesamt);
     if (!treffer.length && von === 'modell') { const w = woerter(frage); if (w.length) { treffer = await suchbegriffe(sp, w, opts); if (treffer.length) { begriffe = w; von = 'code'; } } }
     if (!treffer.length) return { status: 'nichtGefunden', antwort: '', ohneBeleg: false, quellen: [], begriffe, von, modellBegriffe };
     st('lese');
