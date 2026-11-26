@@ -931,3 +931,8 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 ## 26.11.2026 – WikiHeinz: Antwortsprache (Strang AIUIheinz-WikiHeinz, Befund aus dem Handytest)
 - Befund (Entwickler, Handy): englische Frage, Antwort deutsch. Ursache: Qwen 2.5 3B übernahm den deutschen Auszug fast wörtlich; „in the language of the question“ genügte nicht.
 - Fix in `mod/frage.js` (Vorgabe des Entwicklers: Antwortsprache aus der Spracheinstellung): `beantworte` bekommt `sprache` (`Heinz.lang`, EN/DE-Umschalter) und schreibt „Write your answer in English/German … translate the facts, keep names“ in den Systemprompt plus Schlusszeile im Nutzertext; keine Spracherkennung der Frage. Test in `tests/wikiheinz/frage.test.mjs`. Am Handy erneut prüfen (Y24, Punkt 4).
+
+## 26.11.2026 – WikiHeinz: Suchbegriffe in der Sprache der Quelle (Handytest, Strang AIUIheinz-WikiHeinz)
+- Befund (Entwickler, Handy): „What is Cologne?“ ergab die französische Gemeinde „Cologne (Gers)“ statt „Köln“; die Suchbegriffe kamen aus dem Rückfall (Wörter der Frage), weil der Prompt „in der Sprache der Frage“ verlangte und die Wikipedia deutsch ist. Gemessen am Handy (Qwen 2.5 3B, zwei Modellaufrufe: Begriffe, Antwort): rund 20 s je Frage.
+- Fix: `baueBegriffeAnfrage(frage, wiki)` nennt dem Modell die Sprache der durchsuchten Quelle (`quelle.sprache`) und verlangt Titel in dieser Sprache, Beispiel „What is Cologne?“ → „Köln“. Test in `tests/wikiheinz/frage.test.mjs`. Noch offen: Antwortzeit (Schalter „Suchbegriffe von der App“ spart einen Modellaufruf), Rangfolge der Treffer (Haupteintrag vor Namensvettern wie „Sokrates (Bunker)“).
+

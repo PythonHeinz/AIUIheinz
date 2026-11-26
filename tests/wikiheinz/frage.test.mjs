@@ -83,3 +83,11 @@ test('Antwortsprache folgt der Spracheinstellung, nicht der Frage oder den Ausz�
     assert.match(de.system, /in German/); assert.match(de.user, /Answer in German\.$/);
     assert.doesNotMatch(baueAntwortAnfrage('Sokrates', v).system, /Write your answer in/);
 });
+test('Suchbegriffe: Prompt nennt die Sprache der Quelle, damit „Cologne“ zu „Köln“ wird', async () => {
+    assert.match(baueBegriffeAnfrage('What is Cologne?', 'de').system, /titles are in German/);
+    assert.match(baueBegriffeAnfrage('Wer war Sokrates?', 'fr').system, /titles are in French/);
+    assert.match(baueBegriffeAnfrage('x').system, /in German/);
+    const sp = await aufbau(); const gesehen = [];
+    await beantworte({ frage: 'Platon?', sp, senden: async (a) => { gesehen.push(a); return a.art === 'begriffe' ? '{"begriffe":["Platon"]}' : 'Schüler [1]'; } });
+    assert.match(gesehen[0].system, /titles are in German/);
+});

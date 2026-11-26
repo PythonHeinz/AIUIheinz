@@ -14,12 +14,16 @@ import { angabe, linkZu } from './quelle.js';
 export const MAX_BEGRIFFE = 4, MAX_KONTEXT = 3200, MAX_AUSZUG = 900, NICHT_GEFUNDEN = 'NOT_FOUND';
 const SCHEMA = { type: 'object', properties: { begriffe: { type: 'array', items: { type: 'string' }, maxItems: MAX_BEGRIFFE } }, required: ['begriffe'] };
 
-export function baueBegriffeAnfrage(frage) {
+const NAMEN = { de: 'German', en: 'English', fr: 'French', es: 'Spanish', it: 'Italian', nl: 'Dutch', pt: 'Portuguese', pl: 'Polish', ru: 'Russian', sv: 'Swedish', cs: 'Czech', tr: 'Turkish' };
+/** wiki = Sprache der durchsuchten Quelle (Kürzel): die Titel dort sind in dieser Sprache, die Frage darf eine andere haben. */
+export function baueBegriffeAnfrage(frage, wiki) {
+    const w = String(wiki || 'de').toLowerCase(), name = NAMEN[w] || w;
     return {
         art: 'begriffe', format: SCHEMA,
-        system: 'You turn a question into search terms for an encyclopedia. Answer only as JSON: {"begriffe": ["<article title>", …]}. ' +
-            'Give at most ' + MAX_BEGRIFFE + ' terms, the main subject first, each as the title of an encyclopedia article (nominative, no question words), in the language of the question. ' +
-            'Do not answer the question. Example: "Wer war Sokrates und was lehrte er?" -> {"begriffe": ["Sokrates", "Sokratische Methode"]}.',
+        system: 'You turn a question into search terms for an encyclopedia whose article titles are in ' + name + '. Answer only as JSON: {"begriffe": ["<article title>", …]}. ' +
+            'Give at most ' + MAX_BEGRIFFE + ' terms, the main subject first, each as the exact title of an encyclopedia article in ' + name + ' (nominative, no question words). ' +
+            'If the question is in another language, translate the subject into ' + name + ', for example place and person names. ' +
+            'Do not answer the question. Examples: "Wer war Sokrates und was lehrte er?" -> {"begriffe": ["Sokrates", "Sokratische Methode"]}; "What is Cologne?" -> {"begriffe": ["Köln"]}.',
         user: String(frage || '').slice(0, 500)
     };
 }
@@ -73,14 +77,15 @@ export function pruefeAntwort(roh, verwendet) {
 export async function beantworte(o) {
     const { frage, sp, senden, signal } = o, st = o.onStatus || (() => {}), gesamt = o.maxTreffer || 3, opts = { quellen: o.quellen, gesamt };
     st('suche');
+    const alle = await sp.quellen(), gewaehlt = alle.filter(q => !o.quellen || o.quellen.includes(q.id)), wq = gewaehlt.find(q => q.wikipedia) || gewaehlt[0], wikiSprache = wq ? wq.sprache : 'de';
     let begriffe = null, von = 'modell';
-    try { begriffe = pruefeBegriffe(await senden(baueBegriffeAnfrage(frage), signal)); } catch (e) { if (signal && signal.aborted) throw e; begriffe = null; }
+    try { begriffe = pruefeBegriffe(await senden(baueBegriffeAnfrage(frage, wikiSprache), signal)); } catch (e) { if (signal && signal.aborted) throw e; begriffe = null; }
     if (!begriffe) { begriffe = woerter(frage); von = 'code'; }
     let treffer = begriffe.length ? await suchbegriffe(sp, begriffe, opts) : [];
     if (!treffer.length && von === 'modell') { const w = woerter(frage); if (w.length) { treffer = await suchbegriffe(sp, w, opts); if (treffer.length) { begriffe = w; von = 'code'; } } }
     if (!treffer.length) return { status: 'nichtGefunden', antwort: '', ohneBeleg: false, quellen: [], begriffe, von };
     st('lese');
-    const k = baueKontext(treffer), meta = new Map((await sp.quellen()).map(q => [q.id, q]));
+    const k = baueKontext(treffer), meta = new Map(alle.map(q => [q.id, q]));
     st('antworte');
     const p = pruefeAntwort(await senden(baueAntwortAnfrage(frage, k.verwendet, o.sprache), signal), k.verwendet);
     const quellen = k.verwendet.map(v => { const q = meta.get(v.q); return { nr: v.nr, q: v.q, titel: v.titel, auszug: v.auszug, angabe: angabe(q, v.titel), link: linkZu(q, v.titel), zitiert: p.zitiert.includes(v.nr) }; });
