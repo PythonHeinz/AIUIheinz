@@ -210,6 +210,44 @@ class WikiUiTests(unittest.TestCase):
         finally:
             ctx.close()
 
+    def test_notes_from_other_tools_wait_for_a_decision_and_never_write_by_themselves(self):
+        ctx, page = self.open()
+        try:
+            page.click("#tabs [data-tab=wiki]"); page.click("#b-neu"); page.fill("#e-titel", "Platon"); page.fill("#e-text", "Schüler."); page.click("#b-save")
+            page.wait_for_selector(".wh-hit b:text-is('Platon')")
+            r = page.evaluate("""async () => {
+                const { HeinzPostfach } = await import('/lib/shared/postfach.js');
+                const a = await HeinzPostfach.legen('wikiheinz', 'merke', { titel: 'Platon', text: 'Notiz aus dem Buch', herkunft: { buch: 'Politeia', autor: 'Platon' }, tags: ['lesen'] }, { von: 'docHeinz' });
+                const b = await HeinzPostfach.legen('wikiheinz', 'zitat', { titel: 'Zitate', zitat: 'Erkenne dich selbst', herkunft: { autor: 'Delphi' } }, { von: 'docHeinz' });
+                return [a.zustand, b.zustand];
+            }""")
+            self.assertEqual(r, ["abgelegt", "abgelegt"])
+            page.wait_for_function("document.querySelector('#tabs [data-tab=wiki]').dataset.n === '2'")
+            self.assertIn("2 notes wait", page.inner_text("#msg"))
+            self.assertIn("Add them to My wiki?", page.inner_text("#zettelkopf"))
+            pages = lambda: page.evaluate("""async () => { const sp = await (await import('/lib/wissen/db.js')).oeffne(); return (await sp.alle('mein-wiki')).map(e => [e.t, e.x]); }""")
+            self.assertEqual([t for t, x in pages()], ["Platon"], "nothing is written before the user says yes")
+            page.reload(); page.wait_for_function("window.__wikiReady === true")                           # the notes survive a reload (IndexedDB)
+            page.click("#tabs [data-tab=wiki]")
+            page.wait_for_function("document.querySelectorAll('#zettel .wh-zettel').length === 2")
+            page.click("#zettel .wh-zettel:has-text('Platon') button[data-act=add]")
+            page.wait_for_function("document.querySelectorAll('#zettel .wh-zettel').length === 1")
+            platon = dict(pages())["Platon"]
+            self.assertIn("Schüler.", platon, "an existing page is appended to, not overwritten"); self.assertIn("Notiz aus dem Buch", platon); self.assertIn("#lesen", platon)
+            self.assertIn("Platon", page.inner_text("#msg"))
+            btn = page.locator("#zettel .wh-zettel button[data-act=drop]")
+            btn.click(); self.assertEqual(btn.inner_text(), "Really discard?")                           # discarding needs a second tap
+            btn.click()
+            page.wait_for_function("document.querySelectorAll('#zettel .wh-zettel').length === 0")
+            self.assertTrue(page.is_hidden("#zettelbox"))
+            self.assertIsNone(page.get_attribute("#tabs [data-tab=wiki]", "data-n"))
+            self.assertEqual(sorted(t for t, x in pages()), ["Platon"], "the discarded note created no page")
+            page.reload(); page.wait_for_function("window.__wikiReady === true")
+            self.assertIsNone(page.get_attribute("#tabs [data-tab=wiki]", "data-n"))
+            self.assertEqual(self.outside, [])
+        finally:
+            ctx.close()
+
     def test_my_wiki_pages_links_backlinks_search_edit_delete_export_restore(self):
         ctx, page = self.open(lang="de")
         try:

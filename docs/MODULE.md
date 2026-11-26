@@ -23,6 +23,7 @@ Angelegt am 12.11.2026 im Strang AIUIheinz-Fundament (`docs/agent/AUFTRAG_Fundam
 | `lib/core.js` | Thema, Sprache, Kopfzeile, Blätter, Hilfen | klassisches Skript im `<head>` (Kopf-Block), `window.Heinz` |
 | `lib/dashboard/*.js` | Dashboard (`dashboard.html`) | Module; `main.js` ist der Einstieg, `failsafe.js` klassisch |
 | `lib/chat/*.js` | Heinz Chat (`chat.html`) | Module; `main.js` ist der Einstieg |
+| `lib/shared/postfach.js` | `HeinzPostfach`: Briefkasten zwischen Werkzeugen (Merkzettel), Ablage in `HeinzStore` (`heinz_postfach`), BroadcastChannel für neue Einträge; importiert nur `../store.js` | Modul (Ordner `lib/shared/`, kennt weder Dashboard noch Chat); Werkzeuge holen es über ihre `base.js` |
 | `lib/wissen/*.js` | Wissensbaustein `HeinzWissen` (Wikipedia aus IndexedDB und ZIM, „Mein Wiki“); Einstieg `index.js`, die übrigen Dateien (`db`, `eigene`, `frage`, `import`, `quelle`, `schluessel`, `speicher`, `suche`, `volltext`, `zip`) sind die reinen Module, die bis 26.11.2026 unter `tools/wikiheinz/mod/` lagen | Module; importieren nur Dateien ihres Ordners (`./name.js`), nie ein Werkzeug, nie `lib/providers.js`; kein Modellaufruf, kein fremdes Netz (Test `tests/test_wissen.py`) |
 | `lib/data/*.json` | Daten (Texte, Modi, Prüfsätze, Fähigkeiten) | Daten, keine Module |
 | `tools/<id>/` | Tool-Seiten, `index.html`, `hub.html` | Inline-Modul (`<script type="module">`), kein Inline-Handler (Test) |

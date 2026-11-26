@@ -205,6 +205,35 @@ class StoreTest(unittest.TestCase):
         self.assertNotEqual(self.ls(page, "heinz_idb_migration"), "{}")
         self.assertIsNone(self.ls(page, "other"))
 
+    # ---- mailbox between tools (heinz_postfach, 26.11.2026) ----
+    def test_the_mailbox_lives_in_indexeddb_and_is_never_exported_or_imported(self):
+        page = self.new_page()
+        self.dash(page)
+        page.evaluate("HeinzStore.set('heinz_postfach', [{id: 'p1', an: 'wikiheinz'}])")
+        dump = page.evaluate(IDB_DUMP)
+        self.assertIn("heinz_postfach", dump["results"])
+        self.assertIsNone(self.ls(page, "heinz_postfach"), "no copy in localStorage")
+        self.assertNotIn("heinz_postfach", page.evaluate("HeinzStore.exportAll(false)"))
+        self.assertNotIn("heinz_postfach", page.evaluate("HeinzStore.exportAll(true)"), "not even in the backup with API keys")
+        page.evaluate("d => HeinzStore.importAll(d)", {"heinz_postfach": json.dumps([{"id": "fremd"}]), "heinz_settings": json.dumps({"lang": "de"})})
+        self.assertEqual(page.evaluate("HeinzStore.get('heinz_postfach', [])"), [{"id": "p1", "an": "wikiheinz"}], "a backup file does not overwrite the mailbox")
+        self.assertEqual(self.errors, [])
+
+    def test_reload_reads_a_routed_key_again_that_another_page_wrote(self):
+        a = self.new_page()
+        self.dash(a)
+        b = a.context.new_page()
+        b.goto(self.srv.base + "/dashboard.html")
+        b.wait_for_function("window.HeinzDashboard && HeinzDashboard.ready === true", timeout=15000)
+        b.evaluate("HeinzStore.set('heinz_postfach', [{id: 'p2'}])")
+        self.assertEqual(a.evaluate("HeinzStore.get('heinz_postfach', [])"), [], "page A still has the old memory copy")
+        a.evaluate("HeinzStore.reload('heinz_postfach')")
+        self.assertEqual(a.evaluate("HeinzStore.get('heinz_postfach', [])"), [{"id": "p2"}])
+        b.evaluate("HeinzStore.remove('heinz_postfach')")
+        a.evaluate("HeinzStore.reload('heinz_postfach')")
+        self.assertEqual(a.evaluate("HeinzStore.get('heinz_postfach', [])"), [], "a deleted key disappears after reload")
+        self.assertIsNone(a.evaluate("HeinzStore.reload('heinz_settings')"), "keys in localStorage: nothing to do")
+
     def test_menu_backup_import_reports_a_failed_write(self):
         page = self.new_page()
         self.dash(page)

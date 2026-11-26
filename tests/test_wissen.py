@@ -115,5 +115,107 @@ class WissenBrowserTests(unittest.TestCase):
             ctx.close()
 
 
+POSTFACH_JS = """async () => {
+  const { HeinzStore } = await import('/lib/store.js');
+  const { HeinzPostfach, GRENZEN } = await import('/lib/shared/postfach.js');
+  await HeinzStore.open();
+  const out = {}, jetzt = Date.now(), TAG = 24 * 3600 * 1000;
+  out.grenzen = GRENZEN;
+  out.ungueltig = [await HeinzPostfach.legen('', 'merke', { text: 'x' }), await HeinzPostfach.legen('wikiheinz', 'mail', { text: 'x' }), await HeinzPostfach.legen('wikiheinz', 'merke', 'text')].map(r => r.zustand);
+  out.zuLang = (await HeinzPostfach.legen('wikiheinz', 'merke', { text: 'x'.repeat(20000) })).zustand;
+  out.genau = (await HeinzPostfach.legen('wikiheinz', 'merke', { text: 'x'.repeat(19970) }, { von: 'docHeinz', jetzt: jetzt - 31 * TAG })).zustand;     // 19 970 + JSON-Rahmen <= 20 000, aber schon verfallen
+  out.offenVerfallen = HeinzPostfach.offen('wikiheinz').length;
+  const a = await HeinzPostfach.legen('wikiheinz', 'merke', { titel: 'A', text: 'eins' }, { von: 'docHeinz', jetzt: jetzt - 1000 });
+  const b = await HeinzPostfach.legen('wikiheinz', 'zitat', { titel: 'B', zitat: 'zwei' }, { von: 'docHeinz' });
+  await HeinzPostfach.legen('anderes', 'merke', { text: 'fuer ein anderes Werkzeug' });
+  out.offen = HeinzPostfach.offen('wikiheinz').map(e => [e.daten.titel, e.von, e.art]);
+  out.fremd = HeinzPostfach.offen('anderes').length;
+  out.entfernt = [await HeinzPostfach.entfernen(a.id), await HeinzPostfach.entfernen(a.id)];
+  out.nachEntfernen = HeinzPostfach.offen('wikiheinz').map(e => e.daten.titel);
+  // volles Postfach: nichts wird stillschweigend verworfen
+  for (let i = 0; i < 60; i++) await HeinzPostfach.legen('voll', 'merke', { text: 'n' + i });
+  out.voll = [HeinzStore.get('heinz_postfach', []).length, (await HeinzPostfach.legen('voll', 'merke', { text: 'zuviel' })).zustand];     // 2 Einträge von oben + 48 = 50
+  // verfallene Einträge fallen beim nächsten Schreiben weg und machen Platz
+  const raw = HeinzStore.get('heinz_postfach', []); raw.forEach(e => { if (e.an === 'voll') e.zeit = jetzt - 40 * TAG; }); await HeinzStore.set('heinz_postfach', raw);
+  out.nachVerfall = [HeinzPostfach.offen('voll').length, (await HeinzPostfach.legen('voll', 'merke', { text: 'wieder Platz' })).zustand];
+  out.imSpeicher = HeinzStore.get('heinz_postfach', []).length;
+  return out;
+}"""
+
+
+class WissenPostfachTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = Server().start()
+        cls.pw = sync_playwright().start()
+        cls.browser = cls.pw.chromium.launch()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.pw.stop()
+        cls.server.stop()
+
+    def test_limits_expiry_order_and_removal(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            page.goto(self.server.base + "/chat.html")
+            page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            o = page.evaluate(POSTFACH_JS)
+            self.assertEqual(o["grenzen"], {"eintraege": 50, "zeichen": 20000, "tage": 30})
+            self.assertEqual(o["ungueltig"], ["ungueltig", "ungueltig", "ungueltig"])
+            self.assertEqual(o["zuLang"], "zu-lang", "nothing is cut off silently")
+            self.assertEqual(o["offenVerfallen"], 0, "an entry older than 30 days is not shown")
+            self.assertEqual(o["offen"], [["A", "docHeinz", "merke"], ["B", "docHeinz", "zitat"]], "oldest first, only the entries for this tool")
+            self.assertEqual(o["fremd"], 1)
+            self.assertEqual(o["entfernt"], [True, False])
+            self.assertEqual(o["nachEntfernen"], ["B"])
+            self.assertEqual(o["voll"], [50, "voll"], "a full mailbox refuses, it does not drop old notes")
+            self.assertEqual(o["nachVerfall"], [0, "abgelegt"], "expired entries make room")
+        finally:
+            ctx.close()
+
+    def test_a_note_laid_down_in_one_page_reaches_the_listener_of_another(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            a, b = ctx.new_page(), ctx.new_page()
+            for p in (a, b):
+                p.goto(self.server.base + "/chat.html")
+                p.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            a.evaluate("""async () => {
+                const { HeinzStore } = await import('/lib/store.js'); const { HeinzPostfach } = await import('/lib/shared/postfach.js');
+                await HeinzStore.open(); window.__neu = []; HeinzPostfach.beiNeu('wikiheinz', (l) => window.__neu.push(l.map(e => e.daten.titel)));
+            }""")
+            b.evaluate("""async () => {
+                const { HeinzStore } = await import('/lib/store.js'); const { HeinzPostfach } = await import('/lib/shared/postfach.js');
+                await HeinzStore.open(); await HeinzPostfach.legen('wikiheinz', 'merke', { titel: 'vom Buch', text: 'x' }, { von: 'docHeinz' });
+            }""")
+            a.wait_for_function("window.__neu.length === 1")
+            self.assertEqual(a.evaluate("window.__neu"), [["vom Buch"]])
+            self.assertEqual(a.evaluate("""async () => (await import('/lib/shared/postfach.js')).HeinzPostfach.offen('wikiheinz').length"""), 1)
+        finally:
+            ctx.close()
+
+    def test_merke_puts_a_note_into_the_mailbox_when_it_is_wired(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            page.goto(self.server.base + "/chat.html")
+            page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            o = page.evaluate("""async () => {
+                const { HeinzStore } = await import('/lib/store.js'); const { HeinzPostfach } = await import('/lib/shared/postfach.js'); const { HeinzWissen } = await import('/lib/wissen/index.js');
+                await HeinzStore.open(); const vorher = (await HeinzWissen.merke({ titel: 'T', text: 'x' })).zustand;
+                HeinzWissen.konfiguriere({ postfach: HeinzPostfach });
+                const r = await HeinzWissen.merke({ titel: 'T', text: 'x', herkunft: { buch: 'B' }, tags: ['a'], von: 'docHeinz' });
+                const zu = await HeinzWissen.merke({ titel: 'T', text: 'x'.repeat(20000) });
+                return { vorher, r: r.zustand, zu: zu.zustand, offen: HeinzPostfach.offen('wikiheinz').map(e => [e.von, e.art, e.daten.titel, e.daten.herkunft.buch]) };
+            }""")
+            self.assertEqual((o["vorher"], o["r"], o["zu"]), ("kein-postfach", "abgelegt", "zu-lang"))
+            self.assertEqual(o["offen"], [["docHeinz", "merke", "T", "B"]])
+        finally:
+            ctx.close()
+
+
 if __name__ == "__main__":
     unittest.main()
