@@ -471,7 +471,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 4. Im Suchfeld tippen: flache Trefferliste ohne Abschnitte; Leeren bringt die Abschnitte zurück.
 
 
-### Y32: docHeinz sendet an WikiHeinz (Strang AIUIheinz-Wissen, Stufe 4; nur simuliert getestet)
+### Y32: docHeinz sendet an WikiHeinz (Strang AIUIheinz-Wissen, Stufe 4; am Handy bestätigt 27.11.2026)
 1. `git pull`, `bash start.sh`, docHeinz öffnen, ein Buch mit mindestens einer Markierung (am besten mit Notiz und Schlagwort) haben.
 2. Notizübersicht öffnen, bei einem Eintrag das Pfeil-Symbol tippen: Meldung „Gesendet …“.
 3. Knopf „Alle angezeigten an WikiHeinz senden“: Meldung mit Anzahl.
