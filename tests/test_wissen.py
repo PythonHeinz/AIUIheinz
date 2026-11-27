@@ -363,7 +363,7 @@ class WissenChatTests(unittest.TestCase):
         finally:
             ctx.close()
 
-    def test_the_side_bar_holds_the_switch_and_the_menu_and_keeps_the_input_row_free(self):
+    def test_the_side_bar_holds_the_switch_and_the_menu_pages_and_keeps_the_input_row_free(self):
         ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
         try:
             page = ctx.new_page()
@@ -376,13 +376,16 @@ class WissenChatTests(unittest.TestCase):
             self.assertFalse(page.is_visible(".sl-leiste"))
             page.click(".sl-kragen"); page.wait_for_selector(".sl-leiste.open")
             names = page.evaluate("[...document.querySelectorAll('.sl-leiste .sl-punkt')].map(e => e.dataset.id)")
-            self.assertEqual(names, ["wissen", "menu"])
+            self.assertEqual(names, ["wissen", "cfgs", "perf", "conn", "app"])
             page.wait_for_function("document.querySelector('.sl-leiste').getBoundingClientRect().left >= 0")
             lb = page.locator(".sl-leiste").bounding_box()
             self.assertGreaterEqual(lb["x"], 0); self.assertLessEqual(lb["x"] + lb["width"], 426)
-            page.click(".sl-leiste .sl-punkt[data-id=menu] .sl-zeile")
+            page.click(".sl-leiste .sl-punkt[data-id=cfgs] .sl-zeile")
             page.wait_for_selector("#menu-sheet.open")
             self.assertFalse(page.evaluate("document.querySelector('.sl-leiste').classList.contains('open')"), "the bar closes when the menu opens")
+            # Seitenrand: der Inhalt beginnt rechts neben der Kerbe, und die Tippfläche der Kerbe ist groß genug
+            self.assertGreaterEqual(page.evaluate("document.querySelector('.app').getBoundingClientRect().left"), box["x"] + box["width"] - 6, "the content does not run under the collar")
+            self.assertGreaterEqual(page.evaluate("(() => { const r = document.querySelector('.sl-kragen').getBoundingClientRect(); return r.height; })()"), 60)
             page.goto(self.server.base + "/chat.html")
             page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
             self.assertEqual(page.evaluate("[...document.querySelectorAll('.sl-leiste .sl-punkt')].map(e => e.dataset.id)"), ["wissen"])
@@ -418,7 +421,7 @@ class WissenChatTests(unittest.TestCase):
             leiste_auf(page); page.click(".wsw-an"); page.click(".wsw-mehr")
             page.wait_for_function("document.querySelectorAll('.wsw select')[0].options.length >= 2")
             page.select_option(".wsw select >> nth=0", "wikipedia-de"); page.select_option(".wsw select >> nth=1", "modell"); leiste_zu(page)
-            page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
+            page.click(".burger-btn"); page.evaluate("HeinzDashboard.showPage('cfgs')")
             page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
             self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
             page.evaluate("localStorage.removeItem('heinz_wissen'); window.dispatchEvent(new CustomEvent('heinz-wissen'))")

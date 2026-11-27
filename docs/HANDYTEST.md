@@ -487,3 +487,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 Zusatz zu Y33 (Umstellung der Wikipedia): 
 5. Zuerst in WikiHeinz die Wikipedia importieren (`wikipedia-de.jsonl.gz`, 363 MB). Danach in docHeinz ein Wort markieren → Wörterbuch. Unten steht „Zeit: Wörterbücher x ms, WikiHeinz y ms“. Bitte Werte für „Sokrates“, „Köln“ und ein seltenes Wort melden.
 6. In docHeinz Bibliothek → Wörterbücher: Die alte Wikipedia-Zeile trägt den Hinweis „wird nicht mehr benutzt“. Erst wenn die Treffer aus WikiHeinz passen, die alte Zeile mit „Löschen“ entfernen (gibt Platz frei).
+
+### Y34: Seitenleiste mit Menüseiten, Zahnrad, Seitenrand (nur simuliert getestet)
+1. `git pull`, `bash start.sh`, Dashboard öffnen. Der Text beginnt rechts neben der Kerbe und läuft nicht darunter (auch im Heinz Chat).
+2. Kerbe mehrmals antippen, auch am äußersten Rand: sie soll jedes Mal öffnen (vorher oft keine Reaktion). Meldung, ob es jetzt zuverlässig ist.
+3. In der Leiste: Wissensschalter, Konfigurationen, Leistung, Verbindung & Datenschutz, App, jeweils mit Zustandszeile. Antippen öffnet das Blatt auf der richtigen Seite, der Pfeil schließt es (Verbindung → Engine: Pfeil eine Ebene hoch).
+4. Zahnrad oben rechts: öffnet direkt „Modell & Person“ mit Engine, Modell, Ton, Prompt, Laufzeit.
