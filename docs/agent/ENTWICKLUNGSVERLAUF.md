@@ -1051,3 +1051,7 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Tests:** `tests/test_pages.py` (`test_model_list_with_many_models_...`; Rename-Test gegen Zeitfehler abgesichert). Voller Lauf grün, nur simuliert; Handytest Y31.
 - **Offen:** Schritt 5 (Leisten beim Tippen ausblenden).
 
+## 27.11.2026 – Strang AIUIheinz-Menü, Schritt 5: Leisten beim Tippen (geprüft, keine Änderung)
+- Der Tastaturmodus (`body.kbd`, `setKbd` in `lib/dashboard/caps.js`) blendet beim Tippen bei kleiner Sichtfläche (Bildschirmtastatur) Modusleiste, Statistikleiste (In/Out/T/s), Aktionen und Kontextfeld aus; das Kontextfeld ist ohne Fokus schon einzeilig eingeklappt. Geprüft per Screenshot bei 426 × 500 und durch den vorhandenen Test (`test_pages.py`, `kbd`). Die wissens-Leiste ist durch die Seitenleiste entfallen. Kein Umbau nötig.
+- **Offen:** Inhalt der Seitenleiste (welche weiteren Punkte), Feinschliff der Menüs.
+
