@@ -10,6 +10,7 @@ import { mdToHtml } from '../mod/markdown.js';
 import { lookup } from './woerterbuch.js';
 import { shortDef } from '../mod/woerterbuch.js';
 import { wikiOn, wikiLookup } from './wikipedia.js';
+import { HeinzWissen } from './base.js';
 import { sauber } from '../mod/sauber.js';
 import { makeMark, cleanMarks, addMark, updateMark, removeMark, markAt, relocate, sortMarks, toMarkdown, COLORS, MAX_MARKS, MAX_MARK_TAGS } from '../mod/markierung.js';
 import { parseTags } from '../mod/bibliothek.js';
@@ -417,6 +418,22 @@ async function dictSearch(text) {
         });
         box.appendChild(more);
     }
+    let wissenShown = false;
+    try {                                                                   // WikiHeinz (lib/wissen/): nur lokale Quellen, keine Anfrage nach außen; ohne bereite Quelle bleibt der Block weg
+        const w = await HeinzWissen.suche(q, { max: 2, voll: false });
+        if (my !== A.run) return;
+        if (w.zustand === 'ok') {
+            wissenShown = true;
+            const h = document.createElement('div'); h.className = 'dh-dw'; h.textContent = t('wh_title'); box.appendChild(h);
+            w.treffer.forEach(x => {
+                const n = document.createElement('div'); n.className = 'dh-dw'; n.textContent = x.titel + ' · ' + x.quelle;
+                const d = document.createElement('div'); d.className = 'dh-dd'; d.textContent = x.auszug;
+                box.append(n, d);
+                if (x.link && /^https?:/.test(x.link)) { const a = document.createElement('a'); a.href = x.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t('wh_more'); a.className = 'help'; box.appendChild(a); }
+                if (x.angabe) box.appendChild(line('help', x.angabe));
+            });
+        } else if (w.zustand === 'leer') box.appendChild(line('help', t('wh_none')));
+    } catch { /* WikiHeinz nicht erreichbar: Wörterbuch bleibt */ }
     let wikiShown = false;
     if (wikiOn()) {                                                         // Wikipedia-Kurztext (nur mit Haken und „Online erlauben“; Treffer werden gemerkt)
         const hold = line('dh-sline', t('w_working')); box.appendChild(hold);
@@ -432,7 +449,7 @@ async function dictSearch(text) {
         } else if (w.blocked) box.appendChild(line('help', t('w_blocked')));
         else box.appendChild(line('help', t(w.failed ? 'w_failed' : 'w_none')));
     }
-    if (!r.groups.length && !wikiShown) box.appendChild(line('dh-sline', t(r.none ? 'd_none' : 'd_nohit')));
+    if (!r.groups.length && !wikiShown && !wissenShown) box.appendChild(line('dh-sline', t(r.none ? 'd_none' : 'd_nohit')));
 }
 async function search(query) {
     query = normalizeQuery(query);

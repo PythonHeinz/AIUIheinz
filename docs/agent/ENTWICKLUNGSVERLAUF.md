@@ -1062,3 +1062,9 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **WikiHeinz:** `zettelText` hängt `daten.notiz` an den Zitatblock an (Vorschau und Übernahme).
 - **Tests:** `test_notes_can_be_sent_to_wikiheinz_through_the_mailbox` (docHeinz), Notiz-Anzeige im Postfach-Test von WikiHeinz. Nur simuliert; Handytest Y32.
 - **Offen:** „Nachschlagen“ per `suche()` in docHeinz (nur auf Zuruf).
+
+## 27.11.2026 – Strang AIUIheinz-Wissen, Stufe 4: Nachschlagen in docHeinz
+- **Fremdmodul docHeinz berührt (Auftrag des Entwicklers, 13:36):** `tools/docheinz/ui/auswahl.js` (`dictSearch`), `ui/base.js` (re-exportiert `HeinzWissen`), `ui/i18n.js` (wh_title, wh_none, wh_more).
+- **Verhalten:** Auswahl → Wörterbuch zeigt unter den Wörterbuchtreffern einen Block „WikiHeinz (offline)“: bis zu zwei Treffer aus `HeinzWissen.suche(begriff, { max: 2, voll: false })` mit Titel, Quelle, Auszug, Quellenangabe und (bei Wikipedia-Quellen) Link. Nur lokale Quellen, keine Anfrage nach außen. Ohne bereite Quelle erscheint nichts; mit Quelle, aber ohne Treffer ein Hinweis. Die Auswahlleiste bleibt unverändert.
+- **Tests:** `test_dictionary_sheet_also_looks_up_wikiheinz_offline_and_stays_quiet_without_a_source` (kein Block ohne Quelle, Block nach Anlegen von Mein Wiki). Nur simuliert; Handytest Y33.
+- **Offen:** eigene 363-MB-Kopie der Wikipedia in docHeinz durch `lib/wissen/` ersetzen (Migration mit dem docHeinz-Strang klären).

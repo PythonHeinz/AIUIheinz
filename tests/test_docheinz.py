@@ -601,6 +601,26 @@ class DocHeinzUiTests(DocHeinzBase):
         self.assertNotIn("Dativ Plural", txt)                                   # keine Formenbeschreibung statt Bedeutung
         self.assertEqual(p.errors, [])
 
+    def test_dictionary_sheet_also_looks_up_wikiheinz_offline_and_stays_quiet_without_a_source(self):
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# W\n\nSokrates sprach viel über Tugend.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
+        self.select_text(p, "Sokrates"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Wörterbuch|Kein Treffer|nichts/i.test(document.getElementById('rs-body').innerText) || document.getElementById('rs-body').innerText.length > 0")
+        p.wait_for_timeout(500)
+        self.assertNotIn("WikiHeinz", p.inner_text("#rs-body"), "without a ready source the block stays away")
+        p.evaluate("""async () => {
+            const { oeffne } = await import('/lib/wissen/db.js'); const { speichere } = await import('/lib/wissen/eigene.js'); const { EIGEN_ID, neueQuelle, ART } = await import('/lib/wissen/quelle.js');
+            const sp = await oeffne(); const q = neueQuelle({ id: EIGEN_ID, name: 'Mein Wiki', art: ART.EIGEN, sprache: 'de', anzahl: 1 }); await sp.quelleSetzen(q); await speichere(sp, EIGEN_ID, { titel: 'Sokrates', text: 'Griechischer Philosoph aus Athen, Lehrer von Platon.' }, Date.now());
+        }""")
+        p.click("#rs-close") if p.locator("#rs-close").count() else None
+        self.select_text(p, "Sokrates"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Lehrer von Platon/.test(document.getElementById('rs-body').innerText)")
+        self.assertIn("WikiHeinz (offline)", p.inner_text("#rs-body"))
+        self.assertEqual(p.errors, [])
+
     def test_wikipedia_short_text_is_off_by_default_needs_online_and_is_cached(self):
         import json
         p = self.open(lang="de")

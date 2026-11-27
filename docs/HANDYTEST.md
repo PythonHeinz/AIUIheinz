@@ -477,3 +477,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. Knopf „Alle angezeigten an WikiHeinz senden“: Meldung mit Anzahl.
 4. WikiHeinz öffnen, Reiter Mein Wiki: Hinweis „n Notizen warten“, Zettel zeigen Zitat, Herkunft und Notiz. „Aufnehmen“ legt eine Seite an bzw. hängt an, „Verwerfen“ (zweiter Tipp) löscht nur den Zettel. Vor der Entscheidung darf nichts in Mein Wiki stehen.
 5. Beide Werkzeuge bleiben offline (keine Anfrage nach außen).
+
+### Y33: Nachschlagen in docHeinz (Strang AIUIheinz-Wissen, Stufe 4; nur simuliert getestet)
+1. `git pull`, `bash start.sh`. In WikiHeinz mindestens eine Quelle bereit haben (Wikipedia-Import oder eine Seite in Mein Wiki).
+2. In docHeinz im Buch ein Wort markieren und „Wörterbuch“ tippen.
+3. Unter den Wörterbuchtreffern erscheint „WikiHeinz (offline)“ mit Titel, Quelle und Auszug (bei Wikipedia mit „Quelle öffnen“).
+4. Flugmodus an: Der Block erscheint weiterhin. Ohne Quelle in WikiHeinz erscheint er nicht.
