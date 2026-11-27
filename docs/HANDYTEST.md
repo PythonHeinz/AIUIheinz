@@ -464,3 +464,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 3. ⋯ öffnen: Dem Modell zuordnen und Im Heinz Chat verwenden (die Zeile zeigt danach die Marke), Umbenennen (Name wird zum Feld; Enter speichert), Löschen (erster Tipp fragt, zweiter löscht).
 4. Das Menü zeigt „n gespeichert“ in der Zelle Konfigurationen.
 
+### Y31: Modellliste (Strang AIUIheinz-Menü, Schritt 4; nur simuliert getestet)
+1. `git pull`, `bash start.sh`, hart neu laden. Auf das Modell oben tippen: Suchfeld steht oben. Bei bis zu 8 Modellen eine flache Liste mit Stern rechts.
+2. Bei mehr als 8 Modellen: „Zuletzt benutzt“ (aktuelles Modell zuerst), „Favoriten“, darunter „Weitere Modelle (n)“, eingeklappt; Antippen klappt auf.
+3. Stern antippen: das Modell wandert unter Favoriten; erneut tippen löst es. Modell wählen: es steht danach unter „Zuletzt benutzt“.
+4. Im Suchfeld tippen: flache Trefferliste ohne Abschnitte; Leeren bringt die Abschnitte zurück.
+

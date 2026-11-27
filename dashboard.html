@@ -275,8 +275,12 @@
         .st-table th { color: var(--sub); font-weight: normal; }
         .st-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         /* Modellauswahl */
-        .mrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 6px 4px; background: none; border: 0; border-top: 1px solid var(--line); text-align: left; color: var(--txt); cursor: pointer; font-size: 1rem; }
-        .mrow:first-child { border-top: 0; }
+        #model-rest-toggle[aria-expanded=true] .go { transform: rotate(180deg); }
+        .mwrap { position: relative; border-top: 1px solid var(--line); } .mwrap:first-child { border-top: 0; }
+        .mstar { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--sub); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .mstar svg { width: 20px; height: 20px; fill: none; } .mstar.on { color: var(--acc); } .mstar.on svg { fill: currentColor; }
+        .mwrap .mrow { padding-right: 48px; }
+        .mrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 6px 4px; background: none; border: 0; text-align: left; color: var(--txt); cursor: pointer; font-size: 1rem; }
         .mrow .mt { flex: 1; min-width: 0; } .mrow .mt b { display: block; font-weight: 500; overflow-wrap: anywhere; }
         .mrow .mt small { display: block; color: var(--sub); font-size: .76rem; margin-top: 1px; }
         .mrow .ld { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }

@@ -1045,3 +1045,9 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Tests:** `tests/test_pages.py` (Hilfsfunktion `cfg_do`, neuer Test für Liste, Umbenennen und zweistufiges Löschen), `tests/test_wissen.py`; `test_rules` (ungenutzte Aktionen entfernt). Voller Lauf grün, nur simuliert; Handytest Y30.
 - **Offen:** Modellliste (Schritt 4), Leisten beim Tippen ausblenden (Schritt 5).
 
+## 27.11.2026 – Strang AIUIheinz-Menü, Schritt 4: Modellliste
+- **Umbau (Modellblatt des Dashboards, `renderModelSheet` in `lib/dashboard/caps.js`):** Suchfeld immer sichtbar. Bis 8 Modelle eine flache Liste. Bei mehr Modellen: „Zuletzt benutzt“ (das aktuelle und die letzten zwei), „Favoriten“, der Rest eingeklappt als „Weitere Modelle (n)“. Jedes Modell steht nur einmal. Suche zeigt eine flache Trefferliste. Stern an jeder Zeile setzt oder löst den Favoriten.
+- **Ablage:** `heinz_model_recent` und `heinz_model_fav` = `{ <Engine>: [Modellnamen] }` über `HeinzStore`, nur vom Dashboard gelesen (Sicherung und Import erfassen sie mit allen Schlüsseln). Die Liste gilt je Engine, wie das Blatt selbst; ein Einklappen nach Engine entfällt damit.
+- **Tests:** `tests/test_pages.py` (`test_model_list_with_many_models_...`; Rename-Test gegen Zeitfehler abgesichert). Voller Lauf grün, nur simuliert; Handytest Y31.
+- **Offen:** Schritt 5 (Leisten beim Tippen ausblenden).
+
