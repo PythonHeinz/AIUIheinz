@@ -123,3 +123,5 @@ Wer ein lokales Modell anspricht (jede Seite, jedes neue Tool), liest zuerst `do
 - `bash tests/run_all.sh <Wort>` führt nur Tests aus, deren Name das Wort enthält.
 
 - **Konfigurationen (13.11.2026):** gemeinsame Schlüssel `heinz_configs` (Liste) und `heinz_chat_config` (Id der dem Heinz Chat zugewiesenen) in `lib/providers.js`, nur dort lesen/schreiben (landen über `lib/store.js` im localStorage). Zuweisung im Dashboard (Knopf „Im Heinz Chat verwenden“) und auf `tools/configs`. Die zugewiesene Konfiguration überstimmt für ihr Modell die Chat-Einstellungen; ihre Laufzeit schreibt der Chat nie.
+- **Takt vor dem Start:** Module der Seite dürfen auf Modulebene Timer starten (`status.js`), aber ihr Code darf nicht auf Daten aus `applyDashboardData` (Modi, Texte) zugreifen, ohne zu prüfen, dass sie geladen sind. Auf dem Handy dauert der Start mitunter über 3 s.
+

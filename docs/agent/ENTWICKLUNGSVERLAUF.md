@@ -1022,3 +1022,8 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Inhalt:** Dashboard: Wissen (Tippen an/aus, „…“ zeigt Quellen und Suchbegriffe darunter) und Einstellungen (öffnet das bestehende Menü). Heinz Chat: Wissen. Weitere Punkte (später die Menüzellen) hängen sich als `punkt(...)` an.
 - **Tests:** `tests/test_wissen.py` (Leiste öffnen/schließen, Eingabezeile ohne Wissensknopf, Punkte, Menü, Kragen-Markierung). Voller Lauf grün, nur simuliert; Handytest Y27 angepasst.
 
+## 27.11.2026 – Korrektur: „Start fehlgeschlagen“ bei langsamem Start (Strang AIUIheinz-Wissen)
+- **Meldung am Handy (03:45):** `TypeError: Cannot read properties of undefined (reading 'temp')` in `presetTone` (aus `renderRing` über `checkServer`).
+- **Ursache (älter als die Seitenleiste):** `lib/dashboard/status.js` startet auf Modulebene `setInterval(checkServer, 3000)`. Dauert der Start länger als 3 s (nach dem Update, kalte Dateien), zeichnet der Takt den Ring, bevor `applyDashboardData` die Modi gesetzt hat; `MODE_PRESETS` ist dann leer.
+- **Behebung:** `renderRing` und `checkServer` kehren zurück, solange `MODE_PRESETS` leer ist. Test: `tests/test_wissen.py` verzögert `modes.json` um 3,6 s und erwartet keinen Fehler (ohne die Behebung rot, mit grün).
+

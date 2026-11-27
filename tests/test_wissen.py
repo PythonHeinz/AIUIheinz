@@ -1,4 +1,5 @@
 """HeinzWissen (lib/wissen/): Node tests of the building block, structure rules (the foundation never depends on a tool) and a browser test with real IndexedDB and simulated Ollama."""
+import time
 import json, os, re, shutil, subprocess, sys, unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from helpers import Server
@@ -388,6 +389,20 @@ class WissenChatTests(unittest.TestCase):
             self.assertEqual(page.locator(".comp .wsw").count(), 0)
             an_aus(page)
             self.assertTrue(page.evaluate("document.querySelector('.sl-kragen').classList.contains('on')"), "the collar shows that knowledge is on")
+        finally:
+            ctx.close()
+
+    def test_a_slow_start_does_not_break_when_the_status_timer_fires_before_the_data_is_loaded(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page(); errs = []
+            page.on("pageerror", lambda e: errs.append(str(e)))
+            Modell(page)
+            page.add_init_script("""const f = window.fetch; window.fetch = (u, o) => String(u).includes('modes.json') ? new Promise(r => setTimeout(r, 3600)).then(() => f(u, o)) : f(u, o);""")
+            page.goto(self.server.base + "/dashboard.html")
+            page.wait_for_timeout(7000)   # the 3 s timer of the status ring fires while modes.json is still on its way
+            self.assertEqual(errs, [])
+            self.assertNotIn("Start failed", page.content())
         finally:
             ctx.close()
 
