@@ -1009,3 +1009,10 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Dashboard:** Schalterzeile über dem Eingabefeld (`lib/dashboard/wissen.js`). `askGemma` holt vor dem Senden die Auszüge (`HeinzWissen.kontext`, Phase in der Wartenachricht), hängt sie als Systemzusatz an (ohne Systemnachricht wird eine angelegt; Nativ bekommt sie nur bei eingeschalteter Wissensabfrage), Chips unter der Antwort (`.src .schip`), `quellen` an der Nachricht im Verlauf, damit sie in gespeicherten Unterhaltungen bleiben. Kurze Nachfragen suchen mit der vorigen Frage mit. Online-Engine: keine Auszüge, Hinweis an der Frage.
 - **Tests:** `tests/test_wissen.py`: Schalter ohne Konfiguration, Neustart, Schalter schlägt Voreinstellung; Dashboard (Schalter, Auszüge, Chips, Nachfrage, gespeicherte Chips, aus = keine Auszüge); Konfiguration speichert und lädt den Schalter. `tests/test_rules.py`: DIRECT-Regel (Laufzeit-Optionen ohne `num_thread:` im Dashboard-Modul), Modulgraph in `docs/MODULE.md`. Nur simuliert getestet.
 - **Offen:** Menüs und Listen sind lang geworden (Reiter statt vieler Pillen, später); Handytest Y27.
+
+## 27.11.2026 – Wissensschalter als runder Knopf (Strang AIUIheinz-Wissen)
+- **Anlass:** Die Pille „Wissen“ störte die untere Zeile in Chat und Dashboard (Rückmeldung des Entwicklers 03:27).
+- **Umbau:** `baueSchalter` erzeugt einen runden Buchknopf (Symbol `i-book`) in der Eingabezeile: im Chat vor dem Senden-Knopf, im Dashboard vor Mikrofon und Senden. Tippen schaltet an/aus; langes Drücken (450 ms) oder Kontextmenü öffnet ein kleines Fenster mit Quellen und Suchbegriffen (App/Modell). Das Fenster schließt bei Tipp außerhalb, Escape oder erneutem Tipp. Zustand und Sendeweg unverändert.
+- **Tests:** `tests/test_wissen.py` auf den Knopf umgestellt (Kontextmenü statt `.wsw-mehr`). Voller Lauf grün. Nur simuliert, Layout per Screenshot 426 × 803 geprüft; Handytest Y27.
+- **Offen:** Modus-Schieberegler (Idee des Entwicklers, Freigabe und Strang Modi nötig), WikiHeinz „Parameter“ kürzen, Strang AIUIheinz-Menü (Menüzellen mit Unterseiten).
+

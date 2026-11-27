@@ -439,10 +439,10 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 8. (Kempten) „Was weißt du über Kempten?“: Treffer „Kempten …“ als [1], keine „Weiß…“-Titel. Danach „Das ist falsch“: die Chips zeigen wieder Kempten, keine „Falsch…“-Titel. Auch „Wo liegt Rüsselsheim?“ und „Erzähl mir etwas über den Grünten“ prüfen.
 
 ### Y27: Wissensschalter in Heinz Chat und Dashboard (Strang AIUIheinz-Wissen; nur simuliert getestet)
-1. `git pull`, `bash start.sh`, Seite hart neu laden (Dashboard und Heinz Chat). Über dem Eingabefeld steht „Wissen ▾“; der Knopf ist aus. Im Konfigurationsmenü des Dashboards gibt es keine Wissens-Bedienelemente mehr, nur einen Hinweistext.
-2. Heinz Chat: „Wissen“ antippen (Knopf wird farbig), „Was ist der Grünten?“ fragen: Chips unter der Antwort. Seite neu laden: der Schalter bleibt an. Ausschalten: Frage ohne Auszüge.
+1. `git pull`, `bash start.sh`, Seite hart neu laden (Dashboard und Heinz Chat). In der Eingabezeile sitzt ein kleiner runder Buchknopf (Chat: vor Senden, Dashboard: vor Mikrofon); er ist aus. Im Konfigurationsmenü des Dashboards gibt es keine Wissens-Bedienelemente mehr, nur einen Hinweistext.
+2. Heinz Chat: Buchknopf antippen (er wird farbig), „Was ist der Grünten?“ fragen: Chips unter der Antwort. Seite neu laden: der Schalter bleibt an. Ausschalten: Frage ohne Auszüge.
 3. Dashboard: derselbe Schalter ist dort schon an (gemeinsamer Zustand). Dieselbe Frage: Wartetext „Suche im Wissen …“, Antwort mit Chips; Unterhaltung speichern, neu öffnen: die Chips sind noch da.
 4. Konfiguration speichern, solange der Schalter an ist; Schalter aus, Konfiguration laden: der Schalter ist wieder an.
-5. ▾ öffnen: Quelle und Suchbegriffe (App/Modell) wählbar; Wirkung wie in Y26. Bei einer Online-Engine bekommt die Frage keine Auszüge (Hinweis).
+5. Buchknopf lange drücken: Fenster mit Quelle und Suchbegriffe (App/Modell) wählbar; Wirkung wie in Y26. Bei einer Online-Engine bekommt die Frage keine Auszüge (Hinweis).
 6. Mit dem Dashboard-Chat messen: gleiche Frage mit und ohne Wissen (Antwortzeit, Eingabetoken `In`), Werte nach `docs/KONZEPT.md` 19.6.
 
