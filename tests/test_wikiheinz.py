@@ -342,9 +342,11 @@ class WikiUiTests(unittest.TestCase):
             self.assertNotEqual(page.inner_text("#mstat").strip(), "")
             self.assertRegex(page.get_attribute("#app-header .ring", "class"), r"wh-status s-(red|orange|blue|green|yellow)")      # der Ring der Kopfzeile zeigt den Zustand
             self.assertEqual(page.locator("#cfgsel option").count(), 2)
+            page.evaluate("document.getElementById('params').open = true")
             page.select_option("#cfgsel", "c1")
             page.wait_for_function("document.querySelector('#model').value === 'gemma2:2b'")
             self.assertEqual(page.input_value("#temp"), "0.7")
+            self.assertIn("gemma2:2b", page.inner_text("#par-sum")); self.assertIn("0.7", page.inner_text("#par-sum"))   # die Zeile „Parameter“ nennt den Zustand
             page.fill("#f-frage", "Wer war Sokrates?"); page.click("#b-ask")
             page.wait_for_selector("#antwort:not([hidden])")
             self.assertEqual(page.inner_text("#askstatus").strip(), "")

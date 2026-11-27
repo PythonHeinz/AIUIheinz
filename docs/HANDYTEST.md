@@ -446,3 +446,8 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 5. In der Leiste „…“ neben Wissen antippen (oder Wissen lange drücken): Quelle und Suchbegriffe (App/Modell) wählbar; Wirkung wie in Y26. Bei einer Online-Engine bekommt die Frage keine Auszüge (Hinweis).
 6. Mit dem Dashboard-Chat messen: gleiche Frage mit und ohne Wissen (Antwortzeit, Eingabetoken `In`), Werte nach `docs/KONZEPT.md` 19.6.
 
+### Y28: WikiHeinz, Reiter „Fragen“: Zeile „Parameter“ (Strang AIUIheinz-Wissen; nur simuliert getestet)
+1. `git pull`, `bash start.sh`, WikiHeinz öffnen, Reiter „Fragen“. Unter der Frage steht eine Zeile „Parameter“ mit Symbol, grauer Zustandszeile (Engine · Modell · Temperatur · Tokens) und Pfeil.
+2. Antippen: Konfiguration, Engine und Modell, Temperatur und Antwortgrenze (zwei Spalten), Quelle; alles in einem Bildschirm ohne lange Hilfetexte.
+3. Modell oder Temperatur ändern: die graue Zeile folgt. Eine Konfiguration wählen: Modell und Temperatur ziehen nach.
+

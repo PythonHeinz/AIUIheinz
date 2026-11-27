@@ -56,16 +56,18 @@
             <div class="help" id="ant-fact"></div>
         </div>
         <div class="help wh-mstat" id="mstat" aria-live="polite"></div>
-        <label class="fld"><span data-i="cfg"></span><select id="cfgsel" class="sel"></select></label>
-        <div class="help" id="cfghelp"></div>
-        <details class="wh-det" id="params">
-            <summary><span data-i="params"></span></summary>
-            <label class="fld"><span data-i="engine"></span><select id="provider" class="sel"></select></label>
-            <label class="fld"><span data-i="model"></span><select id="model" class="sel"></select></label>
+        <details class="wh-par" id="params">
+            <summary><span class="tile"><svg class="i"><use href="../../lib/icons.svg#i-sliders"/></svg></span><span class="tx"><b data-i="params"></b><small id="par-sum"></small></span><svg class="i sm go"><use href="../../lib/icons.svg#i-chev-r"/></svg></summary>
+            <div class="wh-pg">
+                <label class="fld wh-full"><span data-i="cfg"></span><select id="cfgsel" class="sel"></select></label>
+                <label class="fld"><span data-i="engine"></span><select id="provider" class="sel"></select></label>
+                <label class="fld"><span data-i="model"></span><select id="model" class="sel"></select></label>
+                <label class="fld"><span data-i="temp"></span><input id="temp" class="inp" type="number" step="0.1" min="0" max="2" inputmode="decimal"></label>
+                <label class="fld"><span data-i="maxTok"></span><input id="maxtok" class="inp" type="number" step="10" min="50" max="1500" inputmode="numeric"></label>
+                <label class="fld wh-full"><span data-i="scope"></span><select id="scope" class="sel"></select></label>
+            </div>
+            <div class="help" id="cfghelp"></div>
             <div class="help" id="modelhelp"></div>
-            <label class="fld"><span data-i="temp"></span><input id="temp" class="inp" type="number" step="0.1" min="0" max="2" inputmode="decimal"></label>
-            <label class="fld"><span data-i="maxTok"></span><input id="maxtok" class="inp" type="number" step="10" min="50" max="1500" inputmode="numeric"></label>
-            <label class="fld"><span data-i="scope"></span><select id="scope" class="sel"></select></label>
             <div class="help" id="rtinfo"></div>
         </details>
         <div class="help" data-i="askHelp"></div>

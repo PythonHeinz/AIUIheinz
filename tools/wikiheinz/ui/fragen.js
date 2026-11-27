@@ -7,7 +7,8 @@ const KEY = 'heinz_wikiheinz_settings', DEF = { provider: 'ollama', model: 'qwen
 let cfg = { ...DEF }, ac = null, onlineOk = '', last = null, status = '', modelSeq = 0, modelleGeladen = false;
 const attr = (s) => esc(String(s)).replace(/"/g, '&quot;');
 const cfgObj = () => (cfg.config ? PV.configById(cfg.config) : null);
-const speichern = () => { const s = HeinzStore.get(KEY, {}) || {}; s.fragen = { ...cfg }; return HeinzStore.set(KEY, s); };
+function zeigeParam() { const el = $('par-sum'); if (el) el.textContent = [providerName(), cfg.model || '–', t('temp') + ' ' + cfg.temp, cfg.maxTok + ' tok'].join(' · '); }
+const speichern = () => { zeigeParam(); const s = HeinzStore.get(KEY, {}) || {}; s.fragen = { ...cfg }; return HeinzStore.set(KEY, s); };
 
 export function onlineState() { const p = PV.get(cfg.provider); if (!p || p.local) return 'local'; return PV.onlineAllowed() ? 'online' : 'blocked'; }
 const providerName = () => { const p = PV.get(cfg.provider); return p ? p.name : cfg.provider; };
@@ -36,7 +37,7 @@ async function fillModels() {
     if (seq !== modelSeq) return;
     if (cfg.model && names.indexOf(cfg.model) < 0) names = [cfg.model].concat(names);
     names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
-    sel.value = cfg.model; $('modelhelp').textContent = t('modelHelp') + (names.length <= 1 ? ' ' + t('modelNone') : ''); renderRt();
+    sel.value = cfg.model; $('modelhelp').textContent = names.length <= 1 ? t('modelNone') : ''; renderRt();
 }
 function fillScope() {
     const sel = $('scope'); sel.textContent = '';
@@ -104,7 +105,7 @@ function fillConfigs() {
     const a = document.createElement('option'); a.value = ''; a.textContent = t('cfgDefault'); sel.appendChild(a);
     PV.configs().forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.name + ' · ' + f.model + (PV.get(f.provider) && !PV.get(f.provider).local ? ' ☁' : ''); sel.appendChild(o); });
     sel.value = cfg.config && PV.configById(cfg.config) ? cfg.config : '';
-    $('cfghelp').textContent = PV.configs().length ? t('cfgHelp') : t('cfgNone');
+    $('cfghelp').textContent = PV.configs().length ? '' : t('cfgNone');
 }
 function wendeKonfigAn(id) {
     onlineOk = '';
@@ -150,7 +151,7 @@ async function fragen() {
 
 export function initFragen() {
     cfg = { ...DEF, ...((HeinzStore.get(KEY, {}) || {}).fragen || {}) };
-    $('temp').value = cfg.temp; $('maxtok').value = cfg.maxTok;
+    $('temp').value = cfg.temp; $('maxtok').value = cfg.maxTok; zeigeParam();
     const num = (d) => (v) => { const x = parseFloat(v); return Number.isFinite(x) ? x : d; };
     $('temp').addEventListener('input', (e) => { cfg.temp = num(DEF.temp)(e.target.value); speichern(); });
     $('maxtok').addEventListener('input', (e) => { cfg.maxTok = num(DEF.maxTok)(e.target.value); speichern(); });
@@ -162,7 +163,7 @@ export function initFragen() {
     $('b-askstop').addEventListener('click', () => { if (ac) ac.abort(); });
     $('f-frage').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fragen(); } });
     $('ant-quellen').addEventListener('click', (ev) => { const a = ev.target.closest('a[data-q]'); if (a) { ev.preventDefault(); emit('open', { q: a.dataset.q, titel: a.dataset.t }); } });
-    on('quellen', fillScope); on('lang', () => { fillProviders(); fillScope(); fillConfigs(); zeigeModell(); renderOnline(); zeigeAntwort(); if (anz) ringSetzen(anz.color, anz.key); });
+    on('quellen', fillScope); on('lang', () => { zeigeParam(); fillProviders(); fillScope(); fillConfigs(); zeigeModell(); renderOnline(); zeigeAntwort(); if (anz) ringSetzen(anz.color, anz.key); });
     on('tabwechsel', (name) => { if (name !== 'fragen') return; if (!modelleGeladen) { modelleGeladen = true; fillModels().then(() => { zeigeModell(); ladeModell(); }); } else zeigeModell(); });   // die Modellliste wird erst beim ersten Öffnen des Reiters von der lokalen Engine geholt
     fillProviders(); fillScope(); fillConfigs(); renderOnline();
     zeigeModell(); setInterval(() => { if (!document.hidden && !ac && !laedt) zeigeModell(); }, 15000);   // Ring in der Kopfzeile: Modellstatus auf jedem Reiter

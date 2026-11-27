@@ -1027,3 +1027,8 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Ursache (älter als die Seitenleiste):** `lib/dashboard/status.js` startet auf Modulebene `setInterval(checkServer, 3000)`. Dauert der Start länger als 3 s (nach dem Update, kalte Dateien), zeichnet der Takt den Ring, bevor `applyDashboardData` die Modi gesetzt hat; `MODE_PRESETS` ist dann leer.
 - **Behebung:** `renderRing` und `checkServer` kehren zurück, solange `MODE_PRESETS` leer ist. Test: `tests/test_wissen.py` verzögert `modes.json` um 3,6 s und erwartet keinen Fehler (ohne die Behebung rot, mit grün).
 
+## 27.11.2026 – WikiHeinz: Parameter als Zeile mit Zustand (Strang AIUIheinz-Wissen)
+- **Anlass:** Die Pille „Parameter“ war nicht als einstellbar erkennbar, der aufgeklappte Teil war lang und unübersichtlich (Entwickler 03:27).
+- **Umbau:** `tools/wikiheinz/index.html`, `wikiheinz.css`, `ui/fragen.js`: „Parameter“ ist eine Zeile im Stil der Menüzellen (Symbol, Titel, graue Zeile mit Engine · Modell · Temperatur · Tokens, Pfeil). Aufgeklappt stehen Konfiguration, Engine/Modell und Temperatur/Antwortgrenze in zwei Spalten, dazu die Quelle. Hilfetexte erscheinen nur noch, wenn etwas fehlt (keine Modellliste, keine Konfiguration); die Zeile zur Laufzeit bleibt.
+- **Tests:** `tests/test_wikiheinz.py` (Zustandszeile, Felder im aufgeklappten Bereich). Voller Lauf grün, nur simuliert; Handytest in `docs/HANDYTEST.md` (Y28).
+
