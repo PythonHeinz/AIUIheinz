@@ -422,7 +422,7 @@ class WissenChatTests(unittest.TestCase):
             page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
             self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
             page.evaluate("localStorage.removeItem('heinz_wissen'); window.dispatchEvent(new CustomEvent('heinz-wissen'))")
-            page.click("#cfg-load-btn")
+            page.click(".cfg-do-load")
             self.assertTrue(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"))
             self.assertEqual(page.evaluate("JSON.parse(localStorage.getItem('heinz_wissen')).begriffe"), "modell")
         finally:

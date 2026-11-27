@@ -208,6 +208,15 @@ class PageTest(unittest.TestCase):
         self.addCleanup(ctx.close)
         return page
 
+    def cfg_do(self, page, name, action):
+        """Konfigurationsliste: Aktion einer Zeile (load, model, chat, rename, del); die Zeile wird über ihren Namen gefunden, ⋯ öffnet das Menü"""
+        row = page.locator(".cfg-row", has=page.locator(".cfg-name", has_text=name)).first
+        if action != "load":
+            if not row.locator(".cfg-menu").is_visible(): row.locator(".cfg-more").click()
+            row.locator(".cfg-do-" + action).click()
+        else:
+            row.locator(".cfg-do-load").click()
+
     def menu(self, page, pg=None):
         """open the menu sheet (and one of its sub pages)"""
         page.click(".burger-btn")
@@ -1067,7 +1076,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
-        self.assertTrue(page.is_disabled("#cfg-load-btn"), "nothing to load yet")
+        self.assertEqual(page.locator(".cfg-row").count(), 0, "nothing to load yet")
         page.click("[data-pw=prompts]")
         page.fill("#ps-text", "You are a calm test agent.")
         page.click("[data-pw=params]")
@@ -1090,8 +1099,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=wilson]")
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
-        page.select_option("#cfg-load", label="Calm Heinz · gemma2:2b")
-        page.click("#cfg-load-btn")
+        self.cfg_do(page, "Calm Heinz", "load")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
         self.assertEqual(page.input_value("#param-temp"), "0.3")
         self.assertEqual(page.input_value("#param-ctx"), "4096")
@@ -1110,8 +1118,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
-        page.select_option("#cfg-load", label="Lite one · gemma4-e2b")
-        page.click("#cfg-load-btn")
+        self.cfg_do(page, "Lite one", "load")
         page.wait_for_function("HeinzDashboard.settings.provider === 'litert'", timeout=15000)
         page.wait_for_function("document.getElementById('model-select').value === 'gemma4-e2b'", timeout=15000)
         self.assertEqual(page.evaluate("HeinzDashboard.settings.model"), "gemma4-e2b")
@@ -1134,11 +1141,32 @@ class PageTest(unittest.TestCase):
         self._save_config(page, "Mine")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
-        page.click("#cfg-use")
+        self.cfg_do(page, "Mine", "chat")
         self.assertEqual(page.evaluate("HeinzProviders.chatConfigId()"), page.evaluate("HeinzProviders.configs()[0].id"))
-        self.assertIn("on", page.get_attribute("#cfg-use", "class"))
-        page.click("#cfg-use")
+        self.assertIn("on", page.get_attribute(".cfg-do-chat", "class"))
+        self.cfg_do(page, "Mine", "chat")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
+
+    def test_configuration_list_has_load_and_a_menu_with_assign_chat_rename_and_delete(self):
+        page = self.new_page()
+        page.goto(self.srv.base + "/dashboard.html")
+        page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
+        self._save_config(page, "Alpha")
+        self._save_config(page, "Beta")
+        page.click(".burger-btn")
+        self.assertEqual(page.inner_text("#mz-cfgs").strip(), "2 saved")
+        page.click("#menu-sheet [data-go=cfgs]")
+        self.assertEqual(page.locator(".cfg-row").count(), 2)
+        self.assertEqual(page.locator(".cfg-menu:visible").count(), 0, "the menu is closed until the dots are tapped")
+        self.assertFalse(page.is_visible("#cfg-load-btn") if page.locator("#cfg-load-btn").count() else False)
+        self.cfg_do(page, "Alpha", "rename")
+        page.keyboard.press("Control+A"); page.keyboard.type("Alpha 2"); page.keyboard.press("Enter")
+        self.assertEqual(sorted(c["name"] for c in page.evaluate("HeinzProviders.configs()")), ["Alpha 2", "Beta"])
+        self.cfg_do(page, "Beta", "del")
+        self.assertEqual(len(page.evaluate("HeinzProviders.configs()")), 2, "the first tap only asks")
+        page.locator(".cfg-row", has=page.locator(".cfg-name", has_text="Beta")).locator(".cfg-do-del").click()
+        self.assertEqual([c["name"] for c in page.evaluate("HeinzProviders.configs()")], ["Alpha 2"])
+        self.assertEqual(page.locator(".cfg-row").count(), 1)
 
     def test_configuration_page_assigns_exports_imports_renames_and_deletes(self):
         page = self.new_page()
@@ -3494,7 +3522,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
         self._save_config(page, "Bench")
-        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]"); page.click("#cfg-use")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]"); self.cfg_do(page, "Bench", "chat")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
@@ -3518,10 +3546,10 @@ class PageTest(unittest.TestCase):
         page.evaluate("var e=document.getElementById('param-temp'); e.value=0.15; e.dispatchEvent(new Event('input', {bubbles: true})); var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}));")
         page.fill("#cfg-name", "Wilson on gemma"); page.click("#cfg-save")
         self.assertIsNone(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"))
-        page.click("#cfg-model")
+        self.cfg_do(page, "Wilson on gemma", "model")
         cid = page.evaluate("HeinzProviders.configs()[0].id")
         self.assertEqual(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"), cid)
-        self.assertIn("on", page.get_attribute("#cfg-model", "class"))
+        self.assertIn("on", page.get_attribute(".cfg-do-model", "class"))
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"), "the model assignment is not the Heinz Chat assignment")
         # restart: the app starts on Heinz, the assigned configuration loads with the model (person, prompt, tone, runtime) and says so
         page.goto(self.srv.base + "/dashboard.html")
@@ -3535,7 +3563,7 @@ class PageTest(unittest.TestCase):
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
         # removing the assignment brings the model's standard: the app starts on Heinz again
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
-        page.click("#cfg-model")
+        self.cfg_do(page, "Wilson on gemma", "model")
         self.assertIsNone(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"))
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
@@ -3549,7 +3577,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.evaluate("var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}));")
-        page.fill("#cfg-name", "Small ctx"); page.click("#cfg-save"); page.click("#cfg-model")
+        page.fill("#cfg-name", "Small ctx"); page.click("#cfg-save"); self.cfg_do(page, "Small ctx", "model")
         page.evaluate("HeinzDashboard.closeAll()")
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")

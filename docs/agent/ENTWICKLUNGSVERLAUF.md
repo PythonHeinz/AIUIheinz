@@ -1039,3 +1039,9 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Tests:** `tests/test_pages.py`: Hilfsfunktion in `new_page` wechselt zur Unterseite, auf der das Zielfeld liegt; `test_menu_pages_back_arrow_and_groups` neu (Zellen, Zustandszeilen, Zurück eine Ebene hoch); Tippen daneben schließt über dem abgedunkelten Bereich neben dem Blatt. Voller Lauf grün (ein Zeitfehler unter Last, allein wiederholt grün). Nur simuliert getestet; Handytest Y29.
 - **Offen:** Menüzeile für Konfigurationen als Liste mit „Laden“ und ⋯ (Schritt 3), Modellliste mit Suche und Favoriten (Schritt 4), Leisten, die beim Tippen verschwinden (Schritt 5), Inhalt der Seitenleiste (doppelter Menüaufruf Burger/Leiste klären).
 
+## 27.11.2026 – Strang AIUIheinz-Menü, Schritt 3: Konfigurationen als Liste
+- **Umbau (Seite „Konfigurationen“ des Dashboard-Menüs):** oben Namensfeld und „Aktuellen Stand speichern“, darunter je Konfiguration eine Zeile (Name, Modell · Person, Marken „mit seinem Modell“ und „Heinz Chat“) mit „Laden“ und ⋯. Das ⋯-Menü der Zeile hat: Dem Modell zuordnen, Im Heinz Chat verwenden (beide mit Zustand), Umbenennen (Eingabe in der Zeile, Enter/Verlassen speichert, Escape bricht ab), Löschen (erster Tipp fragt, zweiter löscht; nach 3 s zurückgesetzt). Das Auswahlfeld `#cfg-load` und die Knöpfe darunter entfallen; die Funktionen (`loadConfig`, `assignModelConfig`, `useConfigInChat`) nehmen die Id der Zeile.
+- **Ablage unverändert:** `PV.renameConfig`/`PV.deleteConfig` aus `lib/providers.js`; keine Änderung am Format.
+- **Tests:** `tests/test_pages.py` (Hilfsfunktion `cfg_do`, neuer Test für Liste, Umbenennen und zweistufiges Löschen), `tests/test_wissen.py`; `test_rules` (ungenutzte Aktionen entfernt). Voller Lauf grün, nur simuliert; Handytest Y30.
+- **Offen:** Modellliste (Schritt 4), Leisten beim Tippen ausblenden (Schritt 5).
+

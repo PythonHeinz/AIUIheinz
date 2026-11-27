@@ -458,3 +458,9 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 4. Leistung: Schnellmodus, Vorladen, Tempo-Test, Testreihe. Verbindung & Datenschutz: Engine-Seite, „Online erlauben“. App: Aussehen, Update.
 5. Auf Unterseiten bringt der Pfeil eine Ebene zurück (zum Beispiel vom Tempo-Test zu Leistung). Zustandszeilen folgen den Einstellungen, sobald man ins Hauptmenü zurückkehrt.
 
+### Y30: Konfigurationen als Liste (Strang AIUIheinz-Menü, Schritt 3; nur simuliert getestet)
+1. `git pull`, `bash start.sh`, hart neu laden. Menü → Konfigurationen: Namensfeld mit „Aktuellen Stand speichern“, darunter eine Zeile je Konfiguration mit „Laden“ und ⋯.
+2. Speichern, dann „Laden“: Modell, Person, Prompt, Ton und Laufzeit kommen zurück wie vorher.
+3. ⋯ öffnen: Dem Modell zuordnen und Im Heinz Chat verwenden (die Zeile zeigt danach die Marke), Umbenennen (Name wird zum Feld; Enter speichert), Löschen (erster Tipp fragt, zweiter löscht).
+4. Das Menü zeigt „n gespeichert“ in der Zelle Konfigurationen.
+

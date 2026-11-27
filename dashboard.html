@@ -95,6 +95,20 @@
         #menu-sheet .pg .row .mono { font-size: .8rem; color: var(--sub); margin-right: 4px; }
         #menu-sheet .pg .row.open .go { transform: rotate(180deg); }
         .quick .rule { height: 6px; }
+        .cfg-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .cfg-row { border: 1px solid var(--ol); border-radius: 20px; background: var(--card); padding: 8px 8px 8px 14px; }
+        .cfg-top { display: flex; align-items: center; gap: 8px; }
+        .cfg-top .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .cfg-top .tx b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cfg-top .tx small { color: var(--sub); font-size: .74rem; line-height: 1.25; overflow-wrap: anywhere; }
+        .cfg-top .inp { margin: 0; height: 36px; }
+        .cfg-more.open { background: var(--surf, var(--card)); }
+        .cfg-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .cfg-menu[hidden] { display: none; }
+        .cfg-menu .pill { min-height: 38px; padding: 0 10px; font-size: .78rem; white-space: normal; text-align: center; }
+        .cfg-menu .pill.on { background: var(--acc); border-color: var(--acc); color: var(--onacc); }
+        .cfg-menu .pill.danger:not(.sure) { background: var(--card); border-color: var(--ol); color: var(--red, #d33); }
+        .cfg-menu .pill.danger.sure { background: var(--red, #d33); color: #fff; }
         .srow { position: relative; display: flex; align-items: center; gap: 10px; height: 26px; margin: -6px 0 2px; flex: none; }
         .srow #preload-status { margin-right: 18px; }
         #preload-status.st-open { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.3; }
@@ -434,15 +448,10 @@
 
             <div class="pg" data-pg="cfgs">
                 <div class="quick">
-                    <div class="caps" style="margin:14px 0 4px"><span data-i18n="cfgTitle">Configuration</span></div>
-                    <div class="q-btns" style="gap:8px"><input class="inp" id="cfg-name" type="text" maxlength="80" data-i18n-ph="cfgNamePh" placeholder="Name" style="flex:1;min-width:0;margin:0"><button class="pill" type="button" id="cfg-save" data-click="saveConfig"><span data-i18n="cfgSave">Save</span></button></div>
-                    <div class="q-btns" style="gap:8px"><select class="inp" id="cfg-load" data-change="renderConfigs" style="flex:1;min-width:0;margin:0"></select><button class="pill" type="button" id="cfg-load-btn" data-click="loadConfig"><span data-i18n="cfgLoad">Load</span></button></div>
-                    <div class="q-btns"><button class="pill" type="button" id="cfg-model" data-click="assignModelConfig"><span id="cfg-model-t" data-i18n="cfgModel">Assign to its model</span></button></div>
-                    <small class="help" data-i18n="cfgModelHelp">Assigned to its model, the configuration loads automatically every time that model loads (also after a restart).</small>
-                    <small class="help" data-i18n="cfgWissenHelp">Knowledge lookup is switched next to the input field.</small>
-                    <div class="q-btns"><button class="pill" type="button" id="cfg-use" data-click="useConfigInChat"><span id="cfg-use-t" data-i18n="cfgUse">Use in Heinz Chat</span></button></div>
-                    <small class="help" data-i18n="cfgUseHelp">The Heinz Chat runs with exactly one configuration of its own, independent of what is loaded here.</small>
+                    <div class="q-btns" style="gap:8px"><input class="inp" id="cfg-name" type="text" maxlength="80" data-i18n-ph="cfgNamePh" placeholder="Name" style="flex:1;min-width:0;margin:0"><button class="pill acc" type="button" id="cfg-save" data-click="saveConfig"><span data-i18n="cfgSaveNow">Save current state</span></button></div>
                     <small class="help" id="cfg-empty" data-i18n="cfgEmpty">No configuration saved yet.</small>
+                    <div id="cfg-list" class="cfg-list"></div>
+                    <small class="help" data-i18n="cfgHelpShort">Load sets engine, model, person, prompt, tone and runtime. In the Heinz Chat the configuration runs on its own, independent of what is loaded here.</small>
                     <small class="help" id="cfg-note"></small>
                 </div>
             </div>
