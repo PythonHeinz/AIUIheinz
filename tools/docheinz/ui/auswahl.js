@@ -386,7 +386,9 @@ async function dictSearch(text) {
     const box = $('rs-body');
     box.appendChild(line('dh-sline', t('s_working')));
     const lang = A.env.lang(), rl = (A.env.rec && A.env.rec().language) || lang;
+    const t0 = performance.now();
     let r; try { r = await lookup(text, lang); } catch { r = { none: false, groups: [], tried: [] }; }
+    const msDict = Math.round(performance.now() - t0);
     if (my !== A.run) return;
     box.textContent = '';
     const rows = [];                                                         // Kompaktansicht: je Wörterbuch ein Eintrag, Bedeutungen gekürzt; „Mehr anzeigen“ blendet den Rest ein
@@ -418,9 +420,11 @@ async function dictSearch(text) {
         });
         box.appendChild(more);
     }
-    let wissenShown = false;
+    let wissenShown = false, msWiki = -1;
     try {                                                                   // WikiHeinz (lib/wissen/): nur lokale Quellen, keine Anfrage nach außen; ohne bereite Quelle bleibt der Block weg
+        const t1 = performance.now();
         const w = await HeinzWissen.suche(q, { max: 2, voll: false });
+        msWiki = Math.round(performance.now() - t1);
         if (my !== A.run) return;
         if (w.zustand === 'ok') {
             wissenShown = true;
@@ -450,6 +454,7 @@ async function dictSearch(text) {
         else box.appendChild(line('help', t(w.failed ? 'w_failed' : 'w_none')));
     }
     if (!r.groups.length && !wikiShown && !wissenShown) box.appendChild(line('dh-sline', t(r.none ? 'd_none' : 'd_nohit')));
+    box.appendChild(line('help', t('wh_ms', { d: msDict, w: msWiki < 0 ? '–' : msWiki })));    // Messwert zum Vergleich der beiden Wege (Wörterbuch-Kopie in docHeinz und lib/wissen/)
 }
 async function search(query) {
     query = normalizeQuery(query);

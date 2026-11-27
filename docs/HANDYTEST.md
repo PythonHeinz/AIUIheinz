@@ -483,3 +483,7 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. In docHeinz im Buch ein Wort markieren und „Wörterbuch“ tippen.
 3. Unter den Wörterbuchtreffern erscheint „WikiHeinz (offline)“ mit Titel, Quelle und Auszug (bei Wikipedia mit „Quelle öffnen“).
 4. Flugmodus an: Der Block erscheint weiterhin. Ohne Quelle in WikiHeinz erscheint er nicht.
+
+Zusatz zu Y33 (Umstellung der Wikipedia): 
+5. Zuerst in WikiHeinz die Wikipedia importieren (`wikipedia-de.jsonl.gz`, 363 MB). Danach in docHeinz ein Wort markieren → Wörterbuch. Unten steht „Zeit: Wörterbücher x ms, WikiHeinz y ms“. Bitte Werte für „Sokrates“, „Köln“ und ein seltenes Wort melden.
+6. In docHeinz Bibliothek → Wörterbücher: Die alte Wikipedia-Zeile trägt den Hinweis „wird nicht mehr benutzt“. Erst wenn die Treffer aus WikiHeinz passen, die alte Zeile mit „Löschen“ entfernen (gibt Platz frei).

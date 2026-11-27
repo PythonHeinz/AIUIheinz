@@ -562,6 +562,32 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => /Gruppe von Schaben/.test(document.getElementById('rs-body').innerText)")
         self.assertEqual(p.errors, [])
 
+    def test_old_wikipedia_copy_in_docheinz_is_hidden_and_import_refused_once_wikiheinz_has_a_wikipedia(self):
+        import json
+        p = self.open(lang="de")
+        self.add(p, ("w.md", "text/markdown", "# Wort\n\nEine Kakerlake lief.".encode()))
+        p.wait_for_function("() => document.querySelectorAll('#list .dh-book').length === 1")
+        p.click("#b-dict"); p.wait_for_selector("#dict:not([hidden])")
+        rows = [{"word": "Kakerlake", "lang_code": "de", "senses": [{"glosses": ["Insekt aus der alten Kopie."]}]}]
+        p.set_input_files("#file-dict", {"name": "wikipedia-de.jsonl", "mimeType": "application/json", "buffer": "\n".join(json.dumps(r) for r in rows).encode()})
+        p.wait_for_function("() => /Wikipedia \\(offline/.test(document.getElementById('dict').innerText)")
+        self.assertNotIn("nicht mehr benutzt", p.inner_text("#dict"))                 # WikiHeinz hat noch keine: alte Kopie bleibt in Gebrauch
+        p.evaluate("""async () => {
+            const { oeffne } = await import('/lib/wissen/db.js'); const { neueQuelle } = await import('/lib/wissen/quelle.js');
+            const sp = await oeffne(); await sp.quelleSetzen(neueQuelle({ id: 'wikipedia-de', name: 'Wikipedia (de, offline)', sprache: 'de', wikipedia: true, anzahl: 1 }));
+            await sp.put({ q: 'wikipedia-de', k: 'kakerlake', t: 'Kakerlake', x: 'Neue Einleitung aus WikiHeinz.', v: '', tags: [], links: [], h: null, e: '', g: '' });
+        }""")
+        p.click("#dict [data-dc=close]"); p.click("#b-dict")
+        p.wait_for_function("() => /nicht mehr benutzt/.test(document.getElementById('dict').innerText)")
+        p.set_input_files("#file-dict", {"name": "wikipedia-de2.jsonl", "mimeType": "application/json", "buffer": "\n".join(json.dumps(r) for r in rows).encode()})
+        p.wait_for_function("() => /schon eine Wikipedia/.test(document.body.innerText)")
+        p.click("#dict [data-dc=close]")
+        p.locator("#list .dh-book").first.click(); p.wait_for_selector("#reader:not([hidden])")
+        self.select_text(p, "Kakerlake"); p.click("#r-sel [data-sel=dict]")
+        p.wait_for_function("() => /Neue Einleitung aus WikiHeinz/.test(document.getElementById('rs-body').innerText)")
+        self.assertNotIn("alten Kopie", p.inner_text("#rs-body"))
+        self.assertEqual(p.errors, [])
+
     def test_dictionary_reads_gzip_jsonl_and_keeps_only_german_and_english(self):
         import gzip, json
         p = self.open(lang="de")
@@ -610,7 +636,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.select_text(p, "Sokrates"); p.click("#r-sel [data-sel=dict]")
         p.wait_for_function("() => /Wörterbuch|Kein Treffer|nichts/i.test(document.getElementById('rs-body').innerText) || document.getElementById('rs-body').innerText.length > 0")
         p.wait_for_timeout(500)
-        self.assertNotIn("WikiHeinz", p.inner_text("#rs-body"), "without a ready source the block stays away")
+        self.assertNotIn("WikiHeinz (offline)", p.inner_text("#rs-body"), "without a ready source the block stays away")
         p.evaluate("""async () => {
             const { oeffne } = await import('/lib/wissen/db.js'); const { speichere } = await import('/lib/wissen/eigene.js'); const { EIGEN_ID, neueQuelle, ART } = await import('/lib/wissen/quelle.js');
             const sp = await oeffne(); const q = neueQuelle({ id: EIGEN_ID, name: 'Mein Wiki', art: ART.EIGEN, sprache: 'de', anzahl: 1 }); await sp.quelleSetzen(q); await speichere(sp, EIGEN_ID, { titel: 'Sokrates', text: 'Griechischer Philosoph aus Athen, Lehrer von Platon.' }, Date.now());
@@ -619,6 +645,7 @@ class DocHeinzUiTests(DocHeinzBase):
         self.select_text(p, "Sokrates"); p.click("#r-sel [data-sel=dict]")
         p.wait_for_function("() => /Lehrer von Platon/.test(document.getElementById('rs-body').innerText)")
         self.assertIn("WikiHeinz (offline)", p.inner_text("#rs-body"))
+        self.assertRegex(p.inner_text("#rs-body"), r"Zeit: Wörterbücher \d+ ms, WikiHeinz \d+ ms")
         self.assertEqual(p.errors, [])
 
     def test_wikipedia_short_text_is_off_by_default_needs_online_and_is_cached(self):

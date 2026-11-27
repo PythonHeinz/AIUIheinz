@@ -2,7 +2,7 @@
  *   initDict({ db(), t, say(text, art) })   verdrahtet Knopf #b-dict und Feld #dict der Bibliothek
  *   lookup(auswahl, sprache) -> Promise<{ none, groups: [{ word, items: [{ name, o, d }] }], tried }>   (none: kein Wörterbuch eingelesen)
  * Alles bleibt auf dem Gerät (IndexedDB, Stores dict und dictmeta). */
-import { $ } from './base.js';
+import { $, HeinzWissen } from './base.js';
 import { detect, parseLine, parseJson, wanted, candidates, keyOf, words } from '../mod/woerterbuch.js';
 
 const D = { env: null, open: false, busy: '', seq: 0 };
@@ -19,9 +19,14 @@ function niceName(file, t, ui) {
     return t('d_nameGen', { l });
 }
 
+// Die Wikipedia liegt seit 27.11.2026 in WikiHeinz (lib/wissen/). Ist dort eine Wikipedia bereit, wird eine alte eigene Kopie in docHeinz nicht mehr gelesen (sie bleibt als Rückfall, solange WikiHeinz keine hat) und kann gelöscht werden.
+const istWikiKopie = (m) => /^wikipedia/i.test(m.name || '');
+export async function wikiHeinzHatWikipedia() { try { return (await HeinzWissen.quellen()).some(q => q.bereit && q.wikipedia); } catch { return false; } }
+
 export async function lookup(sel, lang) {
     const db = D.env && D.env.db();
-    const metas = db ? await db.dictList() : [];
+    let metas = db ? await db.dictList() : [];
+    if (metas.some(istWikiKopie) && await wikiHeinzHatWikipedia()) metas = metas.filter(m => !istWikiKopie(m));
     if (!metas.length) return { none: true, groups: [], tried: [] };
     const names = Object.fromEntries(metas.map(m => [m.id, m.name]));
     const ws = words(sel), tried = [], groups = [], seen = new Set();
@@ -33,13 +38,13 @@ export async function lookup(sel, lang) {
         let items = [];
         for (const c of cs) {                                                     // genau vor Grundform: beim ersten Treffer aufhören
             tried.push(c);
-            const hits = await db.dictFind([c]);
+            const hits = (await db.dictFind([c])).filter(x => names[x.dict] !== undefined);
             if (hits.length) { items = hits; break; }
         }
         const refs = [...new Set(items.filter(x => x.r).map(x => x.r))], form = [];
         if (refs.length) {                                                       // Beugungsform: Eintrag der Grundform zeigen
             const real = items.filter(x => !x.r);
-            for (const lem of refs) { const h = (await db.dictFind(candidates(lem, lang).slice(0, 1))).filter(x => !x.r); h.forEach(x => form.push(Object.assign(x, { from: lem }))); }
+            for (const lem of refs) { const h = (await db.dictFind(candidates(lem, lang).slice(0, 1))).filter(x => !x.r && names[x.dict] !== undefined); h.forEach(x => form.push(Object.assign(x, { from: lem }))); }
             items = real.concat(form);
             if (!items.length) items = [{ dict: '', o: w, d: D.env.t('d_formOf', { a: w, b: refs[0] }), from: '' }];
         }
@@ -68,6 +73,7 @@ async function sampleOf(file, gz) {
 
 async function importFile(file) {
     const db = D.env.db(), t = D.env.t;
+    if (/^wikipedia/i.test(file.name) && await wikiHeinzHatWikipedia()) { const e = new Error('inWiki'); e.code = 'inWiki'; throw e; }
     const gz = await isGz(file);
     if (gz && typeof DecompressionStream === 'undefined') throw new Error('nogz');
     const fmt = detect(await sampleOf(file, gz));
@@ -112,6 +118,7 @@ async function render() {
     head.append(h, x); box.appendChild(head);
     // Nur der neueste Aufruf zeichnet (D.seq): mehrere gleichzeitige Aufrufe (Fortschritt beim Import) verdoppelten sonst die Liste
     const list = db ? await db.dictList() : [];
+    const wikiDa = list.some(istWikiKopie) && await wikiHeinzHatWikipedia();
     if (my !== D.seq) return;
     if (!list.length) { const p = document.createElement('p'); p.className = 'help'; p.textContent = t('d_empty'); box.appendChild(p); }
     list.forEach(m => {
@@ -120,6 +127,7 @@ async function render() {
         const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('d_del') }); b.dataset.dc = 'del'; b.dataset.id = m.id;
         const rn = Object.assign(document.createElement('button'), { type: 'button', className: 'pill', textContent: t('d_ren') }); rn.dataset.dc = 'ren'; rn.dataset.id = m.id; rn.dataset.name = m.name;
         r.append(s, rn, b); box.appendChild(r);
+        if (istWikiKopie(m) && wikiDa) { const h = document.createElement('p'); h.className = 'help'; h.textContent = t('d_wikiMoved'); box.appendChild(h); }
     });
     if (D.busy) { const p = document.createElement('p'); p.className = 'help'; p.textContent = D.busy; box.appendChild(p); }
     else {
@@ -157,7 +165,7 @@ export function initDict(env) {
         const files = Array.from(e.target.files || []); e.target.value = '';
         for (const f of files) {
             try { const r = await importFile(f); D.busy = ''; env.say(env.t('d_done', { name: r.name, n: r.count }), 'ok'); }
-            catch (err) { D.busy = ''; env.say(env.t(err && err.code === 'full' ? 'e_full' : 'd_bad', { name: f.name }), 'err'); }
+            catch (err) { D.busy = ''; env.say(env.t(err && err.code === 'full' ? 'e_full' : err && err.code === 'inWiki' ? 'd_inWiki' : 'd_bad', { name: f.name }), 'err'); }
         }
         D.busy = ''; render();
     });
