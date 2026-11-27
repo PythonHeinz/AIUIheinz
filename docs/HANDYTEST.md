@@ -451,3 +451,10 @@ Messwerte (Tempo je Eintrag, Trefferquote an einem Testsatz) bitte an den Strang
 2. Antippen: Konfiguration, Engine und Modell, Temperatur und Antwortgrenze (zwei Spalten), Quelle; alles in einem Bildschirm ohne lange Hilfetexte.
 3. Modell oder Temperatur ändern: die graue Zeile folgt. Eine Konfiguration wählen: Modell und Temperatur ziehen nach.
 
+### Y29: Hauptmenü als Menüzellen (Strang AIUIheinz-Menü, Schritt 2; nur simuliert getestet)
+1. `git pull`, `bash start.sh`, Seite hart neu laden, oben rechts das Menü öffnen. Es zeigt fünf Zellen mit grauer Zustandszeile: Modell & Person, Konfigurationen, Leistung, Verbindung & Datenschutz, App.
+2. Modell & Person: Engine, Modell, Reiter Ton/Prompt, Regler und Laufzeit wie vorher; Schieber und „Letzten Stand laden“ funktionieren.
+3. Konfigurationen: speichern, laden, dem Modell zuordnen, im Heinz Chat verwenden wie vorher.
+4. Leistung: Schnellmodus, Vorladen, Tempo-Test, Testreihe. Verbindung & Datenschutz: Engine-Seite, „Online erlauben“. App: Aussehen, Update.
+5. Auf Unterseiten bringt der Pfeil eine Ebene zurück (zum Beispiel vom Tempo-Test zu Leistung). Zustandszeilen folgen den Einstellungen, sobald man ins Hauptmenü zurückkehrt.
+

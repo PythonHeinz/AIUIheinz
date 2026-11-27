@@ -5,7 +5,6 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
-- 27.11.2026 AIUIheinz-Menü (Strang AIUIheinz-Wissen führt ihn, Beschluss des Entwicklers): Hauptmenü des Dashboards als Menüzellen mit Unterseiten, ohne Funktionsänderung. Berührt `dashboard.html`, `lib/dashboard/menu.js`, `lib/data/dashboard.i18n.json`, Tests des Dashboard-Menüs.
 
 Stand: 26.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
@@ -43,7 +42,7 @@ Strangname gilt, nicht der Titel in der Chat-Liste der Claude-App. Neue Stränge
 |---|---|---|
 | AIUIheinz (Root) | Konzept (`docs/KONZEPT.md`), Querprüfung, neue Aufträge | Konzept nachgeführt bis Abschnitt 22 (Beschlüsse zur Struktur, 12.11.) |
 | AIUIheinz-Aufraeumen | Doppelablage beenden, Dokumente entschlacken, Anweisungen; `AUFTRAG_Aufraeumen.md` | fertig (12.11.2026): Doppelablage beendet, Dokumente neu geordnet, Anweisungen geschrieben; Abweichungen in `AUFTRAG_Aufraeumen.md` |
-| AIUIheinz-Menu | Bausteinkatalog (Phase 0), Menü des Dashboards (DR2 Phase B); `AUFTRAG_Menu.md` | Phase 0 fertig (12.11.2026): Design-Katalog, Bausteine nach `lib/core.css`, Helfer in `lib/core.js`; Menü-Umbau nicht beauftragt, Menü bleibt |
+| AIUIheinz-Menu | Bausteinkatalog (Phase 0), Menü des Dashboards (DR2 Phase B); `AUFTRAG_Menu.md` | Phase 0 fertig (12.11.2026): Design-Katalog, Bausteine nach `lib/core.css`, Helfer in `lib/core.js`; Menü-Umbau nicht beauftragt, Menü bleibt; **Schritt 2 gebaut 27.11.2026:** Hauptmenü des Dashboards als Menüzellen mit Unterseiten (Person, Konfigurationen, Leistung, Verbindung, App), nur simuliert getestet, Handytest Y29; offen: Schritte 3 bis 5 (Konfigurationsliste, Modellliste, Leisten) |
 | AIUIheinz-Dashboard | **Heinz Dashboard** (`dashboard.html`): Menü, Chatfenster, Modi, Regler, Tempo-Test, Testreihen, Sonden S1 bis S8, Engine- und Modellprüfung (übernimmt seit 12.11.2026 die frühere Dashboard-Arbeit des Strangs Chat); schlankes Web-UI nach `AUFTRAG_Dashboard_Schlank.md`, Vorschlag `docs/DASHBOARD_INVENTUR.md`; weitere Aufträge `AUFTRAG_CHAT-SEITE.md`, `AUFTRAG_Chat_Schnittstellen.md` | läuft (seit 12.11.): Fassade, Daten als JSON, Speicherschicht, Blöcke nach `lib/dashboard/` gepusht; offen: Umstellung auf ES-Module und Inline-Handler, Testreihen Schritt 4 und 5, LiteRT-LM und Online-Anbieter am Handy, Modellverwaltung, Sonden |
 | AIUIheinz-Fix-Chat | Korrektur: leerer orange Balken im Heinz Chat; `AUFTRAG_Fix_Chat.md` | **entfällt** (13.11.2026, Entwickler): der Balken wird in Phase 2 des Strangs Fundament als Schritt 0a behoben (eine Regel in `lib/core.css`, Test), der Befund zum Systemprompt (B2) ist vertagt |
 | AIUIheinz-Personen | Personenleiste, Laufzeit, Konfigurationen; `AUFTRAG_Personen.md`, `ANWEISUNG_Personenleiste.md`, `docs/BEDIENKONZEPT_DASHBOARD.md` | **fertig 13.11.2026** (Handytest A bis M bestanden, Phase 3 ersetzt durch Konfigurationen) |

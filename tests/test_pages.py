@@ -191,6 +191,19 @@ class PageTest(unittest.TestCase):
                 page.wait_for_function("window.HeinzDashboard && HeinzDashboard.ready === true", timeout=15000)
             return r
         page.reload = reload_ready
+        # Das Menü hat Unterseiten: liegt das Zielfeld auf einer anderen Unterseite als der offenen, wechselt der Test dorthin, wie es ein Nutzer täte
+        def zur_seite(sel):
+            try:
+                page.evaluate("""(s) => { const e = document.querySelector(s), m = document.getElementById('menu-sheet'), pg = e && e.closest('.pg');
+                    if (pg && m && m.classList.contains('open') && pg.dataset.pg && !pg.classList.contains('on')) HeinzDashboard.showPage(pg.dataset.pg); }""", sel)
+            except Exception:
+                pass
+        for name in ("click", "fill", "select_option"):
+            orig = getattr(page, name)
+            def wrapped(sel, *a, _o=orig, **k):
+                if isinstance(sel, str) and ">>" not in sel: zur_seite(sel)
+                return _o(sel, *a, **k)
+            setattr(page, name, wrapped)
         page.route("**/127.0.0.1:9379/**", lambda route: route.abort())   # LiteRT-LM not running in tests
         self.addCleanup(ctx.close)
         return page
@@ -199,7 +212,10 @@ class PageTest(unittest.TestCase):
         """open the menu sheet (and one of its sub pages)"""
         page.click(".burger-btn")
         if pg:
-            page.click("#menu-sheet [data-go=%s]" % pg)
+            if pg in ("person", "cfgs", "perf", "conn", "app"):
+                page.click("#menu-sheet [data-go=%s]" % pg)
+            else:                                   # Unterseiten (engine, speed, series, look, update): ihre Zeile liegt auf einer Unterseite, Test springt direkt
+                page.evaluate("(p) => HeinzDashboard.showPage(p)", pg)
 
     def chat_switch(self, page, model, provider="ollama"):
         """the Heinz Chat has no model choice: put the model into its default configuration and reload (stands in for the first-start choice)"""
@@ -944,7 +960,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("[data-pw=prompts]")
         self.assertTrue(page.is_disabled("#ps-reset"), "nothing to reset yet")
         page.fill("#ps-text", "xx")
@@ -975,7 +991,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertTrue(page.is_disabled("#rt-reset"))
         self.assertFalse(page.evaluate("document.getElementById('rt-title').classList.contains('chg')"))
         page.evaluate("var e=document.getElementById('param-ctx'); e.value=4096; e.dispatchEvent(new Event('input', {bubbles: true}))")
@@ -985,7 +1001,7 @@ class PageTest(unittest.TestCase):
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=wilson]")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.params.ctx"), 4096, "a person change keeps the runtime")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("#rt-reset")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.params.ctx"), 8192)
         self.assertFalse(page.evaluate("document.getElementById('rt-title').classList.contains('chg')"))
@@ -995,7 +1011,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertTrue(page.is_disabled("#last-load"), "nothing stored yet")
         page.click("[data-pw=prompts]")
         page.fill("#ps-text", "xx")
@@ -1011,7 +1027,7 @@ class PageTest(unittest.TestCase):
         page.click("#mode-bar [data-mode=wilson]")   # tap on the active person: back to the preset, the stand is kept for the button
         self.assertEqual(page.locator("#mode-bar .mode-pill.chg").count(), 0, "back on the preset")
         self.assertEqual(page.input_value("#param-temp"), "0.4")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertFalse(page.is_disabled("#last-load"))
         page.click("#last-load")
         self.assertEqual(page.input_value("#param-temp"), "0.9")
@@ -1021,27 +1037,27 @@ class PageTest(unittest.TestCase):
         # another person has its own (empty) last state
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=audit]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertTrue(page.is_disabled("#last-load"))
         # the state survives a reload (stored with the settings)
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=wilson]")
         page.reload()
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertFalse(page.is_disabled("#last-load"))
 
     def test_runtime_has_its_own_heading_and_the_source_text_field_is_not_called_context(self):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertIn("Context window", page.inner_text("#sc-ctx"))
         self.assertTrue(page.evaluate("document.getElementById('sc-ctx').previousElementSibling.textContent.startsWith('Runtime')"))
         self.assertIn("Source text", page.inner_text("#ctx-label"))
         page.evaluate("HeinzDashboard.closeAll()")
 
     def _save_config(self, page, name):
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         page.fill("#cfg-name", name)
         page.click("#cfg-save")
         page.evaluate("HeinzDashboard.closeAll()")
@@ -1050,7 +1066,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         self.assertTrue(page.is_disabled("#cfg-load-btn"), "nothing to load yet")
         page.click("[data-pw=prompts]")
         page.fill("#ps-text", "You are a calm test agent.")
@@ -1073,7 +1089,7 @@ class PageTest(unittest.TestCase):
         # change everything, then load: person, prompt, tone and runtime come back
         page.evaluate("HeinzDashboard.closeAll()")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         page.select_option("#cfg-load", label="Calm Heinz · gemma2:2b")
         page.click("#cfg-load-btn")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.mode"), "heinz")
@@ -1093,7 +1109,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         page.select_option("#cfg-load", label="Lite one · gemma4-e2b")
         page.click("#cfg-load-btn")
         page.wait_for_function("HeinzDashboard.settings.provider === 'litert'", timeout=15000)
@@ -1117,7 +1133,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self._save_config(page, "Mine")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         page.click("#cfg-use")
         self.assertEqual(page.evaluate("HeinzProviders.chatConfigId()"), page.evaluate("HeinzProviders.configs()[0].id"))
         self.assertIn("on", page.get_attribute("#cfg-use", "class"))
@@ -1227,7 +1243,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("[data-pw=prompts]")
         page.fill("#ps-text", "Chat config prompt")
         page.click("[data-pw=params]")
@@ -1264,7 +1280,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("[data-pw=prompts]")
         self.assertIn("Wilson", page.input_value("#ps-text"), "the person's prompt is visible and editable")
         self.assertFalse(page.is_disabled("#ps-copy"))
@@ -1279,7 +1295,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), "You are a test agent.", "one own prompt is kept")
         page.click("#mode-bar [data-mode=native]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("[data-pw=prompts]")
         self.assertEqual(page.input_value("#ps-text"), "", "Nativ has no prompt of its own")
         self.assertTrue(page.is_disabled("#ps-copy"), "nothing to copy while the prompt is empty")
@@ -1351,7 +1367,7 @@ class PageTest(unittest.TestCase):
             self.assertFalse(page.is_disabled("#param-temp"), m)
             self.assertFalse(page.is_disabled("#param-topp"), m)
             self.assertFalse(page.is_disabled("#param-topk"), m)
-            page.click(".burger-btn")
+            page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
             page.click("[data-pw=prompts]")
             self.assertFalse(page.is_disabled("#ps-text"), m)
             page.evaluate("HeinzDashboard.closeAll()")
@@ -1465,7 +1481,7 @@ class PageTest(unittest.TestCase):
         self.send(page, "Private earlier question")      # an Ollama chat that must never reach the provider
         page.click("#mode-bar [data-mode=wilson]")       # saves it to the chat list
         page.click("#mode-bar [data-mode=heinz]")        # Heinz sends stop words
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=conn]")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=true; c.dispatchEvent(new Event('change', {bubbles: true}))")
         page.click("#q-engine")
         self.assertFalse(page.locator("#q-eng-list [data-eng=openrouter]").evaluate("e => e.classList.contains('locked')"), "online engine unlocked in the engine list")
@@ -1497,7 +1513,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("document.getElementById('status-dot').className"), "ring-btn metal status-dot status-cloud s-blue")
         self.assertIn("ONLINE", page.inner_text("#chip-engine").upper(), "header chip tells that this engine is online")
         # switching online off returns to Ollama
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=conn]")
         page.evaluate("var c=document.getElementById('online-on'); c.checked=false; c.dispatchEvent(new Event('change', {bubbles: true}))")
         self.assertEqual(page.evaluate("HeinzDashboard.settings.provider"), "ollama")
         self.assertNotIn("openrouter", page.eval_on_selector_all("#provider-select option", "els => els.map(e => e.value)"))
@@ -1862,7 +1878,7 @@ class PageTest(unittest.TestCase):
     def test_sliders_use_full_width_with_short_label_even_when_hints_are_shown(self):
         # Handytest 11.11.2026: Temperatur-Regler war winzig, weil der Hinweis zwischen Name und Regler lag
         page, g = self.google_page("gemini-3-flash")
-        self.menu(page)
+        self.menu(page, "person")
         page.evaluate("HeinzDashboard.renderCaps()")
         self.assertIn("Recommended", page.text_content("#sc-temp .cap-row"))
         w = page.evaluate("['param-temp','param-topp','param-topk','param-ctx'].map(id => Math.round(document.getElementById(id).getBoundingClientRect().width))")
@@ -2356,17 +2372,17 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         self.send(page, "Hi")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         self.assertTrue(page.evaluate("document.getElementById('menu-sheet').classList.contains('open')"))
         page.evaluate("var e=document.getElementById('param-threads'); e.value=3; e.dispatchEvent(new Event('input', {bubbles: true}))")
-        # tap on the dimmed area above the sheet: the menu closes, the setting is already applied
-        page.mouse.click(200, 40)
+        # tap on the dimmed area next to the sheet: the menu closes, the setting is already applied
+        page.mouse.click(60, 400)
         page.wait_for_function("!document.getElementById('menu-sheet').classList.contains('open')")
         self.send(page, "Again")
         self.assertEqual(self.ollama.requests[-1]["options"]["num_thread"], 3)
         # taps inside the sheet do not close it
         page.click(".burger-btn")
-        page.click("#menu-sheet .caps.grp >> nth=0")
+        page.click("#sh-title")
         self.assertTrue(page.evaluate("document.getElementById('menu-sheet').classList.contains('open')"))
         # reload entry: chat and thread setting survive
         page.click("#q-reload")
@@ -2646,13 +2662,22 @@ class PageTest(unittest.TestCase):
         page.click(".burger-btn")
         self.assertEqual(page.inner_text("#sh-title"), "Settings")
         self.assertFalse(page.is_visible("#sh-back"))
-        for sw in ("online-on", "fast-mode", "preload-on"):
-            self.assertTrue(page.locator("#%s" % sw).count() == 1, sw)
-        page.click("#menu-sheet [data-go=look]")
-        self.assertFalse(page.is_visible("#online-on"), "sub page replaces the content of the sheet")
+        rows = page.evaluate("[...document.querySelectorAll('#menu-sheet .pg[data-pg=main] .row')].map(e => e.dataset.go)")
+        self.assertEqual(rows, ["person", "cfgs", "perf", "conn", "app"], "the main menu holds only the menu cells")
+        for r in ("person", "cfgs", "perf", "conn", "app"):
+            self.assertNotEqual(page.inner_text("#mz-" + r).strip(), "", "state line of " + r)
+        page.click("#menu-sheet [data-go=conn]")
+        self.assertEqual(page.inner_text("#sh-title"), "Connection & privacy")
+        self.assertTrue(page.is_visible("#online-on") or page.locator("#online-on").count() == 1)
+        page.click("#menu-sheet [data-go=engine]")
+        self.assertEqual(page.inner_text("#sh-title"), "Engine")
+        page.click("#sh-back")
+        self.assertEqual(page.inner_text("#sh-title"), "Connection & privacy", "one level up, not to the main menu")
         page.click("#sh-back")
         self.assertEqual(page.inner_text("#sh-title"), "Settings")
+        page.click("#menu-sheet [data-go=person]")
         self.assertTrue(page.locator("#param-temp").count() == 1)
+        self.assertEqual(page.locator("#fast-mode, #preload-on").count(), 2)
         page.keyboard.press("Escape")
         page.click("#lang-btn")
         page.click(".burger-btn")
@@ -3469,7 +3494,7 @@ class PageTest(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=heinz]")
         self._save_config(page, "Bench")
-        page.click(".burger-btn"); page.click("#cfg-use")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]"); page.click("#cfg-use")
         page.goto(self.srv.base + "/chat.html")
         page.wait_for_selector("html[data-heinz-chat=ready]", state="attached")
         page.wait_for_function("document.getElementById('mod-t').textContent.indexOf('gemma2:2b') >= 0")
@@ -3486,7 +3511,7 @@ class PageTest(unittest.TestCase):
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
         page.click("#mode-bar [data-mode=wilson]")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.click("[data-pw=prompts]")
         page.fill("#ps-text", "Assigned prompt")
         page.click("[data-pw=params]")
@@ -3509,7 +3534,7 @@ class PageTest(unittest.TestCase):
         self.assertEqual(page.evaluate("HeinzDashboard.settings.ownPrompt"), "Assigned prompt")
         self.assertIsNone(page.evaluate("HeinzProviders.chatConfigId()"))
         # removing the assignment brings the model's standard: the app starts on Heinz again
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
         page.click("#cfg-model")
         self.assertIsNone(page.evaluate("HeinzProviders.modelConfigId('ollama', 'gemma2:2b')"))
         page.goto(self.srv.base + "/dashboard.html")
@@ -3522,7 +3547,7 @@ class PageTest(unittest.TestCase):
         page = self.new_page()
         page.goto(self.srv.base + "/dashboard.html")
         page.wait_for_function("document.querySelectorAll('#model-select option').length == 3")
-        page.click(".burger-btn")
+        page.click(".burger-btn"); page.click("#menu-sheet [data-go=person]")
         page.evaluate("var c=document.getElementById('param-ctx'); c.value=4096; c.dispatchEvent(new Event('input', {bubbles: true}));")
         page.fill("#cfg-name", "Small ctx"); page.click("#cfg-save"); page.click("#cfg-model")
         page.evaluate("HeinzDashboard.closeAll()")

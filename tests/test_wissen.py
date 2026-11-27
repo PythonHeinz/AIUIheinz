@@ -418,7 +418,7 @@ class WissenChatTests(unittest.TestCase):
             leiste_auf(page); page.click(".wsw-an"); page.click(".wsw-mehr")
             page.wait_for_function("document.querySelectorAll('.wsw select')[0].options.length >= 2")
             page.select_option(".wsw select >> nth=0", "wikipedia-de"); page.select_option(".wsw select >> nth=1", "modell"); leiste_zu(page)
-            page.click(".burger-btn")
+            page.click(".burger-btn"); page.click("#menu-sheet [data-go=cfgs]")
             page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
             self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})
             page.evaluate("localStorage.removeItem('heinz_wissen'); window.dispatchEvent(new CustomEvent('heinz-wissen'))")
