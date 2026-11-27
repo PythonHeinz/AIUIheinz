@@ -86,10 +86,10 @@ Von einem Skript erzeugt (`python3 tests/modulegraph.py --write`), nicht von Han
 | 2 | `persist.js` | `base`, `hooks`, `i18n`, `state` |
 | 2 | `pixelbar.js` | `base`, `i18n`, `state` |
 | 2 | `update.js` | `base`, `i18n`, `state` |
-| 2 | `wissen.js` | `base`, `i18n`, `state` |
 | 3 | `menu.js` | `base`, `hooks`, `i18n`, `persist`, `state`, `update` |
 | 3 | `params.js` | `base`, `hooks`, `persist`, `sliders`, `state` |
 | 4 | `caps.js` | `base`, `hooks`, `i18n`, `menu`, `params`, `persist`, `pixelbar`, `state` |
+| 4 | `wissen.js` | `base`, `i18n`, `menu`, `state` |
 | 5 | `build.js` | `base`, `caps`, `params`, `state` |
 | 5 | `protocol.js` | `base`, `caps`, `clipboard`, `sliders`, `state` |
 | 5 | `status.js` | `base`, `caps`, `i18n`, `pixelbar`, `state` |

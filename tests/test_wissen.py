@@ -11,6 +11,24 @@ LIB = os.path.join(ROOT, "lib", "wissen")
 
 
 @unittest.skipUnless(NODE, "node fehlt")
+
+
+def leiste_auf(page):
+    if not page.evaluate("document.querySelector('.sl-leiste').classList.contains('open')"):
+        page.click(".sl-kragen")
+    page.wait_for_selector(".sl-leiste.open .wsw-an")
+
+
+def leiste_zu(page):
+    if page.evaluate("document.querySelector('.sl-leiste').classList.contains('open')"):
+        page.click(".sl-scrim", position={"x": 400, "y": 120})
+    page.wait_for_function("!document.querySelector('.sl-leiste').classList.contains('open')")
+
+
+def an_aus(page):
+    leiste_auf(page); page.click(".wsw-an"); leiste_zu(page)
+
+
 class WissenNodeTests(unittest.TestCase):
     def test_node_tests_of_the_building_block_pass(self):
         d = os.path.join(ROOT, "tests", "wissen")
@@ -286,7 +304,7 @@ class WissenChatTests(unittest.TestCase):
             page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
             page.evaluate(SEED_JS)
             self.assertFalse(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"), "off by default")
-            page.click(".wsw-an")
+            an_aus(page)
             self.assertTrue(page.evaluate("JSON.parse(localStorage.getItem('heinz_wissen')).an"))
             modell.bodies.clear()
             page.fill("#q", "Wer war Sokrates?"); page.click("#send")
@@ -294,7 +312,7 @@ class WissenChatTests(unittest.TestCase):
             self.assertIn("antiker Philosoph", self.sysmsg(modell.bodies[-1]))
             page.reload(); page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
             self.assertTrue(page.evaluate("document.querySelector('.wsw-an').classList.contains('on')"), "the state survives a restart")
-            page.click(".wsw-an")
+            an_aus(page)
             modell.bodies.clear()
             page.fill("#q", "Wer war Sokrates?"); page.click("#send")
             page.wait_for_function("document.querySelectorAll('#log .msg.a').length === 2 && !document.querySelector('#log .cur')")
@@ -316,11 +334,10 @@ class WissenChatTests(unittest.TestCase):
             page.goto(self.server.base + "/dashboard.html")
             page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
             page.evaluate(SEED_JS)
-            self.assertEqual(page.locator("#wissen-host .wsw-an").count(), 1)
-            page.click("#wissen-host .wsw-an")
-            page.dispatch_event("#wissen-host .wsw-an", "contextmenu")
-            page.wait_for_function("document.querySelectorAll('#wissen-host select')[0].options.length >= 2")
-            page.keyboard.press("Escape"); self.assertFalse(page.is_visible("#wissen-host .wsw-panel"))
+            self.assertEqual(page.locator(".wsw .wsw-an").count(), 1)
+            an_aus(page); leiste_auf(page); page.click(".wsw-mehr")
+            page.wait_for_function("document.querySelectorAll('.wsw select')[0].options.length >= 2")
+            page.keyboard.press("Escape"); self.assertFalse(page.is_visible(".wsw .wsw-panel")); leiste_zu(page)
             modell.bodies.clear()
             page.fill("#query", "Wer war Sokrates?"); page.click("#send-btn")
             page.wait_for_selector(".msg-assistant .src .schip")
@@ -338,10 +355,39 @@ class WissenChatTests(unittest.TestCase):
             self.assertEqual(hist, [1, 1], "the chips are part of the stored conversation")
             # with the switch off the request carries no excerpts
             page.wait_for_function("!document.body.classList.contains('gen')")
-            page.click("#wissen-host .wsw-an"); modell.bodies.clear()
+            an_aus(page); modell.bodies.clear()
             page.fill("#query", "Noch eine Frage"); page.click("#send-btn")
             page.wait_for_function("document.querySelectorAll('.msg-assistant').length === 3 && !document.body.classList.contains('gen')")
             self.assertNotIn("excerpt", self.sysmsg(modell.bodies[-1]).lower())
+        finally:
+            ctx.close()
+
+    def test_the_side_bar_holds_the_switch_and_the_menu_and_keeps_the_input_row_free(self):
+        ctx = self.browser.new_context(viewport={"width": 426, "height": 803})
+        try:
+            page = ctx.new_page()
+            Modell(page)
+            page.goto(self.server.base + "/dashboard.html")
+            page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
+            self.assertEqual(page.locator(".pbtns .wsw, .pbtns .wsw-an").count(), 0, "no knowledge button in the input row")
+            box = page.locator(".sl-kragen").bounding_box()
+            self.assertLessEqual(box["x"], 1); self.assertLess(box["width"], 30)
+            self.assertFalse(page.is_visible(".sl-leiste"))
+            page.click(".sl-kragen"); page.wait_for_selector(".sl-leiste.open")
+            names = page.evaluate("[...document.querySelectorAll('.sl-leiste .sl-punkt')].map(e => e.dataset.id)")
+            self.assertEqual(names, ["wissen", "menu"])
+            page.wait_for_function("document.querySelector('.sl-leiste').getBoundingClientRect().left >= 0")
+            lb = page.locator(".sl-leiste").bounding_box()
+            self.assertGreaterEqual(lb["x"], 0); self.assertLessEqual(lb["x"] + lb["width"], 426)
+            page.click(".sl-leiste .sl-punkt[data-id=menu] .sl-zeile")
+            page.wait_for_selector("#menu-sheet.open")
+            self.assertFalse(page.evaluate("document.querySelector('.sl-leiste').classList.contains('open')"), "the bar closes when the menu opens")
+            page.goto(self.server.base + "/chat.html")
+            page.wait_for_function("document.documentElement.dataset.heinzChat === 'ready'")
+            self.assertEqual(page.evaluate("[...document.querySelectorAll('.sl-leiste .sl-punkt')].map(e => e.dataset.id)"), ["wissen"])
+            self.assertEqual(page.locator(".comp .wsw").count(), 0)
+            an_aus(page)
+            self.assertTrue(page.evaluate("document.querySelector('.sl-kragen').classList.contains('on')"), "the collar shows that knowledge is on")
         finally:
             ctx.close()
 
@@ -354,9 +400,9 @@ class WissenChatTests(unittest.TestCase):
             page.wait_for_function("document.querySelectorAll('#model-select option').length >= 1")
             page.evaluate(SEED_JS)
             self.assertEqual(page.locator("#cfg-wissen, #cfg-wissen-box").count(), 0, "the configuration menu has no switch of its own any more")
-            page.click("#wissen-host .wsw-an"); page.dispatch_event("#wissen-host .wsw-an", "contextmenu")
-            page.wait_for_function("document.querySelectorAll('#wissen-host select')[0].options.length >= 2")
-            page.select_option("#wissen-host select >> nth=0", "wikipedia-de"); page.select_option("#wissen-host select >> nth=1", "modell")
+            leiste_auf(page); page.click(".wsw-an"); page.click(".wsw-mehr")
+            page.wait_for_function("document.querySelectorAll('.wsw select')[0].options.length >= 2")
+            page.select_option(".wsw select >> nth=0", "wikipedia-de"); page.select_option(".wsw select >> nth=1", "modell"); leiste_zu(page)
             page.click(".burger-btn")
             page.fill("#cfg-name", "Mit Wissen"); page.click("#cfg-save")
             self.assertEqual(page.evaluate("HeinzProviders.configs()[0].wissen"), {"an": True, "quellen": ["wikipedia-de"], "begriffe": "modell"})

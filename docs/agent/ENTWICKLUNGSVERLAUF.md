@@ -1016,3 +1016,9 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - **Tests:** `tests/test_wissen.py` auf den Knopf umgestellt (Kontextmenü statt `.wsw-mehr`). Voller Lauf grün. Nur simuliert, Layout per Screenshot 426 × 803 geprüft; Handytest Y27.
 - **Offen:** Modus-Schieberegler (Idee des Entwicklers, Freigabe und Strang Modi nötig), WikiHeinz „Parameter“ kürzen, Strang AIUIheinz-Menü (Menüzellen mit Unterseiten).
 
+## 27.11.2026 – Seitenleiste mit Kragen am linken Rand (Strang AIUIheinz-Wissen)
+- **Anlass:** Der runde Wiki-Knopf gehört nicht in die Eingabezeile (Entwickler 03:38). Übernommen wird nur die Form des Modus-Schiebereglers aus `tools/design/modus.html`: Halbkreis-Kragen links, Tippen öffnet eine senkrechte Leiste mit runden Knöpfen. Die Modusleiste mit den LEDs im Dashboard bleibt unverändert.
+- **Baustein:** `lib/shared/seitenleiste.js` (`baueSeitenleiste`, `punkt`), Stile `.sl-*` in `lib/core.css`. Kragen färbt sich, wenn Wissen an ist. Leiste schließt bei Tipp daneben, Escape oder wenn ein Punkt ein Menü öffnet.
+- **Inhalt:** Dashboard: Wissen (Tippen an/aus, „…“ zeigt Quellen und Suchbegriffe darunter) und Einstellungen (öffnet das bestehende Menü). Heinz Chat: Wissen. Weitere Punkte (später die Menüzellen) hängen sich als `punkt(...)` an.
+- **Tests:** `tests/test_wissen.py` (Leiste öffnen/schließen, Eingabezeile ohne Wissensknopf, Punkte, Menü, Kragen-Markierung). Voller Lauf grün, nur simuliert; Handytest Y27 angepasst.
+
