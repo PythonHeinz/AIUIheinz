@@ -63,7 +63,7 @@ async function markiereExport() { const s = einst(); s.export = new Date().toISO
 
 // ---- Merkzettel aus dem Postfach: werden nur nach Klick auf „Aufnehmen“ ins Wiki übernommen, nie automatisch ----
 const verwerfen = new Map();
-const zettelText = (e) => { const d = e.daten || {}, h = d.herkunft || null; return e.art === 'zitat' ? zitatBlock({ ...(h || {}), zitat: d.zitat || d.text }) : String(d.text || ''); };
+const zettelText = (e) => { const d = e.daten || {}, h = d.herkunft || null; return e.art === 'zitat' ? zitatBlock({ ...(h || {}), zitat: d.zitat || d.text }) + (d.notiz ? '\n\n' + String(d.notiz) : '') : String(d.text || ''); };
 export async function zettel() {
     const l = HeinzPostfach.offen('wikiheinz'), box = $('zettel'), tab = document.querySelector('#tabs button[data-tab="wiki"]');
     if (l.length) tab.dataset.n = String(l.length); else delete tab.dataset.n;

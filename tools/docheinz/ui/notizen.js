@@ -1,7 +1,7 @@
 /* tools/docheinz/ui/notizen.js – Übersicht aller Markierungen und Notizen über alle Bücher (Logik in ../mod/sammlung.js).
  * initNotes({ t, books, open, save }) einmal beim Start; renderNotes() nach jeder Änderung der Liste.
  *   open(bookId, jumpTo) öffnet das Buch an der Stelle; save(bookId, marks) speichert die geänderten Markierungen des Buchs. */
-import { $ } from './base.js';
+import { $, HeinzPostfach } from './base.js';
 import { collect, markTags, filterItems, groupItems, countBy, toMarkdownAll } from '../mod/sammlung.js';
 import { COLORS, updateMark, removeMark } from '../mod/markierung.js';
 import { parseTags } from '../mod/bibliothek.js';
@@ -42,6 +42,7 @@ export function renderNotes(keepFocus) {
     box.appendChild(by);
     box.appendChild(el('p', 'help', t('nt_count', { n: c.marks, b: c.books, m: c.notes })));
     const ex = el('div', 'dh-xb'); ex.append(btn('pill', t('m_copyMd'), { nt: 'copy' }), btn('pill acc', t('m_export'), { nt: 'save' })); box.appendChild(ex);
+    box.appendChild(btn('pill', t('nt_sendAll', { n: items.length }), { nt: 'sendall' }));
     for (const g of groupItems(items, S.by)) {
         const title = S.by === 'book' ? g.title : S.by === 'tag' ? (g.key === '' ? t('nt_untagged') : '#' + g.title) : g.key === 'pn' ? t('mk_pn') : t('mk_' + g.key);
         box.appendChild(el('div', 'dh-group', title + ' · ' + g.items.length));
@@ -52,7 +53,8 @@ export function renderNotes(keepFocus) {
             if (m.note) b.appendChild(el('span', 'n', (m.ai ? t('mk_ai') + ': ' : '') + m.note));
             if ((m.tags || []).length) b.appendChild(el('small', 'dh-tags', m.tags.map(x => '#' + x).join(' ')));
             row.appendChild(b);
-            const side = el('div', 'dh-nside'); side.append(btn('ibtn dh-tgbtn', '#', { nt: 'tg', id }), btn('ibtn', '', { nt: 'del', id }));
+            const side = el('div', 'dh-nside'); side.append(btn('ibtn dh-tgbtn', '#', { nt: 'tg', id }), btn('ibtn', '', { nt: 'send', id }), btn('ibtn', '', { nt: 'del', id }));
+            const sb = side.children[1]; sb.setAttribute('aria-label', t('nt_send')); sb.title = t('nt_send'); sb.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-share"/></svg>';
             side.lastChild.setAttribute('aria-label', t('mk_del')); side.lastChild.innerHTML = '<svg class="i"><use href="../../lib/icons.svg#i-trash"/></svg>';
             side.firstChild.setAttribute('aria-label', t('tg_btn'));
             row.appendChild(side);
@@ -69,6 +71,27 @@ export function renderNotes(keepFocus) {
     }
     if (!items.length) box.appendChild(el('p', 'help', t('nt_empty')));
     if (hadFocus) { const n = $('nt-q'); n.focus(); try { n.setSelectionRange(pos, pos); } catch { /* ok */ } }
+}
+
+// ---- An WikiHeinz senden: legt einen Merkzettel ins Postfach; WikiHeinz fragt vor dem Übernehmen (Stufe 4 des Strangs AIUIheinz-Wissen) ----
+export function zettelVon(book, m, t) {
+    const h = { buch: book.title || '', autor: book.author || '', kapitel: m.pn ? t('mk_pn') : t('r_part', { n: (m.ch || 0) + 1 }) };
+    const daten = { titel: book.title || '', zitat: m.text || '', herkunft: h };
+    if (m.note) daten.notiz = (m.ai ? t('mk_ai') + ': ' : '') + m.note;
+    if ((m.tags || []).length) daten.tags = m.tags.slice();
+    return daten;
+}
+async function sende(items) {
+    const t = S.env.t; let ok = 0, voll = false, lang = false;
+    for (const { book, mark } of items) {
+        const daten = zettelVon(book, mark, t);
+        if (!daten.zitat && !daten.notiz) continue;
+        let r; try { r = await HeinzPostfach.legen('wikiheinz', 'zitat', daten, { von: 'docheinz' }); } catch { r = { zustand: 'fehler' }; }
+        if (r.zustand === 'abgelegt') ok++; else if (r.zustand === 'voll') { voll = true; break; } else if (r.zustand === 'zu-lang') lang = true;
+    }
+    if (voll) S.env.say(t('nt_full') + (ok ? ' ' + t('nt_sentN', { n: ok }) : ''), 'warn');
+    else if (ok) S.env.say(ok === 1 && !lang ? t('nt_sent') : t('nt_sentN', { n: ok }) + (lang ? ' ' + t('nt_tooLong') : ''), 'ok');
+    else S.env.say(lang ? t('nt_tooLong') : t('nt_sendFail'), 'warn');
 }
 
 async function saveTags(bookId, markId, text) {
@@ -99,6 +122,8 @@ export function initNotes(env) {
         else if (d.nt === 'copy') { try { await navigator.clipboard.writeText(markdown()); S.env.say(S.env.t('nt_copied'), 'ok'); } catch { S.env.say(S.env.t('nt_copyFail'), 'warn'); } }
         else if (d.nt === 'save') download('docheinz-notizen.md', markdown());
         else if (d.nt === 'go') { const bk = S.env.books().find(x => x.id === d.b), m = bk && bk.marks.find(x => x.id === d.m); if (m) S.env.open(d.b, m.pn ? { ch: m.ch, frac: m.frac || 0 } : { ch: m.ch, start: m.start, len: m.len }); }
+        else if (d.nt === 'send') { const [bid, mid] = d.id.split('|'), it = collect(S.env.books()).find(x => x.book.id === bid && x.mark.id === mid); if (it) await sende([it]); }
+        else if (d.nt === 'sendall') await sende(current());
         else if (d.nt === 'tg') { S.edit = S.edit === d.id ? '' : d.id; renderNotes(); const i = $('nt-tg'); if (i) i.focus(); }
         else if (d.nt === 'tgno') { S.edit = ''; renderNotes(); }
         else if (d.nt === 'tgok') saveTags(d.b, d.m, $('nt-tg').value);

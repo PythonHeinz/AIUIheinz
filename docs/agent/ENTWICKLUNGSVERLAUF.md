@@ -1055,3 +1055,10 @@ Register heißt „Markierungen & Notizen“. „+ Notiz zu dieser Seite“ legt
 - Der Tastaturmodus (`body.kbd`, `setKbd` in `lib/dashboard/caps.js`) blendet beim Tippen bei kleiner Sichtfläche (Bildschirmtastatur) Modusleiste, Statistikleiste (In/Out/T/s), Aktionen und Kontextfeld aus; das Kontextfeld ist ohne Fokus schon einzeilig eingeklappt. Geprüft per Screenshot bei 426 × 500 und durch den vorhandenen Test (`test_pages.py`, `kbd`). Die wissens-Leiste ist durch die Seitenleiste entfallen. Kein Umbau nötig.
 - **Offen:** Inhalt der Seitenleiste (welche weiteren Punkte), Feinschliff der Menüs.
 
+
+## 27.11.2026 – Strang AIUIheinz-Wissen, Stufe 4: docHeinz sendet an WikiHeinz (Postfach)
+- **Fremdmodul docHeinz berührt (Auftrag des Entwicklers, 13:13):** `tools/docheinz/ui/notizen.js`, `ui/base.js` (re-exportiert `HeinzPostfach`), `ui/i18n.js` (nt_send, nt_sendAll, nt_sent, nt_sentN, nt_full, nt_tooLong, nt_sendFail, EN und DE).
+- **Verhalten:** In der Notizübersicht hat jede Markierung ein Pfeil-Symbol „An WikiHeinz senden“; darunter ein Knopf „Alle angezeigten an WikiHeinz senden (n)“ (respektiert Suche und Filter). Gelegt wird ein Merkzettel `art: 'zitat'` für `wikiheinz` mit `zitat`, `notiz`, `tags`, `herkunft {buch, autor, kapitel}`, `von: 'docheinz'`. Rückmeldung bei abgelegt, voll (50) und zu lang. Nichts wird in WikiHeinz geschrieben: dort fragt „Aufnehmen/Verwerfen“.
+- **WikiHeinz:** `zettelText` hängt `daten.notiz` an den Zitatblock an (Vorschau und Übernahme).
+- **Tests:** `test_notes_can_be_sent_to_wikiheinz_through_the_mailbox` (docHeinz), Notiz-Anzeige im Postfach-Test von WikiHeinz. Nur simuliert; Handytest Y32.
+- **Offen:** „Nachschlagen“ per `suche()` in docHeinz (nur auf Zuruf).

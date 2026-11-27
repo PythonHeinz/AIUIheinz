@@ -1783,6 +1783,30 @@ class DocHeinzUiTests(DocHeinzBase):
         p.wait_for_function("() => document.getElementById('reader').dataset.pages > 0")
         self.assertEqual(p.errors, [])
 
+    def test_notes_can_be_sent_to_wikiheinz_through_the_mailbox(self):
+        p = self.open(lang="de")
+        self.start_book(p, "a.md", "text/markdown", "# Alpha\n\nMut ist wichtig im Leben. Weiter geht es mit Text.".encode())
+        self.mark(p, "Mut ist wichtig")
+        p.click("#r-mk [data-mk=note]")
+        p.fill("#rs-note-t", "Meine Notiz")
+        p.fill("#rs-tags", "Mut")
+        p.click("#rs-note-go")
+        p.wait_for_timeout(400)
+        self.close_reader(p)
+        p.click("#b-notes")
+        p.click("#notes [data-nt=send]")
+        p.wait_for_function("() => /Gesendet/.test(document.body.innerText)")
+        box = p.evaluate("async () => { const { HeinzPostfach } = await import('/lib/shared/postfach.js'); return HeinzPostfach.offen('wikiheinz'); }")
+        self.assertEqual(len(box), 1)
+        e = box[0]
+        self.assertEqual(e["art"], "zitat"); self.assertEqual(e["von"], "docheinz")
+        d = e["daten"]
+        self.assertIn("Mut ist wichtig", d["zitat"]); self.assertEqual(d["notiz"], "Meine Notiz"); self.assertEqual(d["tags"], ["Mut"])
+        self.assertEqual(d["herkunft"]["buch"], d["titel"]); self.assertIn("Teil 1", d["herkunft"]["kapitel"])
+        p.click("#notes [data-nt=sendall]")
+        p.wait_for_function("async () => { const { HeinzPostfach } = await import('/lib/shared/postfach.js'); return HeinzPostfach.offen('wikiheinz').length === 2; }")
+        self.assertEqual(p.errors, [])
+
     def test_small_viewport_and_both_themes_have_no_overflow(self):
         for theme in ("lt", "dk"):
             p = self.open(theme=theme, height=400)

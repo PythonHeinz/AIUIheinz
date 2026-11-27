@@ -218,13 +218,14 @@ class WikiUiTests(unittest.TestCase):
             r = page.evaluate("""async () => {
                 const { HeinzPostfach } = await import('/lib/shared/postfach.js');
                 const a = await HeinzPostfach.legen('wikiheinz', 'merke', { titel: 'Platon', text: 'Notiz aus dem Buch', herkunft: { buch: 'Politeia', autor: 'Platon' }, tags: ['lesen'] }, { von: 'docHeinz' });
-                const b = await HeinzPostfach.legen('wikiheinz', 'zitat', { titel: 'Zitate', zitat: 'Erkenne dich selbst', herkunft: { autor: 'Delphi' } }, { von: 'docHeinz' });
+                const b = await HeinzPostfach.legen('wikiheinz', 'zitat', { titel: 'Zitate', zitat: 'Erkenne dich selbst', notiz: 'Meine Randnotiz', herkunft: { autor: 'Delphi' } }, { von: 'docHeinz' });
                 return [a.zustand, b.zustand];
             }""")
             self.assertEqual(r, ["abgelegt", "abgelegt"])
             page.wait_for_function("document.querySelector('#tabs [data-tab=wiki]').dataset.n === '2'")
             self.assertIn("2 notes wait", page.inner_text("#msg"))
             self.assertIn("Add them to My wiki?", page.inner_text("#zettelkopf"))
+            self.assertIn('Meine Randnotiz', page.evaluate("document.getElementById('zettel').textContent"), 'a note sent with a quote is shown with it')
             pages = lambda: page.evaluate("""async () => { const sp = await (await import('/lib/wissen/db.js')).oeffne(); return (await sp.alle('mein-wiki')).map(e => [e.t, e.x]); }""")
             self.assertEqual([t for t, x in pages()], ["Platon"], "nothing is written before the user says yes")
             page.reload(); page.wait_for_function("window.__wikiReady === true")                           # the notes survive a reload (IndexedDB)
