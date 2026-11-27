@@ -5,6 +5,7 @@ Projekt „Heinz UI“: Weboberfläche für lokale Modelle (Ollama in Termux, Pi
 ## Aktive Arbeit
 Jeder Strang trägt vor der ersten Änderung eine Zeile ein (Datum, Strangname, Vorhaben, berührte Dateien), pusht sofort und löscht die Zeile nach dem Push. Zeilen älter als 24 Stunden gelten als verwaist; vor dem Entfernen den Entwickler fragen.
 Aktuell:
+- 27.11.2026 AIUIheinz-Menü (Strang AIUIheinz-Wissen führt ihn, Beschluss des Entwicklers): Hauptmenü des Dashboards als Menüzellen mit Unterseiten, ohne Funktionsänderung. Berührt `dashboard.html`, `lib/dashboard/menu.js`, `lib/data/dashboard.i18n.json`, Tests des Dashboard-Menüs.
 
 Stand: 26.11.2026, Commit siehe `git log -1`. Version 1.0 (`VERSION.txt`). Alles Folgende lief nur in simulierten Tests (Playwright, simuliertes Ollama), wenn nicht ausdrücklich „am Handy bestätigt“ steht.
 
